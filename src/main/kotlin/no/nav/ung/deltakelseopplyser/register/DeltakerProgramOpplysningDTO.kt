@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.register
 
-import org.apache.kafka.common.protocol.types.Field.UUID
 import java.time.LocalDate
+import java.util.*
 
 data class DeltakerProgramOpplysningDTO(
     val id: UUID,
