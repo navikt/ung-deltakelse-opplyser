@@ -1,0 +1,17 @@
+name: CodeQl
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  codeql:
+    name: CodeQl
+    uses: navikt/sif-gha-workflows/.github/workflows/codeql.yml@main
+    secrets: inherit
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+    with:
+      java-version: 21
