@@ -28,7 +28,7 @@ jobs:
 
   trivy:
     needs: [ build-app ]
-    if: startsWith(github.ref, 'refs/heads/dev-') || startsWith(github.ref, 'refs/heads/main') || github.event.deployment.payload.triggered # Build and push docker if branch is either main or dev-*
+    if: github.ref_name == 'main'
     uses: navikt/sif-gha-workflows/.github/workflows/trivy.yml@main
     permissions:
       contents: write
@@ -45,7 +45,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: github.ref_name == 'main'
+    if: startsWith(github.ref, 'refs/heads/dev-') || startsWith(github.ref, 'refs/heads/main') || github.event.deployment.payload.triggered # Build and push docker if branch is either main or dev-*
     needs: build-app
     uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
     with:
