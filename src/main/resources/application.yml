@@ -14,7 +14,7 @@ spring:
       connection-test-query: SELECT 1
       maximum-pool-size: 2
       connection-timeout: 1000
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}
+    url: ${DB_JDBC_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
