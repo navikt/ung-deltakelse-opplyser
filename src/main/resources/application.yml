@@ -2,6 +2,23 @@ spring:
   application:
     name: # Settes i nais/<cluster>.json
 
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+  datasource:
+    hikari:
+      connection-test-query: SELECT 1
+      maximum-pool-size: 2
+      connection-timeout: 1000
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
 management:
   endpoint:
     health:
