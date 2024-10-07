@@ -73,7 +73,7 @@ spec:
         highAvailability: {{ database.highAvailability }}
         databases:
           - name: {{ database.name }}
-          - envVarPrefix: {{ database.envVarPrefix }}
+            envVarPrefix: {{ database.envVarPrefix }}
   env:
   {{#each env}}
    - name: {{@key}}
