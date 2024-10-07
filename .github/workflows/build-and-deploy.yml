@@ -38,7 +38,7 @@ jobs:
     secrets: inherit
     with:
       image: ${{ needs.build-app.outputs.image }}
-      team: dusseldorf
+      team: k9saksbehandling
 
   deploy-dev:
     name: Deploy dev
