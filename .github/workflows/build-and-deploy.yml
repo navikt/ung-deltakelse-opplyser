@@ -26,6 +26,20 @@ jobs:
       upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
     secrets: inherit
 
+  trivy:
+    needs: [ build-app ]
+    if: startsWith(github.ref, 'refs/heads/dev-') || startsWith(github.ref, 'refs/heads/main') || github.event.deployment.payload.triggered # Build and push docker if branch is either main or dev-*
+    uses: navikt/sif-gha-workflows/.github/workflows/trivy.yml@main
+    permissions:
+      contents: write
+      security-events: write
+      id-token: write
+      actions: read
+    secrets: inherit
+    with:
+      image: ${{ needs.build-app.outputs.image }}
+      team: dusseldorf
+
   deploy-dev:
     name: Deploy dev
     permissions:
