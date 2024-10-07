@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import io.swagger.v3.oas.annotations.Operation
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
@@ -32,6 +33,7 @@ class UngdomsprogramRegisterController(
      * Legger til en deltaker i ungdomsprogrammet.
      */
     @PostMapping("/legg-til", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Legg til en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun leggTilIProgram(@RequestBody deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO): DeltakerProgramOpplysningDTO {
         return registerService.leggTilIProgram(deltakerProgramOpplysningDTO)
@@ -41,6 +43,7 @@ class UngdomsprogramRegisterController(
      * Henter opplysninger for en deltaker i ungdomsprogrammet.
      */
     @GetMapping("/hent/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Hent opplysninger for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentOpplysningForDeltaker(@PathVariable id: UUID): DeltakerProgramOpplysningDTO {
         return registerService.hentFraProgram(id)
@@ -50,6 +53,7 @@ class UngdomsprogramRegisterController(
      * Henter alle opplysninger for en deltaker i ungdomsprogrammet.
      */
     @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Hent alle opplysninger for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): DeltakerProgramOpplysningDTO {
         return registerService.hentAlleForDeltaker(deltakerOpplysningDTO.deltakerIdent)
@@ -59,6 +63,7 @@ class UngdomsprogramRegisterController(
      * Oppdaterer opplysninger for en deltaker i ungdomsprogrammet.
      */
     @PutMapping("/oppdater/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Oppdater opplysninger for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun oppdaterFraProgram(
         @PathVariable id: UUID,
@@ -71,6 +76,7 @@ class UngdomsprogramRegisterController(
      * Fjerner en deltaker fra ungdomsprogrammet.
      */
     @DeleteMapping("/fjern/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Fjern en deltaker fra ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun fjernFraProgram(@PathVariable id: UUID): DeltakerProgramOpplysningDTO {
         return registerService.fjernFraProgram(id)
