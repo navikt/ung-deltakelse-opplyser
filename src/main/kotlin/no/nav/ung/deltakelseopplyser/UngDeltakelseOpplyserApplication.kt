@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class UngDeltakelseOpplyserApplication
 
 fun main(args: Array<String>) {
-	runApplication<UngDeltakelseOpplyserApplication>(*args)
+    runApplication<UngDeltakelseOpplyserApplication>(*args)
 }

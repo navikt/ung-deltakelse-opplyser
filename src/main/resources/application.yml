@@ -30,3 +30,20 @@ management:
         include: health, prometheus
       path-mapping:
         prometheus: /metrics
+
+no.nav:
+  security:
+    jwt:
+      issuer:
+        tokenx:
+          discoveryUrl: ${TOKEN_X_WELL_KNOWN_URL}
+          accepted_audience: ${TOKEN_X_CLIENT_ID}
+
+
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+    disable-swagger-default-url: true
+    path: swagger-ui.html
