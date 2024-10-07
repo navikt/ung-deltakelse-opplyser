@@ -26,20 +26,6 @@ jobs:
       upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
     secrets: inherit
 
-  trivy:
-    needs: [ build-app ]
-    if: github.ref_name == 'main'
-    uses: navikt/sif-gha-workflows/.github/workflows/trivy.yml@main
-    permissions:
-      contents: write
-      security-events: write
-      id-token: write
-      actions: read
-    secrets: inherit
-    with:
-      image: ${{ needs.build-app.outputs.image }}
-      team: k9saksbehandling
-
   deploy-dev:
     name: Deploy dev
     permissions:
