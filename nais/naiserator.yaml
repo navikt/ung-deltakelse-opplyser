@@ -1,0 +1,81 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: {{app}}
+  namespace: {{namespace}}
+  labels:
+    team: {{team}}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100M"
+spec:
+  image: {{ image }}
+  port: 8080
+  ingresses:
+  {{#each ingresses as |url|}}
+    - {{url}}
+  {{/each}}
+  tokenx:
+    enabled: true
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+        - application: ungdomsytelse-soknad
+      {{#each inboundRules}}
+        - application: {{app}}
+          namespace: {{namespace}}
+          cluster: {{cluster}}
+      {{/each}}
+    outbound:
+      rules:
+        - application: k9-selvbetjening-oppslag
+      external:
+        {{#each externalHosts as |host|}}
+        - host: {{host}}
+        {{/each}}
+  liveness:
+    path: /health/liveness
+    initialDelay: 60
+    timeout: 1
+    periodSeconds: 5
+    failureThreshold: 10
+  readiness:
+    path: /health/readiness
+    initialDelay: 60
+    timeout: 1
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 3072Mi
+    requests:
+      cpu: 100m
+      memory: 1536Mi
+  replicas:
+    min: {{minReplicas}}
+    max: {{maxReplicas}}
+    cpuThresholdPercentage: 90
+  prometheus:
+    enabled: true
+    path: /metrics
+  observability:
+    autoInstrumentation:
+      enabled: {{observabilityEnabled}}
+      runtime: java
+  gcp:
+    sqlInstances:
+      - type: {{ database.type }}
+        name: {{ database.name }}
+        tier: {{ database.tier }}
+        diskSize: {{ database.diskSize }}
+        diskAutoresize: {{ database.diskAutoresize }}
+        highAvailability: {{ database.highAvailability }}
+        databases:
+          - name: {{ database.name }}
+          - envVarPrefix: {{ database.envVarPrefix }}
+  env:
+  {{#each env}}
+   - name: {{@key}}
+     value: "{{this}}"
+  {{/each}}

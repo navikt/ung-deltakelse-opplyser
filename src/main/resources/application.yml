@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: # Settes i nais/<cluster>.json
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health, prometheus
+      path-mapping:
+        prometheus: /metrics

@@ -1,0 +1,97 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{app}}-alerts
+  namespace: {{namespace}}
+  labels:
+    team: {{team}}
+spec:
+  groups:
+    - name: {{app}}-alerts
+      rules:
+        - alert: Applikasjon nede
+          expr: kube_deployment_status_replicas_available{deployment="{{app}}"} == 0
+          for: 5m
+          annotations:
+            consequence: Ingen søknader blir prosessert
+            action: "`kubectl describe pod <podname>` -> `kubectl logs <podname>`"
+            summary: "App \{{ $labels.deployment }} er nede i namespace \{{ $labels.namespace }}"
+          labels:
+            namespace: {{namespace}}
+            severity: danger
+
+        - alert: Helsesjekk feiler
+          expr: floor(increase(http_server_requests_seconds_count{app="{{app}}", status!~"200", uri="/health/**"}[3m])) > 0
+          for: 5m
+          annotations:
+            consequence: Prosessering av stream feiler.
+            action: "`kubectl describe pod <podname>` -> `kubectl logs <podname>`"
+            summary: "Helsesjekk for app \{{ $labels.app }} feiler med \{{ $labels.exception }} i namespace \{{ $labels.namespace }}"
+          labels:
+            namespace: {{namespace}}
+            severity: danger
+
+        - alert: Kafka stream nede
+          expr: sum by (app, pod, container, namespace, client_id) (increase(kafka_stream_failed_stream_threads_total{app="{{app}}"} [3m])) > 10
+          for: 5m
+          annotations:
+            consequence: Prosessering av stream feiler.
+            action: "`kubectl logs \{{ $labels.pod}} -c \{{ $labels.container }} -n \{{ $labels.namespace }}`"
+            summary: "Stream \{{ $labels.client_id }} feiler."
+          labels:
+            namespace: {{namespace}}
+            severity: danger
+
+        - alert: Høy andel error i logger
+          expr: sum by (app, container, pod, namespace) (floor(increase(logback_events_total{app="{{app}}", level="error"} [3m]))) > 0
+          for: 5m
+          annotations:
+            action: "`kubectl logs \{{ $labels.pod }} -c \{{ $labels.container }} -n \{{ $labels.namespace }}`"
+            summary: "Høy andel error i logger for app \{{ $labels.app }} feiler med \{{ $labels.exception }} i namespace \{{ $labels.namespace }}"
+          labels:
+            namespace: {{namespace}}
+            severity: danger
+
+        - alert: Høy andel warning i logger
+          expr: sum by (app, container, pod, namespace) (floor(increase(logback_events_total{app="{{app}}", level="warning"} [3m]))) > 0
+          for: 5m
+          annotations:
+            action: "`kubectl logs \{{ $labels.pod }} -c \{{ $labels.container }} -n \{{ $labels.namespace }}`"
+            summary: "Høy andel error i logger for app \{{ $labels.app }} feiler med \{{ $labels.exception }} i namespace \{{ $labels.namespace }}"
+          labels:
+            namespace: {{namespace}}
+            severity: warning
+
+        - alert: Publisering av meldinger feiler
+          expr: ceil(increase(spring_kafka_template_seconds_count{result="failure", app="{{app}}"}[3m])) > 0
+          for: 1m
+          annotations:
+            summary: "Publisering av melding med \{{ $labels.name }} feiler med  \{{ $labels.exception }}. Sjekk loggene for å finne ut hvorfor dette feiler."
+            action: "`kubectl logs \{{ $labels.pod }} -n \{{ $labels.namespace }} -c \{{ $labels.app }}`"
+          labels:
+            namespace: {{namespace}}
+            severity: danger
+
+        - alert: Høy andel HTTP serverfeil (5xx responser)
+          expr: floor(increase(http_server_requests_seconds_count{status=~"5.*", app="{{app}}"}[3m])) > 1
+          for: 1m
+          annotations:
+            summary: "Følgende request feilet: `Status \{{ $labels.status }} - \{{ $labels.method }} \{{ $labels.uri }}`.\n
+                      Grunn:\n ```\{{ $labels.problem_details }}```\n
+                      Sjekk loggene for å se hvorfor dette feiler."
+            action: "`kubectl logs \{{ $labels.pod }} -n \{{ $labels.namespace }} -c \{{ $labels.app }}`"
+          labels:
+            namespace: {{namespace}}
+            severity: critical
+
+        - alert: Høy andel HTTP klientfeil (4xx responser)
+          expr: floor(increase(http_server_requests_seconds_count{status=~"4.*", status!~"404|401|403", app="{{app}}"}[3m])) > 0
+          for: 1m
+          annotations:
+            summary: "Følgende request feilet: `Status \{{ $labels.status }} - \{{ $labels.method }} \{{ $labels.uri }}`.\n
+                      Grunn:\n ```\{{ $labels.problem_details }}```\n
+                      Sjekk loggene for å se hvorfor dette feiler."
+            action: "`kubectl logs \{{ $labels.pod }} -n \{{ $labels.namespace }} -c \{{ $labels.app }}`"
+          labels:
+            namespace: {{namespace}}
+            severity: critical

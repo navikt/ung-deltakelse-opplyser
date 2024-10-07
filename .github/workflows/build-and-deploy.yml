@@ -1,0 +1,77 @@
+# This workflow trigger on push to any branch.
+name: Build
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENCE'
+      - 'CODEOWNERS'
+      - '.github/workflows/apply-alerts.yml'
+      - 'nais/alerts.yml'
+    branches:
+
+jobs:
+  test:
+    uses: navikt/sif-gha-workflows/.github/workflows/gradle-test.yml@main
+    permissions:
+      contents: read
+    secrets: inherit
+    with:
+      readertoken: true
+      buildcommand: './gradlew check'
+      javaversion: 21
+
+  codeql:
+    uses: navikt/sif-gha-workflows/.github/workflows/gradle-codeql.yml@main
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+      security-events: write
+    secrets: inherit
+    with:
+      readertoken: true
+      package-command: './gradlew clean build -x test'
+      branch: main
+      javaversion: 21
+
+  build:
+    uses: navikt/sif-gha-workflows/.github/workflows/gradle-build.yml@main
+    if: startsWith(github.ref, 'refs/heads/dev-') || startsWith(github.ref, 'refs/heads/main') || github.event.deployment.payload.triggered # Build and push docker if branch is either main or dev-*
+    permissions:
+      contents: write
+      id-token: write
+    secrets: inherit
+    with:
+      team: k9saksbehandling
+      readertoken: true
+      buildcommand: '--configuration-cache build -x test'
+      javaversion: 21
+
+  trivy:
+    needs: [ build ]
+    if: startsWith(github.ref, 'refs/heads/dev-') || startsWith(github.ref, 'refs/heads/main') || github.event.deployment.payload.triggered # Build and push docker if branch is either main or dev-*
+    uses: navikt/sif-gha-workflows/.github/workflows/trivy.yml@main
+    permissions:
+      contents: write
+      security-events: write
+      id-token: write
+      actions: read
+    secrets: inherit
+    with:
+      image: ${{ needs.build.outputs.image }}
+      team: k9saksbehandling
+
+  deploy:
+    needs: [ test, build ]
+    if: startsWith(github.ref, 'refs/heads/dev-') || startsWith(github.ref, 'refs/heads/main') # Deploy if branch is either main or dev-*
+    uses: navikt/sif-gha-workflows/.github/workflows/gradle-deploy.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+    with:
+      image: ${{ needs.build.outputs.image }}
+      environment: gcp
+      deploy-prod: ${{ startsWith(github.ref, 'refs/heads/main') }}

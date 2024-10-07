@@ -1,0 +1,32 @@
+version: 2
+registries:
+  k9-felles:
+    type: maven-repository
+    url: https://maven.pkg.github.com/navikt/ung-deltakelse-opplyser
+    username: x-access-token
+    password: ${{secrets.READER_TOKEN}}
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
+    groups:
+      github:
+        patterns:
+          - "*"
+
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: daily
+    registries:
+      - k9-felles
+    groups:
+      gradle:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: daily
