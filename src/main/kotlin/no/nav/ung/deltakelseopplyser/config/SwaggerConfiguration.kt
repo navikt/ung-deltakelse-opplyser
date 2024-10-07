@@ -39,7 +39,7 @@ class SwaggerConfiguration {
     }
 
     private fun tokenXApiToken(): SecurityScheme {
-        val audience = "dev-gcp:k9saksbehandling:ung-deltaker-opplyser"
+        val audience = "dev-gcp:k9saksbehandling:ung-deltakelse-opplyser"
 
         return SecurityScheme()
             .type(SecurityScheme.Type.HTTP)
