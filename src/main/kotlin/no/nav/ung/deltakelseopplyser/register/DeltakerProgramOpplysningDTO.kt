@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.util.*
 
 data class DeltakerProgramOpplysningDTO(
-    val id: UUID,
+    val id: UUID? = null,
     val deltakerIdent: String,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate? = null,
