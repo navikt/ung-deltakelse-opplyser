@@ -33,8 +33,14 @@ class UngprogramregisterService(private val repository: UngdomsprogramRepository
         id: UUID,
         deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO,
     ): DeltakerProgramOpplysningDTO {
-        forsikreEksitererIProgram(id)
-        val updatedUngdomsprogramDAO = repository.save(deltakerProgramOpplysningDTO.mapToDAO())
+        val ungdomsprogramDAO = forsikreEksitererIProgram(id)
+
+        val updatedUngdomsprogramDAO = repository.save(
+            ungdomsprogramDAO.copy(
+                fraOgMed = deltakerProgramOpplysningDTO.fraOgMed,
+                tilOgMed = deltakerProgramOpplysningDTO.tilOgMed
+            )
+        )
         return updatedUngdomsprogramDAO.mapToDTO()
     }
 
