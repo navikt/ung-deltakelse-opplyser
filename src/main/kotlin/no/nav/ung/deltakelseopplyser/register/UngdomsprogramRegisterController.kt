@@ -28,7 +28,7 @@ import java.util.*
     )
 )
 class UngdomsprogramRegisterController(
-    private val registerService: UngprogramregisterService,
+    private val registerService: UngdomsprogramregisterService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder
 ) {
 

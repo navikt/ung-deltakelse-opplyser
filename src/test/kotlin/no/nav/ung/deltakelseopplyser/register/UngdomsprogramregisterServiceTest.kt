@@ -24,11 +24,11 @@ import java.time.LocalDate
 @AutoConfigureTestDatabase(
     replace = AutoConfigureTestDatabase.Replace.NONE
 )
-@Import(UngprogramregisterService::class)
-class UngprogramregisterServiceTest {
+@Import(UngdomsprogramregisterService::class)
+class UngdomsprogramregisterServiceTest {
 
     @Autowired
-    lateinit var ungprogramregisterService: UngprogramregisterService
+    lateinit var ungdomsprogramregisterService: UngdomsprogramregisterService
 
     @Autowired
     lateinit var repository: UngdomsprogramRepository
@@ -50,7 +50,7 @@ class UngprogramregisterServiceTest {
             fraOgMed = LocalDate.now(),
             tilOgMed = null
         )
-        val innmelding = ungprogramregisterService.leggTilIProgram(dto)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
@@ -64,7 +64,7 @@ class UngprogramregisterServiceTest {
             fraOgMed = LocalDate.now(),
             tilOgMed = LocalDate.now().plusDays(10)
         )
-        val innmelding = ungprogramregisterService.leggTilIProgram(dto)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
@@ -78,9 +78,9 @@ class UngprogramregisterServiceTest {
             fraOgMed = LocalDate.now(),
             tilOgMed = null
         )
-        val innmelding = ungprogramregisterService.leggTilIProgram(dto)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val utmelding = ungprogramregisterService.fjernFraProgram(innmelding.id!!)
+        val utmelding = ungdomsprogramregisterService.fjernFraProgram(innmelding.id!!)
 
         assertTrue(utmelding)
     }
@@ -92,14 +92,14 @@ class UngprogramregisterServiceTest {
             fraOgMed = LocalDate.now(),
             tilOgMed = null
         )
-        val innmelding = ungprogramregisterService.leggTilIProgram(dto)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         val oppdatertDto = DeltakerProgramOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = LocalDate.now(),
             tilOgMed = LocalDate.now().plusDays(10)
         )
-        val oppdatertInnmelding = ungprogramregisterService.oppdaterProgram(innmelding.id!!, oppdatertDto)
+        val oppdatertInnmelding = ungdomsprogramregisterService.oppdaterProgram(innmelding.id!!, oppdatertDto)
 
         assertNotNull(oppdatertInnmelding)
         assertEquals(oppdatertDto.deltakerIdent, oppdatertInnmelding.deltakerIdent)
@@ -113,9 +113,9 @@ class UngprogramregisterServiceTest {
             fraOgMed = LocalDate.now(),
             tilOgMed = null
         )
-        val innmelding = ungprogramregisterService.leggTilIProgram(dto)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val hentetDto = ungprogramregisterService.hentFraProgram(innmelding.id!!)
+        val hentetDto = ungdomsprogramregisterService.hentFraProgram(innmelding.id!!)
 
         assertNotNull(hentetDto)
         assertEquals(dto.deltakerIdent, hentetDto.deltakerIdent)
