@@ -64,7 +64,7 @@ class UngdomsprogramRegisterVeilederController(
 
     @DeleteMapping("/fjern/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Fjern en deltakelse fra ungdomsprogrammet")
-    @ResponseStatus(HttpStatus.ACCEPTED)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun fjernFraProgram(@PathVariable id: UUID) {
         registerService.fjernFraProgram(id)
     }
