@@ -31,7 +31,7 @@ import java.util.*
         combineWithOr = true
     )
 )
-@Tag(name = "Veielder", description = "API for å legge til, hente, oppdatere og fjerne deltakelser i ungdomsprogrammet")
+@Tag(name = "Veilder", description = "API for å legge til, hente, oppdatere og fjerne deltakelser i ungdomsprogrammet")
 class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
 ) {
