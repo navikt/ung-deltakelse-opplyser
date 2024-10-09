@@ -14,8 +14,12 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
     }
 
     fun leggTilIProgram(deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO): DeltakerProgramOpplysningDTO {
+        val eksisterendeDeltakelser = hentAlleForDeltaker(deltakerProgramOpplysningDTO.deltakerIdent)
+        deltakerProgramOpplysningDTO.verifiserIkkeOverlapper(eksisterendeDeltakelser)
+
         logger.info("Legger til deltaker i programmet: $deltakerProgramOpplysningDTO")
         val ungdomsprogramDAO = repository.save(deltakerProgramOpplysningDTO.mapToDAO())
+
         return ungdomsprogramDAO.mapToDTO()
     }
 
@@ -71,6 +75,31 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         logger.info("Fant ${ungdomsprogramDAO.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAO.map { it.mapToDTO() }
+    }
+
+    private fun verifiserIkkeOverlapper(deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO) {
+        val eksisterendeProgram = hentAlleForDeltaker(deltakerProgramOpplysningDTO.deltakerIdent)
+            .sortedWith(compareByDescending { it.fraOgMed.dayOfWeek })
+
+        eksisterendeProgram.forEach { eksisterende ->
+            val nyFra = deltakerProgramOpplysningDTO.fraOgMed
+            val nyTil = deltakerProgramOpplysningDTO.tilOgMed ?: nyFra.plusYears(1)
+            val eksisterendeFra = eksisterende.fraOgMed
+            val eksisterendeTil = eksisterende.tilOgMed ?: eksisterendeFra.plusYears(1)
+
+            if (!(nyTil.isBefore(eksisterendeFra) || nyFra.isAfter(eksisterendeTil))) {
+                val feilmelding = "[$nyFra - $nyTil] overlapper med [$eksisterendeFra - $eksisterendeTil]"
+                logger.error(feilmelding)
+                throw ErrorResponseException(
+                    HttpStatus.BAD_REQUEST,
+                    ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        feilmelding
+                    ),
+                    null
+                )
+            }
+        }
     }
 
     private fun UngdomsprogramDAO.mapToDTO(): DeltakerProgramOpplysningDTO {
