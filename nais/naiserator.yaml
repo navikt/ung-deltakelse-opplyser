@@ -23,6 +23,7 @@ spec:
     inbound:
       rules:
         - application: ungdomsytelse-soknad
+        - application: ungdomsytelse-veileder
       {{#each inboundRules}}
         - application: {{app}}
           namespace: {{namespace}}
