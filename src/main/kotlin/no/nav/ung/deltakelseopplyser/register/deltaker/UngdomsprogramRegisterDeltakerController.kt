@@ -11,15 +11,10 @@ import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ProblemDetail
-import org.springframework.web.ErrorResponseException
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.*
-
 
 @RestController
 @RequestMapping("/deltakelse/register")
@@ -36,11 +31,8 @@ class UngdomsprogramRegisterDeltakerController(
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
 
-    /**
-     * Henter alle opplysninger for en deltaker i ungdomsprogrammet.
-     */
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Hent alle opplysninger for en deltaker i ungdomsprogrammet")
+    @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(): List<DeltakerProgramOpplysningDTO> {
         val personIdent = tokenValidationContextHolder.personIdent()

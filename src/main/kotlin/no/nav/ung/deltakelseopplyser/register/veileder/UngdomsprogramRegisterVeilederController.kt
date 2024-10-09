@@ -31,46 +31,28 @@ import java.util.*
         combineWithOr = true
     )
 )
-@Tag(name = "Veielder", description = "API for å legge til, hente, oppdatere og fjerne deltakere i ungdomsprogrammet")
+@Tag(name = "Veielder", description = "API for å legge til, hente, oppdatere og fjerne deltakelser i ungdomsprogrammet")
 class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
 ) {
 
-    /**
-     * Legger til en deltaker i ungdomsprogrammet.
-     */
     @PostMapping("/legg-til", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Legg til en deltaker i ungdomsprogrammet")
+    @Operation(summary = "Legg til en ny deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.CREATED)
     fun leggTilIProgram(@RequestBody deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO): DeltakerProgramOpplysningDTO {
         return registerService.leggTilIProgram(deltakerProgramOpplysningDTO)
     }
 
-    /**
-     * Henter opplysninger for en deltaker i ungdomsprogrammet.
-     */
-    @GetMapping("/hent/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Hent opplysninger for en deltaker i ungdomsprogrammet")
-    @ResponseStatus(HttpStatus.OK)
-    fun hentOpplysningForDeltaker(@PathVariable id: UUID): DeltakerProgramOpplysningDTO {
-        return registerService.hentFraProgram(id)
-    }
 
-    /**
-     * Henter alle opplysninger for en deltaker i ungdomsprogrammet.
-     */
-    @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Hent alle opplysninger for en deltaker i ungdomsprogrammet")
+    @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): List<DeltakerProgramOpplysningDTO> {
         return registerService.hentAlleForDeltaker(deltakerIdent = deltakerOpplysningDTO.deltakerIdent)
     }
 
-    /**
-     * Oppdaterer opplysninger for en deltaker i ungdomsprogrammet.
-     */
     @PutMapping("/oppdater/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Oppdater opplysninger for en deltaker i ungdomsprogrammet")
+    @Operation(summary = "Oppdater opplysninger for en deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun oppdaterFraProgram(
         @PathVariable id: UUID,
@@ -79,11 +61,9 @@ class UngdomsprogramRegisterVeilederController(
         return registerService.oppdaterProgram(id, deltakerProgramOpplysningDTO)
     }
 
-    /**
-     * Fjerner en deltaker fra ungdomsprogrammet.
-     */
+
     @DeleteMapping("/fjern/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Fjern en deltaker fra ungdomsprogrammet")
+    @Operation(summary = "Fjern en deltakelse fra ungdomsprogrammet")
     @ResponseStatus(HttpStatus.ACCEPTED)
     fun fjernFraProgram(@PathVariable id: UUID) {
         registerService.fjernFraProgram(id)
