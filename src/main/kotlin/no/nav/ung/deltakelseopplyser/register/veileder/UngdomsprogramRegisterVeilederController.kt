@@ -1,11 +1,12 @@
-package no.nav.ung.deltakelseopplyser.register
+package no.nav.ung.deltakelseopplyser.register.veileder
 
 import io.swagger.v3.oas.annotations.Operation
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.utils.personIdent
+import no.nav.ung.deltakelseopplyser.register.DeltakerOpplysningDTO
+import no.nav.ung.deltakelseopplyser.register.DeltakerProgramOpplysningDTO
+import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -14,12 +15,14 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
 
-@RestController("/ungdomsprogramregister")
+@RestController
+@RequestMapping("/veileder/register")
 @RequiredIssuers(
     ProtectedWithClaims(
         issuer = TOKEN_X,
@@ -27,9 +30,8 @@ import java.util.*
         combineWithOr = true
     )
 )
-class UngdomsprogramRegisterController(
+class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
-    private val tokenValidationContextHolder: SpringTokenValidationContextHolder
 ) {
 
     /**
@@ -58,9 +60,8 @@ class UngdomsprogramRegisterController(
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle opplysninger for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(): List<DeltakerProgramOpplysningDTO> {
-        val personIdent = tokenValidationContextHolder.personIdent()
-        return registerService.hentAlleForDeltaker(deltakerIdent = personIdent)
+    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): List<DeltakerProgramOpplysningDTO> {
+        return registerService.hentAlleForDeltaker(deltakerIdent = deltakerOpplysningDTO.deltakerIdent)
     }
 
     /**
