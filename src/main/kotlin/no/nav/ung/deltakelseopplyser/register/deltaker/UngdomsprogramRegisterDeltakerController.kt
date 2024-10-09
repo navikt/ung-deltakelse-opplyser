@@ -37,27 +37,6 @@ class UngdomsprogramRegisterDeltakerController(
 ) {
 
     /**
-     * Henter opplysninger for en deltaker i ungdomsprogrammet.
-     */
-    @GetMapping("/hent/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Hent opplysninger for en deltaker i ungdomsprogrammet")
-    @ResponseStatus(HttpStatus.OK)
-    fun hentOpplysningForDeltaker(@PathVariable id: UUID): DeltakerProgramOpplysningDTO {
-        val programOpplysningDTO = registerService.hentFraProgram(id)
-        if (programOpplysningDTO.deltakerIdent != tokenValidationContextHolder.personIdent()) {
-            throw ErrorResponseException(
-                HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN,
-                    "Programopplysningene tilhører ikke deltaker. Tilgang nektet."
-                ),
-                null
-            )
-        }
-        return programOpplysningDTO
-    }
-
-    /**
      * Henter alle opplysninger for en deltaker i ungdomsprogrammet.
      */
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
