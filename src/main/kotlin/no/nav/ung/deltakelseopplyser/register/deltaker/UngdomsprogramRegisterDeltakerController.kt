@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.register.deltaker
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
@@ -21,7 +22,7 @@ import java.util.*
 
 
 @RestController
-@RequestMapping("/deltaker/register")
+@RequestMapping("/deltakelse/register")
 @RequiredIssuers(
     ProtectedWithClaims(
         issuer = TOKEN_X,
@@ -29,6 +30,7 @@ import java.util.*
         combineWithOr = true
     )
 )
+@Tag(name = "Deltakelse", description = "API for å hente opplysninger om deltakelse i ungdomsprogrammet")
 class UngdomsprogramRegisterDeltakerController(
     private val registerService: UngdomsprogramregisterService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,

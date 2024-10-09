@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.register.veileder
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
@@ -30,6 +31,7 @@ import java.util.*
         combineWithOr = true
     )
 )
+@Tag(name = "Veielder", description = "API for å legge til, hente, oppdatere og fjerne deltakere i ungdomsprogrammet")
 class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
 ) {
