@@ -88,7 +88,7 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
             val eksisterendeTil = eksisterende.tilOgMed ?: eksisterendeFra.plusYears(1)
 
             if (!(nyTil.isBefore(eksisterendeFra) || nyFra.isAfter(eksisterendeTil))) {
-                val feilmelding = "[$nyFra - $nyTil] overlapper med [$eksisterendeFra - $eksisterendeTil]"
+                val feilmelding = "Ny periode[$nyFra - $nyTil] overlapper med eksisterende periode[$eksisterendeFra - $eksisterendeTil]"
                 logger.error(feilmelding)
                 throw ErrorResponseException(
                     HttpStatus.BAD_REQUEST,
