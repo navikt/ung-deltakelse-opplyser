@@ -77,31 +77,6 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         return ungdomsprogramDAO.map { it.mapToDTO() }
     }
 
-    private fun verifiserIkkeOverlapper(deltakelseOpplysningDTO: DeltakelseOpplysningDTO) {
-        val eksisterendeProgram = hentAlleForDeltaker(deltakelseOpplysningDTO.deltakerIdent)
-            .sortedWith(compareByDescending { it.fraOgMed.dayOfWeek })
-
-        eksisterendeProgram.forEach { eksisterende ->
-            val nyFra = deltakelseOpplysningDTO.fraOgMed
-            val nyTil = deltakelseOpplysningDTO.tilOgMed ?: nyFra.plusYears(1)
-            val eksisterendeFra = eksisterende.fraOgMed
-            val eksisterendeTil = eksisterende.tilOgMed ?: eksisterendeFra.plusYears(1)
-
-            if (!(nyTil.isBefore(eksisterendeFra) || nyFra.isAfter(eksisterendeTil))) {
-                val feilmelding = "Ny periode[$nyFra - $nyTil] overlapper med eksisterende periode[$eksisterendeFra - $eksisterendeTil]"
-                logger.error(feilmelding)
-                throw ErrorResponseException(
-                    HttpStatus.BAD_REQUEST,
-                    ProblemDetail.forStatusAndDetail(
-                        HttpStatus.BAD_REQUEST,
-                        feilmelding
-                    ),
-                    null
-                )
-            }
-        }
-    }
-
     private fun UngdomsprogramDAO.mapToDTO(): DeltakelseOpplysningDTO {
         return DeltakelseOpplysningDTO(
             id = id,
