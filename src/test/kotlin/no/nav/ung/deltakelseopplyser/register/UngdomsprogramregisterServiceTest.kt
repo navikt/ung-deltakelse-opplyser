@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import no.nav.ung.deltakelseopplyser.validation.ValidationErrorResponseException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -72,11 +73,11 @@ class UngdomsprogramregisterServiceTest {
         val deltakelse = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         // Skal feile fordi deltaker allerede er meldt inn i programmet uten t.o.m dato.
-        assertThrows<ErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
+        assertThrows<ValidationErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
 
         // Skal feile fordi deltaker allerede er meldt inn i programmet med t.o.m dato.
         ungdomsprogramregisterService.oppdaterProgram(deltakelse.id!!, dto.copy(tilOgMed = onsdag))
-        assertThrows<ErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
+        assertThrows<ValidationErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
     }
 
     @Test

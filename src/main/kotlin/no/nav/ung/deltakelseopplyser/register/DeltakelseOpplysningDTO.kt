@@ -1,8 +1,9 @@
 package no.nav.ung.deltakelseopplyser.register
 
-import org.springframework.http.HttpStatus
-import org.springframework.http.ProblemDetail
-import org.springframework.web.ErrorResponseException
+import no.nav.ung.deltakelseopplyser.validation.ParameterType
+import no.nav.ung.deltakelseopplyser.validation.ValidationErrorResponseException
+import no.nav.ung.deltakelseopplyser.validation.ValidationProblemDetails
+import no.nav.ung.deltakelseopplyser.validation.Violation
 import java.time.LocalDate
 import java.util.*
 
@@ -23,13 +24,17 @@ data class DeltakelseOpplysningDTO(
 
             if (!(nyTil.isBefore(eksisterendeFra) || nyFra.isAfter(eksisterendeTil))) {
                 val feilmelding = "[$nyFra - $nyTil] overlapper med [$eksisterendeFra - $eksisterendeTil]"
-                throw ErrorResponseException(
-                    HttpStatus.BAD_REQUEST,
-                    ProblemDetail.forStatusAndDetail(
-                        HttpStatus.BAD_REQUEST,
-                        feilmelding
-                    ),
-                    null
+                throw ValidationErrorResponseException(
+                    ValidationProblemDetails(
+                        setOf(
+                            Violation(
+                                parameterName = "deltakelseOpplysningDTO.fraOgMed",
+                                parameterType = ParameterType.ENTITY,
+                                reason = feilmelding,
+                                invalidValue = fraOgMed
+                            )
+                        )
+                    )
                 )
             }
         }
