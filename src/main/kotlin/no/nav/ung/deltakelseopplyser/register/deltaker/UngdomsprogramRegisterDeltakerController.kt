@@ -6,7 +6,7 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.register.DeltakerProgramOpplysningDTO
+import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
@@ -34,7 +34,7 @@ class UngdomsprogramRegisterDeltakerController(
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(): List<DeltakerProgramOpplysningDTO> {
+    fun hentAlleProgramopplysningerForDeltaker(): List<DeltakelseOpplysningDTO> {
         val personIdent = tokenValidationContextHolder.personIdent()
         return registerService.hentAlleForDeltaker(deltakerIdent = personIdent)
     }

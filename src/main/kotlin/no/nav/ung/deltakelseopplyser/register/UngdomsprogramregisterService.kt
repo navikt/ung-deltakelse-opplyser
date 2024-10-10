@@ -13,12 +13,12 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
     }
 
-    fun leggTilIProgram(deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO): DeltakerProgramOpplysningDTO {
-        val eksisterendeDeltakelser = hentAlleForDeltaker(deltakerProgramOpplysningDTO.deltakerIdent)
-        deltakerProgramOpplysningDTO.verifiserIkkeOverlapper(eksisterendeDeltakelser)
+    fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
+        val eksisterendeDeltakelser = hentAlleForDeltaker(deltakelseOpplysningDTO.deltakerIdent)
+        deltakelseOpplysningDTO.verifiserIkkeOverlapper(eksisterendeDeltakelser)
 
-        logger.info("Legger til deltaker i programmet: $deltakerProgramOpplysningDTO")
-        val ungdomsprogramDAO = repository.save(deltakerProgramOpplysningDTO.mapToDAO())
+        logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
+        val ungdomsprogramDAO = repository.save(deltakelseOpplysningDTO.mapToDAO())
 
         return ungdomsprogramDAO.mapToDTO()
     }
@@ -49,27 +49,27 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
 
     fun oppdaterProgram(
         id: UUID,
-        deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO,
-    ): DeltakerProgramOpplysningDTO {
-        logger.info("Oppdaterer program for deltaker med $deltakerProgramOpplysningDTO")
+        deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
+    ): DeltakelseOpplysningDTO {
+        logger.info("Oppdaterer program for deltaker med $deltakelseOpplysningDTO")
         val eksiterende = forsikreEksitererIProgram(id)
 
         val oppdatert = repository.save(
             eksiterende.copy(
-                fraOgMed = deltakerProgramOpplysningDTO.fraOgMed,
-                tilOgMed = deltakerProgramOpplysningDTO.tilOgMed
+                fraOgMed = deltakelseOpplysningDTO.fraOgMed,
+                tilOgMed = deltakelseOpplysningDTO.tilOgMed
             )
         )
         return oppdatert.mapToDTO()
     }
 
-    fun hentFraProgram(id: UUID): DeltakerProgramOpplysningDTO {
+    fun hentFraProgram(id: UUID): DeltakelseOpplysningDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreEksitererIProgram(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
-    fun hentAlleForDeltaker(deltakerIdent: String): List<DeltakerProgramOpplysningDTO> {
+    fun hentAlleForDeltaker(deltakerIdent: String): List<DeltakelseOpplysningDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val ungdomsprogramDAO = repository.findByDeltakerIdent(deltakerIdent)
         logger.info("Fant ${ungdomsprogramDAO.size} programopplysninger for deltaker.")
@@ -77,13 +77,13 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         return ungdomsprogramDAO.map { it.mapToDTO() }
     }
 
-    private fun verifiserIkkeOverlapper(deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO) {
-        val eksisterendeProgram = hentAlleForDeltaker(deltakerProgramOpplysningDTO.deltakerIdent)
+    private fun verifiserIkkeOverlapper(deltakelseOpplysningDTO: DeltakelseOpplysningDTO) {
+        val eksisterendeProgram = hentAlleForDeltaker(deltakelseOpplysningDTO.deltakerIdent)
             .sortedWith(compareByDescending { it.fraOgMed.dayOfWeek })
 
         eksisterendeProgram.forEach { eksisterende ->
-            val nyFra = deltakerProgramOpplysningDTO.fraOgMed
-            val nyTil = deltakerProgramOpplysningDTO.tilOgMed ?: nyFra.plusYears(1)
+            val nyFra = deltakelseOpplysningDTO.fraOgMed
+            val nyTil = deltakelseOpplysningDTO.tilOgMed ?: nyFra.plusYears(1)
             val eksisterendeFra = eksisterende.fraOgMed
             val eksisterendeTil = eksisterende.tilOgMed ?: eksisterendeFra.plusYears(1)
 
@@ -102,8 +102,8 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         }
     }
 
-    private fun UngdomsprogramDAO.mapToDTO(): DeltakerProgramOpplysningDTO {
-        return DeltakerProgramOpplysningDTO(
+    private fun UngdomsprogramDAO.mapToDTO(): DeltakelseOpplysningDTO {
+        return DeltakelseOpplysningDTO(
             id = id,
             deltakerIdent = deltakerIdent,
             fraOgMed = fraOgMed,
@@ -111,7 +111,7 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         )
     }
 
-    private fun DeltakerProgramOpplysningDTO.mapToDAO(): UngdomsprogramDAO {
+    private fun DeltakelseOpplysningDTO.mapToDAO(): UngdomsprogramDAO {
         return UngdomsprogramDAO(
             deltakerIdent = deltakerIdent,
             fraOgMed = fraOgMed,

@@ -6,12 +6,11 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.register.DeltakerOpplysningDTO
-import no.nav.ung.deltakelseopplyser.register.DeltakerProgramOpplysningDTO
+import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -39,15 +38,15 @@ class UngdomsprogramRegisterVeilederController(
     @PostMapping("/legg-til", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Legg til en ny deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.CREATED)
-    fun leggTilIProgram(@RequestBody deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO): DeltakerProgramOpplysningDTO {
-        return registerService.leggTilIProgram(deltakerProgramOpplysningDTO)
+    fun leggTilIProgram(@RequestBody deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
+        return registerService.leggTilIProgram(deltakelseOpplysningDTO)
     }
 
 
     @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): List<DeltakerProgramOpplysningDTO> {
+    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): List<DeltakelseOpplysningDTO> {
         return registerService.hentAlleForDeltaker(deltakerIdent = deltakerOpplysningDTO.deltakerIdent)
     }
 
@@ -56,9 +55,9 @@ class UngdomsprogramRegisterVeilederController(
     @ResponseStatus(HttpStatus.OK)
     fun oppdaterFraProgram(
         @PathVariable id: UUID,
-        @RequestBody deltakerProgramOpplysningDTO: DeltakerProgramOpplysningDTO,
-    ): DeltakerProgramOpplysningDTO {
-        return registerService.oppdaterProgram(id, deltakerProgramOpplysningDTO)
+        @RequestBody deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
+    ): DeltakelseOpplysningDTO {
+        return registerService.oppdaterProgram(id, deltakelseOpplysningDTO)
     }
 
 

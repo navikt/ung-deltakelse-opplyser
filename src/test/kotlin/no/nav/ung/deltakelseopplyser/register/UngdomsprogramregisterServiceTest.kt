@@ -47,7 +47,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
-        val dto = DeltakerProgramOpplysningDTO(
+        val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = LocalDate.now(),
             tilOgMed = null
@@ -64,7 +64,7 @@ class UngdomsprogramregisterServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
-        val dto = DeltakerProgramOpplysningDTO(
+        val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = mandag,
             tilOgMed = null
@@ -81,7 +81,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
-        val dto = DeltakerProgramOpplysningDTO(
+        val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = LocalDate.now(),
             tilOgMed = LocalDate.now().plusDays(10)
@@ -95,7 +95,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
-        val dto = DeltakerProgramOpplysningDTO(
+        val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = LocalDate.now(),
             tilOgMed = null
@@ -112,14 +112,14 @@ class UngdomsprogramregisterServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
-        val dto = DeltakerProgramOpplysningDTO(
+        val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = mandag,
             tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val oppdatertDto = DeltakerProgramOpplysningDTO(
+        val oppdatertDto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = mandag,
             tilOgMed = onsdag
@@ -133,7 +133,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Henter deltaker fra programmet`() {
-        val dto = DeltakerProgramOpplysningDTO(
+        val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = LocalDate.now(),
             tilOgMed = null

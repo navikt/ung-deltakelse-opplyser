@@ -6,13 +6,13 @@ import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
 import java.util.*
 
-data class DeltakerProgramOpplysningDTO(
+data class DeltakelseOpplysningDTO(
     val id: UUID? = null,
     val deltakerIdent: String,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate? = null,
 ) {
-    fun verifiserIkkeOverlapper(eksisterendeDeltakelser: List<DeltakerProgramOpplysningDTO>) {
+    fun verifiserIkkeOverlapper(eksisterendeDeltakelser: List<DeltakelseOpplysningDTO>) {
         val sorterteDeltakelser = eksisterendeDeltakelser.sortedWith(compareByDescending { it.fraOgMed.dayOfWeek })
 
         sorterteDeltakelser.forEach { eksisterendeDeltakelse ->
