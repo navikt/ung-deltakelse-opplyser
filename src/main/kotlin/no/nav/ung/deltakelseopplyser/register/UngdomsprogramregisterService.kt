@@ -124,7 +124,7 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant programopplysning for deltaker med id $id"
+                    it.detail = "Fant ingen deltakelse med id $id"
                 },
                 null
             )
