@@ -8,7 +8,7 @@ import org.springframework.web.ErrorResponseException
 import java.util.*
 
 @Service
-class UngdomsprogramregisterService(private val repository: UngdomsprogramRepository) {
+class UngdomsprogramregisterService(private val repository: UngdomsprogramDeltakelseRepository) {
     private companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
     }
@@ -77,7 +77,7 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         return ungdomsprogramDAO.map { it.mapToDTO() }
     }
 
-    private fun UngdomsprogramDAO.mapToDTO(): DeltakelseOpplysningDTO {
+    private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
         return DeltakelseOpplysningDTO(
             id = id,
             deltakerIdent = deltakerIdent,
@@ -86,15 +86,15 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramReposi
         )
     }
 
-    private fun DeltakelseOpplysningDTO.mapToDAO(): UngdomsprogramDAO {
-        return UngdomsprogramDAO(
+    private fun DeltakelseOpplysningDTO.mapToDAO(): UngdomsprogramDeltakelseDAO {
+        return UngdomsprogramDeltakelseDAO(
             deltakerIdent = deltakerIdent,
             fraOgMed = fraOgMed,
             tilOgMed = tilOgMed
         )
     }
 
-    private fun forsikreEksitererIProgram(id: UUID): UngdomsprogramDAO =
+    private fun forsikreEksitererIProgram(id: UUID): UngdomsprogramDeltakelseDAO =
         repository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,

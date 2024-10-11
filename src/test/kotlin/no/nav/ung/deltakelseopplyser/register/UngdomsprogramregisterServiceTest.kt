@@ -16,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
 
 
@@ -34,7 +33,7 @@ class UngdomsprogramregisterServiceTest {
     lateinit var ungdomsprogramregisterService: UngdomsprogramregisterService
 
     @Autowired
-    lateinit var repository: UngdomsprogramRepository
+    lateinit var repository: UngdomsprogramDeltakelseRepository
 
     @BeforeEach
     fun setUp() {
