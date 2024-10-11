@@ -9,7 +9,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
 
-@Entity(name = "ungdomsprogram_deltakelse")
+@Entity(name = "ungdomsprogram")
 data class UngdomsprogramDeltakelseDAO(
     @Column(name = "id") @Id val id: UUID = UUID.randomUUID(),
     @Column(name = "deltaker_ident") val deltakerIdent: String,

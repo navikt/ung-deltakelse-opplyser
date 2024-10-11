@@ -1,4 +1,4 @@
-CREATE TABLE ungdomsprogram_deltakelse
+CREATE TABLE ungdomsprogram
 (
     id             UUID PRIMARY KEY NOT NULL,
     deltaker_ident VARCHAR(20)      NOT NULL,
