@@ -23,13 +23,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("/veileder/register")
-@RequiredIssuers(
-    ProtectedWithClaims(
-        issuer = TOKEN_X,
-        claimMap = ["acr=Level4", "acr=idporten-loa-high"],
-        combineWithOr = true
-    )
-)
+@RequiredIssuers(ProtectedWithClaims(issuer = TOKEN_X))
 @Tag(name = "Veileder", description = "API for å legge til, hente, oppdatere og fjerne deltakelser i ungdomsprogrammet")
 class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
