@@ -24,6 +24,11 @@
       "app": "ungdomsytelse-soknad",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
+    },
+    {
+      "app": "k9-sak",
+      "namespace": "k9saksbehandling",
+      "cluster": "dev-fss"
     }
   ],
   "database": {

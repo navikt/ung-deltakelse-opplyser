@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser
 
 import com.nimbusds.jwt.SignedJWT
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
 import org.assertj.core.api.Assertions.assertThat
@@ -56,11 +57,14 @@ class ApplicationecurityTests {
     @MethodSource("endpointsProvider")
     fun `Forventer at autorisasjon på endepunkter fungerer som forventet`(endpoint: Endpoint) {
         // Kall på endepunkt med riktig token ikke gir 401 feil
-        testRestTemplate.assertNotEquals(
-            endpoint = endpoint,
-            expectedStatus = HttpStatus.UNAUTHORIZED,
-            token = mockOAuth2Server.hentToken()
-        )
+        endpoint.issuers.forEach { issuer ->
+            logger.info("Issuer: $issuer")
+            testRestTemplate.assertNotEquals(
+                endpoint = endpoint,
+                expectedStatus = HttpStatus.UNAUTHORIZED,
+                token = mockOAuth2Server.hentToken(issuerId = issuer)
+            )
+        }
 
         // Kall uten authorization header gir 401 feil
         testRestTemplate.assertEquals(
@@ -76,13 +80,15 @@ class ApplicationecurityTests {
         )
 
         // Kall på endepunkt med acr level 3 gir 401 feil
-        testRestTemplate.assertEquals(
-            endpoint = endpoint,
-            expectedStatus = HttpStatus.UNAUTHORIZED,
-            token = mockOAuth2Server.hentToken(claims = mapOf("acr" to "Level3"))
-        )
+        if (endpoint.issuers.contains("tokenx")) {
+            testRestTemplate.assertEquals(
+                endpoint = endpoint,
+                expectedStatus = HttpStatus.UNAUTHORIZED,
+                token = mockOAuth2Server.hentToken(claims = mapOf("acr" to "Level3"))
+            )
+        }
 
-        // Kall på endepunkt med ukjent issuer gir 401 feil`(endpoint: Endpoint) {
+        // Kall på endepunkt med ukjent issuer gir 401 feil
         testRestTemplate.assertEquals(
             endpoint = endpoint,
             expectedStatus = HttpStatus.UNAUTHORIZED,
@@ -110,31 +116,36 @@ class ApplicationecurityTests {
             applicationContext.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping::class.java)
         val apiMappings: MutableMap<RequestMappingInfo, HandlerMethod> = requestMappingHandlerMapping.handlerMethods
 
-        val endpointList = apiMappings.keys.mapNotNull { mappingInfo: RequestMappingInfo ->
-            logger.info("--> Endpoint: {}", mappingInfo.toString())
-            val requestMethod = mappingInfo.methodsCondition.methods.firstOrNull()
-            if (requestMethod == null) {
-                logger.warn("No request method found for mapping info: $mappingInfo")
-                return@mapNotNull null
+        val endpointList =
+            apiMappings.entries.mapNotNull { (mappingInfo: RequestMappingInfo, handlerMethod: HandlerMethod) ->
+                logger.info("--> Endpoint: {}", mappingInfo.toString())
+                val requestMethod = mappingInfo.methodsCondition.methods.firstOrNull()
+                if (requestMethod == null) {
+                    logger.warn("No request method found for mapping info: $mappingInfo")
+                    return@mapNotNull null
+                }
+                val pathPattern = mappingInfo.pathPatternsCondition!!.patterns.first()
+
+                val requiredIssuers: RequiredIssuers = handlerMethod.beanType.getAnnotation(RequiredIssuers::class.java)
+                val issuers = requiredIssuers.value.map { it.issuer }
+
+                var urlVariables: String? = null
+                if (pathPattern.hasPatternSyntax()) {
+                    println("Pattern syntax error: ${pathPattern.patternString}")
+                    urlVariables = UUID.randomUUID().toString()
+                }
+                val path = pathPattern.patternString
+
+                val contentType = mappingInfo.consumesCondition.consumableMediaTypes.firstOrNull()
+
+                Endpoint(
+                    method = requestMethod.asHttpMethod(),
+                    url = path,
+                    urlVariables = urlVariables,
+                    contentType = contentType,
+                    issuers = issuers
+                )
             }
-            val pathPattern = mappingInfo.pathPatternsCondition!!.patterns.first()
-
-            var urlVariables: String? = null
-            if (pathPattern.hasPatternSyntax()) {
-                println("Pattern syntax error: ${pathPattern.patternString}")
-                urlVariables = UUID.randomUUID().toString()
-            }
-            val path = pathPattern.patternString
-
-            val contentType = mappingInfo.consumesCondition.consumableMediaTypes.firstOrNull()
-
-            Endpoint(
-                method = requestMethod.asHttpMethod(),
-                url = path,
-                urlVariables = urlVariables,
-                contentType = contentType
-            )
-        }
 
         logger.info("Found endpoints: $endpointList")
         return endpointList
@@ -235,6 +246,7 @@ class ApplicationecurityTests {
         val url: String,
         val urlVariables: String? = null,
         val contentType: MediaType? = MediaType.APPLICATION_JSON,
+        val issuers: List<String>,
     ) {
         override fun toString(): String {
             return "$method $url"
