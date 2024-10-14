@@ -60,6 +60,8 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramDeltak
                 tilOgMed = deltakelseOpplysningDTO.tilOgMed
             )
         )
+
+        // TODO: kall til k9-sak for å semde opphørshendelse
         return oppdatert.mapToDTO()
     }
 
