@@ -27,12 +27,14 @@ import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @EnableMockOAuth2Server
+@AutoConfigureWireMock
 class ApplicationecurityTests {
 
     @Autowired
