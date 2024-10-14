@@ -39,6 +39,9 @@ Denne tjenesten understøtter behovet for:
 
 # 7. Infrastrukturarkitektur
 
+## System Context Diagram
+![system-context-diagram.png](docs/system-context-diagram.png)
+
 # 8. Distribusjon av tjenesten (deployment)
 
 Distribusjon av tjenesten er gjort med bruk av Github Actions.
