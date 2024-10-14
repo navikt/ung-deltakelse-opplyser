@@ -61,7 +61,7 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramDeltak
             )
         )
 
-        // TODO: kall til k9-sak for å semde opphørshendelse
+        // TODO: kall til k9-sak for å sende opphørshendelse
         return oppdatert.mapToDTO()
     }
 
