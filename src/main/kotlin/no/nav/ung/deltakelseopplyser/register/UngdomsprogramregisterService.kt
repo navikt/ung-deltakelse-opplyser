@@ -84,7 +84,7 @@ class UngdomsprogramregisterService(
         kotlin.runCatching {
             val hendelseInfo = HendelseInfo.Builder()
                 .medOpprettet(oppdatert.oppdatertDato.toLocalDateTime())
-                .leggTilAktør(AktørId(oppdatert.deltakerIdent)) // TODO: Konverter til aktørId
+                .leggTilAktør(AktørId(oppdatert.deltakerIdent)) // TODO: Legg til historiske aktørId
 
             val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
             k9SakService.sendInnHendelse(
@@ -92,7 +92,7 @@ class UngdomsprogramregisterService(
                     hendelse,
                     AktørId(oppdatert.deltakerIdent)
                 )
-            ) // TODO: Konverter til aktørId
+            ) // TODO: Konverter til nåværende aktørId
         }.fold(
             onSuccess = {
                 logger.info("Hendelse om opphør av programmet ble sendt inn til k9-sak")
