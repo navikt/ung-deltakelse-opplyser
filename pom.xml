@@ -270,11 +270,9 @@
                     <execution>
                         <id>generate-graphql-client</id>
                         <goals>
-                            <goal>introspect-schema</goal>
                             <goal>generate-client</goal>
                         </goals>
                         <configuration>
-                            <endpoint>https://pdl-api.dev.intern.nav.no/graphql</endpoint>
                             <packageName>no.nav.pdl.generated</packageName>
                             <schemaFile>${project.basedir}/src/main/resources/pdl/pdl-api-schema.graphql</schemaFile>
                             <queryFileDirectory>${project.basedir}/src/main/resources/pdl</queryFileDirectory>
