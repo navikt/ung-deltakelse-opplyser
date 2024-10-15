@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.k9sak
 
+import com.fasterxml.jackson.annotation.JsonValue
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -17,6 +18,8 @@ import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 @Retryable(
@@ -36,14 +39,13 @@ class K9SakService(
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(K9SakService::class.java)
 
-        private val ungdomsytelseOpphørerUrl =
-            "/api/ungdomsytelse/opphorer"
+        private val hendelseInnsendingUrl = "/api/fagsak/hendelse/innsending"
     }
 
-    fun ungdomsytelseOpphørerHendelse(inputDto: UngdomsytelseOpphørerHendelseDTO): Boolean {
-        val httpEntity = HttpEntity(inputDto)
+    fun sendInnHendelse(hendelse: K9UngdomsprogramOpphørHendelse): Boolean {
+        val httpEntity = HttpEntity(hendelse)
         val response = k9SakKlient.exchange(
-            ungdomsytelseOpphørerUrl,
+            hendelseInnsendingUrl,
             HttpMethod.POST,
             httpEntity,
             Unit::class.java
@@ -52,36 +54,46 @@ class K9SakService(
     }
 
     @Recover
-    private fun ungdomsytelseOpphørerHendelse(
+    private fun sendInnHendelse(
         exception: HttpClientErrorException,
-        inputDto: UngdomsytelseOpphørerHendelseDTO,
+        hendelse: K9UngdomsprogramOpphørHendelse,
     ): Boolean {
-        logger.error("Fikk en HttpClientErrorException når man kalte ungdomsytelseOpphørerHendelse tjeneste i k9-sak. Error response = '${exception.responseBodyAsString}'")
+        logger.error("Fikk en HttpClientErrorException når man kalte sendInnHendelse tjeneste i k9-sak. Error response = '${exception.responseBodyAsString}'")
         return false
     }
 
     @Recover
-    private fun ungdomsytelseOpphørerHendelse(
+    private fun sendInnHendelse(
         exception: HttpServerErrorException,
-        inputDto: UngdomsytelseOpphørerHendelseDTO,
+        hendelse: K9UngdomsprogramOpphørHendelse,
     ): Boolean {
-        logger.error("Fikk en HttpServerErrorException når man kalte ungdomsytelseOpphørerHendelse tjeneste i k9-sak.")
+        logger.error("Fikk en HttpServerErrorException når man kalte sendInnHendelse tjeneste i k9-sak.")
         return false
     }
 
     @Recover
-    private fun ungdomsytelseOpphørerHendelse(
+    private fun sendInnHendelse(
         exception: ResourceAccessException,
-        inputDto: UngdomsytelseOpphørerHendelseDTO,
+        hendelse: K9UngdomsprogramOpphørHendelse,
     ): Boolean {
-        logger.error("Fikk en ResourceAccessException når man kalte ungdomsytelseOpphørerHendelse tjeneste i k9-sak.")
+        logger.error("Fikk en ResourceAccessException når man kalte sendInnHendelse tjeneste i k9-sak.")
         return false
     }
 
-    data class UngdomsytelseOpphørerHendelseDTO(
-        val deltakerAktørId: String,
-        val opphørerDato: String,
+    data class K9UngdomsprogramOpphørHendelse(
+        val type: HendelseType,
+        val hendelseInfo: K9HendelseInfo,
+        val opphørsdato: LocalDate,
     )
+
+    data class K9HendelseInfo(
+        val aktørIder: List<String>,
+        val opprettet: LocalDateTime,
+    )
+
+    enum class HendelseType(@JsonValue val value: String) {
+        UNGDOMSPROGRAM_OPPHØR("UNG_OPPHØR")
+    }
 }
 
 class K9SakException(

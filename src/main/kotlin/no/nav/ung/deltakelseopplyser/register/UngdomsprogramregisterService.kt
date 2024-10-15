@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -8,7 +9,10 @@ import org.springframework.web.ErrorResponseException
 import java.util.*
 
 @Service
-class UngdomsprogramregisterService(private val repository: UngdomsprogramDeltakelseRepository) {
+class UngdomsprogramregisterService(
+    private val repository: UngdomsprogramDeltakelseRepository,
+    private val k9SakService: K9SakService,
+) {
     private companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
     }
@@ -61,8 +65,37 @@ class UngdomsprogramregisterService(private val repository: UngdomsprogramDeltak
             )
         )
 
-        // TODO: kall til k9-sak for å sende opphørshendelse
+        if (oppdatert.tilOgMed != null) {
+            sendOpphørsHendelseTilK9(oppdatert)
+        }
+
         return oppdatert.mapToDTO()
+    }
+
+    private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
+        val opphørsdato = oppdatert.tilOgMed
+        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
+
+        logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
+        kotlin.runCatching {
+            k9SakService.sendInnHendelse(
+                hendelse = K9SakService.K9UngdomsprogramOpphørHendelse(
+                    type = K9SakService.HendelseType.UNGDOMSPROGRAM_OPPHØR,
+                    hendelseInfo = K9SakService.K9HendelseInfo(
+                        aktørIder = listOf(oppdatert.deltakerIdent), // TODO: Konverter til aktørId
+                        opprettet = oppdatert.oppdatertDato.toLocalDateTime()
+                    ),
+                    opphørsdato = opphørsdato
+                )
+            )
+        }.fold(
+            onSuccess = {
+                logger.info("Hendelse om opphør av programmet ble sendt inn til k9-sak")
+            },
+            onFailure = {
+                logger.error("Klarte ikke å sende inn hendelse om opphør av programmet til k9-sak", it)
+            }
+        )
     }
 
     fun hentFraProgram(id: UUID): DeltakelseOpplysningDTO {

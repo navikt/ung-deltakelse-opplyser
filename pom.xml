@@ -33,6 +33,7 @@
 		<springdoc.version>2.6.0</springdoc.version>
 		<spring-cloud.version>4.1.4</spring-cloud.version>
 		<logback.logstash.version>8.0</logback.logstash.version>
+		<spring-mockk.version>4.0.2</spring-mockk.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -179,6 +180,12 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>kafka</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.ninja-squad</groupId>
+			<artifactId>springmockk</artifactId>
+			<version>${spring-mockk.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<!-- Diverse testing -->

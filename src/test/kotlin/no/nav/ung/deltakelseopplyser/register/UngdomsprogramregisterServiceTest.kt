@@ -1,5 +1,8 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.verify
+import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.validation.ValidationErrorResponseException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -34,6 +37,9 @@ class UngdomsprogramregisterServiceTest {
 
     @Autowired
     lateinit var repository: UngdomsprogramDeltakelseRepository
+
+    @MockkBean(relaxed = true)
+    lateinit var k9SakService: K9SakService
 
     @BeforeEach
     fun setUp() {
@@ -129,6 +135,8 @@ class UngdomsprogramregisterServiceTest {
         assertNotNull(oppdatertInnmelding)
         assertEquals(oppdatertDto.deltakerIdent, oppdatertInnmelding.deltakerIdent)
         assertEquals(oppdatertDto.tilOgMed, oppdatertInnmelding.tilOgMed)
+
+        verify { k9SakService.sendInnHendelse(any()) }
     }
 
     @Test
