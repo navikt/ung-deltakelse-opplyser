@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.k9sak
 
-import com.fasterxml.jackson.annotation.JsonValue
+import no.nav.k9.sak.kontrakt.hendelser.Hendelse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -18,8 +18,6 @@ import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 @Retryable(
@@ -42,7 +40,7 @@ class K9SakService(
         private val hendelseInnsendingUrl = "/api/fagsak/hendelse/innsending"
     }
 
-    fun sendInnHendelse(hendelse: K9UngdomsprogramOpphørHendelse): Boolean {
+    fun sendInnHendelse(hendelse: Hendelse): Boolean {
         val httpEntity = HttpEntity(hendelse)
         val response = k9SakKlient.exchange(
             hendelseInnsendingUrl,
@@ -56,7 +54,7 @@ class K9SakService(
     @Recover
     private fun sendInnHendelse(
         exception: HttpClientErrorException,
-        hendelse: K9UngdomsprogramOpphørHendelse,
+        hendelse: Hendelse,
     ): Boolean {
         logger.error("Fikk en HttpClientErrorException når man kalte sendInnHendelse tjeneste i k9-sak. Error response = '${exception.responseBodyAsString}'")
         return false
@@ -65,7 +63,7 @@ class K9SakService(
     @Recover
     private fun sendInnHendelse(
         exception: HttpServerErrorException,
-        hendelse: K9UngdomsprogramOpphørHendelse,
+        hendelse: Hendelse,
     ): Boolean {
         logger.error("Fikk en HttpServerErrorException når man kalte sendInnHendelse tjeneste i k9-sak.")
         return false
@@ -74,25 +72,10 @@ class K9SakService(
     @Recover
     private fun sendInnHendelse(
         exception: ResourceAccessException,
-        hendelse: K9UngdomsprogramOpphørHendelse,
+        hendelse: Hendelse,
     ): Boolean {
         logger.error("Fikk en ResourceAccessException når man kalte sendInnHendelse tjeneste i k9-sak.")
         return false
-    }
-
-    data class K9UngdomsprogramOpphørHendelse(
-        val type: HendelseType,
-        val hendelseInfo: K9HendelseInfo,
-        val opphørsdato: LocalDate,
-    )
-
-    data class K9HendelseInfo(
-        val aktørIder: List<String>,
-        val opprettet: LocalDateTime,
-    )
-
-    enum class HendelseType(@JsonValue val value: String) {
-        UNGDOMSPROGRAM_OPPHØR("UNG_OPPHØR")
     }
 }
 

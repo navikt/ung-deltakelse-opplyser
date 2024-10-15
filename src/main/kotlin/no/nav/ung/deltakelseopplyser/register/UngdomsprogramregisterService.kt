@@ -1,5 +1,8 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
+import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
+import no.nav.k9.sak.typer.AktørId
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -78,16 +81,11 @@ class UngdomsprogramregisterService(
 
         logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
         kotlin.runCatching {
-            k9SakService.sendInnHendelse(
-                hendelse = K9SakService.K9UngdomsprogramOpphørHendelse(
-                    type = K9SakService.HendelseType.UNGDOMSPROGRAM_OPPHØR,
-                    hendelseInfo = K9SakService.K9HendelseInfo(
-                        aktørIder = listOf(oppdatert.deltakerIdent), // TODO: Konverter til aktørId
-                        opprettet = oppdatert.oppdatertDato.toLocalDateTime()
-                    ),
-                    opphørsdato = opphørsdato
-                )
-            )
+            val hendelseInfo = HendelseInfo.Builder()
+                .medOpprettet(oppdatert.oppdatertDato.toLocalDateTime())
+                .leggTilAktør(AktørId(oppdatert.deltakerIdent)) // TODO: Konverter til aktørId
+
+            k9SakService.sendInnHendelse(hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato))
         }.fold(
             onSuccess = {
                 logger.info("Hendelse om opphør av programmet ble sendt inn til k9-sak")

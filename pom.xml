@@ -34,6 +34,7 @@
 		<spring-cloud.version>4.1.4</spring-cloud.version>
 		<logback.logstash.version>8.0</logback.logstash.version>
 		<spring-mockk.version>4.0.2</spring-mockk.version>
+		<k9-sak.version>5.1.0</k9-sak.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -99,6 +100,14 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- Sikkerhet -->
+
+		<!-- K9 Kontrakter -->
+		<dependency>
+			<groupId>no.nav.k9.sak</groupId>
+			<artifactId>kontrakt</artifactId>
+			<version>${k9-sak.version}</version>
+		</dependency>
+		<!-- K9 Kontrakter -->
 
 		<!-- Swagger -->
 		<dependency>
