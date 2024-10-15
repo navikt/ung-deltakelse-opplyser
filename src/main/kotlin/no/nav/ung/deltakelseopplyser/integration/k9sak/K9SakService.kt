@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.k9sak
 
-import no.nav.k9.sak.kontrakt.hendelser.Hendelse
+import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -40,7 +40,7 @@ class K9SakService(
         private val hendelseInnsendingUrl = "/api/fagsak/hendelse/innsending"
     }
 
-    fun sendInnHendelse(hendelse: Hendelse): Boolean {
+    fun sendInnHendelse(hendelse: HendelseDto): Boolean {
         val httpEntity = HttpEntity(hendelse)
         val response = k9SakKlient.exchange(
             hendelseInnsendingUrl,
@@ -54,7 +54,7 @@ class K9SakService(
     @Recover
     private fun sendInnHendelse(
         exception: HttpClientErrorException,
-        hendelse: Hendelse,
+        hendelse: HendelseDto,
     ): Boolean {
         logger.error("Fikk en HttpClientErrorException når man kalte sendInnHendelse tjeneste i k9-sak. Error response = '${exception.responseBodyAsString}'")
         return false
@@ -63,7 +63,7 @@ class K9SakService(
     @Recover
     private fun sendInnHendelse(
         exception: HttpServerErrorException,
-        hendelse: Hendelse,
+        hendelse: HendelseDto,
     ): Boolean {
         logger.error("Fikk en HttpServerErrorException når man kalte sendInnHendelse tjeneste i k9-sak.")
         return false
@@ -72,7 +72,7 @@ class K9SakService(
     @Recover
     private fun sendInnHendelse(
         exception: ResourceAccessException,
-        hendelse: Hendelse,
+        hendelse: HendelseDto,
     ): Boolean {
         logger.error("Fikk en ResourceAccessException når man kalte sendInnHendelse tjeneste i k9-sak.")
         return false
