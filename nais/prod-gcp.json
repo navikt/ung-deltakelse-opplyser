@@ -6,7 +6,8 @@
   "minReplicas": "1",
   "maxReplicas": "2",
   "externalHosts": [
-    "k9-sak.prod-fss-pub.nais.io"
+    "k9-sak.prod-fss-pub.nais.io",
+    "pdl-api.prod-fss-pub.nais.io"
   ],
   "ingresses": [],
   "inboundRules": [
@@ -42,6 +43,9 @@
     "SPRING_PROFILES_ACTIVE": "prod-gcp",
 
     "NO_NAV_GATEWAYS_K9_SAK": "https://k9-sak.prod-fss-pub.nais.io/k9/sak",
-    "K9_SAK_AZURE_SCOPE": "api://prod-fss.k9saksbehandling.k9-sak/.default"
+    "K9_SAK_AZURE_SCOPE": "api://prod-fss.k9saksbehandling.k9-sak/.default",
+
+    "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.prod-fss-pub.nais.io",
+    "PDL_API_AZURE_SCOPE": "api://prod-fss.pdl.pdl-api/.default"
   }
 }
