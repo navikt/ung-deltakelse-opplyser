@@ -1,8 +1,10 @@
 package no.nav.ung.deltakelseopplyser.register
 
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import io.mockk.verify
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
+import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import no.nav.ung.deltakelseopplyser.validation.ValidationErrorResponseException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -40,6 +42,9 @@ class UngdomsprogramregisterServiceTest {
 
     @MockkBean(relaxed = true)
     lateinit var k9SakService: K9SakService
+
+    @MockkBean(relaxed = true)
+    lateinit var pdlService: PdlService
 
     @BeforeEach
     fun setUp() {
@@ -125,6 +130,10 @@ class UngdomsprogramregisterServiceTest {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
+
+        every { pdlService.hentHistoriskeAktørIder(any()) } returns emptyList()
+        every { pdlService.hentAktørId(any()) } returns "321"
+
         val oppdatertDto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = mandag,
@@ -136,6 +145,8 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(oppdatertDto.deltakerIdent, oppdatertInnmelding.deltakerIdent)
         assertEquals(oppdatertDto.tilOgMed, oppdatertInnmelding.tilOgMed)
 
+        verify { pdlService.hentHistoriskeAktørIder(any()) }
+        verify { pdlService.hentAktørId(any()) }
         verify { k9SakService.sendInnHendelse(any()) }
     }
 

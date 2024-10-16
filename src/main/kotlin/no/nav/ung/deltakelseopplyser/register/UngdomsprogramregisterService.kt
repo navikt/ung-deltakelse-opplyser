@@ -5,6 +5,7 @@ import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.k9.sak.typer.AktørId
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
+import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -16,6 +17,7 @@ import java.util.*
 class UngdomsprogramregisterService(
     private val repository: UngdomsprogramDeltakelseRepository,
     private val k9SakService: K9SakService,
+    private val pdlService: PdlService
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -80,19 +82,26 @@ class UngdomsprogramregisterService(
         val opphørsdato = oppdatert.tilOgMed
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
 
+        logger.info("Henter historiske aktørIder for deltaker")
+        val historiskeAktørIder = pdlService.hentHistoriskeAktørIder(oppdatert.deltakerIdent)
+
+        logger.info("Henter nåværende aktørId for deltaker")
+        val aktørId = pdlService.hentAktørId(oppdatert.deltakerIdent)
+
         logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
         kotlin.runCatching {
-            val hendelseInfo = HendelseInfo.Builder()
-                .medOpprettet(oppdatert.oppdatertDato.toLocalDateTime())
-                .leggTilAktør(AktørId(oppdatert.deltakerIdent)) // TODO: Legg til historiske aktørId
+            val hendelseInfo = HendelseInfo.Builder().medOpprettet(oppdatert.oppdatertDato.toLocalDateTime())
+            historiskeAktørIder.forEach {
+                hendelseInfo.leggTilAktør(AktørId(it.ident))
+            }
 
             val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
             k9SakService.sendInnHendelse(
                 hendelse = HendelseDto(
                     hendelse,
-                    AktørId(oppdatert.deltakerIdent)
+                    AktørId(aktørId)
                 )
-            ) // TODO: Konverter til nåværende aktørId
+            )
         }.fold(
             onSuccess = {
                 logger.info("Hendelse om opphør av programmet ble sendt inn til k9-sak")
