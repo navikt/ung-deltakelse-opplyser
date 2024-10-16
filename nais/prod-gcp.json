@@ -9,7 +9,9 @@
     "k9-sak.prod-fss-pub.nais.io",
     "pdl-api.prod-fss-pub.nais.io"
   ],
-  "ingresses": [],
+  "ingresses": [
+    "https://ung-deltakelse-opplyser.intern.nav.no"
+  ],
   "inboundRules": [
     {
       "app": "ungdomsytelse-veileder",
