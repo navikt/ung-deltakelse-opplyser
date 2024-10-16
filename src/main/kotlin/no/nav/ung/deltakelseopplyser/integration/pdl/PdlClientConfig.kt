@@ -70,8 +70,13 @@ class PdlClientConfig(
         val accessToken: String = oAuth2AccessTokenService.getAccessToken(azurePdlClientProperties).accessToken
             ?: throw IllegalStateException("Access token mangler")
 
-        request.headers().setBearerAuth(accessToken)
-        next.exchange(request)
+        val filtered = ClientRequest.from(request)
+            .headers {
+                it.setBearerAuth(accessToken)
+            }
+            .build()
+
+        next.exchange(filtered)
     }
 
     fun requestLoggerInterceptor(logger: Logger) = { request: ClientRequest, next: ExchangeFunction ->
@@ -92,9 +97,14 @@ class PdlClientConfig(
 
     fun requestTracingInterceptor() = { request: ClientRequest, next: ExchangeFunction ->
         val correlationId = MDCUtil.callIdOrNew()
-        request.headers().computeIfAbsent(NAV_CALL_ID) { listOf(correlationId) }
-        request.headers().computeIfAbsent(X_CORRELATION_ID) { listOf(correlationId) }
 
-        next.exchange(request)
+        val filtered = ClientRequest.from(request)
+            .headers { headers ->
+                headers.set(NAV_CALL_ID, correlationId)
+                headers.set(X_CORRELATION_ID, correlationId)
+            }
+            .build()
+
+        next.exchange(filtered)
     }
 }
