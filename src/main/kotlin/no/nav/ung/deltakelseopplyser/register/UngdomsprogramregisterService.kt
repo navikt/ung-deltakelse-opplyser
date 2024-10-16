@@ -85,12 +85,11 @@ class UngdomsprogramregisterService(
         logger.info("Henter aktørIder for deltaker")
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltakerIdent, historisk = true)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
-        val historiskeAktørIder = aktørIder.filter { it.historisk }
 
         logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
         kotlin.runCatching {
             val hendelseInfo = HendelseInfo.Builder().medOpprettet(oppdatert.oppdatertDato.toLocalDateTime())
-            historiskeAktørIder.forEach {
+            aktørIder.forEach {
                 hendelseInfo.leggTilAktør(AktørId(it.ident))
             }
 
