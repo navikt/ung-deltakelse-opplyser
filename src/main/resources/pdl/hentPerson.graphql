@@ -12,16 +12,5 @@ query($ident: ID!){
             foedselsdato
             foedselsaar
         }
-        adressebeskyttelse {
-            gradering
-        }
-        doedsfall {
-            doedsdato
-        }
-        forelderBarnRelasjon {
-            relatertPersonsIdent
-            relatertPersonsRolle
-            minRolleForPerson
-        }
     }
 }
