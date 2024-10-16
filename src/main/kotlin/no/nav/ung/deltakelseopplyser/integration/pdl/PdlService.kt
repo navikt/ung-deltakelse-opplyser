@@ -32,7 +32,7 @@ class PdlService(
             }
 
             response.data!!.hentIdenter != null -> response.data!!.hentIdenter!!.identer
-                .filter { it.historisk == historisk }
+                .filter { historisk || !it.historisk }
                 .let { Identliste(it) }
 
             else -> {
