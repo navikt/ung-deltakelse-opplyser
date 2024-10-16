@@ -82,11 +82,10 @@ class UngdomsprogramregisterService(
         val opphørsdato = oppdatert.tilOgMed
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
 
-        logger.info("Henter historiske aktørIder for deltaker")
-        val historiskeAktørIder = pdlService.hentHistoriskeAktørIder(oppdatert.deltakerIdent)
-
-        logger.info("Henter nåværende aktørId for deltaker")
-        val aktørId = pdlService.hentAktørId(oppdatert.deltakerIdent)
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltakerIdent, historisk = true)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+        val historiskeAktørIder = aktørIder.filter { it.historisk }
 
         logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
         kotlin.runCatching {
@@ -99,7 +98,7 @@ class UngdomsprogramregisterService(
             k9SakService.sendInnHendelse(
                 hendelse = HendelseDto(
                     hendelse,
-                    AktørId(aktørId)
+                    AktørId(nåværendeAktørId)
                 )
             )
         }.fold(

@@ -3,6 +3,8 @@ package no.nav.ung.deltakelseopplyser.register
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.verify
+import no.nav.pdl.generated.enums.IdentGruppe
+import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import no.nav.ung.deltakelseopplyser.validation.ValidationErrorResponseException
@@ -131,8 +133,10 @@ class UngdomsprogramregisterServiceTest {
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
 
-        every { pdlService.hentHistoriskeAktørIder(any()) } returns emptyList()
-        every { pdlService.hentAktørId(any()) } returns "321"
+        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
 
         val oppdatertDto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
@@ -145,8 +149,7 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(oppdatertDto.deltakerIdent, oppdatertInnmelding.deltakerIdent)
         assertEquals(oppdatertDto.tilOgMed, oppdatertInnmelding.tilOgMed)
 
-        verify { pdlService.hentHistoriskeAktørIder(any()) }
-        verify { pdlService.hentAktørId(any()) }
+        verify { pdlService.hentAktørIder(any(), any()) }
         verify { k9SakService.sendInnHendelse(any()) }
     }
 

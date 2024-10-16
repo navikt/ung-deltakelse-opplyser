@@ -19,7 +19,7 @@ class PdlService(
         private val logger = LoggerFactory.getLogger(PdlService::class.java)
     }
 
-    private fun hentIdenter(ident: String, historisk: Boolean = false, identGruppe: IdentGruppe = IdentGruppe.FOLKEREGISTERIDENT): Identliste = runBlocking {
+    fun hentIdenter(ident: String, historisk: Boolean = false, identGruppe: IdentGruppe = IdentGruppe.FOLKEREGISTERIDENT): Identliste = runBlocking {
         val response = pdlClient.execute(HentIdent(HentIdent.Variables(ident, listOf(identGruppe))))
 
         if (!response.extensions.isNullOrEmpty()) logger.info("PDL response extensions: ${response.extensions}")
@@ -65,14 +65,14 @@ class PdlService(
             }
     }
 
-    fun hentHistoriskeAktørIder(ident: String): List<IdentInformasjon> {
-        val identliste = hentIdenter(ident = ident, identGruppe = IdentGruppe.AKTORID, historisk = true)
+    fun hentAktørIder(ident: String, historisk: Boolean = false): List<IdentInformasjon> {
+        val identliste = hentIdenter(ident = ident, identGruppe = IdentGruppe.AKTORID, historisk = historisk)
         return runCatching {
             identliste.identer.filter { it.gruppe == IdentGruppe.AKTORID }
         }
             .getOrElse {
-                logger.error("Fant ingen historiske aktørIder.")
-                throw IllegalStateException("Fant ingen aktørId.")
+                logger.error("Fant ingen aktørIder. Historisk=$historisk")
+                throw IllegalStateException("Fant ingen historiske aktørId. Historisk=$historisk")
             }
     }
 }
