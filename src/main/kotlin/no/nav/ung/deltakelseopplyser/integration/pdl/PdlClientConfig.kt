@@ -95,7 +95,6 @@ class PdlClientConfig(
         request.headers().computeIfAbsent(NAV_CALL_ID) { listOf(correlationId) }
         request.headers().computeIfAbsent(X_CORRELATION_ID) { listOf(correlationId) }
 
-
         next.exchange(request)
     }
 }
