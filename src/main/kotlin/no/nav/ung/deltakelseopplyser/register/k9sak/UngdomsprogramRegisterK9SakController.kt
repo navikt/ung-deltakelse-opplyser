@@ -6,6 +6,7 @@ import no.nav.k9.sak.kontrakt.person.AktørIdDto
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import no.nav.ung.deltakelseopplyser.register.DeltakerOpplysningerDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
@@ -28,13 +29,16 @@ import org.springframework.web.bind.annotation.RestController
 )
 class UngdomsprogramRegisterK9SakController(
     private val registerService: UngdomsprogramregisterService,
+    private val pdlService: PdlService,
 ) {
 
     @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(@RequestBody aktørIdDto: AktørIdDto): DeltakerOpplysningerDTO {
-        val opplysninger = registerService.hentAlleForDeltaker(deltakerIdent = aktørIdDto.aktorId)
+        val folkeregisterident = pdlService.hentFolkeregisterident(aktørIdDto.aktorId)
+
+        val opplysninger = registerService.hentAlleForDeltaker(deltakerIdent = folkeregisterident)
         return DeltakerOpplysningerDTO(opplysninger)
     }
 }
