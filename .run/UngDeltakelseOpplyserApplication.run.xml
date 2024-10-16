@@ -2,7 +2,7 @@
   <configuration default="false" name="UngDeltakelseOpplyserApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="dev-gcp" />
     <option name="envFilePaths">
-      <option value="$PROJECT_DIR$/vtp.env" />
+      <option value="$PROJECT_DIR$/dev/vtp.env" />
     </option>
     <module name="ung-deltakelse-opplyser" />
     <selectedOptions>
