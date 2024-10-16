@@ -18,12 +18,13 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@main
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@extra-tag
     with:
       java-version: 21
       build-image: ${{ github.actor != 'dependabot[bot]' }}
       push-image: ${{ startsWith(github.ref, 'refs/heads/dev-') ||  github.ref_name == github.event.repository.default_branch}}
       upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
+      additional-tag: ${{ startsWith(github.ref, 'refs/heads/dev-') && 'latest-dev' }}
     secrets: inherit
 
   deploy-dev:
