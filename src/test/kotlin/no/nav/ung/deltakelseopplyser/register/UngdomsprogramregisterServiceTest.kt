@@ -87,6 +87,11 @@ class UngdomsprogramregisterServiceTest {
         // Skal feile fordi deltaker allerede er meldt inn i programmet uten t.o.m dato.
         assertThrows<ValidationErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
 
+        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
         // Skal feile fordi deltaker allerede er meldt inn i programmet med t.o.m dato.
         ungdomsprogramregisterService.oppdaterProgram(deltakelse.id!!, dto.copy(tilOgMed = onsdag))
         assertThrows<ValidationErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
