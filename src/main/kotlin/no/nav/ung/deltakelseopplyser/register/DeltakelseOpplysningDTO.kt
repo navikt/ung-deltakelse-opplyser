@@ -7,6 +7,10 @@ import no.nav.ung.deltakelseopplyser.validation.Violation
 import java.time.LocalDate
 import java.util.*
 
+data class DeltakerOpplysningerDTO(
+    val opplysninger: List<DeltakelseOpplysningDTO>
+)
+
 data class DeltakelseOpplysningDTO(
     val id: UUID? = null,
     val deltakerIdent: String,

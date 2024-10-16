@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers
-import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakerOpplysningDTO
+import no.nav.ung.deltakelseopplyser.register.DeltakerOpplysningerDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -33,7 +33,9 @@ class UngdomsprogramRegisterK9SakController(
     @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): List<DeltakelseOpplysningDTO> {
-        return registerService.hentAlleForDeltaker(deltakerIdent = deltakerOpplysningDTO.deltakerIdent)
+    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): DeltakerOpplysningerDTO {
+        val opplysninger =
+            registerService.hentAlleForDeltaker(deltakerIdent = deltakerOpplysningDTO.deltakerIdent)
+        return DeltakerOpplysningerDTO(opplysninger)
     }
 }

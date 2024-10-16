@@ -67,6 +67,22 @@ For å bygge kode, kjør:
 ./mvnw clean install
 ```
 
+## Teste lokalt med VTP via IntelliJ
+Forutsetninger:
+- Postgresql kjører via Docker med docker config fra [k9-verdikjede](https://github.com/navikt/k9-verdikjede/blob/master/saksbehandling/docker-compose.yml)
+- VTP kjører via Docker med docker config fra [k9-verdikjede](https://github.com/navikt/k9-verdikjede/blob/master/saksbehandling/docker-compose.yml)
+
+Bruk run configuration fra .run/UngDeltakelseOpplyserApplication.run.xml
+
+Alternativt:
+1. Lag ny run configuration for UngDeltakelseOpplyserApplication
+2. Importer environment variabeler fra dev/vtp.env
+3. kjør!
+
+## Verdikjedetester
+Ende til ende verdikjede tester som involverer denne appen finnes i [k9-verdikjede](https://github.com/navikt/k9-verdikjede/tree/master/verdikjede/src/test/java/no/nav/k9/sak/ung)
+
+
 ## Registrering og henting av data via api-endepunktene
 
 Applikasjonen er konfigurert swagger-ui for å kunne teste ut endepunktene.
