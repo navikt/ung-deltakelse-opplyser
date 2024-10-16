@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.ClientRequest
 import org.springframework.web.reactive.function.client.ClientResponse
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.ExchangeFunction
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
@@ -66,7 +67,7 @@ class PdlClientConfig(
             }
     )
 
-    private fun exchangeBearerTokenFilter() = { request: ClientRequest, next: ExchangeFunction ->
+    private fun exchangeBearerTokenFilter() = ExchangeFilterFunction { request: ClientRequest, next: ExchangeFunction ->
         val accessToken: String = oAuth2AccessTokenService.getAccessToken(azurePdlClientProperties).accessToken
             ?: throw IllegalStateException("Access token mangler")
 
@@ -79,29 +80,29 @@ class PdlClientConfig(
         next.exchange(filtered)
     }
 
-    fun requestLoggerInterceptor(logger: Logger) = { request: ClientRequest, next: ExchangeFunction ->
-        logger.info("HTTP Request: {} {}", request.method(), request.url())
+    fun requestLoggerInterceptor(logger: Logger) = ExchangeFilterFunction { request: ClientRequest, next: ExchangeFunction ->
+            logger.info("HTTP Request: {} {}", request.method(), request.url())
 
-        val response: Mono<ClientResponse> = next.exchange(request)
-            .doOnNext { response ->
-                logger.info(
-                    "HTTP Response: {} {} {}",
-                    response.statusCode(),
-                    request.method(),
-                    request.url()
-                )
-            }
+            val response: Mono<ClientResponse> = next.exchange(request)
+                .doOnNext { response ->
+                    logger.info(
+                        "HTTP Response: {} {} {}",
+                        response.statusCode(),
+                        request.method(),
+                        request.url()
+                    )
+                }
 
-        response
-    }
+            response
+        }
 
-    fun requestTracingInterceptor() = { request: ClientRequest, next: ExchangeFunction ->
+    fun requestTracingInterceptor() = ExchangeFilterFunction { clientRequest: ClientRequest, next: ExchangeFunction ->
         val correlationId = MDCUtil.callIdOrNew()
 
-        val filtered = ClientRequest.from(request)
+        val filtered = ClientRequest.from(clientRequest)
             .headers { headers ->
-                headers.set(NAV_CALL_ID, correlationId)
-                headers.set(X_CORRELATION_ID, correlationId)
+                headers[NAV_CALL_ID] = correlationId
+                headers[X_CORRELATION_ID] = correlationId
             }
             .build()
 
