@@ -18,7 +18,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@extra-tag
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@main
     with:
       java-version: 21
       build-image: ${{ github.actor != 'dependabot[bot]' }}
