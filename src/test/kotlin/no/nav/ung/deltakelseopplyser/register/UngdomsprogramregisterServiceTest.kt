@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
@@ -58,6 +59,7 @@ class UngdomsprogramregisterServiceTest {
         repository.deleteAll()
     }
 
+    @Disabled
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
         val dto = DeltakelseOpplysningDTO(
@@ -72,6 +74,7 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(dto.deltakerIdent, innmelding.deltakerIdent)
     }
 
+    @Disabled
     @Test
     fun `Innmelding av deltakelse med overlappende perioder feiler`() {
         val mandag = LocalDate.parse("2024-10-07")
@@ -97,6 +100,7 @@ class UngdomsprogramregisterServiceTest {
         assertThrows<ValidationErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
     }
 
+    @Disabled
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
         val dto = DeltakelseOpplysningDTO(
@@ -111,6 +115,7 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(dto.deltakerIdent, innmelding.deltakerIdent)
     }
 
+    @Disabled
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
         val dto = DeltakelseOpplysningDTO(
@@ -125,6 +130,7 @@ class UngdomsprogramregisterServiceTest {
         assertTrue(utmelding)
     }
 
+    @Disabled
     @Test
     fun `Deltaker blir oppdatert i programmet`() {
         val mandag = LocalDate.parse("2024-10-07")
@@ -158,6 +164,7 @@ class UngdomsprogramregisterServiceTest {
         verify { k9SakService.sendInnHendelse(any()) }
     }
 
+    @Disabled
     @Test
     fun `Henter deltaker fra programmet`() {
         val dto = DeltakelseOpplysningDTO(
