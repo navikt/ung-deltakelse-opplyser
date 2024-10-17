@@ -83,6 +83,12 @@ class UngdomsprogramregisterServiceTest {
             fraOgMed = mandag,
             tilOgMed = null
         )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon("123", false, IdentGruppe.FOLKEREGISTERIDENT),
+            IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
         val deltakelse = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         // Skal feile fordi deltaker allerede er meldt inn i programmet uten t.o.m dato.

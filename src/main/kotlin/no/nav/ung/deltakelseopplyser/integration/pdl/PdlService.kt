@@ -41,28 +41,9 @@ class PdlService(
         }
     }
 
-    fun hentFolkeregisterident(ident: String): String {
+    fun hentFolkeregisteridenter(ident: String): List<IdentInformasjon> {
         val identliste = hentIdenter(ident = ident)
-        return runCatching {
-            identliste.identer
-                .filterNot { it.historisk }
-                .first { it.gruppe == IdentGruppe.FOLKEREGISTERIDENT }.ident
-        }
-            .getOrElse {
-                logger.error("Fant ingen folkeregisterident.")
-                throw IllegalStateException("Fant ingen folkeregisterident.")
-            }
-    }
-
-    fun hentAktørId(ident: String): String {
-        val identliste = hentIdenter(ident = ident, identGruppe = IdentGruppe.AKTORID)
-        return runCatching {
-            identliste.identer.first { it.gruppe == IdentGruppe.AKTORID }.ident
-        }
-            .getOrElse {
-                logger.error("Fant ingen aktørId.")
-                throw IllegalStateException("Fant ingen aktørId.")
-            }
+        return identliste.identer.filter { it.gruppe == IdentGruppe.FOLKEREGISTERIDENT }
     }
 
     fun hentAktørIder(ident: String, historisk: Boolean = false): List<IdentInformasjon> {

@@ -115,10 +115,11 @@ class UngdomsprogramregisterService(
 
     fun hentAlleForDeltaker(deltakerIdent: String): List<DeltakelseOpplysningDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
-        val ungdomsprogramDAO = repository.findByDeltakerIdent(deltakerIdent)
-        logger.info("Fant ${ungdomsprogramDAO.size} programopplysninger for deltaker.")
+        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdent).map { it.ident }
+        val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
+        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
-        return ungdomsprogramDAO.map { it.mapToDTO() }
+        return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
