@@ -19,7 +19,7 @@ import java.util.*
 class UngdomsprogramregisterService(
     private val repository: UngdomsprogramDeltakelseRepository,
     private val k9SakService: K9SakService,
-    private val pdlService: PdlService
+    private val pdlService: PdlService,
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -90,27 +90,20 @@ class UngdomsprogramregisterService(
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
         logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
-        kotlin.runCatching {
-            val hendelsedato = oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
-            val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
-            aktørIder.forEach {
-                hendelseInfo.leggTilAktør(AktørId(it.ident))
-            }
 
-            val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
-            k9SakService.sendInnHendelse(
-                hendelse = HendelseDto(
-                    hendelse,
-                    AktørId(nåværendeAktørId)
-                )
+        val hendelsedato =
+            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
+        k9SakService.sendInnHendelse(
+            hendelse = HendelseDto(
+                hendelse,
+                AktørId(nåværendeAktørId)
             )
-        }.fold(
-            onSuccess = {
-                logger.info("Hendelse om opphør av programmet ble sendt inn til k9-sak")
-            },
-            onFailure = {
-                logger.error("Klarte ikke å sende inn hendelse om opphør av programmet til k9-sak", it)
-            }
         )
     }
 
