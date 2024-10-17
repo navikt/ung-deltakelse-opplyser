@@ -15,6 +15,6 @@ data class UngdomsprogramDeltakelseDAO(
     @Column(name = "deltaker_ident") val deltakerIdent: String,
     @Column(name = "fra_og_med") val fraOgMed: LocalDate,
     @Column(name = "til_og_med") val tilOgMed: LocalDate? = null,
-    @Column(name = "opprettet_dato") @CreatedDate val opprettetDato: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-    @Column(name = "oppdatert_dato") val oppdatertDato: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC)
+    @Column(name = "opprettet_tidspunkt") @CreatedDate val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    @Column(name = "endret_tidspunkt") val endretTidspunkt: ZonedDateTime? = null
 )

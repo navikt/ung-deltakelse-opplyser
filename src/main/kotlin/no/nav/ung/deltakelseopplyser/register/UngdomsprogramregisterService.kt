@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 @Service
@@ -67,7 +69,8 @@ class UngdomsprogramregisterService(
         val oppdatert = repository.save(
             eksiterende.copy(
                 fraOgMed = deltakelseOpplysningDTO.fraOgMed,
-                tilOgMed = deltakelseOpplysningDTO.tilOgMed
+                tilOgMed = deltakelseOpplysningDTO.tilOgMed,
+                endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
             )
         )
 
@@ -88,7 +91,8 @@ class UngdomsprogramregisterService(
 
         logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
         kotlin.runCatching {
-            val hendelseInfo = HendelseInfo.Builder().medOpprettet(oppdatert.oppdatertDato.toLocalDateTime())
+            val hendelsedato = oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+            val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
             aktørIder.forEach {
                 hendelseInfo.leggTilAktør(AktørId(it.ident))
             }
