@@ -5,6 +5,6 @@ CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse
     periode             DATERANGE        NOT NULL,
     opprettet_tidspunkt TIMESTAMP        NOT NULL,
     endret_tidspunkt    TIMESTAMP,
-    CONSTRAINT ingen_overlappende_periode EXCLUDE USING GIST (deltaker_ident WITH =, periode WITH &&)
+    CONSTRAINT ingen_overlappende_periode EXCLUDE USING GIST (deltaker_ident WITH =, periode WITH &&) -- Sjekker at det ikke er overlappende perioder for samme deltaker
 );
 
