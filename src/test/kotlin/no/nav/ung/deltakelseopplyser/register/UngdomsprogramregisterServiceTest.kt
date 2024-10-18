@@ -3,17 +3,18 @@ package no.nav.ung.deltakelseopplyser.register
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.verify
+import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import no.nav.ung.deltakelseopplyser.validation.ValidationErrorResponseException
+import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
@@ -42,6 +43,9 @@ class UngdomsprogramregisterServiceTest {
 
     @Autowired
     lateinit var repository: UngdomsprogramDeltakelseRepository
+
+    @Autowired
+    lateinit var entityManager: EntityManager
 
     @MockkBean(relaxed = true)
     lateinit var k9SakService: K9SakService
@@ -89,19 +93,14 @@ class UngdomsprogramregisterServiceTest {
             IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
         )
 
-        val deltakelse = ungdomsprogramregisterService.leggTilIProgram(dto)
+        ungdomsprogramregisterService.leggTilIProgram(dto)
+        entityManager.flush()
 
         // Skal feile fordi deltaker allerede er meldt inn i programmet uten t.o.m dato.
-        assertThrows<ValidationErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
-
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
-            IdentInformasjon("321", false, IdentGruppe.AKTORID),
-            IdentInformasjon("451", true, IdentGruppe.AKTORID)
-        )
-
-        // Skal feile fordi deltaker allerede er meldt inn i programmet med t.o.m dato.
-        ungdomsprogramregisterService.oppdaterProgram(deltakelse.id!!, dto.copy(tilOgMed = onsdag))
-        assertThrows<ValidationErrorResponseException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
+        assertThrows<ConstraintViolationException> {
+            ungdomsprogramregisterService.leggTilIProgram(dto.copy(fraOgMed = onsdag))
+            entityManager.flush()
+        }
     }
 
     @Test

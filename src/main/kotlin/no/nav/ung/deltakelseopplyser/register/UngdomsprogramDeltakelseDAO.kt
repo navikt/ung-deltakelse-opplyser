@@ -1,20 +1,33 @@
 package no.nav.ung.deltakelseopplyser.register
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import org.springframework.data.annotation.CreatedDate
+import io.hypersistence.utils.hibernate.type.range.PostgreSQLRangeType
+import io.hypersistence.utils.hibernate.type.range.Range
+import org.hibernate.annotations.Type
 import java.time.LocalDate
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.ZoneOffset
 import java.util.UUID
+import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedDate
 
 @Entity(name = "ungdomsprogram_deltakelse")
 data class UngdomsprogramDeltakelseDAO(
-    @Column(name = "id") @Id val id: UUID = UUID.randomUUID(),
-    @Column(name = "deltaker_ident") val deltakerIdent: String,
-    @Column(name = "fra_og_med") val fraOgMed: LocalDate,
-    @Column(name = "til_og_med") val tilOgMed: LocalDate? = null,
-    @Column(name = "opprettet_tidspunkt") @CreatedDate val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-    @Column(name = "endret_tidspunkt") val endretTidspunkt: ZonedDateTime? = null
+    @Id
+    @Column(name = "id")
+    val id: UUID = UUID.randomUUID(),
+
+    @Column(name = "deltaker_ident")
+    val deltakerIdent: String,
+
+    @Type(value = PostgreSQLRangeType::class)
+    @Column(name = "periode", columnDefinition = "daterange")
+    val periode: Range<LocalDate>,
+
+    @CreatedDate
+    @Column(name = "opprettet_tidspunkt")
+    val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+
+    @Column(name = "endret_tidspunkt")
+    val endretTidspunkt: ZonedDateTime? = null
 )
+
