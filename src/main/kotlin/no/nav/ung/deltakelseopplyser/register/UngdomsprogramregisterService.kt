@@ -1,5 +1,7 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import io.hypersistence.utils.hibernate.type.range.Range
+import jakarta.validation.ConstraintViolationException
 import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
 import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
@@ -26,11 +28,26 @@ class UngdomsprogramregisterService(
     }
 
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
-        val eksisterendeDeltakelser = hentAlleForDeltaker(deltakelseOpplysningDTO.deltakerIdent)
-        deltakelseOpplysningDTO.verifiserIkkeOverlapper(eksisterendeDeltakelser)
-
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
-        val ungdomsprogramDAO = repository.save(deltakelseOpplysningDTO.mapToDAO())
+        val ungdomsprogramDAO = kotlin.runCatching {
+            repository.save(deltakelseOpplysningDTO.mapToDAO())
+        }.fold(
+            onSuccess = { it },
+            onFailure = {
+                logger.error("Klarte ikke å legge til deltaker i programmet", it)
+                if (it is ConstraintViolationException) {
+
+                    throw ErrorResponseException(
+                        HttpStatus.CONFLICT,
+                        ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                            it.detail = "Deltaker er allerede i programmet"
+                        },
+                        null
+                    )
+                }
+                throw it
+            }
+        )
 
         return ungdomsprogramDAO.mapToDTO()
     }
@@ -66,15 +83,20 @@ class UngdomsprogramregisterService(
         logger.info("Oppdaterer program for deltaker med $deltakelseOpplysningDTO")
         val eksiterende = forsikreEksitererIProgram(id)
 
+        val periode = if (deltakelseOpplysningDTO.tilOgMed == null) {
+            Range.closedInfinite(deltakelseOpplysningDTO.fraOgMed)
+        } else {
+            Range.closed(deltakelseOpplysningDTO.fraOgMed, deltakelseOpplysningDTO.tilOgMed)
+        }
+
         val oppdatert = repository.save(
             eksiterende.copy(
-                fraOgMed = deltakelseOpplysningDTO.fraOgMed,
-                tilOgMed = deltakelseOpplysningDTO.tilOgMed,
+                periode = periode,
                 endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
             )
         )
 
-        if (oppdatert.tilOgMed != null) {
+        if (oppdatert.periode.upper() != null) {
             sendOpphørsHendelseTilK9(oppdatert)
         }
 
@@ -82,7 +104,7 @@ class UngdomsprogramregisterService(
     }
 
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
-        val opphørsdato = oppdatert.tilOgMed
+        val opphørsdato = oppdatert.periode.upper()
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
 
         logger.info("Henter aktørIder for deltaker")
@@ -123,19 +145,24 @@ class UngdomsprogramregisterService(
     }
 
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
+
         return DeltakelseOpplysningDTO(
             id = id,
             deltakerIdent = deltakerIdent,
-            fraOgMed = fraOgMed,
-            tilOgMed = tilOgMed
+            fraOgMed = periode.lower(),
+            tilOgMed = periode.upper()
         )
     }
 
     private fun DeltakelseOpplysningDTO.mapToDAO(): UngdomsprogramDeltakelseDAO {
+        val periode = if (tilOgMed == null) {
+            Range.closedInfinite(fraOgMed)
+        } else {
+            Range.closed(fraOgMed, tilOgMed)
+        }
         return UngdomsprogramDeltakelseDAO(
             deltakerIdent = deltakerIdent,
-            fraOgMed = fraOgMed,
-            tilOgMed = tilOgMed
+            periode = periode
         )
     }
 
