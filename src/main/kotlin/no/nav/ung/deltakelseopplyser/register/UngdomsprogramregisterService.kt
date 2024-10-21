@@ -40,7 +40,7 @@ class UngdomsprogramregisterService(
                     throw ErrorResponseException(
                         HttpStatus.CONFLICT,
                         ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
-                            it.detail = "Deltaker med ident ${deltakelseOpplysningDTO.deltakerIdent} er allerede i programmet"
+                            it.detail = "Deltaker er allerede i programmet"
                         },
                         null
                     )
