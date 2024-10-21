@@ -7,4 +7,5 @@ object Constants {
     const val NAV_CALL_ID = "Nav-Callid"
     const val X_CORRELATION_ID = "X-Correlation-ID"
     const val BEHANLINGSNUMMER = "Behandlingsnummer"
+    const val CALLER_CLIENT_ID: String = "caller_client_id"
 }
