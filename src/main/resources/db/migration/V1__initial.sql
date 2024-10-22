@@ -1,7 +1,6 @@
-drop table if exists ungdomsprogram_deltakelse;
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
-/*CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse
+CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse
 (
     id                  UUID PRIMARY KEY NOT NULL,
     deltaker_ident      VARCHAR(20)      NOT NULL,
@@ -11,5 +10,5 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 
     -- Sjekker at det ikke er overlappende perioder for samme deltaker
     CONSTRAINT ingen_overlappende_periode EXCLUDE USING GIST (deltaker_ident WITH =, periode WITH &&)
-);*/
+);
 
