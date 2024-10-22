@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse
+drop table if exists ungdomsprogram_deltakelse;
+
+/*CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse
 (
     id                  UUID PRIMARY KEY NOT NULL,
     deltaker_ident      VARCHAR(20)      NOT NULL,
@@ -8,5 +10,5 @@ CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse
 
     -- Sjekker at det ikke er overlappende perioder for samme deltaker
     CONSTRAINT ingen_overlappende_periode EXCLUDE USING GIST (deltaker_ident WITH =, periode WITH &&)
-);
+);*/
 
