@@ -96,7 +96,7 @@ class UngdomsprogramregisterService(
             )
         )
 
-        if (oppdatert.periode.upper() != null) {
+        if (oppdatert.getTom() != null) {
             sendOpphørsHendelseTilK9(oppdatert)
         }
 
@@ -104,7 +104,7 @@ class UngdomsprogramregisterService(
     }
 
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
-        val opphørsdato = oppdatert.periode.upper()
+        val opphørsdato = oppdatert.getTom()
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
 
         logger.info("Henter aktørIder for deltaker")
@@ -149,8 +149,8 @@ class UngdomsprogramregisterService(
         return DeltakelseOpplysningDTO(
             id = id,
             deltakerIdent = deltakerIdent,
-            fraOgMed = periode.lower(),
-            tilOgMed = periode.upper()
+            fraOgMed = getFom(),
+            tilOgMed = getTom()
         )
     }
 
