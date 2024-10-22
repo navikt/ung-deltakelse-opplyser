@@ -48,7 +48,7 @@ class UngdomsprogramRegisterVeilederController(
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): List<DeltakelseOpplysningDTO> {
-        return registerService.hentAlleForDeltaker(deltakerIdent = deltakerOpplysningDTO.deltakerIdent)
+        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = deltakerOpplysningDTO.deltakerIdent)
     }
 
     @PutMapping("/oppdater/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])

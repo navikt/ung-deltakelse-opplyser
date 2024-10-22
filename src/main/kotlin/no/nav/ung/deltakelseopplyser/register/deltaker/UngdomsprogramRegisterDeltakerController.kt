@@ -36,6 +36,6 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(): List<DeltakelseOpplysningDTO> {
         val personIdent = tokenValidationContextHolder.personIdent()
-        return registerService.hentAlleForDeltaker(deltakerIdent = personIdent)
+        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = personIdent)
     }
 }

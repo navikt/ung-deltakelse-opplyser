@@ -59,7 +59,7 @@ class UngdomsprogramregisterService(
             return true
         }
 
-        val ungdomsprogramDAO = forsikreEksitererIProgram(id)
+        val ungdomsprogramDAO = forsikreEksistererIProgram(id)
         repository.delete(ungdomsprogramDAO)
 
         if (repository.existsById(id)) {
@@ -81,7 +81,7 @@ class UngdomsprogramregisterService(
         deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
     ): DeltakelseOpplysningDTO {
         logger.info("Oppdaterer program for deltaker med $deltakelseOpplysningDTO")
-        val eksiterende = forsikreEksitererIProgram(id)
+        val eksiterende = forsikreEksistererIProgram(id)
 
         val periode = if (deltakelseOpplysningDTO.tilOgMed == null) {
             Range.closedInfinite(deltakelseOpplysningDTO.fraOgMed)
@@ -131,13 +131,13 @@ class UngdomsprogramregisterService(
 
     fun hentFraProgram(id: UUID): DeltakelseOpplysningDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
-        val ungdomsprogramDAO = forsikreEksitererIProgram(id)
+        val ungdomsprogramDAO = forsikreEksistererIProgram(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
-    fun hentAlleForDeltaker(deltakerIdent: String): List<DeltakelseOpplysningDTO> {
+    fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseOpplysningDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
-        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdent).map { it.ident }
+        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
         val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
@@ -166,7 +166,7 @@ class UngdomsprogramregisterService(
         )
     }
 
-    private fun forsikreEksitererIProgram(id: UUID): UngdomsprogramDeltakelseDAO =
+    private fun forsikreEksistererIProgram(id: UUID): UngdomsprogramDeltakelseDAO =
         repository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,

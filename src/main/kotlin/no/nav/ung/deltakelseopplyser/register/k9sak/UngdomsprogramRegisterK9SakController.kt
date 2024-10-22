@@ -36,7 +36,7 @@ class UngdomsprogramRegisterK9SakController(
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(@RequestBody aktørIdDto: AktørIdDto): DeltakerOpplysningerDTO {
-        val opplysninger = registerService.hentAlleForDeltaker(deltakerIdent = aktørIdDto.aktorId)
+        val opplysninger = registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
         return DeltakerOpplysningerDTO(opplysninger)
     }
 }

@@ -19,8 +19,8 @@ class PdlService(
         private val logger = LoggerFactory.getLogger(PdlService::class.java)
     }
 
-    fun hentIdenter(ident: String, historisk: Boolean = false, identGruppe: IdentGruppe = IdentGruppe.FOLKEREGISTERIDENT): Identliste = runBlocking {
-        val response = pdlClient.execute(HentIdent(HentIdent.Variables(ident, listOf(identGruppe))))
+    fun hentIdenter(ident: String, historisk: Boolean = false): Identliste = runBlocking {
+        val response = pdlClient.execute(HentIdent(HentIdent.Variables(ident)))
 
         if (!response.extensions.isNullOrEmpty()) logger.info("PDL response extensions: ${response.extensions}")
 
@@ -47,7 +47,7 @@ class PdlService(
     }
 
     fun hentAktørIder(ident: String, historisk: Boolean = false): List<IdentInformasjon> {
-        val identliste = hentIdenter(ident = ident, identGruppe = IdentGruppe.AKTORID, historisk = historisk)
+        val identliste = hentIdenter(ident = ident, historisk = historisk)
         return runCatching {
             identliste.identer.filter { it.gruppe == IdentGruppe.AKTORID }
         }
