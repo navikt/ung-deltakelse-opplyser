@@ -22,7 +22,6 @@ spec:
   accessPolicy:
     inbound:
       rules:
-        - application: ungdomsytelse-soknad
       {{#each inboundRules}}
         - application: {{app}}
           namespace: {{namespace}}

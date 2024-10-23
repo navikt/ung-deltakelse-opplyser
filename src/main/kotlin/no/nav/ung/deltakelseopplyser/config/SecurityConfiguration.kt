@@ -9,4 +9,5 @@ internal class SecurityConfiguration
 
 object Issuers {
     const val TOKEN_X = "tokenx"
+    const val AZURE = "azure"
 }
