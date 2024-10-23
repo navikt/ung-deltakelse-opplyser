@@ -36,9 +36,11 @@ class UngdomsprogramregisterService(
             onFailure = { throwable: Throwable ->
                 logger.error("Klarte ikke å legge til deltaker i programmet", throwable)
                 if (throwable is DataIntegrityViolationException) {
+                    val mostSpecificCause = throwable.mostSpecificCause
+                    logger.error("Most specific cause: $mostSpecificCause")
                     throw ErrorResponseException(
                         HttpStatus.CONFLICT,
-                        ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                        ProblemDetail.forStatus(HttpStatus.CONFLICT).also {
                             it.detail = "Deltaker er allerede i programmet"
                         },
                         throwable
