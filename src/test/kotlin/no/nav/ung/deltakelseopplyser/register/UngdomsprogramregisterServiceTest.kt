@@ -8,7 +8,6 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
-import no.nav.ung.deltakelseopplyser.validation.ValidationErrorResponseException
 import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -83,13 +82,13 @@ class UngdomsprogramregisterServiceTest {
         val onsdag = LocalDate.parse("2024-10-09")
 
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = "123",
+            deltakerIdent = "02499435811",
             fraOgMed = mandag,
             tilOgMed = null
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
-            IdentInformasjon("123", false, IdentGruppe.FOLKEREGISTERIDENT),
+            IdentInformasjon("02499435811", false, IdentGruppe.FOLKEREGISTERIDENT),
             IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
         )
 
@@ -102,6 +101,7 @@ class UngdomsprogramregisterServiceTest {
             entityManager.flush()
         }
     }
+
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {

@@ -1,7 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
-import jakarta.validation.ConstraintViolationException
 import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
 import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
@@ -9,6 +8,7 @@ import no.nav.k9.sak.typer.AktørId
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -33,19 +33,18 @@ class UngdomsprogramregisterService(
             repository.save(deltakelseOpplysningDTO.mapToDAO())
         }.fold(
             onSuccess = { it },
-            onFailure = {
-                logger.error("Klarte ikke å legge til deltaker i programmet", it)
-                if (it is ConstraintViolationException) {
-
+            onFailure = { throwable: Throwable ->
+                logger.error("Klarte ikke å legge til deltaker i programmet", throwable)
+                if (throwable is DataIntegrityViolationException) {
                     throw ErrorResponseException(
                         HttpStatus.CONFLICT,
                         ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
                             it.detail = "Deltaker er allerede i programmet"
                         },
-                        null
+                        throwable
                     )
                 }
-                throw it
+                throw throwable
             }
         )
 
