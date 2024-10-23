@@ -8,7 +8,6 @@ import no.nav.k9.sak.typer.AktørId
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import org.slf4j.LoggerFactory
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -29,27 +28,7 @@ class UngdomsprogramregisterService(
 
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
-        val ungdomsprogramDAO = kotlin.runCatching {
-            repository.save(deltakelseOpplysningDTO.mapToDAO())
-        }.fold(
-            onSuccess = { it },
-            onFailure = { throwable: Throwable ->
-                logger.error("Klarte ikke å legge til deltaker i programmet", throwable)
-                if (throwable is DataIntegrityViolationException) {
-                    val mostSpecificCause = throwable.mostSpecificCause
-                    logger.error("Most specific cause: $mostSpecificCause")
-                    throw ErrorResponseException(
-                        HttpStatus.CONFLICT,
-                        ProblemDetail.forStatus(HttpStatus.CONFLICT).also {
-                            it.detail = "Deltaker er allerede i programmet"
-                        },
-                        throwable
-                    )
-                }
-                throw throwable
-            }
-        )
-
+        val ungdomsprogramDAO = repository.save(deltakelseOpplysningDTO.mapToDAO())
         return ungdomsprogramDAO.mapToDTO()
     }
 

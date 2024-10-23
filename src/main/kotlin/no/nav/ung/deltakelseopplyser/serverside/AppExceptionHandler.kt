@@ -7,8 +7,10 @@ import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnaut
 import no.nav.ung.deltakelseopplyser.validation.ParameterType
 import no.nav.ung.deltakelseopplyser.validation.ValidationProblemDetails
 import no.nav.ung.deltakelseopplyser.validation.Violation
+import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.FORBIDDEN
@@ -94,6 +96,47 @@ class AppExceptionHandler : ResponseEntityExceptionHandler() {
             detail = exception.message ?: ""
         )
         log.debug("{}", problemDetails)
+        return problemDetails
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    @ResponseStatus(INTERNAL_SERVER_ERROR)
+    fun håndtereDataIntegrityViolationException(
+        exception: DataIntegrityViolationException,
+        request: ServletWebRequest,
+    ): ProblemDetail {
+        val konkretFeil = exception.mostSpecificCause
+        val problemDetails = when (konkretFeil) {
+            is PSQLException -> {
+                val serverErrorMessage = konkretFeil.serverErrorMessage
+                if (serverErrorMessage != null && serverErrorMessage.message?.contains("ingen_overlappende_periode") == true) {
+                    request.respondProblemDetails(
+                        status = HttpStatus.CONFLICT,
+                        title = "Deltaker er allerede i programmet for oppgitt periode",
+                        type = URI("/problem-details/deltaker-med-overlappende-periode"),
+                        detail = serverErrorMessage.detail!!
+                    )
+                } else {
+                    request.respondProblemDetails(
+                        status = INTERNAL_SERVER_ERROR,
+                        title = "Dataintegritetsfeil - uventet feil",
+                        type = URI("/problem-details/data-integritetsfeil"),
+                        detail = konkretFeil.message ?: "Uforventet feil"
+                    )
+                }
+            }
+
+            else -> {
+                request.respondProblemDetails(
+                    status = INTERNAL_SERVER_ERROR,
+                    title = "Dataintegritetsfeil - uventet feil",
+                    type = URI("/problem-details/data-integritetsfeil"),
+                    detail = konkretFeil.message ?: "Uforventet feil"
+                )
+            }
+        }
+
+        log.error("DataIntegrityViolationException problemdetails: {}", problemDetails, exception)
         return problemDetails
     }
 
