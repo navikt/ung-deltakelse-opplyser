@@ -10,6 +10,7 @@ data class DeltakerOpplysningerDTO(
 data class DeltakelseOpplysningDTO(
     val id: UUID? = null,
     val deltakerIdent: String,
+    val harSøkt: Boolean,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate? = null,
 ) {
