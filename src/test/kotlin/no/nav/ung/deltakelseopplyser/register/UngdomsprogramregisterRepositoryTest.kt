@@ -59,6 +59,7 @@ class UngdomsprogramregisterRepositoryTest {
         repository.saveAndFlush(
             UngdomsprogramDeltakelseDAO(
                 deltakerIdent = "123",
+                harSøkt = false,
                 periode = periodeA
             )
         )
@@ -68,6 +69,7 @@ class UngdomsprogramregisterRepositoryTest {
                 repository.saveAndFlush(
                     UngdomsprogramDeltakelseDAO(
                         deltakerIdent = "123",
+                        harSøkt = false,
                         periode = periodeB
                     )
                 )
@@ -77,6 +79,7 @@ class UngdomsprogramregisterRepositoryTest {
                 repository.saveAndFlush(
                     UngdomsprogramDeltakelseDAO(
                         deltakerIdent = "123",
+                        harSøkt = false,
                         periode = periodeB
                     )
                 )

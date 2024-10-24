@@ -83,6 +83,17 @@ class UngdomsprogramregisterService(
         return oppdatert.mapToDTO()
     }
 
+    fun markerSomHarSøkt(id: UUID): UngdomsprogramDeltakelseDAO {
+        logger.info("Markerer at deltaker har søkt programmet med id $id")
+        val eksisterende = forsikreEksistererIProgram(id)
+        return repository.save(
+            eksisterende.copy(
+                harSøkt = true,
+                endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
+            )
+        )
+    }
+
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
         val opphørsdato = oppdatert.getTom()
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
@@ -129,6 +140,7 @@ class UngdomsprogramregisterService(
         return DeltakelseOpplysningDTO(
             id = id,
             deltakerIdent = deltakerIdent,
+            harSøkt = harSøkt,
             fraOgMed = getFom(),
             tilOgMed = getTom()
         )
@@ -142,7 +154,8 @@ class UngdomsprogramregisterService(
         }
         return UngdomsprogramDeltakelseDAO(
             deltakerIdent = deltakerIdent,
-            periode = periode
+            periode = periode,
+            harSøkt = harSøkt
         )
     }
 

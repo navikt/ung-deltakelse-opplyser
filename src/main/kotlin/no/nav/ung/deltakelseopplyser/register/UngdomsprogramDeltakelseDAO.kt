@@ -24,6 +24,9 @@ data class UngdomsprogramDeltakelseDAO(
     @Column(name = "periode", columnDefinition = "daterange")
     private val periode: Range<LocalDate>,
 
+    @Column(name = "har_sokt")
+    val harSøkt: Boolean,
+
     @CreatedDate
     @Column(name = "opprettet_tidspunkt")
     val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),

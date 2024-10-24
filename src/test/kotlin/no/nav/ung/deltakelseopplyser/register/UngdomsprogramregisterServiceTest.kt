@@ -67,6 +67,7 @@ class UngdomsprogramregisterServiceTest {
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = LocalDate.now(),
+            harSøkt = false,
             tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
@@ -84,6 +85,7 @@ class UngdomsprogramregisterServiceTest {
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "02499435811",
             fraOgMed = mandag,
+            harSøkt = false,
             tilOgMed = null
         )
 
@@ -107,6 +109,7 @@ class UngdomsprogramregisterServiceTest {
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
+            harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = LocalDate.now().plusDays(10)
         )
@@ -121,6 +124,7 @@ class UngdomsprogramregisterServiceTest {
     fun `Deltaker blir fjernet fra programmet`() {
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
+            harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = null
         )
@@ -139,6 +143,7 @@ class UngdomsprogramregisterServiceTest {
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = mandag,
+            harSøkt = false,
             tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
@@ -152,6 +157,7 @@ class UngdomsprogramregisterServiceTest {
         val oppdatertDto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = mandag,
+            harSøkt = false,
             tilOgMed = onsdag
         )
         val oppdatertInnmelding = ungdomsprogramregisterService.oppdaterProgram(innmelding.id!!, oppdatertDto)
@@ -169,6 +175,7 @@ class UngdomsprogramregisterServiceTest {
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = "123",
             fraOgMed = LocalDate.now(),
+            harSøkt = false,
             tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
