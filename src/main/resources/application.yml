@@ -18,6 +18,18 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: ${SPRING_APPLICATION_NAME}
+      auto-offset-reset: earliest
+      isolation-level: read_committed
+      enable-auto-commit: false
+    producer:
+      client-id: ${HOSTNAME}
+      retries: 3
+      transaction-id-prefix: -tx
+
 management:
   endpoint:
     health:

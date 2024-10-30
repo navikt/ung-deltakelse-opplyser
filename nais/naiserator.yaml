@@ -19,6 +19,8 @@ spec:
   azure:
     application:
       enabled: true
+  kafka:
+    pool: {{kafkaPool}}
   accessPolicy:
     inbound:
       rules:

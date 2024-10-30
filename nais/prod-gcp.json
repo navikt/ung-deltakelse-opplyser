@@ -38,6 +38,7 @@
     "diskAutoresize": "true",
     "highAvailability": "true"
   },
+  "kafkaPool": "nav-prod",
   "observabilityEnabled": "true",
   "env": {
     "SERVER_PORT": "8080",

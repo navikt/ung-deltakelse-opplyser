@@ -2,10 +2,20 @@ spring:
   datasource:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
   flyway:
     enabled: true
+
   jpa:
     show-sql: true
+
+  kafka:
+    bootstrap-servers: localhost:9092 # placeholder
+    consumer:
+      group-id: ung-deltakelse-opplyser
+      auto-offset-reset: earliest
+    producer:
+      client-id: ung-deltakelse-opplyser
 
 no.nav:
   security:
