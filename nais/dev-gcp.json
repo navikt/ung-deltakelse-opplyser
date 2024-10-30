@@ -24,7 +24,7 @@
       "cluster": "dev-gcp"
     },
     {
-      "app": "ungdomsytelse-soknad",
+      "app": "ungdomsytelse-deltaker",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
     },
