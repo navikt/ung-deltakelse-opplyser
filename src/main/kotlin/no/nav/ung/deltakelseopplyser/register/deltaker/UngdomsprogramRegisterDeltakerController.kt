@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
 import java.util.*
 
 @RestController
@@ -45,6 +46,14 @@ class UngdomsprogramRegisterDeltakerController(
         return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = personIdent)
     }
 
+    @GetMapping("/hent/alle/perioder", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet med rapporteringsperioder")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentAlleProgramperiodeinfoForDeltaker(): List<DeltakelsePeriodInfo> {
+        val personIdent = tokenValidationContextHolder.personIdent()
+        return registerService.hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId = personIdent)
+    }
+
     @PutMapping("/{id}/marker-har-sokt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Markerer at deltakelsen er søkt om")
     @ResponseStatus(HttpStatus.OK)
@@ -55,9 +64,24 @@ class UngdomsprogramRegisterDeltakerController(
     @PutMapping("/{id}/registrer-inntekt-i-periode", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Registrer inntekt i en periode")
     @ResponseStatus(HttpStatus.OK)
-
-    fun registrerInntektIPeriode(@PathVariable id: UUID, @RequestBody inntektIPeriodeDTO: InntektIPeriodeDTO): InntektIPeriodeDTO {
+    fun registrerInntektIPeriode(
+        @PathVariable id: UUID,
+        @RequestBody inntektIPeriodeDTO: InntektIPeriodeDTO,
+    ): InntektIPeriodeDTO {
         return registerService.registrerInntektIPeriode(id, inntektIPeriodeDTO)
     }
 
+    data class DeltakelsePeriodInfo(
+        val deltakerIdent: String? = null,
+        val programPeriodeFraOgMed: LocalDate,
+        val programperiodeTilOgMed: LocalDate? = null,
+        val rapporteringsPerioder: List<RapportPeriodeinfoDTO> = emptyList()
+    )
+
+    data class RapportPeriodeinfoDTO(
+        val fraOgMed: LocalDate,
+        val tilOgMed: LocalDate,
+        val harSøkt: Boolean,
+        val inntekt: Double? = null,
+    )
 }

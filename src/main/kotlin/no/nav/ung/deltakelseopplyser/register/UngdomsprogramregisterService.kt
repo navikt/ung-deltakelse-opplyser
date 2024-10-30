@@ -5,16 +5,22 @@ import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
 import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.k9.sak.typer.AktørId
+import no.nav.k9.sak.typer.Periode
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
+import no.nav.ung.deltakelseopplyser.register.deltaker.UngdomsprogramRegisterDeltakerController
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
+import java.time.LocalDate
+import java.time.Period
+import java.time.YearMonth
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
+import java.util.stream.Stream
 
 @Service
 class UngdomsprogramregisterService(
@@ -97,6 +103,7 @@ class UngdomsprogramregisterService(
     fun registrerInntektIPeriode(id: UUID, inntektIPeriodeDTO: InntektIPeriodeDTO): InntektIPeriodeDTO {
         logger.info("Inntekt for periode ${inntektIPeriodeDTO.fraOgMed} til ${inntektIPeriodeDTO.tilOgMed} er ${inntektIPeriodeDTO.inntekt}")
         logger.info("Legger til opplysninger om inntekt i en periode for deltakelse $id")
+        return inntektIPeriodeDTO
     }
 
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
@@ -138,6 +145,36 @@ class UngdomsprogramregisterService(
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }
+    }
+
+    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<UngdomsprogramRegisterDeltakerController.DeltakelsePeriodInfo> {
+        logger.info("Henter alle programopplysninger for deltaker.")
+        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
+        val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
+        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
+
+        return ungdomsprogramDAOs.map { deltakelseDAO ->
+            val måneder: Stream<LocalDate> =
+                deltakelseDAO.getFom().datesUntil(deltakelseDAO.getTom(), Period.ofMonths(1))
+
+            val rapporteringsperioder = måneder
+                .map { Periode(YearMonth.from(it)) }
+                .map { måned: Periode ->
+                    UngdomsprogramRegisterDeltakerController.RapportPeriodeinfoDTO(
+                        fraOgMed = måned.fom,
+                        tilOgMed = måned.tom,
+                        harSøkt = false,
+                        inntekt = null
+                    )
+                }.toList()
+
+            UngdomsprogramRegisterDeltakerController.DeltakelsePeriodInfo(
+                deltakerIdent = deltakelseDAO.deltakerIdent,
+                programPeriodeFraOgMed = deltakelseDAO.getFom(),
+                programperiodeTilOgMed = deltakelseDAO.getTom(),
+                rapporteringsPerioder = rapporteringsperioder
+            )
+        }
     }
 
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
