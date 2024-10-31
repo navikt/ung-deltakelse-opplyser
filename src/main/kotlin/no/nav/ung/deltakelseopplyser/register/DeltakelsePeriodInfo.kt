@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 data class DeltakelsePeriodInfo(
     val deltakerIdent: String? = null,
-    val programPeriodeFraOgMed: LocalDate,
+    val programperiodeFraOgMed: LocalDate,
     val programperiodeTilOgMed: LocalDate? = null,
     val harSøkt: Boolean,
     val rapporteringsPerioder: List<RapportPeriodeinfoDTO> = emptyList(),

@@ -163,7 +163,7 @@ class UngdomsprogramregisterService(
 
             DeltakelsePeriodInfo(
                 deltakerIdent = deltakelseDAO.deltakerIdent,
-                programPeriodeFraOgMed = deltakelseDAO.getFom(),
+                programperiodeFraOgMed = deltakelseDAO.getFom(),
                 programperiodeTilOgMed = deltakelseDAO.getTom(),
                 harSøkt = deltakelseDAO.harSøkt,
                 rapporteringsPerioder = rapporteringsperioder
