@@ -30,6 +30,15 @@ spring:
       retries: 3
       transaction-id-prefix: -tx
 
+topic:
+  # Bryter betegner av/på funksjon for kafkalytter. True (på), False (av).
+  listener:
+    # topic.listener.ung-soknad
+    ung-soknad:
+      id: ungdomsytelsesoknad-listener
+      navn: dusseldorf.ungdomsytelse-soknad-cleanup
+      bryter: true
+
 management:
   endpoint:
     health:
