@@ -24,7 +24,7 @@
       "cluster": "dev-gcp"
     },
     {
-      "app": "ungdomsytelse-soknad",
+      "app": "ungdomsytelse-deltaker",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
     },
@@ -43,6 +43,7 @@
     "diskAutoresize": "false",
     "highAvailability": "false"
   },
+  "kafkaPool": "nav-dev",
   "observabilityEnabled": "true",
   "env": {
     "SERVER_PORT": "8080",
