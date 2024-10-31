@@ -20,7 +20,9 @@ class UngdomsytelsesøknadKonsument(
         id = "#{'\${topic.listener.ung-soknad.id}'}",
         groupId = "#{'\${spring.kafka.consumer.group-id}'}",
         autoStartup = "#{'\${topic.listener.ung-soknad.bryter}'}",
-        properties = ["auto.offset.reset: latest"]
+        properties = [
+            "auto.offset.reset=#{'\${topic.listener.ung-soknad.auto-offset-reset}'}"
+        ]
     )
     fun konsumer(
         @Payload ungdomsytelseSøknadTopicEntry: String,

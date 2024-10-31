@@ -38,6 +38,7 @@ topic:
       id: ungdomsytelsesoknad-listener
       navn: dusseldorf.ungdomsytelse-soknad-cleanup
       bryter: true
+      auto-offset-reset: latest
 
 management:
   endpoint:
