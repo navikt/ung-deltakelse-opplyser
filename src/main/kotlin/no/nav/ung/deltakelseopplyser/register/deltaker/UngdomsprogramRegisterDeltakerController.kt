@@ -84,4 +84,5 @@ class UngdomsprogramRegisterDeltakerController(
         val harSøkt: Boolean,
         val inntekt: Double? = null,
     )
+
 }
