@@ -19,7 +19,7 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${KAFKA_BROKERS}
     consumer:
       group-id: ${SPRING_APPLICATION_NAME}
       auto-offset-reset: earliest
