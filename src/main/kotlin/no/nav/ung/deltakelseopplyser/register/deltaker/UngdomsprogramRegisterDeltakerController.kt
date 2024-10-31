@@ -7,7 +7,6 @@ import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.register.InntektIPeriodeDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.utils.personIdent
@@ -59,16 +58,6 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID): UngdomsprogramDeltakelseDAO {
         return registerService.markerSomHarSøkt(id)
-    }
-
-    @PutMapping("/{id}/registrer-inntekt-i-periode", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Registrer inntekt i en periode")
-    @ResponseStatus(HttpStatus.OK)
-    fun registrerInntektIPeriode(
-        @PathVariable id: UUID,
-        @RequestBody inntektIPeriodeDTO: InntektIPeriodeDTO,
-    ): InntektIPeriodeDTO {
-        return registerService.registrerInntektIPeriode(id, inntektIPeriodeDTO)
     }
 
     data class DeltakelsePeriodInfo(

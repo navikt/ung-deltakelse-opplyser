@@ -100,12 +100,6 @@ class UngdomsprogramregisterService(
         )
     }
 
-    fun registrerInntektIPeriode(id: UUID, inntektIPeriodeDTO: InntektIPeriodeDTO): InntektIPeriodeDTO {
-        logger.info("Inntekt for periode ${inntektIPeriodeDTO.fraOgMed} til ${inntektIPeriodeDTO.tilOgMed} er ${inntektIPeriodeDTO.inntekt}")
-        logger.info("Legger til opplysninger om inntekt i en periode for deltakelse $id")
-        return inntektIPeriodeDTO
-    }
-
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
         val opphørsdato = oppdatert.getTom()
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
