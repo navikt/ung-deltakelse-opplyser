@@ -8,7 +8,6 @@ import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.Periode
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
-import no.nav.ung.deltakelseopplyser.register.deltaker.UngdomsprogramRegisterDeltakerController
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -141,7 +140,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
-    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<UngdomsprogramRegisterDeltakerController.DeltakelsePeriodInfo> {
+    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelsePeriodInfo> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
         val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
@@ -154,7 +153,7 @@ class UngdomsprogramregisterService(
             val rapporteringsperioder = måneder
                 .map { Periode(YearMonth.from(it)) }
                 .map { måned: Periode ->
-                    UngdomsprogramRegisterDeltakerController.RapportPeriodeinfoDTO(
+                    RapportPeriodeinfoDTO(
                         fraOgMed = måned.fom,
                         tilOgMed = måned.tom,
                         harSøkt = false,
@@ -162,10 +161,11 @@ class UngdomsprogramregisterService(
                     )
                 }.toList()
 
-            UngdomsprogramRegisterDeltakerController.DeltakelsePeriodInfo(
+            DeltakelsePeriodInfo(
                 deltakerIdent = deltakelseDAO.deltakerIdent,
                 programPeriodeFraOgMed = deltakelseDAO.getFom(),
                 programperiodeTilOgMed = deltakelseDAO.getTom(),
+                harSøkt = deltakelseDAO.harSøkt,
                 rapporteringsPerioder = rapporteringsperioder
             )
         }
