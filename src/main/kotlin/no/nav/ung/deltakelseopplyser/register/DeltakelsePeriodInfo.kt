@@ -1,9 +1,10 @@
 package no.nav.ung.deltakelseopplyser.register
 
 import java.time.LocalDate
+import java.util.*
 
 data class DeltakelsePeriodInfo(
-    val deltakerIdent: String? = null,
+    val id: UUID,
     val programperiodeFraOgMed: LocalDate,
     val programperiodeTilOgMed: LocalDate? = null,
     val harSøkt: Boolean,
@@ -13,6 +14,6 @@ data class DeltakelsePeriodInfo(
 data class RapportPeriodeinfoDTO(
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate,
-    val harSøkt: Boolean,
+    val harRapportert: Boolean,
     val inntekt: Double? = null,
 )

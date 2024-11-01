@@ -156,13 +156,13 @@ class UngdomsprogramregisterService(
                     RapportPeriodeinfoDTO(
                         fraOgMed = måned.fom,
                         tilOgMed = måned.tom,
-                        harSøkt = false,
+                        harRapportert = false,
                         inntekt = null
                     )
                 }.toList()
 
             DeltakelsePeriodInfo(
-                deltakerIdent = deltakelseDAO.deltakerIdent,
+                id = deltakelseDAO.id,
                 programperiodeFraOgMed = deltakelseDAO.getFom(),
                 programperiodeTilOgMed = deltakelseDAO.getTom(),
                 harSøkt = deltakelseDAO.harSøkt,
