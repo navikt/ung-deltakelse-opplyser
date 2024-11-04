@@ -25,10 +25,11 @@ class UngdomsytelsesøknadKonsument(
         ]
     )
     fun konsumer(
-        @Payload ungdomsytelseSøknadTopicEntry: String,
+        @Payload ungdomsytelseSøknadTopicEntry: String
     ) {
-        val søknadPrettyJson =
-            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(ungdomsytelseSøknadTopicEntry)
+        val søknadPrettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(ungdomsytelseSøknadTopicEntry)
         logger.info("Leser melding fra topic: {}", søknadPrettyJson)
+        val søknadTopicEntry = objectMapper.readValue(ungdomsytelseSøknadTopicEntry, UngdomsytelseSøknadTopicEntry::class.java)
+        logger.info("Deserialisert melding fra topic: {}", søknadTopicEntry)
     }
 }

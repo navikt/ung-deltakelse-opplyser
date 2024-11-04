@@ -37,6 +37,7 @@
         <logback.logstash.version>8.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <k9-sak.version>5.1.0</k9-sak.version>
+        <k9-format.version>9.7.1</k9-format.version>
         <graphql-kotlin.version>8.1.0</graphql-kotlin.version>
     </properties>
     <dependencies>
@@ -110,6 +111,11 @@
             <artifactId>kontrakt</artifactId>
             <version>${k9-sak.version}</version>
         </dependency>
+        <dependency>
+            <groupId>no.nav.k9</groupId>
+            <artifactId>soknad</artifactId>
+            <version>${k9-format.version}</version>
+        </dependency>
         <!-- K9 Kontrakter -->
 
         <!-- GraphQL -->
@@ -132,6 +138,10 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <!-- Jackson -->
 
