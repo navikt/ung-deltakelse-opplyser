@@ -1,13 +1,18 @@
 package no.nav.ung.deltakelseopplyser.soknad
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
 
+@JsonTest
 class JournalførtUngdomsytelseSøknadTest {
 
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
+
     private companion object {
-        val objectMapper = jacksonObjectMapper()
 
         //language=JSON
         val søknad = """
@@ -50,7 +55,6 @@ class JournalførtUngdomsytelseSøknadTest {
 
     @Test
     fun `Deserialisering av UngdomsytelseSøknadTopicEntry feiler ikke`() {
-        objectMapper.findAndRegisterModules()
         assertDoesNotThrow {
             objectMapper.readValue(søknad, UngdomsytelseSøknadTopicEntry::class.java)
         }
