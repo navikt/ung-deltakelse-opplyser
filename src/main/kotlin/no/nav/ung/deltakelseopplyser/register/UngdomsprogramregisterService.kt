@@ -5,7 +5,6 @@ import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
 import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.k9.sak.typer.AktørId
-import no.nav.k9.sak.typer.Periode
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import org.slf4j.LoggerFactory
@@ -19,7 +18,6 @@ import java.time.YearMonth
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
-import java.util.stream.Stream
 
 @Service
 class UngdomsprogramregisterService(
@@ -27,8 +25,46 @@ class UngdomsprogramregisterService(
     private val k9SakService: K9SakService,
     private val pdlService: PdlService,
 ) {
-    private companion object {
+    companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
+
+        fun List<UngdomsprogramDeltakelseDAO>.somDeltakelsePeriodInfo(): List<DeltakelsePeriodInfo> = map { deltakelseDAO ->
+            DeltakelsePeriodInfo(
+                id = deltakelseDAO.id,
+                programperiodeFraOgMed = deltakelseDAO.getFom(),
+                programperiodeTilOgMed = deltakelseDAO.getTom(),
+                harSøkt = deltakelseDAO.harSøkt,
+                rapporteringsPerioder = deltakelseDAO.rapporteringsperioder()
+            )
+        }
+
+        private fun UngdomsprogramDeltakelseDAO.rapporteringsperioder(): List<RapportPeriodeinfoDTO> {
+            val fraOgMed = getFom()
+            val tilOgMed = getTom()
+
+            val måneder: MutableList<LocalDate> = fraOgMed
+                .datesUntil(tilOgMed?.plusMonths(1) ?: fraOgMed.plusMonths(1), Period.ofMonths(1))
+                .toList()
+
+            return måneder.mapIndexed { index, date ->
+                val startOfMonth = if (index == 0) date else date.withDayOfMonth(1)
+                val endOfMonth =
+                    if (tilOgMed != null && date.plusMonths(1).isAfter(tilOgMed))
+                        tilOgMed
+                    else
+                        YearMonth.from(date).atEndOfMonth()
+
+                no.nav.k9.søknad.felles.type.Periode(startOfMonth, endOfMonth)
+            }
+                .map { måned: no.nav.k9.søknad.felles.type.Periode ->
+                    RapportPeriodeinfoDTO(
+                        fraOgMed = måned.fraOgMed,
+                        tilOgMed = måned.tilOgMed,
+                        harRapportert = false,
+                        inntekt = null
+                    )
+                }.toList()
+        }
     }
 
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
@@ -146,29 +182,17 @@ class UngdomsprogramregisterService(
         val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
-        return ungdomsprogramDAOs.map { deltakelseDAO ->
-            val måneder: Stream<LocalDate> =
-                deltakelseDAO.getFom().datesUntil(deltakelseDAO.getTom() ?: deltakelseDAO.getFom().plusMonths(1), Period.ofMonths(1))
+        return ungdomsprogramDAOs.somDeltakelsePeriodInfo()
+    }
 
-            val rapporteringsperioder = måneder
-                .map { Periode(YearMonth.from(it)) }
-                .map { måned: Periode ->
-                    RapportPeriodeinfoDTO(
-                        fraOgMed = måned.fom,
-                        tilOgMed = måned.tom,
-                        harRapportert = false,
-                        inntekt = null
-                    )
-                }.toList()
-
-            DeltakelsePeriodInfo(
-                id = deltakelseDAO.id,
-                programperiodeFraOgMed = deltakelseDAO.getFom(),
-                programperiodeTilOgMed = deltakelseDAO.getTom(),
-                harSøkt = deltakelseDAO.harSøkt,
-                rapporteringsPerioder = rapporteringsperioder
-            )
-        }
+    fun List<UngdomsprogramDeltakelseDAO>.somDeltakelsePeriodInfo(): List<DeltakelsePeriodInfo> = map { deltakelseDAO ->
+        DeltakelsePeriodInfo(
+            id = deltakelseDAO.id,
+            programperiodeFraOgMed = deltakelseDAO.getFom(),
+            programperiodeTilOgMed = deltakelseDAO.getTom(),
+            harSøkt = deltakelseDAO.harSøkt,
+            rapporteringsPerioder = deltakelseDAO.rapporteringsperioder()
+        )
     }
 
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
