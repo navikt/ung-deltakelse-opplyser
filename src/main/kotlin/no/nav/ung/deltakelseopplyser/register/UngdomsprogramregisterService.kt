@@ -148,7 +148,7 @@ class UngdomsprogramregisterService(
 
         return ungdomsprogramDAOs.map { deltakelseDAO ->
             val måneder: Stream<LocalDate> =
-                deltakelseDAO.getFom().datesUntil(deltakelseDAO.getTom(), Period.ofMonths(1))
+                deltakelseDAO.getFom().datesUntil(deltakelseDAO.getTom() ?: LocalDate.now(), Period.ofMonths(1))
 
             val rapporteringsperioder = måneder
                 .map { Periode(YearMonth.from(it)) }
