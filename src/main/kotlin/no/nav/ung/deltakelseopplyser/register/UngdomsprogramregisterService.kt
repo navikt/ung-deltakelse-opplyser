@@ -49,10 +49,10 @@ class UngdomsprogramregisterService(
                 deltakelsetidsLinje.splitAtRegular(getFom(), deltakelsetidsLinje.maxLocalDate, Period.ofMonths(1))
 
             return deltakelseperiodeMånedForMånedTidslinje.toSegments()
-                .map { segment: LocalDateSegment<UngdomsprogramDeltakelseDAO> ->
+                .map { månedSegment: LocalDateSegment<UngdomsprogramDeltakelseDAO> ->
                     RapportPeriodeinfoDTO(
-                        fraOgMed = segment.fom,
-                        tilOgMed = segment.tom,
+                        fraOgMed = månedSegment.fom,
+                        tilOgMed = månedSegment.tom,
                         harRapportert = false,
                         inntekt = null
                     )
