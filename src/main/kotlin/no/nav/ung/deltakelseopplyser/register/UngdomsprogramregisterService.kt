@@ -185,16 +185,6 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.somDeltakelsePeriodInfo()
     }
 
-    fun List<UngdomsprogramDeltakelseDAO>.somDeltakelsePeriodInfo(): List<DeltakelsePeriodInfo> = map { deltakelseDAO ->
-        DeltakelsePeriodInfo(
-            id = deltakelseDAO.id,
-            programperiodeFraOgMed = deltakelseDAO.getFom(),
-            programperiodeTilOgMed = deltakelseDAO.getTom(),
-            harSøkt = deltakelseDAO.harSøkt,
-            rapporteringsPerioder = deltakelseDAO.rapporteringsperioder()
-        )
-    }
-
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
 
         return DeltakelseOpplysningDTO(
