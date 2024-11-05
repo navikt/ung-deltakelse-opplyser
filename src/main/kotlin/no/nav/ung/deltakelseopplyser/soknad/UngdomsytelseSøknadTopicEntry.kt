@@ -8,13 +8,13 @@ data class MetaInfo(
     val soknadDialogCommitSha: String? = null,
 )
 
-data class UngdomsytelseSøknadTopicEntry(val metadata: MetaInfo, val data: UngdomsytelseSøknad)
-
-data class UngdomsytelseSøknad(
-    val journalførtMelding: JournalførtUngdomsytelseSøknad,
-)
+data class UngdomsytelseSøknadTopicEntry(val metadata: MetaInfo, val data: JournalførtUngdomsytelseSøknad)
 
 data class JournalførtUngdomsytelseSøknad(
+    val journalførtMelding: Ungdomsytelsesøknad,
+)
+
+data class Ungdomsytelsesøknad(
     val type: String,
     val journalpostId: String,
     val søknad: Søknad

@@ -5,11 +5,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UngdomsytelsesøknadKonsument(
     private val objectMapper: ObjectMapper,
+    private val ungdomsytelsesøknadService: UngdomsytelsesøknadService,
 ) {
 
     companion object {
@@ -26,11 +26,12 @@ class UngdomsytelsesøknadKonsument(
         ]
     )
     fun konsumer(
-        @Payload ungdomsytelseSøknadTopicEntry: String
+        @Payload ungdomsytelseSøknadTopicEntry: String,
     ) {
-        val søknadPrettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(ungdomsytelseSøknadTopicEntry)
-        logger.info("Leser melding fra topic: {}", søknadPrettyJson)
-        val søknadTopicEntry = objectMapper.readValue(ungdomsytelseSøknadTopicEntry, UngdomsytelseSøknadTopicEntry::class.java)
+        val søknadTopicEntry =
+            objectMapper.readValue(ungdomsytelseSøknadTopicEntry, UngdomsytelseSøknadTopicEntry::class.java)
         logger.info("Deserialisert melding fra topic: {}", søknadTopicEntry)
+        ungdomsytelsesøknadService.håndterMottattSøknad(søknadTopicEntry.data.journalførtMelding)
+        logger.info("Håndtert søknad fra topic")
     }
 }
