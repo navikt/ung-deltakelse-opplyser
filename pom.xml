@@ -37,6 +37,7 @@
         <logback.logstash.version>8.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <k9-sak.version>5.1.0</k9-sak.version>
+        <fp-sak.version>2.7.1</fp-sak.version>
         <k9-format.version>9.7.1</k9-format.version>
         <graphql-kotlin.version>8.1.0</graphql-kotlin.version>
     </properties>
@@ -200,6 +201,14 @@
         </dependency>
 
         <!-- Logging -->
+
+        <!-- Utils -->
+        <dependency>
+            <groupId>no.nav.fpsak.tidsserie</groupId>
+            <artifactId>fpsak-tidsserie</artifactId>
+            <version>${fp-sak.version}</version>
+        </dependency>
+        <!-- Utils -->
 
         <!-- Diverse testing -->
         <dependency>
