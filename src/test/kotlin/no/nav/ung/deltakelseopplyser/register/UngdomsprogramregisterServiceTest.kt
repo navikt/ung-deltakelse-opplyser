@@ -208,7 +208,22 @@ class UngdomsprogramregisterServiceTest {
         val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder
         assertThat(rapporteringsPerioder).hasSize(6)
 
-        assertEquals(rapporteringsPerioder.first().fraOgMed, LocalDate.parse("2024-01-15"))
-        assertEquals(rapporteringsPerioder.last().tilOgMed, LocalDate.parse("2024-06-15"))
+        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(LocalDate.parse("2024-01-15"))
+        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(LocalDate.parse("2024-01-31"))
+
+        assertThat(rapporteringsPerioder[1].fraOgMed).isEqualTo(LocalDate.parse("2024-02-01"))
+        assertThat(rapporteringsPerioder[1].tilOgMed).isEqualTo(LocalDate.parse("2024-02-29"))
+
+        assertThat(rapporteringsPerioder[2].fraOgMed).isEqualTo(LocalDate.parse("2024-03-01"))
+        assertThat(rapporteringsPerioder[2].tilOgMed).isEqualTo(LocalDate.parse("2024-03-31"))
+
+        assertThat(rapporteringsPerioder[3].fraOgMed).isEqualTo(LocalDate.parse("2024-04-01"))
+        assertThat(rapporteringsPerioder[3].tilOgMed).isEqualTo(LocalDate.parse("2024-04-30"))
+
+        assertThat(rapporteringsPerioder[4].fraOgMed).isEqualTo(LocalDate.parse("2024-05-01"))
+        assertThat(rapporteringsPerioder[4].tilOgMed).isEqualTo(LocalDate.parse("2024-05-31"))
+
+        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(LocalDate.parse("2024-06-01"))
+        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(LocalDate.parse("2024-06-15"))
     }
 }

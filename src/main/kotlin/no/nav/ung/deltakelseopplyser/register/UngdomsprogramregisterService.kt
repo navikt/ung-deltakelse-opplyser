@@ -43,7 +43,7 @@ class UngdomsprogramregisterService(
             val deltakelsetidsLinje = LocalDateTimeline(getFom(), getTom() ?: getFom().plusMonths(1), this)
 
             val deltakelseperiodeMånedForMånedTidslinje: LocalDateTimeline<UngdomsprogramDeltakelseDAO> =
-                deltakelsetidsLinje.splitAtRegular(getFom(), deltakelsetidsLinje.maxLocalDate, Period.ofMonths(1))
+                deltakelsetidsLinje.splitAtRegular(getFom().withDayOfMonth(1), deltakelsetidsLinje.maxLocalDate, Period.ofMonths(1))
 
             return deltakelseperiodeMånedForMånedTidslinje.toSegments()
                 .map { månedSegment: LocalDateSegment<UngdomsprogramDeltakelseDAO> ->
