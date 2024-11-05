@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 
@@ -15,5 +16,5 @@ data class RapportPeriodeinfoDTO(
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate,
     val harRapportert: Boolean,
-    val inntekt: Double? = null,
+    val inntekt: BigDecimal? = null,
 )
