@@ -36,6 +36,7 @@
         <spring-cloud.version>4.1.4</spring-cloud.version>
         <logback.logstash.version>8.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
+        <awaitility.version>4.2.2</awaitility.version>
         <k9-sak.version>5.1.0</k9-sak.version>
         <fp-sak.version>2.7.1</fp-sak.version>
         <k9-format.version>9.7.1</k9-format.version>
@@ -230,6 +231,12 @@
             <groupId>com.ninja-squad</groupId>
             <artifactId>springmockk</artifactId>
             <version>${spring-mockk.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility-kotlin</artifactId>
+            <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Diverse testing -->

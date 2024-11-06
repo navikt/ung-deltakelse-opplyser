@@ -10,12 +10,19 @@ spring:
     show-sql: true
 
   kafka:
-    bootstrap-servers: localhost:9092 # placeholder
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092} # placeholder
     consumer:
       group-id: ung-deltakelse-opplyser
       auto-offset-reset: earliest
     producer:
       client-id: ung-deltakelse-opplyser
+
+topic:
+  # Bryter betegner av/på funksjon for kafkalytter. True (på), False (av).
+  listener:
+    # topic.listener.ung-soknad
+    ung-soknad:
+      auto-offset-reset: earliest
 
 no.nav:
   security:
