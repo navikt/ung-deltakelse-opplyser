@@ -192,7 +192,7 @@ class UngdomsprogramregisterServiceTest {
     }
 
     @Test
-    fun `Deltakelsesperioder med rapporteringsperingsperioder`() {
+    fun `Forventer riktig genererte rapporteringsperioder fra deltakelsesperiode`() {
         val deltakelsePeriodInfos = listOf(
             UngdomsprogramDeltakelseDAO(
                 id = UUID.randomUUID(),
@@ -225,5 +225,29 @@ class UngdomsprogramregisterServiceTest {
 
         assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(LocalDate.parse("2024-06-01"))
         assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(LocalDate.parse("2024-06-15"))
+    }
+
+    @Test
+    fun `Forvent at rapporteringsperiode genereres til måneden etter fom dato dersom tom dato ikke er satt`() {
+        val deltakelsePeriodInfos = listOf(
+            UngdomsprogramDeltakelseDAO(
+                id = UUID.randomUUID(),
+                deltakerIdent = "123",
+                periode = Range.closedInfinite(LocalDate.parse("2024-01-15")),
+                harSøkt = false,
+                opprettetTidspunkt = ZonedDateTime.now(),
+                endretTidspunkt = null
+            )
+        ).somDeltakelsePeriodInfo()
+
+        assertThat(deltakelsePeriodInfos).hasSize(1)
+        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder
+        assertThat(rapporteringsPerioder).hasSize(2)
+
+        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(LocalDate.parse("2024-01-15"))
+        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(LocalDate.parse("2024-01-31"))
+
+        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(LocalDate.parse("2024-02-01"))
+        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(LocalDate.parse("2024-02-29"))
     }
 }

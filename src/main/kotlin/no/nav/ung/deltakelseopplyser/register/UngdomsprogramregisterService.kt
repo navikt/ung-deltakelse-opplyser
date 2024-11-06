@@ -40,7 +40,8 @@ class UngdomsprogramregisterService(
             }
 
         private fun UngdomsprogramDeltakelseDAO.rapporteringsperioder(): List<RapportPeriodeinfoDTO> {
-            val deltakelsetidsLinje = LocalDateTimeline(getFom(), getTom() ?: getFom().plusMonths(1), this)
+            val månedEtterFomDato = getFom().plusMonths(1)
+            val deltakelsetidsLinje = LocalDateTimeline(getFom(), getTom() ?: månedEtterFomDato.withDayOfMonth(månedEtterFomDato.lengthOfMonth()), this)
 
             val deltakelseperiodeMånedForMånedTidslinje: LocalDateTimeline<UngdomsprogramDeltakelseDAO> =
                 deltakelsetidsLinje.splitAtRegular(getFom().withDayOfMonth(1), deltakelsetidsLinje.maxLocalDate, Period.ofMonths(1))
