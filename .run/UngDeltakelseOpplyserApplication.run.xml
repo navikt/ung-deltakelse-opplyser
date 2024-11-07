@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="UngDeltakelseOpplyserApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
-    <option name="ACTIVE_PROFILES" value="dev-gcp" />
+    <option name="ACTIVE_PROFILES" value="vtp" />
     <option name="envFilePaths">
       <option value="$PROJECT_DIR$/dev/vtp.env" />
     </option>

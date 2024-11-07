@@ -1,6 +1,8 @@
 package no.nav.ung.deltakelseopplyser.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
+import no.nav.fpsak.tidsserie.LocalDateSegment
+import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
 import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
+import java.time.Period
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
@@ -22,8 +25,37 @@ class UngdomsprogramregisterService(
     private val k9SakService: K9SakService,
     private val pdlService: PdlService,
 ) {
-    private companion object {
+    companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
+
+        fun List<UngdomsprogramDeltakelseDAO>.somDeltakelsePeriodInfo(): List<DeltakelsePeriodInfo> =
+            map { deltakelseDAO ->
+                DeltakelsePeriodInfo(
+                    id = deltakelseDAO.id,
+                    programperiodeFraOgMed = deltakelseDAO.getFom(),
+                    programperiodeTilOgMed = deltakelseDAO.getTom(),
+                    harSøkt = deltakelseDAO.harSøkt,
+                    rapporteringsPerioder = deltakelseDAO.rapporteringsperioder()
+                )
+            }
+
+        private fun UngdomsprogramDeltakelseDAO.rapporteringsperioder(): List<RapportPeriodeinfoDTO> {
+            val månedEtterFomDato = getFom().plusMonths(1)
+            val deltakelsetidsLinje = LocalDateTimeline(getFom(), getTom() ?: månedEtterFomDato.withDayOfMonth(månedEtterFomDato.lengthOfMonth()), this)
+
+            val deltakelseperiodeMånedForMånedTidslinje: LocalDateTimeline<UngdomsprogramDeltakelseDAO> =
+                deltakelsetidsLinje.splitAtRegular(getFom().withDayOfMonth(1), deltakelsetidsLinje.maxLocalDate, Period.ofMonths(1))
+
+            return deltakelseperiodeMånedForMånedTidslinje.toSegments()
+                .map { månedSegment: LocalDateSegment<UngdomsprogramDeltakelseDAO> ->
+                    RapportPeriodeinfoDTO(
+                        fraOgMed = månedSegment.fom,
+                        tilOgMed = månedSegment.tom,
+                        harRapportert = false,
+                        inntekt = null
+                    )
+                }
+        }
     }
 
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
@@ -133,6 +165,15 @@ class UngdomsprogramregisterService(
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }
+    }
+
+    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelsePeriodInfo> {
+        logger.info("Henter alle programopplysninger for deltaker.")
+        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
+        val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
+        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
+
+        return ungdomsprogramDAOs.somDeltakelsePeriodInfo()
     }
 
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {

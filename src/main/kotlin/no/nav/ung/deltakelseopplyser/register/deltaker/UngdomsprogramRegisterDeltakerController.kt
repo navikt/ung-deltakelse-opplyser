@@ -6,7 +6,7 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.register.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.utils.personIdent
@@ -38,9 +38,9 @@ class UngdomsprogramRegisterDeltakerController(
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(): List<DeltakelseOpplysningDTO> {
+    fun hentAlleProgramopplysningerForDeltaker(): List<DeltakelsePeriodInfo> {
         val personIdent = tokenValidationContextHolder.personIdent()
-        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = personIdent)
+        return registerService.hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId = personIdent)
     }
 
     @PutMapping("/{id}/marker-har-sokt", produces = [MediaType.APPLICATION_JSON_VALUE])

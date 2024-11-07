@@ -31,16 +31,15 @@ spec:
             namespace: {{namespace}}
             severity: danger
 
-        - alert: Kafka stream nede
-          expr: sum by (app, pod, container, namespace, client_id) (increase(kafka_stream_failed_stream_threads_total{app="{{app}}"} [3m])) > 10
-          for: 5m
+        - alert: Konsumering av meldinger feiler
+          expr: ceil(increase(spring_kafka_listener_seconds_count{result="failure", app="{{app}}"}[3m])) > 0
+          for: 1m
           annotations:
-            consequence: Prosessering av stream feiler.
-            action: "`kubectl logs \{{ $labels.pod}} -c \{{ $labels.container }} -n \{{ $labels.namespace }}`"
-            summary: "Stream \{{ $labels.client_id }} feiler."
+            summary: "Konsumering av melding i \{{ $labels.name }} feiler. Sjekk loggene for å finne ut hvorfor dette feiler."
+            action: "`kubectl logs \{{ $labels.pod_name }} -n \{{ $labels.namespace }} -c \{{ $labels.app }}`"
           labels:
             namespace: {{namespace}}
-            severity: danger
+            severity: critical
 
         - alert: Høy andel error i logger
           expr: sum by (app, container, pod, namespace) (floor(increase(logback_events_total{app="{{app}}", level="error"} [3m]))) > 0

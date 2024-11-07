@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.register
 
 import com.ninjasquad.springmockk.MockkBean
+import io.hypersistence.utils.hibernate.type.range.Range
 import io.mockk.every
 import io.mockk.verify
 import jakarta.persistence.EntityManager
@@ -8,6 +9,8 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
+import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
+import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -25,6 +28,8 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
+import java.time.ZonedDateTime
+import java.util.*
 
 
 @DataJpaTest
@@ -184,5 +189,65 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(hentetDto)
         assertEquals(dto.deltakerIdent, hentetDto.deltakerIdent)
+    }
+
+    @Test
+    fun `Forventer riktig genererte rapporteringsperioder fra deltakelsesperiode`() {
+        val deltakelsePeriodInfos = listOf(
+            UngdomsprogramDeltakelseDAO(
+                id = UUID.randomUUID(),
+                deltakerIdent = "123",
+                periode = Range.closed(LocalDate.parse("2024-01-15"), LocalDate.parse("2024-06-15")),
+                harSøkt = false,
+                opprettetTidspunkt = ZonedDateTime.now(),
+                endretTidspunkt = null
+            )
+        ).somDeltakelsePeriodInfo()
+
+        assertThat(deltakelsePeriodInfos).hasSize(1)
+        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder
+        assertThat(rapporteringsPerioder).hasSize(6)
+
+        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(LocalDate.parse("2024-01-15"))
+        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(LocalDate.parse("2024-01-31"))
+
+        assertThat(rapporteringsPerioder[1].fraOgMed).isEqualTo(LocalDate.parse("2024-02-01"))
+        assertThat(rapporteringsPerioder[1].tilOgMed).isEqualTo(LocalDate.parse("2024-02-29"))
+
+        assertThat(rapporteringsPerioder[2].fraOgMed).isEqualTo(LocalDate.parse("2024-03-01"))
+        assertThat(rapporteringsPerioder[2].tilOgMed).isEqualTo(LocalDate.parse("2024-03-31"))
+
+        assertThat(rapporteringsPerioder[3].fraOgMed).isEqualTo(LocalDate.parse("2024-04-01"))
+        assertThat(rapporteringsPerioder[3].tilOgMed).isEqualTo(LocalDate.parse("2024-04-30"))
+
+        assertThat(rapporteringsPerioder[4].fraOgMed).isEqualTo(LocalDate.parse("2024-05-01"))
+        assertThat(rapporteringsPerioder[4].tilOgMed).isEqualTo(LocalDate.parse("2024-05-31"))
+
+        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(LocalDate.parse("2024-06-01"))
+        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(LocalDate.parse("2024-06-15"))
+    }
+
+    @Test
+    fun `Forvent at rapporteringsperiode genereres til måneden etter fom dato dersom tom dato ikke er satt`() {
+        val deltakelsePeriodInfos = listOf(
+            UngdomsprogramDeltakelseDAO(
+                id = UUID.randomUUID(),
+                deltakerIdent = "123",
+                periode = Range.closedInfinite(LocalDate.parse("2024-01-15")),
+                harSøkt = false,
+                opprettetTidspunkt = ZonedDateTime.now(),
+                endretTidspunkt = null
+            )
+        ).somDeltakelsePeriodInfo()
+
+        assertThat(deltakelsePeriodInfos).hasSize(1)
+        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder
+        assertThat(rapporteringsPerioder).hasSize(2)
+
+        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(LocalDate.parse("2024-01-15"))
+        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(LocalDate.parse("2024-01-31"))
+
+        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(LocalDate.parse("2024-02-01"))
+        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(LocalDate.parse("2024-02-29"))
     }
 }

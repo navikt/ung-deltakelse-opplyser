@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
 
-@Deprecated("Må fjernes før lansering. Dette er kun ment for testing.")
 @RestController
 @RequestMapping("/veileder/register")
 @RequiredIssuers(

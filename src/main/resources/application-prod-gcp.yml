@@ -8,6 +8,8 @@ spring:
       ddl-auto: none
 
   kafka:
+    security:
+      protocol: SSL
     ssl:
       trust-store-location: file:${KAFKA_TRUSTSTORE_PATH}
       trust-store-password: ${KAFKA_CREDSTORE_PASSWORD}

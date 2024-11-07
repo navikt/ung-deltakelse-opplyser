@@ -19,7 +19,7 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${KAFKA_BROKERS}
     consumer:
       group-id: ${SPRING_APPLICATION_NAME}
       auto-offset-reset: earliest
@@ -29,6 +29,16 @@ spring:
       client-id: ${HOSTNAME}
       retries: 3
       transaction-id-prefix: -tx
+
+topic:
+  # Bryter betegner av/på funksjon for kafkalytter. True (på), False (av).
+  listener:
+    # topic.listener.ung-soknad
+    ung-soknad:
+      id: ungdomsytelsesoknad-listener
+      navn: dusseldorf.ungdomsytelse-soknad-cleanup
+      bryter: true
+      auto-offset-reset: latest
 
 management:
   endpoint:
