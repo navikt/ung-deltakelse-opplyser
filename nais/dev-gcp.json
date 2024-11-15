@@ -6,7 +6,6 @@
   "minReplicas": "1",
   "maxReplicas": "2",
   "externalHosts": [
-    "k9-sak.dev-fss-pub.nais.io",
     "pdl-api.dev-fss-pub.nais.io"
   ],
   "ingresses": [
@@ -29,9 +28,9 @@
       "cluster": "dev-gcp"
     },
     {
-      "app": "k9-sak",
+      "app": "ung-sak",
       "namespace": "k9saksbehandling",
-      "cluster": "dev-fss"
+      "cluster": "dev-gcp"
     }
   ],
   "database": {
@@ -50,8 +49,8 @@
     "SPRING_APPLICATION_NAME": "ung-deltakelse-opplyser",
     "SPRING_PROFILES_ACTIVE": "dev-gcp",
 
-    "NO_NAV_GATEWAYS_K9_SAK": "https://k9-sak.dev-fss-pub.nais.io/k9/sak",
-    "K9_SAK_AZURE_SCOPE": "api://dev-fss.k9saksbehandling.k9-sak/.default",
+    "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.dev.nav.no/ung/sak",
+    "K9_SAK_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.ung-sak/.default",
 
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.dev-fss-pub.nais.io",
     "PDL_API_AZURE_SCOPE": "api://dev-fss.pdl.pdl-api/.default",

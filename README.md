@@ -18,16 +18,16 @@
 * [10. Drift og støtte](#11-drift-og-sttte)
 
 # 1. Kontekst
-Tjenesten lytter på hendelser om innmelding/utmelding av ungdommer i programmet, lagrer ned opplysningene, oppretter oppgave for deltaker på mine-sider, og sender opplysingene til k9-sak.
+Tjenesten lytter på hendelser om innmelding/utmelding av ungdommer i programmet, lagrer ned opplysningene, oppretter oppgave for deltaker på mine-sider, og sender opplysingene til ung-sak.
 
 # 2. Funksjonelle Krav
 
 Denne tjenesten understøtter behovet for:
 - lytte på hendelser om innmelding/utmelding av deltakelse i ungdomsprogrammet,
 - lagre ned opplysninger om deltakelse i ungdomsprogrammet, 
-- tilgjengeliggjøre opplysningene for veileder, deltaker og k9-sak,
+- tilgjengeliggjøre opplysningene for veileder, deltaker og ung-sak,
 - opprette oppgave for deltaker på mine-sider,
-- sende opphør av deltakelse til k9-sak.
+- sende opphør av deltakelse til ung-sak.
 
 # 3. Begrensninger
 

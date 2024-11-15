@@ -13,7 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>ung-deltakelse-opplyser</name>
     <description>Tjenesten lytter på hendelser om innmelding/utmelding av ungdommer i programmet, lagrer ned
-        opplysningene, oppretter oppgave for deltaker på mine-sider, og sender opplysingene til k9-sak
+        opplysningene, oppretter oppgave for deltaker på mine-sider, og sender opplysingene til ung-sak
     </description>
     <url/>
     <licenses>
@@ -37,7 +37,7 @@
         <logback.logstash.version>8.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.2.2</awaitility.version>
-        <k9-sak.version>5.1.0</k9-sak.version>
+        <ung-sak.version>0.1.7</ung-sak.version>
         <fp-sak.version>2.7.1</fp-sak.version>
         <k9-format.version>9.7.1</k9-format.version>
         <graphql-kotlin.version>8.1.0</graphql-kotlin.version>
@@ -109,9 +109,9 @@
 
         <!-- K9 Kontrakter -->
         <dependency>
-            <groupId>no.nav.k9.sak</groupId>
+            <groupId>no.nav.ung.sak</groupId>
             <artifactId>kontrakt</artifactId>
-            <version>${k9-sak.version}</version>
+            <version>${ung-sak.version}</version>
         </dependency>
         <dependency>
             <groupId>no.nav.k9</groupId>

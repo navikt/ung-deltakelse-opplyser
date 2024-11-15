@@ -19,7 +19,7 @@ import java.time.Duration
 
 @Configuration
 class K9SakKlientKonfig(
-    @Value("\${no.nav.gateways.k9-sak}") private val k9SakUrl: String,
+    @Value("\${no.nav.gateways.ung-sak}") private val k9SakUrl: String,
     oauth2Config: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService
 ) {
@@ -27,7 +27,7 @@ class K9SakKlientKonfig(
     private companion object {
         val logger: Logger = LoggerFactory.getLogger(K9SakKlientKonfig::class.java)
 
-        const val AZURE_K9_SAK = "azure-k9-sak"
+        const val AZURE_K9_SAK = "azure-ung-sak"
     }
 
     private val azureK9SakClientProperties =

@@ -128,13 +128,13 @@ class UngdomsprogramregisterService(
 
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
         val opphørsdato = oppdatert.getTom()
-        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til k9-sak" }
+        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
 
         logger.info("Henter aktørIder for deltaker")
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltakerIdent, historisk = true)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
-        logger.info("Sender inn hendelse til k9-sak om at deltaker har opphørt programmet")
+        logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
 
         val hendelsedato =
             oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()

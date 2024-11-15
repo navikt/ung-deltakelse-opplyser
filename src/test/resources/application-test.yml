@@ -36,10 +36,10 @@ no.nav:
           accepted_audience: aud-localhost
       client:
         registration:
-          azure-k9-sak:
+          azure-ung-sak:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: client_credentials
-            scope: api://dev-fss:k9saksbehandling:k9-sak/.default
+            scope: api://dev-fss:k9saksbehandling:ung-sak/.default
             authentication:
               client-auth-method: private_key_jwt
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
@@ -55,5 +55,5 @@ no.nav:
               client-jwk: src/test/resources/private_jwk.json
 
   gateways:
-    k9-sak: http://localhost:${wiremock.server.port}/k9-sak-mock/k9/sak
+    ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/k9/sak
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock

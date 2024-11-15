@@ -56,7 +56,7 @@ class K9SakService(
         exception: HttpClientErrorException,
         hendelse: HendelseDto,
     ): Boolean {
-        logger.error("Fikk en HttpClientErrorException når man kalte sendInnHendelse tjeneste i k9-sak. Error response = '${exception.responseBodyAsString}'")
+        logger.error("Fikk en HttpClientErrorException når man kalte sendInnHendelse tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
         return false
     }
 
@@ -65,7 +65,7 @@ class K9SakService(
         exception: HttpServerErrorException,
         hendelse: HendelseDto,
     ): Boolean {
-        logger.error("Fikk en HttpServerErrorException når man kalte sendInnHendelse tjeneste i k9-sak.")
+        logger.error("Fikk en HttpServerErrorException når man kalte sendInnHendelse tjeneste i ung-sak.")
         return false
     }
 
@@ -74,7 +74,7 @@ class K9SakService(
         exception: ResourceAccessException,
         hendelse: HendelseDto,
     ): Boolean {
-        logger.error("Fikk en ResourceAccessException når man kalte sendInnHendelse tjeneste i k9-sak.")
+        logger.error("Fikk en ResourceAccessException når man kalte sendInnHendelse tjeneste i ung-sak.")
         return false
     }
 }
@@ -89,10 +89,10 @@ class K9SakException(
             httpStatus: HttpStatus,
         ): ProblemDetail {
             val problemDetail = ProblemDetail.forStatus(httpStatus)
-            problemDetail.title = "Feil ved kall mot k9-sak"
+            problemDetail.title = "Feil ved kall mot ung-sak"
             problemDetail.detail = melding
 
-            problemDetail.type = URI("/problem-details/k9-sak")
+            problemDetail.type = URI("/problem-details/ung-sak")
 
             return problemDetail
         }
