@@ -27,12 +27,12 @@ class K9SakKlientKonfig(
     private companion object {
         val logger: Logger = LoggerFactory.getLogger(K9SakKlientKonfig::class.java)
 
-        const val AZURE_K9_SAK = "azure-ung-sak"
+        const val AZURE_UNG_SAK = "azure-ung-sak"
     }
 
     private val azureK9SakClientProperties =
-        oauth2Config.registration[AZURE_K9_SAK]
-            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_K9_SAK")
+        oauth2Config.registration[AZURE_UNG_SAK]
+            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_SAK")
 
     @Bean(name = ["k9SakKlient"])
     fun restTemplate(
