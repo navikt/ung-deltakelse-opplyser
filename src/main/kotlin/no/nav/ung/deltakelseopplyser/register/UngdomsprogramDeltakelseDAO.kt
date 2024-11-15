@@ -8,7 +8,6 @@ import java.time.ZonedDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 import jakarta.persistence.*
-import no.nav.k9.sak.typer.Periode
 import org.springframework.data.annotation.CreatedDate
 
 @Entity(name = "ungdomsprogram_deltakelse")

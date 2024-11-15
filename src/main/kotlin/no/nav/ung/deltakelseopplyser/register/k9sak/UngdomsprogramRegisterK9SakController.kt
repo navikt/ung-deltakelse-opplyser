@@ -2,7 +2,7 @@ package no.nav.ung.deltakelseopplyser.register.k9sak
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import no.nav.k9.sak.kontrakt.person.AktørIdDto
+import no.nav.ung.sak.kontrakt.person.AktørIdDto
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers

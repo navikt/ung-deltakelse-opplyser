@@ -3,10 +3,10 @@ package no.nav.ung.deltakelseopplyser.register
 import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
-import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
-import no.nav.k9.sak.kontrakt.hendelser.HendelseInfo
-import no.nav.k9.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
-import no.nav.k9.sak.typer.AktørId
+import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
+import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
+import no.nav.ung.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
+import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import org.slf4j.LoggerFactory

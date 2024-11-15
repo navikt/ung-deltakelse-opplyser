@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.k9sak
 
-import no.nav.k9.sak.kontrakt.hendelser.HendelseDto
+import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
