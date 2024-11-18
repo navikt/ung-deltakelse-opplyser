@@ -7,7 +7,7 @@ import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
-import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -22,7 +22,7 @@ import java.util.*
 @Service
 class UngdomsprogramregisterService(
     private val repository: UngdomsprogramDeltakelseRepository,
-    private val k9SakService: K9SakService,
+    private val ungSakService: UngSakService,
     private val pdlService: PdlService,
 ) {
     companion object {
@@ -144,7 +144,7 @@ class UngdomsprogramregisterService(
         }
 
         val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
-        k9SakService.sendInnHendelse(
+        ungSakService.sendInnHendelse(
             hendelse = HendelseDto(
                 hendelse,
                 AktørId(nåværendeAktørId)

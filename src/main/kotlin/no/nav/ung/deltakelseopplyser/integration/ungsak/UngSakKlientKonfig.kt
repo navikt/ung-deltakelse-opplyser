@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.integration.k9sak
+package no.nav.ung.deltakelseopplyser.integration.ungsak
 
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
@@ -18,23 +18,23 @@ import org.springframework.web.client.RestTemplate
 import java.time.Duration
 
 @Configuration
-class K9SakKlientKonfig(
-    @Value("\${no.nav.gateways.ung-sak}") private val k9SakUrl: String,
+class UngSakKlientKonfig(
+    @Value("\${no.nav.gateways.ung-sak}") private val ungSakUrl: String,
     oauth2Config: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService
 ) {
 
     private companion object {
-        val logger: Logger = LoggerFactory.getLogger(K9SakKlientKonfig::class.java)
+        val logger: Logger = LoggerFactory.getLogger(UngSakKlientKonfig::class.java)
 
         const val AZURE_UNG_SAK = "azure-ung-sak"
     }
 
-    private val azureK9SakClientProperties =
+    private val azureUngSakClientProperties =
         oauth2Config.registration[AZURE_UNG_SAK]
             ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_SAK")
 
-    @Bean(name = ["k9SakKlient"])
+    @Bean(name = ["ungSakKlient"])
     fun restTemplate(
         builder: RestTemplateBuilder,
         mdcInterceptor: MDCValuesPropagatingClientHttpRequestInterceptor,
@@ -43,7 +43,7 @@ class K9SakKlientKonfig(
             .setConnectTimeout(Duration.ofSeconds(20))
             .setReadTimeout(Duration.ofSeconds(20))
             .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .rootUri(k9SakUrl)
+            .rootUri(ungSakUrl)
             .defaultMessageConverters()
             .interceptors(bearerTokenInterceptor(), mdcInterceptor)
             .build()
@@ -55,7 +55,7 @@ class K9SakKlientKonfig(
                 request.uri.path == "/isalive" -> {} // ignorer
 
                 else -> {
-                    oAuth2AccessTokenService.getAccessToken(azureK9SakClientProperties).accessToken?.let {
+                    oAuth2AccessTokenService.getAccessToken(azureUngSakClientProperties).accessToken?.let {
                         request.headers.setBearerAuth(it)
                     }?: throw SecurityException("Access token er null")
                 }

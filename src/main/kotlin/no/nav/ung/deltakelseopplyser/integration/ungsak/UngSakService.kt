@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.integration.k9sak
+package no.nav.ung.deltakelseopplyser.integration.ungsak
 
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import org.slf4j.Logger
@@ -21,7 +21,7 @@ import java.net.URI
 
 @Service
 @Retryable(
-    noRetryFor = [K9SakException::class, HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
+    noRetryFor = [UngSakException::class, HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
     backoff = Backoff(
         delayExpression = "\${spring.rest.retry.initialDelay}",
         multiplierExpression = "\${spring.rest.retry.multiplier}",
@@ -30,19 +30,19 @@ import java.net.URI
     maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
 
     )
-class K9SakService(
-    @Qualifier("k9SakKlient")
-    private val k9SakKlient: RestTemplate,
+class UngSakService(
+    @Qualifier("ungSakKlient")
+    private val ungSakKlient: RestTemplate,
 ) {
     private companion object {
-        private val logger: Logger = LoggerFactory.getLogger(K9SakService::class.java)
+        private val logger: Logger = LoggerFactory.getLogger(UngSakService::class.java)
 
         private val hendelseInnsendingUrl = "/api/fagsak/hendelse/innsending"
     }
 
     fun sendInnHendelse(hendelse: HendelseDto): Boolean {
         val httpEntity = HttpEntity(hendelse)
-        val response = k9SakKlient.exchange(
+        val response = ungSakKlient.exchange(
             hendelseInnsendingUrl,
             HttpMethod.POST,
             httpEntity,
@@ -79,7 +79,7 @@ class K9SakService(
     }
 }
 
-class K9SakException(
+class UngSakException(
     melding: String,
     httpStatus: HttpStatus,
 ) : ErrorResponseException(httpStatus, asProblemDetail(melding, httpStatus), null) {

@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.register.k9sak
+package no.nav.ung.deltakelseopplyser.register.ungsak
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag

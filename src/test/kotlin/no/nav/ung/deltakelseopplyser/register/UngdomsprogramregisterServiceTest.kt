@@ -7,7 +7,7 @@ import io.mockk.verify
 import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
-import no.nav.ung.deltakelseopplyser.integration.k9sak.K9SakService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
 import org.assertj.core.api.Assertions.assertThat
@@ -52,7 +52,7 @@ class UngdomsprogramregisterServiceTest {
     lateinit var entityManager: EntityManager
 
     @MockkBean(relaxed = true)
-    lateinit var k9SakService: K9SakService
+    lateinit var ungSakService: UngSakService
 
     @MockkBean(relaxed = true)
     lateinit var pdlService: PdlService
@@ -172,7 +172,7 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(oppdatertDto.tilOgMed, oppdatertInnmelding.tilOgMed)
 
         verify { pdlService.hentAktørIder(any(), any()) }
-        verify { k9SakService.sendInnHendelse(any()) }
+        verify { ungSakService.sendInnHendelse(any()) }
     }
 
     @Test
