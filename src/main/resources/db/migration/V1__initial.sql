@@ -1,6 +1,3 @@
-DROP TABLE IF EXISTS ungdomsprogram_deltakelse;
-DROP TABLE IF EXISTS deltaker;
-
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE IF NOT EXISTS deltaker
