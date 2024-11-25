@@ -70,7 +70,7 @@ class UngdomsprogramregisterServiceTest {
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = "123",
+            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
             fraOgMed = LocalDate.now(),
             harSøkt = false,
             tilOgMed = null
@@ -79,7 +79,7 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
-        assertEquals(dto.deltakerIdent, innmelding.deltakerIdent)
+        assertEquals(dto.deltaker, innmelding.deltaker)
     }
 
     @Test
@@ -88,7 +88,7 @@ class UngdomsprogramregisterServiceTest {
         val onsdag = LocalDate.parse("2024-10-09")
 
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = "02499435811",
+            deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
             fraOgMed = mandag,
             harSøkt = false,
             tilOgMed = null
@@ -113,7 +113,7 @@ class UngdomsprogramregisterServiceTest {
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = "123",
+            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
             harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = LocalDate.now().plusDays(10)
@@ -122,13 +122,13 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
-        assertEquals(dto.deltakerIdent, innmelding.deltakerIdent)
+        assertEquals(dto.deltaker, innmelding.deltaker)
     }
 
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = "123",
+            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
             harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = null
@@ -145,8 +145,9 @@ class UngdomsprogramregisterServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
+        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = "123",
+            deltaker = deltakerDTO,
             fraOgMed = mandag,
             harSøkt = false,
             tilOgMed = null
@@ -160,7 +161,7 @@ class UngdomsprogramregisterServiceTest {
         )
 
         val oppdatertDto = DeltakelseOpplysningDTO(
-            deltakerIdent = "123",
+            deltaker = deltakerDTO,
             fraOgMed = mandag,
             harSøkt = false,
             tilOgMed = onsdag
@@ -168,7 +169,7 @@ class UngdomsprogramregisterServiceTest {
         val oppdatertInnmelding = ungdomsprogramregisterService.oppdaterProgram(innmelding.id!!, oppdatertDto)
 
         assertNotNull(oppdatertInnmelding)
-        assertEquals(oppdatertDto.deltakerIdent, oppdatertInnmelding.deltakerIdent)
+        assertEquals(oppdatertDto.deltaker, oppdatertInnmelding.deltaker)
         assertEquals(oppdatertDto.tilOgMed, oppdatertInnmelding.tilOgMed)
 
         verify { pdlService.hentAktørIder(any(), any()) }
@@ -178,7 +179,7 @@ class UngdomsprogramregisterServiceTest {
     @Test
     fun `Henter deltaker fra programmet`() {
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = "123",
+            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
             fraOgMed = LocalDate.now(),
             harSøkt = false,
             tilOgMed = null
@@ -188,7 +189,7 @@ class UngdomsprogramregisterServiceTest {
         val hentetDto = ungdomsprogramregisterService.hentFraProgram(innmelding.id!!)
 
         assertNotNull(hentetDto)
-        assertEquals(dto.deltakerIdent, hentetDto.deltakerIdent)
+        assertEquals(dto.deltaker, hentetDto.deltaker)
     }
 
     @Test
@@ -196,7 +197,7 @@ class UngdomsprogramregisterServiceTest {
         val deltakelsePeriodInfos = listOf(
             UngdomsprogramDeltakelseDAO(
                 id = UUID.randomUUID(),
-                deltakerIdent = "123",
+                deltaker = DeltakerDAO(deltakerIdent = "123"),
                 periode = Range.closed(LocalDate.parse("2024-01-15"), LocalDate.parse("2024-06-15")),
                 harSøkt = false,
                 opprettetTidspunkt = ZonedDateTime.now(),
@@ -232,7 +233,7 @@ class UngdomsprogramregisterServiceTest {
         val deltakelsePeriodInfos = listOf(
             UngdomsprogramDeltakelseDAO(
                 id = UUID.randomUUID(),
-                deltakerIdent = "123",
+                deltaker = DeltakerDAO(deltakerIdent = "123"),
                 periode = Range.closedInfinite(LocalDate.parse("2024-01-15")),
                 harSøkt = false,
                 opprettetTidspunkt = ZonedDateTime.now(),

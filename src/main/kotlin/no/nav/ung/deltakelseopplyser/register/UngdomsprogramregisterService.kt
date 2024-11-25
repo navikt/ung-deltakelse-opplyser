@@ -3,12 +3,12 @@ package no.nav.ung.deltakelseopplyser.register
 import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
+import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -21,7 +21,8 @@ import java.util.*
 
 @Service
 class UngdomsprogramregisterService(
-    private val repository: UngdomsprogramDeltakelseRepository,
+    private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val deltakerRepository: UngdomsprogramDeltakerRepository,
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
 ) {
@@ -41,10 +42,18 @@ class UngdomsprogramregisterService(
 
         private fun UngdomsprogramDeltakelseDAO.rapporteringsperioder(): List<RapportPeriodeinfoDTO> {
             val månedEtterFomDato = getFom().plusMonths(1)
-            val deltakelsetidsLinje = LocalDateTimeline(getFom(), getTom() ?: månedEtterFomDato.withDayOfMonth(månedEtterFomDato.lengthOfMonth()), this)
+            val deltakelsetidsLinje = LocalDateTimeline(
+                getFom(),
+                getTom() ?: månedEtterFomDato.withDayOfMonth(månedEtterFomDato.lengthOfMonth()),
+                this
+            )
 
             val deltakelseperiodeMånedForMånedTidslinje: LocalDateTimeline<UngdomsprogramDeltakelseDAO> =
-                deltakelsetidsLinje.splitAtRegular(getFom().withDayOfMonth(1), deltakelsetidsLinje.maxLocalDate, Period.ofMonths(1))
+                deltakelsetidsLinje.splitAtRegular(
+                    getFom().withDayOfMonth(1),
+                    deltakelsetidsLinje.maxLocalDate,
+                    Period.ofMonths(1)
+                )
 
             return deltakelseperiodeMånedForMånedTidslinje.toSegments()
                 .map { månedSegment: LocalDateSegment<UngdomsprogramDeltakelseDAO> ->
@@ -60,21 +69,27 @@ class UngdomsprogramregisterService(
 
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
-        val ungdomsprogramDAO = repository.save(deltakelseOpplysningDTO.mapToDAO())
+
+        if (deltakerRepository.existsByDeltakerIdent(deltakelseOpplysningDTO.deltaker.deltakerIdent).not()) {
+            logger.info("Deltaker med id ${deltakelseOpplysningDTO.deltaker.id} eksisterer ikke. Oppretter ny deltaker.")
+            deltakerRepository.save(deltakelseOpplysningDTO.deltaker.mapToDAO())
+        }
+
+        val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO())
         return ungdomsprogramDAO.mapToDTO()
     }
 
     fun fjernFraProgram(id: UUID): Boolean {
         logger.info("Fjerner deltaker fra programmet med id $id")
-        if (!repository.existsById(id)) {
+        if (!deltakelseRepository.existsById(id)) {
             logger.info("Delatker med id $id eksisterer ikke i programmet. Returnerer true")
             return true
         }
 
         val ungdomsprogramDAO = forsikreEksistererIProgram(id)
-        repository.delete(ungdomsprogramDAO)
+        deltakelseRepository.delete(ungdomsprogramDAO)
 
-        if (repository.existsById(id)) {
+        if (deltakelseRepository.existsById(id)) {
             logger.error("Klarte ikke å slette deltaker fra programmet med id $id")
             throw ErrorResponseException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -101,7 +116,7 @@ class UngdomsprogramregisterService(
             Range.closed(deltakelseOpplysningDTO.fraOgMed, deltakelseOpplysningDTO.tilOgMed)
         }
 
-        val oppdatert = repository.save(
+        val oppdatert = deltakelseRepository.save(
             eksiterende.copy(
                 periode = periode,
                 endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
@@ -118,7 +133,7 @@ class UngdomsprogramregisterService(
     fun markerSomHarSøkt(id: UUID): UngdomsprogramDeltakelseDAO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererIProgram(id)
-        return repository.save(
+        return deltakelseRepository.save(
             eksisterende.copy(
                 harSøkt = true,
                 endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
@@ -131,7 +146,7 @@ class UngdomsprogramregisterService(
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
 
         logger.info("Henter aktørIder for deltaker")
-        val aktørIder = pdlService.hentAktørIder(oppdatert.deltakerIdent, historisk = true)
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent, historisk = true)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
         logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
@@ -161,7 +176,8 @@ class UngdomsprogramregisterService(
     fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseOpplysningDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
-        val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
+        val deltakerIdenter = deltakerRepository.findByDeltakerIdentIn(identer)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIdenter.map { it.id })
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }
@@ -170,7 +186,8 @@ class UngdomsprogramregisterService(
     fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelsePeriodInfo> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
-        val ungdomsprogramDAOs = repository.findByDeltakerIdentIn(identer)
+        val deltakerIdenter = deltakerRepository.findByDeltakerIdentIn(identer)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIdenter.map { it.id })
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.somDeltakelsePeriodInfo()
@@ -180,7 +197,7 @@ class UngdomsprogramregisterService(
 
         return DeltakelseOpplysningDTO(
             id = id,
-            deltakerIdent = deltakerIdent,
+            deltaker = deltaker.mapToDTO(),
             harSøkt = harSøkt,
             fraOgMed = getFom(),
             tilOgMed = getTom()
@@ -194,14 +211,14 @@ class UngdomsprogramregisterService(
             Range.closed(fraOgMed, tilOgMed)
         }
         return UngdomsprogramDeltakelseDAO(
-            deltakerIdent = deltakerIdent,
+            deltaker = deltaker.mapToDAO(),
             periode = periode,
             harSøkt = harSøkt
         )
     }
 
     private fun forsikreEksistererIProgram(id: UUID): UngdomsprogramDeltakelseDAO =
-        repository.findById(id).orElseThrow {
+        deltakelseRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
@@ -210,4 +227,18 @@ class UngdomsprogramregisterService(
                 null
             )
         }
+
+    private fun DeltakerDAO.mapToDTO(): DeltakerDTO {
+        return DeltakerDTO(
+            id = id,
+            deltakerIdent = deltakerIdent
+        )
+    }
+
+    private fun DeltakerDTO.mapToDAO(): DeltakerDAO {
+        return DeltakerDAO(
+            id = id ?: UUID.randomUUID(),
+            deltakerIdent = deltakerIdent
+        )
+    }
 }

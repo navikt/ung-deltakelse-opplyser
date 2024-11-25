@@ -9,13 +9,13 @@ data class DeltakerOpplysningerDTO(
 
 data class DeltakelseOpplysningDTO(
     val id: UUID? = null,
-    val deltakerIdent: String,
+    val deltaker: DeltakerDTO,
     val harSøkt: Boolean,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate? = null,
 ) {
 
     override fun toString(): String {
-        return "DeltakerProgramOpplysningDTO(id=$id, deltakerIdentSatt='${deltakerIdent.isNotBlank()}', fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
+        return "DeltakerProgramOpplysningDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
     }
 }

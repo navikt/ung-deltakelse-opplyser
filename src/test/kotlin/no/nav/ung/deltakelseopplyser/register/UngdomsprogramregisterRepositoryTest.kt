@@ -35,6 +35,9 @@ class UngdomsprogramregisterRepositoryTest {
     lateinit var repository: UngdomsprogramDeltakelseRepository
 
     @Autowired
+    lateinit var deltakerRepository: UngdomsprogramDeltakerRepository
+
+    @Autowired
     lateinit var entityManager: EntityManager
 
     @BeforeEach
@@ -56,9 +59,11 @@ class UngdomsprogramregisterRepositoryTest {
     @ParameterizedTest(name = "{index} => periodeA={0}, periodeB={1}, overlapper={2}")
     @MethodSource("perioderTilTest")
     fun testPeriodOverlaps(periodeA: Range<LocalDate>, periodeB: Range<LocalDate>, overlapper: Boolean) {
+        val deltakerDAO = DeltakerDAO(deltakerIdent = "123")
+        deltakerRepository.saveAndFlush(deltakerDAO)
         repository.saveAndFlush(
             UngdomsprogramDeltakelseDAO(
-                deltakerIdent = "123",
+                deltaker = deltakerDAO,
                 harSøkt = false,
                 periode = periodeA
             )
@@ -68,7 +73,7 @@ class UngdomsprogramregisterRepositoryTest {
             assertThrows<DataIntegrityViolationException> {
                 repository.saveAndFlush(
                     UngdomsprogramDeltakelseDAO(
-                        deltakerIdent = "123",
+                        deltaker = deltakerDAO,
                         harSøkt = false,
                         periode = periodeB
                     )
@@ -78,7 +83,7 @@ class UngdomsprogramregisterRepositoryTest {
             assertDoesNotThrow {
                 repository.saveAndFlush(
                     UngdomsprogramDeltakelseDAO(
-                        deltakerIdent = "123",
+                        deltaker = deltakerDAO,
                         harSøkt = false,
                         periode = periodeB
                     )

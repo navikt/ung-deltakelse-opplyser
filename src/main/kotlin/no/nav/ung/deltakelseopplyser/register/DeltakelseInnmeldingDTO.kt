@@ -4,11 +4,11 @@ import java.time.LocalDate
 import java.util.*
 
 data class DeltakelseInnmeldingDTO(
-    val deltakerIdent: String,
+    val deltaker: DeltakerDTO,
     val startdato: LocalDate
 ) {
 
     override fun toString(): String {
-        return "DeltakelseInnmeldingDTO(deltakerIdentSatt='${deltakerIdent.isNotBlank()}', startdato=$startdato)"
+        return "DeltakelseInnmeldingDTO(startdato=$startdato)"
     }
 }
