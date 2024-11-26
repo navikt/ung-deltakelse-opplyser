@@ -8,7 +8,7 @@ import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.register.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseUtmeldingDTO
-import no.nav.ung.deltakelseopplyser.register.DeltakerOpplysningDTO
+import no.nav.ung.deltakelseopplyser.register.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -55,6 +55,7 @@ class UngdomsprogramRegisterVeilederController(
 
         val deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
             deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent,
+            deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
             fraOgMed = deltakelseInnmeldingDTO.startdato,
             harSøkt = false
         )
@@ -77,8 +78,8 @@ class UngdomsprogramRegisterVeilederController(
     @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerOpplysningDTO: DeltakerOpplysningDTO): List<DeltakelseOpplysningDTO> {
-        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = deltakerOpplysningDTO.deltakerIdent)
+    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerDTO: DeltakerDTO): List<DeltakelseOpplysningDTO> {
+        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = deltakerDTO.deltakerIdent)
     }
 
     @PutMapping("/oppdater/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])

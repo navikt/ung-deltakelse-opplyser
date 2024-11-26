@@ -16,8 +16,9 @@ data class UngdomsprogramDeltakelseDAO(
     @Column(name = "id")
     val id: UUID = UUID.randomUUID(),
 
-    @Column(name = "deltaker_ident")
-    val deltakerIdent: String,
+    @ManyToOne(fetch = FetchType.LAZY) // Referer til Deltaker
+    @JoinColumn(name = "deltaker_id", referencedColumnName = "id", nullable = false)
+    val deltaker: DeltakerDAO,
 
     @Type(value = PostgreSQLRangeType::class)
     @Column(name = "periode", columnDefinition = "daterange")
@@ -44,6 +45,5 @@ data class UngdomsprogramDeltakelseDAO(
         }
         return if (periode.hasMask(Range.UPPER_EXCLUSIVE)) periode.upper().minusDays(1) else periode.upper()
     }
-
 }
 
