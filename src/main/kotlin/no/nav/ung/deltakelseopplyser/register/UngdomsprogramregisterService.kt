@@ -70,12 +70,12 @@ class UngdomsprogramregisterService(
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
 
-        if (deltakerRepository.existsByDeltakerIdent(deltakelseOpplysningDTO.deltaker().deltakerIdent).not()) {
+        val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakelseOpplysningDTO.deltaker().deltakerIdent) ?: run {
             logger.info("Deltaker eksisterer ikke. Oppretter ny deltaker.")
             deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker().mapToDAO())
         }
 
-        val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO())
+        val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO(deltakerDAO))
         return ungdomsprogramDAO.mapToDTO()
     }
 
@@ -205,14 +205,14 @@ class UngdomsprogramregisterService(
         )
     }
 
-    private fun DeltakelseOpplysningDTO.mapToDAO(): UngdomsprogramDeltakelseDAO {
+    private fun DeltakelseOpplysningDTO.mapToDAO(deltakerDAO: DeltakerDAO): UngdomsprogramDeltakelseDAO {
         val periode = if (tilOgMed == null) {
             Range.closedInfinite(fraOgMed)
         } else {
             Range.closed(fraOgMed, tilOgMed)
         }
         return UngdomsprogramDeltakelseDAO(
-            deltaker = deltaker().mapToDAO(),
+            deltaker = deltakerDAO,
             periode = periode,
             harSøkt = harSøkt
         )

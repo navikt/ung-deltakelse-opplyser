@@ -69,7 +69,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
-        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
@@ -81,7 +81,7 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
-        assertEquals(dto.deltaker, innmelding.deltaker)
+        assertNotNull(innmelding.deltaker?.id)
     }
 
     @Test
@@ -116,7 +116,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
-        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent =  "123")
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
@@ -128,7 +128,7 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
-        assertEquals(dto.deltaker, innmelding.deltaker)
+        assertNotNull(innmelding.deltaker?.id)
     }
 
     @Test
@@ -153,7 +153,7 @@ class UngdomsprogramregisterServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
-        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
@@ -170,8 +170,8 @@ class UngdomsprogramregisterServiceTest {
         )
 
         val oppdatertDto = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakerDTO.deltakerIdent,
-            deltaker = deltakerDTO,
+            deltakerIdent = innmelding.deltakerIdent,
+            deltaker = innmelding.deltaker,
             fraOgMed = mandag,
             harSøkt = false,
             tilOgMed = onsdag
@@ -179,7 +179,7 @@ class UngdomsprogramregisterServiceTest {
         val oppdatertInnmelding = ungdomsprogramregisterService.oppdaterProgram(innmelding.id!!, oppdatertDto)
 
         assertNotNull(oppdatertInnmelding)
-        assertEquals(oppdatertDto.deltaker, oppdatertInnmelding.deltaker)
+        assertEquals(innmelding.deltaker, oppdatertInnmelding.deltaker)
         assertEquals(oppdatertDto.tilOgMed, oppdatertInnmelding.tilOgMed)
 
         verify { pdlService.hentAktørIder(any(), any()) }
@@ -188,7 +188,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Henter deltaker fra programmet`() {
-        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
@@ -201,7 +201,7 @@ class UngdomsprogramregisterServiceTest {
         val hentetDto = ungdomsprogramregisterService.hentFraProgram(innmelding.id!!)
 
         assertNotNull(hentetDto)
-        assertEquals(dto.deltaker, hentetDto.deltaker)
+        assertNotNull(hentetDto.deltaker?.id)
     }
 
     @Test
