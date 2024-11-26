@@ -7,6 +7,7 @@ import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.register.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakerInfoService
+import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
-
+@Profile("!prod-gcp")
 @RestController
 @RequestMapping("/oppslag")
 @RequiredIssuers(
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController
 class UngdomsprogramDeltakerInfoVeilederController(
     private val deltakerInfoService: DeltakerInfoService
 ) {
+
     @PostMapping("/deltaker", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personlia for en deltaker")
     @ResponseStatus(HttpStatus.OK)
