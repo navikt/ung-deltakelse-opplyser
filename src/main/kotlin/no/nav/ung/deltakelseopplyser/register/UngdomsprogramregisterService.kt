@@ -72,7 +72,7 @@ class UngdomsprogramregisterService(
 
         if (deltakerRepository.existsByDeltakerIdent(deltakelseOpplysningDTO.deltaker().deltakerIdent).not()) {
             logger.info("Deltaker eksisterer ikke. Oppretter ny deltaker.")
-            deltakerRepository.save(deltakelseOpplysningDTO.deltaker().mapToDAO())
+            deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker().mapToDAO())
         }
 
         val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO())
@@ -237,9 +237,6 @@ class UngdomsprogramregisterService(
     }
 
     private fun DeltakerDTO.mapToDAO(): DeltakerDAO {
-        return DeltakerDAO(
-            id = id ?: UUID.randomUUID(),
-            deltakerIdent = deltakerIdent
-        )
+        return DeltakerDAO(deltakerIdent = deltakerIdent)
     }
 }
