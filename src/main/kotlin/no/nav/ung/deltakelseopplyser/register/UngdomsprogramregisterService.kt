@@ -3,7 +3,7 @@ package no.nav.ung.deltakelseopplyser.register
 import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
-import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo

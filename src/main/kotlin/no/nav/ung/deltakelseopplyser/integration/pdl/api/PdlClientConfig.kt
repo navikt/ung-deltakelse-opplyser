@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.integration.pdl
+package no.nav.ung.deltakelseopplyser.integration.pdl.api
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService

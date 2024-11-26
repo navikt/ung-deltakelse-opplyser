@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.register
 
 import no.nav.pdl.generated.hentperson.Navn
-import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service

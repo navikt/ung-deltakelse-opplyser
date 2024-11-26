@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException

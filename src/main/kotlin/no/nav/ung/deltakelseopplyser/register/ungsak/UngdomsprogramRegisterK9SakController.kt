@@ -6,7 +6,7 @@ import no.nav.ung.sak.kontrakt.person.AktørIdDto
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers
-import no.nav.ung.deltakelseopplyser.integration.pdl.PdlService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.register.DeltakerOpplysningerDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
