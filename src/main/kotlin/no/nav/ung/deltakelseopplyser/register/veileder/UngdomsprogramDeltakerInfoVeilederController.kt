@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 
 
 @RestController
-@RequestMapping("/deltaker")
+@RequestMapping("/oppslag")
 @RequiredIssuers(
     ProtectedWithClaims(
         issuer = TOKEN_X,
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController
 class UngdomsprogramDeltakerInfoVeilederController(
     private val deltakerInfoService: DeltakerInfoService
 ) {
-    @PostMapping("/personlia", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/deltaker", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personlia for en deltaker")
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakerInfo(@RequestBody deltakerDTO: DeltakerDTO): DeltakerInfoService.DeltakerPersonlia? {
