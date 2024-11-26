@@ -1,10 +1,9 @@
 package no.nav.ung.deltakelseopplyser.register
 
 import java.time.LocalDate
-import java.util.*
 
 data class DeltakelseInnmeldingDTO(
-    val deltaker: DeltakerDTO,
+    val deltakerIdent: String,
     val startdato: LocalDate
 ) {
 
