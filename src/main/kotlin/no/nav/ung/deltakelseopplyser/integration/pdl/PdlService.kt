@@ -4,9 +4,11 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import no.nav.pdl.generated.HentIdent
+import no.nav.pdl.generated.HentPerson
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.pdl.generated.hentident.Identliste
+import no.nav.pdl.generated.hentperson.Person
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -17,6 +19,25 @@ class PdlService(
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(PdlService::class.java)
+    }
+
+    fun hentPerson(ident: String): Person = runBlocking {
+        val response = pdlClient.execute(HentPerson(HentPerson.Variables(ident)))
+
+        if (!response.extensions.isNullOrEmpty()) logger.info("PDL response extensions: ${response.extensions}")
+
+        return@runBlocking when {
+            !response.errors.isNullOrEmpty() -> {
+                val errorSomJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response.errors)
+                logger.error("Feil ved henting av person. Årsak: {}", errorSomJson)
+                throw IllegalStateException("Feil ved henting av person.")
+            }
+
+            response.data!!.hentPerson != null -> response.data!!.hentPerson!!
+            else -> {
+                error("Feil ved henting av person.")
+            }
+        }
     }
 
     fun hentIdenter(ident: String, historisk: Boolean = false): Identliste = runBlocking {
