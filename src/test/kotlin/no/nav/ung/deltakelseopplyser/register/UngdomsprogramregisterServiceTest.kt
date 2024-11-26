@@ -69,8 +69,10 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
+        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
-            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
+            deltakerIdent = deltakerDTO.deltakerIdent,
+            deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
             harSøkt = false,
             tilOgMed = null
@@ -87,8 +89,10 @@ class UngdomsprogramregisterServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
+        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "02499435811")
         val dto = DeltakelseOpplysningDTO(
-            deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
+            deltakerIdent = deltakerDTO.deltakerIdent,
+            deltaker = deltakerDTO,
             fraOgMed = mandag,
             harSøkt = false,
             tilOgMed = null
@@ -112,8 +116,10 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
+        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
-            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
+            deltakerIdent = deltakerDTO.deltakerIdent,
+            deltaker = deltakerDTO,
             harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = LocalDate.now().plusDays(10)
@@ -127,8 +133,10 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
+        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
-            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
+            deltakerIdent = deltakerDTO.deltakerIdent,
+            deltaker = deltakerDTO,
             harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = null
@@ -147,6 +155,7 @@ class UngdomsprogramregisterServiceTest {
 
         val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
+            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
             fraOgMed = mandag,
             harSøkt = false,
@@ -161,6 +170,7 @@ class UngdomsprogramregisterServiceTest {
         )
 
         val oppdatertDto = DeltakelseOpplysningDTO(
+            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
             fraOgMed = mandag,
             harSøkt = false,
@@ -178,8 +188,10 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Henter deltaker fra programmet`() {
+        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
-            deltaker = DeltakerDTO(UUID.randomUUID(), "123"),
+            deltakerIdent = deltakerDTO.deltakerIdent,
+            deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
             harSøkt = false,
             tilOgMed = null

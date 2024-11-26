@@ -54,6 +54,7 @@ class UngdomsprogramRegisterVeilederController(
     fun meldInnDeltaker(@RequestBody deltakelseInnmeldingDTO: DeltakelseInnmeldingDTO): DeltakelseOpplysningDTO {
 
         val deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
+            deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent,
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
             fraOgMed = deltakelseInnmeldingDTO.startdato,
             harSøkt = false

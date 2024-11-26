@@ -9,11 +9,17 @@ data class DeltakerOpplysningerDTO(
 
 data class DeltakelseOpplysningDTO(
     val id: UUID? = null,
-    val deltaker: DeltakerDTO,
+    @Deprecated("Bruk deltaker i stedet")
+    val deltakerIdent: String,
+    val deltaker: DeltakerDTO? = null,
     val harSøkt: Boolean,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate? = null,
 ) {
+
+    fun deltaker(): DeltakerDTO {
+        return deltaker ?: DeltakerDTO(deltakerIdent = deltakerIdent)
+    }
 
     override fun toString(): String {
         return "DeltakerProgramOpplysningDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
