@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -46,7 +47,7 @@ class UngdomsprogramRegisterVeilederController(
     }
 
     @PostMapping(
-        "/innmelding",
+        "/deltakelse/innmelding",
         produces = [MediaType.APPLICATION_JSON_VALUE],
         consumes = [MediaType.APPLICATION_JSON_VALUE]
     )
@@ -63,40 +64,40 @@ class UngdomsprogramRegisterVeilederController(
         return registerService.leggTilIProgram(deltakelseOpplysningDTO)
     }
 
-    @PutMapping("/utmelding/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Melder deltaker ut fra ungdomsprogrammet")
+    @PutMapping("/deltakelse/{deltakelseId}/avslutt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Avslutter en deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun meldUtDeltaker(
-        @PathVariable id: UUID,
+        @PathVariable deltakelseId: UUID,
         @RequestBody deltakelseUtmeldingDTO: DeltakelseUtmeldingDTO,
     ): DeltakelseOpplysningDTO {
-        val eksisterendeDeltakelse = registerService.hentFraProgram(id)
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
         val utmeldtDeltakelse = eksisterendeDeltakelse.copy(tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato)
-        return registerService.oppdaterProgram(id, utmeldtDeltakelse)
+        return registerService.oppdaterProgram(deltakelseId, utmeldtDeltakelse)
     }
 
-    @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/deltaker/{deltakerId}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(@RequestBody deltakerDTO: DeltakerDTO): List<DeltakelseOpplysningDTO> {
-        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = deltakerDTO.deltakerIdent)
+    fun hentAlleProgramopplysningerForDeltaker(@PathVariable deltakerId: UUID): List<DeltakelseOpplysningDTO> {
+        return registerService.hentAlleForDeltakerId(deltakerId)
     }
 
-    @PutMapping("/oppdater/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PutMapping("/deltakelse/{deltakelseId}/oppdater/", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppdater opplysninger for en eksisterende deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun oppdaterFraProgram(
-        @PathVariable id: UUID,
+        @PathVariable deltakelseId: UUID,
         @RequestBody deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
     ): DeltakelseOpplysningDTO {
-        return registerService.oppdaterProgram(id, deltakelseOpplysningDTO)
+        return registerService.oppdaterProgram(deltakelseId, deltakelseOpplysningDTO)
     }
 
 
-    @DeleteMapping("/fjern/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @DeleteMapping("/deltakelse/{deltakelseId}/fjern", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Fjern en deltakelse fra ungdomsprogrammet")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun fjernFraProgram(@PathVariable id: UUID) {
-        registerService.fjernFraProgram(id)
+    fun fjernFraProgram(@PathVariable deltakelseId: UUID) {
+        registerService.fjernFraProgram(deltakelseId)
     }
 }

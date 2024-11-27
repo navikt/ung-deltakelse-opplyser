@@ -183,6 +183,26 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
+    fun hentAlleForDeltakerId(deltakerId: UUID): List<DeltakelseOpplysningDTO> {
+        logger.info("Henter alle programopplysninger for deltaker.")
+        val deltakerDAO = deltakerRepository.findById(deltakerId).orElseThrow {
+            ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen deltaker med id $deltakerId"
+                },
+                null
+            )
+        }
+
+        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerDAO.deltakerIdent).map { it.ident }
+        val deltakerIdenter = deltakerRepository.findByDeltakerIdentIn(identer)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIdenter.map { it.id })
+        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
+
+        return ungdomsprogramDAOs.map { it.mapToDTO() }
+    }
+
     fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelsePeriodInfo> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
