@@ -64,7 +64,11 @@ class UngdomsprogramRegisterVeilederController(
         return registerService.leggTilIProgram(deltakelseOpplysningDTO)
     }
 
-    @PutMapping("/deltakelse/{deltakelseId}/avslutt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PutMapping(
+        "/deltakelse/{deltakelseId}/avslutt",
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+        consumes = [MediaType.APPLICATION_JSON_VALUE]
+    )
     @Operation(summary = "Avslutter en deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun meldUtDeltaker(
@@ -76,14 +80,21 @@ class UngdomsprogramRegisterVeilederController(
         return registerService.oppdaterProgram(deltakelseId, utmeldtDeltakelse)
     }
 
-    @GetMapping("/deltaker/{deltakerId}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping(
+        "/deltaker/{deltakerId}/deltakelser",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleProgramopplysningerForDeltaker(@PathVariable deltakerId: UUID): List<DeltakelseOpplysningDTO> {
         return registerService.hentAlleForDeltakerId(deltakerId)
     }
 
-    @PutMapping("/deltakelse/{deltakelseId}/oppdater/", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PutMapping(
+        "/deltakelse/{deltakelseId}/oppdater/",
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+        consumes = [MediaType.APPLICATION_JSON_VALUE]
+    )
     @Operation(summary = "Oppdater opplysninger for en eksisterende deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun oppdaterFraProgram(
@@ -93,8 +104,7 @@ class UngdomsprogramRegisterVeilederController(
         return registerService.oppdaterProgram(deltakelseId, deltakelseOpplysningDTO)
     }
 
-
-    @DeleteMapping("/deltakelse/{deltakelseId}/fjern", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @DeleteMapping("/deltakelse/{deltakelseId}/fjern")
     @Operation(summary = "Fjern en deltakelse fra ungdomsprogrammet")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun fjernFraProgram(@PathVariable deltakelseId: UUID) {
