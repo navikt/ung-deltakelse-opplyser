@@ -47,7 +47,7 @@ class UngdomsprogramRegisterVeilederController(
     }
 
     @PostMapping(
-        "/deltakelse/innmelding",
+        "/deltaker/innmelding",
         produces = [MediaType.APPLICATION_JSON_VALUE],
         consumes = [MediaType.APPLICATION_JSON_VALUE]
     )
