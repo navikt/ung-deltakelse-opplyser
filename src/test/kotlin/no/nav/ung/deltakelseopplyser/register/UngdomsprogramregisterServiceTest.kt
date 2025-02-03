@@ -241,12 +241,15 @@ class UngdomsprogramregisterServiceTest {
     }
 
     @Test
-    fun `Forvent at rapporteringsperiode genereres til måneden etter fom dato dersom tom dato ikke er satt`() {
+    fun `Forvent at rapporteringsperiode genereres dagens dato dersom tom dato ikke er satt`() {
+        val idag = LocalDate.now()
+        val toMånederSiden = idag.minusMonths(2)
+        val periodeFra = toMånederSiden
         val deltakelsePeriodInfos = listOf(
             UngdomsprogramDeltakelseDAO(
                 id = UUID.randomUUID(),
                 deltaker = DeltakerDAO(deltakerIdent = "123"),
-                periode = Range.closedInfinite(LocalDate.parse("2024-01-15")),
+                periode = Range.closedInfinite(periodeFra),
                 harSøkt = false,
                 opprettetTidspunkt = ZonedDateTime.now(),
                 endretTidspunkt = null
@@ -255,12 +258,12 @@ class UngdomsprogramregisterServiceTest {
 
         assertThat(deltakelsePeriodInfos).hasSize(1)
         val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder
-        assertThat(rapporteringsPerioder).hasSize(2)
+        assertThat(rapporteringsPerioder).hasSize(3)
 
-        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(LocalDate.parse("2024-01-15"))
-        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(LocalDate.parse("2024-01-31"))
+        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(toMånederSiden)
+        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(toMånederSiden.withDayOfMonth(toMånederSiden.lengthOfMonth()))
 
-        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(LocalDate.parse("2024-02-01"))
-        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(LocalDate.parse("2024-02-29"))
+        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(idag.withDayOfMonth(1))
+        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(idag)
     }
 }

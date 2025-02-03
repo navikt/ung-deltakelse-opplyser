@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
+import java.time.LocalDate
 import java.time.Period
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -41,10 +42,9 @@ class UngdomsprogramregisterService(
             }
 
         private fun UngdomsprogramDeltakelseDAO.rapporteringsperioder(): List<RapportPeriodeinfoDTO> {
-            val månedEtterFomDato = getFom().plusMonths(1)
             val deltakelsetidsLinje = LocalDateTimeline(
                 getFom(),
-                getTom() ?: månedEtterFomDato.withDayOfMonth(månedEtterFomDato.lengthOfMonth()),
+                getTom() ?: LocalDate.now(),
                 this
             )
 
