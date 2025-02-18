@@ -101,6 +101,32 @@ Se [Henting av token](#henting-av-token) for mer info.
 
 # 10. Drift og støtte
 
+## Tilkobling til database
+For å koble til databasen i dev-gcp må disse kommandoene kjøres:
+
+### Forberede database
+Forberedelse vil forberede postgres-instansen ved å koble til ved hjelp av applikasjonslegitimasjonene og som standard endre tillatelsene på det offentlige skjemaet. Alle IAM-brukere i ditt GCP-prosjekt vil kunne koble til instansen.
+Denne operasjonen trenger bare å kjøres én gang for hver postgresql-instans og skjema.
+
+```shell script
+nais postgres prepare --context dev-gcp --namespace k9saksbehandling ung-deltakelse-opplyser
+```
+
+### Gi tilgang til database
+Grant deg selv tilgang til en Postgres-database. Dette gjøres ved midlertidig å legge til brukeren din i listen over brukere som kan administrere Cloud SQL-instansene og opprette en databasebruker med e-posten din.
+Denne operasjonen trenger bare å kjøres én gang for hver postgresql-database.
+
+```shell script
+nais postgres grant --context dev-gcp --namespace k9saksbehandling ung-deltakelse-opplyser
+```
+
+### Koble til database
+Oppdater IAM-policyer ved å gi brukeren din en tidsbegrenset sql.cloudsql.instanceUser-rolle, og start deretter en proxy til instansen.
+
+```shell script
+nais postgres proxy --context dev-gcp --namespace k9saksbehandling ung-deltakelse-opplyser
+```
+
 ## Logging
 
 Loggene til tjenesten kan leses på to måter:
