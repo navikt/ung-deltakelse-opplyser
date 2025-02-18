@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.soknad.kafka
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.soknad.UngdomsytelsesøknadService
+import no.nav.ung.deltakelseopplyser.soknad.kafka.UngdomsytelsesøknadKonsumentConfiguration.Companion.UNGDOMSYTELSESØKNAD_FILTER
 import no.nav.ung.deltakelseopplyser.utils.Constants
 import no.nav.ung.deltakelseopplyser.utils.MDCUtil
 import org.slf4j.LoggerFactory
@@ -30,7 +31,7 @@ class UngdomsytelsesøknadKonsument(
         id = "#{'\${topic.listener.ung-soknad.id}'}",
         groupId = "#{'\${spring.kafka.consumer.group-id}'}",
         autoStartup = "#{'\${topic.listener.ung-soknad.bryter}'}",
-        filter = "ungdomsytelsesøknadFilter",
+        filter = UNGDOMSYTELSESØKNAD_FILTER,
         properties = [
             "auto.offset.reset=#{'\${topic.listener.ung-soknad.auto-offset-reset}'}"
         ]
@@ -50,11 +51,12 @@ class UngdomsytelsesøknadKonsument(
 class UngdomsytelsesøknadKonsumentConfiguration(
     private val objectMapper: ObjectMapper,
 ) {
-    private companion object {
+    companion object {
         private val logger = LoggerFactory.getLogger(UngdomsytelsesøknadKonsumentConfiguration::class.java)
+        const val UNGDOMSYTELSESØKNAD_FILTER = "ungdomsytelsesøknadFilter"
     }
 
-    @Bean("ungdomsytelsesøknadFilter")
+    @Bean(UNGDOMSYTELSESØKNAD_FILTER)
     fun ungdomsytelsesøknadFilter() = RecordFilterStrategy<String, String> { consumerRecord ->
         try {
             val readValue = objectMapper.readValue(consumerRecord.value(), UngdomsytelseSøknadTopicEntry::class.java)
