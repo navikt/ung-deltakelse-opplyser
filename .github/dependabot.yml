@@ -15,7 +15,7 @@ updates:
         patterns:
           - "*"
 
-  - package-ecosystem: gradle
+  - package-ecosystem: maven
     directory: "/"
     schedule:
       interval: daily
