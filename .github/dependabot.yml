@@ -22,7 +22,7 @@ updates:
     registries:
       - k9-felles
     groups:
-      gradle:
+      maven:
         patterns:
           - "*"
 
