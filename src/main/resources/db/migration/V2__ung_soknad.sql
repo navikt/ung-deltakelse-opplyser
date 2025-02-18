@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS ung_søknad
     søker_ident    VARCHAR(20)             NOT NULL,
     søknad         jsonb                   NOT NUll,
     opprettet_dato TIMESTAMP               NOT NULL,
-    oppdatert_dato TIMESTAMP               NOT NULL,
+    oppdatert_dato TIMESTAMP               NOT NULL
 );
 
 
