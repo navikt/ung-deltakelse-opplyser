@@ -40,7 +40,7 @@ class UngdomsytelsesøknadKonsument(
     ) {
         val søknadTopicEntry =
             objectMapper.readValue(ungdomsytelseSøknadTopicEntry, UngdomsytelseSøknadTopicEntry::class.java)
-        logger.info("Mottar og håndterer søknad for ungdomsytelsen: {}", søknadTopicEntry)
+        logger.info("Mottar og håndterer søknad for ungdomsytelsen")
         ungdomsytelsesøknadService.håndterMottattSøknad(søknadTopicEntry.data.journalførtMelding)
         logger.info("Håndtert søknad for ungdomsytelsen.")
     }
@@ -58,8 +58,9 @@ class UngdomsytelsesøknadKonsumentConfiguration(
     fun ungdomsytelsesøknadFilter() = RecordFilterStrategy<String, String> { consumerRecord ->
         try {
             val readValue = objectMapper.readValue(consumerRecord.value(), UngdomsytelseSøknadTopicEntry::class.java)
-            logger.info("FILTER --> Deserialisert melding fra topic: {}", readValue)
             MDCUtil.toMDC(Constants.CORRELATION_ID, readValue.metadata.correlationId)
+            MDCUtil.toMDC(Constants.JOURNALPOST_ID, readValue.data.journalførtMelding.journalpostId)
+            logger.info("Deserialisert ungdomsytelsesøknad fra topic")
             false
         } catch (e: Exception) {
             logger.error("Kunne ikke deserialisere melding fra topic", e)
