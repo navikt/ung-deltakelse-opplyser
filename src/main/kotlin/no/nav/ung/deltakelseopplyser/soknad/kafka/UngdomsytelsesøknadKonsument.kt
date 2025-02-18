@@ -59,9 +59,9 @@ class UngdomsytelsesøknadKonsumentConfiguration(
     @Bean(UNGDOMSYTELSESØKNAD_FILTER)
     fun ungdomsytelsesøknadFilter() = RecordFilterStrategy<String, String> { consumerRecord ->
         try {
-            val readValue = objectMapper.readValue(consumerRecord.value(), UngdomsytelseSøknadTopicEntry::class.java)
-            MDCUtil.toMDC(Constants.CORRELATION_ID, readValue.metadata.correlationId)
-            MDCUtil.toMDC(Constants.JOURNALPOST_ID, readValue.data.journalførtMelding.journalpostId)
+            val søknadTopicEntry = objectMapper.readValue(consumerRecord.value(), UngdomsytelseSøknadTopicEntry::class.java)
+            MDCUtil.toMDC(Constants.CORRELATION_ID, søknadTopicEntry.metadata.correlationId)
+            MDCUtil.toMDC(Constants.JOURNALPOST_ID, søknadTopicEntry.data.journalførtMelding.journalpostId)
             logger.info("Deserialisert ungdomsytelsesøknad fra topic")
             false
         } catch (e: Exception) {
