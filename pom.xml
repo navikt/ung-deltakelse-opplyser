@@ -30,7 +30,7 @@
     </scm>
     <properties>
         <java.version>21</java.version>
-        <kotlin.version>2.0.20</kotlin.version>
+        <kotlin.version>2.1.10</kotlin.version>
         <tokenSupport.version>5.0.3</tokenSupport.version>
         <springdoc.version>2.6.0</springdoc.version>
         <spring-cloud.version>4.1.4</spring-cloud.version>
@@ -39,7 +39,7 @@
         <awaitility.version>4.2.2</awaitility.version>
         <ung-sak.version>0.1.7</ung-sak.version>
         <fp-sak.version>2.7.1</fp-sak.version>
-        <k9-format.version>9.7.1</k9-format.version>
+        <k9-format.version>11.2.1</k9-format.version>
         <graphql-kotlin.version>8.1.0</graphql-kotlin.version>
     </properties>
     <dependencies>

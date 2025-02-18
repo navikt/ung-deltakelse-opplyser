@@ -1,6 +1,8 @@
-package no.nav.ung.deltakelseopplyser.soknad
+package no.nav.ung.deltakelseopplyser.soknad.kafka
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
+import no.nav.ung.deltakelseopplyser.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.utils.Constants
 import no.nav.ung.deltakelseopplyser.utils.MDCUtil
 import org.slf4j.LoggerFactory
@@ -10,6 +12,7 @@ import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.listener.adapter.RecordFilterStrategy
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UngdomsytelsesøknadKonsument(
@@ -21,6 +24,7 @@ class UngdomsytelsesøknadKonsument(
         private val logger = LoggerFactory.getLogger(UngdomsytelsesøknadKonsument::class.java)
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     @KafkaListener(
         topics = ["#{'\${topic.listener.ung-soknad.navn}'}"],
         id = "#{'\${topic.listener.ung-soknad.id}'}",
@@ -36,9 +40,9 @@ class UngdomsytelsesøknadKonsument(
     ) {
         val søknadTopicEntry =
             objectMapper.readValue(ungdomsytelseSøknadTopicEntry, UngdomsytelseSøknadTopicEntry::class.java)
-        logger.info("Deserialisert melding fra topic: {}", søknadTopicEntry)
+        logger.info("Mottar og håndterer søknad for ungdomsytelsen: {}", søknadTopicEntry)
         ungdomsytelsesøknadService.håndterMottattSøknad(søknadTopicEntry.data.journalførtMelding)
-        logger.info("Håndtert søknad fra topic")
+        logger.info("Håndtert søknad for ungdomsytelsen.")
     }
 }
 

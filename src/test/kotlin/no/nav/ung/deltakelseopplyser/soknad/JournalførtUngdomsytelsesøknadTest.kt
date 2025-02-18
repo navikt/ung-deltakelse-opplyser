@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.soknad
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.nav.ung.deltakelseopplyser.soknad.kafka.UngdomsytelseSøknadTopicEntry
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.beans.factory.annotation.Autowired
