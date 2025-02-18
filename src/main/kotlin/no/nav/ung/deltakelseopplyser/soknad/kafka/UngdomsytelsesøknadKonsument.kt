@@ -66,7 +66,7 @@ class UngdomsytelsesøknadKonsumentConfiguration(
             false
         } catch (e: Exception) {
             logger.error("Kunne ikke deserialisere melding fra topic", e)
-            false
+            throw e
         }
     }
 }
