@@ -16,9 +16,13 @@ class UngdomsytelsesøknadService(
         private val logger = LoggerFactory.getLogger(UngdomsytelsesøknadService::class.java)
     }
 
-    fun håndterMottattSøknad(ungdomsytelsesøknad: Ungdomsytelsesøknad): UngSøknadDAO {
+    fun håndterMottattSøknad(ungdomsytelsesøknad: Ungdomsytelsesøknad) {
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
-        return søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
+        søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
+
+        // TODO: Hent tilhørende deltakelse for søknadens startdato
+        // TODO: Marker deltakelse som søkt om den ikke er det
+        // TODO: Marker deltakelsens relevante oppgave som løst hvis den har en endret startdato eller sluttdato
     }
 
     private fun Ungdomsytelsesøknad.somUngSøknadDAO(): UngSøknadDAO {
