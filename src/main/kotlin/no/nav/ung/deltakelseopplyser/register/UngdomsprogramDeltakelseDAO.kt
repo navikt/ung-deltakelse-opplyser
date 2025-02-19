@@ -8,6 +8,7 @@ import java.time.ZonedDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 import jakarta.persistence.*
+import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDAO
 import org.springframework.data.annotation.CreatedDate
 
 @Entity(name = "ungdomsprogram_deltakelse")
@@ -27,23 +28,46 @@ data class UngdomsprogramDeltakelseDAO(
     @Column(name = "har_sokt")
     val harSøkt: Boolean,
 
+    /**
+     * Oppgaver som er knyttet til deltakelsen.
+     * Ved å bruke @JoinColumn definerer vi at kolonnen "deltakelseId" i oppgaver-tabellen, refererer til denne entiteten
+     */
+    @OneToMany(fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
+    @JoinColumn(name = "deltakelse_id", referencedColumnName = "id")
+    val oppgaver: MutableSet<OppgaveDAO> = mutableSetOf(),
+
     @CreatedDate
     @Column(name = "opprettet_tidspunkt")
     val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
 
     @Column(name = "endret_tidspunkt")
-    val endretTidspunkt: ZonedDateTime? = null
-)  {
+    val endretTidspunkt: ZonedDateTime? = null,
+) {
 
-    fun getFom() : LocalDate {
+    fun getFom(): LocalDate {
         return if (periode.hasMask(Range.LOWER_EXCLUSIVE)) periode.lower().plusDays(1) else periode.lower()
     }
 
-    fun getTom() : LocalDate? {
+    fun getTom(): LocalDate? {
         if (periode.upper() == null) {
             return null
         }
         return if (periode.hasMask(Range.UPPER_EXCLUSIVE)) periode.upper().minusDays(1) else periode.upper()
+    }
+
+    /**
+     * Legger til en ny oppgave i samlingen.
+     */
+    fun leggTilOppgave(oppgave: OppgaveDAO) {
+        oppgaver.add(oppgave)
+    }
+
+    /**
+     * Oppdaterer en eksisterende oppgave. Oppgaven med samme id blir erstattet.
+     */
+    fun oppdaterOppgave(oppdatertOppgave: OppgaveDAO) {
+        oppgaver.removeAll { it.id == oppdatertOppgave.id }
+        oppgaver.add(oppdatertOppgave)
     }
 }
 

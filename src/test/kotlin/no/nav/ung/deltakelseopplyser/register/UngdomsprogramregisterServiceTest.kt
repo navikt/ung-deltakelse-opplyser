@@ -71,11 +71,11 @@ class UngdomsprogramregisterServiceTest {
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
             harSøkt = false,
-            tilOgMed = null
+            fraOgMed = LocalDate.now(),
+            tilOgMed = null,
+            oppgaver = listOf()
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -91,11 +91,11 @@ class UngdomsprogramregisterServiceTest {
 
         val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "02499435811")
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
-            fraOgMed = mandag,
             harSøkt = false,
-            tilOgMed = null
+            fraOgMed = mandag,
+            tilOgMed = null,
+            oppgaver = listOf()
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -118,11 +118,11 @@ class UngdomsprogramregisterServiceTest {
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent =  "123")
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
             harSøkt = false,
             fraOgMed = LocalDate.now(),
-            tilOgMed = LocalDate.now().plusDays(10)
+            tilOgMed = LocalDate.now().plusDays(10),
+            oppgaver = listOf()
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -135,11 +135,11 @@ class UngdomsprogramregisterServiceTest {
     fun `Deltaker blir fjernet fra programmet`() {
         val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
             harSøkt = false,
             fraOgMed = LocalDate.now(),
-            tilOgMed = null
+            tilOgMed = null,
+            oppgaver = listOf()
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -155,11 +155,11 @@ class UngdomsprogramregisterServiceTest {
 
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
-            fraOgMed = mandag,
             harSøkt = false,
-            tilOgMed = null
+            fraOgMed = mandag,
+            tilOgMed = null,
+            oppgaver = listOf()
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -170,11 +170,11 @@ class UngdomsprogramregisterServiceTest {
         )
 
         val oppdatertDto = DeltakelseOpplysningDTO(
-            deltakerIdent = innmelding.deltakerIdent,
             deltaker = innmelding.deltaker,
-            fraOgMed = mandag,
             harSøkt = false,
-            tilOgMed = onsdag
+            fraOgMed = mandag,
+            tilOgMed = onsdag,
+            oppgaver = listOf()
         )
         val oppdatertInnmelding = ungdomsprogramregisterService.oppdaterProgram(innmelding.id!!, oppdatertDto)
 
@@ -190,11 +190,11 @@ class UngdomsprogramregisterServiceTest {
     fun `Henter deltaker fra programmet`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakerDTO.deltakerIdent,
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
             harSøkt = false,
-            tilOgMed = null
+            fraOgMed = LocalDate.now(),
+            tilOgMed = null,
+            oppgaver = listOf()
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 

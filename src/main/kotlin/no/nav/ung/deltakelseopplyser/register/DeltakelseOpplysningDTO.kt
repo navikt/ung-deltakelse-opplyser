@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO
 import java.time.LocalDate
 import java.util.*
 
@@ -9,17 +10,12 @@ data class DeltakerOpplysningerDTO(
 
 data class DeltakelseOpplysningDTO(
     val id: UUID? = null,
-    @Deprecated("Bruk deltaker i stedet")
-    val deltakerIdent: String,
-    val deltaker: DeltakerDTO? = null,
+    val deltaker: DeltakerDTO,
     val harSøkt: Boolean,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate? = null,
+    val oppgaver: List<OppgaveDTO>,
 ) {
-
-    fun deltaker(): DeltakerDTO {
-        return deltaker ?: DeltakerDTO(deltakerIdent = deltakerIdent)
-    }
 
     override fun toString(): String {
         return "DeltakerProgramOpplysningDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"

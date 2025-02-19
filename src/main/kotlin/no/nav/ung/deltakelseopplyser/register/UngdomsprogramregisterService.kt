@@ -5,6 +5,7 @@ import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO.Companion.tilDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
@@ -70,9 +71,9 @@ class UngdomsprogramregisterService(
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
 
-        val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakelseOpplysningDTO.deltaker().deltakerIdent) ?: run {
+        val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakelseOpplysningDTO.deltaker.deltakerIdent) ?: run {
             logger.info("Deltaker eksisterer ikke. Oppretter ny deltaker.")
-            deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker().mapToDAO())
+            deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker.mapToDAO())
         }
 
         val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO(deltakerDAO))
@@ -217,11 +218,11 @@ class UngdomsprogramregisterService(
 
         return DeltakelseOpplysningDTO(
             id = id,
-            deltakerIdent = deltaker.deltakerIdent,
             deltaker = deltaker.mapToDTO(),
             harSøkt = harSøkt,
             fraOgMed = getFom(),
-            tilOgMed = getTom()
+            tilOgMed = getTom(),
+            oppgaver = oppgaver.map { it.tilDTO() }
         )
     }
 

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
+import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseUtmeldingDTO
@@ -55,10 +56,10 @@ class UngdomsprogramRegisterVeilederController(
     fun meldInnDeltaker(@RequestBody deltakelseInnmeldingDTO: DeltakelseInnmeldingDTO): DeltakelseOpplysningDTO {
 
         val deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
-            deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent,
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
+            harSøkt = false,
             fraOgMed = deltakelseInnmeldingDTO.startdato,
-            harSøkt = false
+            oppgaver = listOf()
         )
 
         return registerService.leggTilIProgram(deltakelseOpplysningDTO)
