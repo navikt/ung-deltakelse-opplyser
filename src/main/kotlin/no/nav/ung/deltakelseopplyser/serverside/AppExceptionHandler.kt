@@ -121,7 +121,7 @@ class AppExceptionHandler : ResponseEntityExceptionHandler() {
                     serverErrorMessage != null && serverErrorMessage.message?.contains("unique_ulost_oppgavetype") == true -> {
                         request.respondProblemDetails(
                             status = HttpStatus.CONFLICT,
-                            title = "Det finnes allerede en oppgavetype som er uløst",
+                            title = "Det finnes allerede en oppgave av samme type som er uløst",
                             type = URI("/problem-details/duplikat-uløst-oppgavetype"),
                             detail = serverErrorMessage.detail!!
                         )
