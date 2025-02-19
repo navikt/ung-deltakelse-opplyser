@@ -255,7 +255,6 @@ class UngdomsprogramregisterService(
         eksisterende.leggTilOppgave(nyOppgave)
         eksisterende.oppdaterPeriode(nyPeriode)
 
-        // Lagre den oppdaterte entiteten direkte – unngå bruk av copy()
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
