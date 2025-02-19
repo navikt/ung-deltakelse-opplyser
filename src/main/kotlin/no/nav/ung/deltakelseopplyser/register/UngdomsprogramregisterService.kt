@@ -38,7 +38,8 @@ class UngdomsprogramregisterService(
                     programperiodeFraOgMed = deltakelseDAO.getFom(),
                     programperiodeTilOgMed = deltakelseDAO.getTom(),
                     harSøkt = deltakelseDAO.harSøkt,
-                    rapporteringsPerioder = deltakelseDAO.rapporteringsperioder()
+                    rapporteringsPerioder = deltakelseDAO.rapporteringsperioder(),
+                    oppgaver = deltakelseDAO.oppgaver.map { it.tilDTO() }
                 )
             }
 
