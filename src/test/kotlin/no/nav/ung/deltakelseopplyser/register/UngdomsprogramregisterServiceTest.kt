@@ -9,6 +9,7 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.oppgave.OppgaveType
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException
@@ -149,44 +150,6 @@ class UngdomsprogramregisterServiceTest {
     }
 
     @Test
-    fun `Deltaker blir oppdatert i programmet`() {
-        val mandag = LocalDate.parse("2024-10-07")
-        val onsdag = LocalDate.parse("2024-10-09")
-
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
-        val dto = DeltakelseOpplysningDTO(
-            deltaker = deltakerDTO,
-            harSøkt = false,
-            fraOgMed = mandag,
-            tilOgMed = null,
-            oppgaver = listOf()
-        )
-        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
-
-
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
-            IdentInformasjon("321", false, IdentGruppe.AKTORID),
-            IdentInformasjon("451", true, IdentGruppe.AKTORID)
-        )
-
-        val oppdatertDto = DeltakelseOpplysningDTO(
-            deltaker = innmelding.deltaker,
-            harSøkt = false,
-            fraOgMed = mandag,
-            tilOgMed = onsdag,
-            oppgaver = listOf()
-        )
-        val oppdatertInnmelding = ungdomsprogramregisterService.oppdaterProgram(innmelding.id!!, oppdatertDto)
-
-        assertNotNull(oppdatertInnmelding)
-        assertEquals(innmelding.deltaker, oppdatertInnmelding.deltaker)
-        assertEquals(oppdatertDto.tilOgMed, oppdatertInnmelding.tilOgMed)
-
-        verify { pdlService.hentAktørIder(any(), any()) }
-        verify { ungSakService.sendInnHendelse(any()) }
-    }
-
-    @Test
     fun `Henter deltaker fra programmet`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
@@ -265,5 +228,71 @@ class UngdomsprogramregisterServiceTest {
 
         assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(idag.withDayOfMonth(1))
         assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(idag)
+    }
+
+    @Test
+    fun `Endring av startdato på deltakelse oppretter BEKREFT_ENDRET_STARTDATO oppgave`() {
+        val mandag = LocalDate.parse("2024-10-07")
+        val onsdag = LocalDate.parse("2024-10-09")
+
+        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val dto = DeltakelseOpplysningDTO(
+            deltaker = deltakerDTO,
+            harSøkt = false,
+            fraOgMed = mandag,
+            tilOgMed = null,
+            oppgaver = listOf()
+        )
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        val endretStartdatoDeltakelse = ungdomsprogramregisterService.endreStartdato(innmelding.id!!, onsdag)
+
+        assertNotNull(endretStartdatoDeltakelse)
+        assertEquals(innmelding.deltaker, endretStartdatoDeltakelse.deltaker)
+        assertEquals(onsdag, endretStartdatoDeltakelse.fraOgMed)
+
+        val oppgaver = endretStartdatoDeltakelse.oppgaver
+        assertThat(oppgaver).hasSize(1)
+        assertThat(oppgaver.first().oppgavetype).isEqualTo(OppgaveType.BEKREFT_ENDRET_STARTDATO)
+    }
+
+    @Test
+    fun `Endring av sluttdato på deltakelse oppretter BEKREFT_ENDRET_SLUTTDATODATO oppgave`() {
+        val mandag = LocalDate.parse("2024-10-07")
+        val onsdag = LocalDate.parse("2024-10-09")
+
+        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val dto = DeltakelseOpplysningDTO(
+            deltaker = deltakerDTO,
+            harSøkt = false,
+            fraOgMed = mandag,
+            tilOgMed = null,
+            oppgaver = listOf()
+        )
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val oppdatertDto = DeltakelseOpplysningDTO(
+            deltaker = innmelding.deltaker,
+            harSøkt = false,
+            fraOgMed = mandag,
+            tilOgMed = onsdag,
+            oppgaver = listOf()
+        )
+        ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
+
+        val endretSluttdatoDeltakelse = ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, onsdag.plusWeeks(1))
+
+        assertNotNull(endretSluttdatoDeltakelse)
+        assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
+        assertEquals(onsdag.plusWeeks(1), endretSluttdatoDeltakelse.tilOgMed)
+
+        val oppgaver = endretSluttdatoDeltakelse.oppgaver
+        assertThat(oppgaver).hasSize(1)
+        assertThat(oppgaver.first().oppgavetype).isEqualTo(OppgaveType.BEKREFT_ENDRET_SLUTTDATO)
     }
 }

@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseUtmeldingDTO
@@ -78,7 +77,35 @@ class UngdomsprogramRegisterVeilederController(
     ): DeltakelseOpplysningDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
         val utmeldtDeltakelse = eksisterendeDeltakelse.copy(tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato)
-        return registerService.oppdaterProgram(deltakelseId, utmeldtDeltakelse)
+        return registerService.avsluttDeltakelse(deltakelseId, utmeldtDeltakelse)
+    }
+
+    @PutMapping(
+        "/deltakelse/{deltakelseId}/endre/startdato",
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+        consumes = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Endrer startdato på en deltakelse i ungdomsprogrammet")
+    @ResponseStatus(HttpStatus.OK)
+    fun oppdaterStartsdatoP(
+        @PathVariable deltakelseId: UUID,
+        @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
+    ): DeltakelseOpplysningDTO {
+        return registerService.endreStartdato(deltakelseId, endrePeriodeDatoDTO.dato)
+    }
+
+    @PutMapping(
+        "/deltakelse/{deltakelseId}/endre/sluttdato",
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+        consumes = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Endrer startdato på en deltakelse i ungdomsprogrammet")
+    @ResponseStatus(HttpStatus.OK)
+    fun oppdaterSluttdato(
+        @PathVariable deltakelseId: UUID,
+        @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
+    ): DeltakelseOpplysningDTO {
+        return registerService.endreSluttdato(deltakelseId, endrePeriodeDatoDTO.dato)
     }
 
     @GetMapping(
@@ -91,6 +118,7 @@ class UngdomsprogramRegisterVeilederController(
         return registerService.hentAlleForDeltakerId(deltakerId)
     }
 
+    @Deprecated("Bruk spesifikke endepunkter for å oppdatere en deltakelse")
     @PutMapping(
         "/deltakelse/{deltakelseId}/oppdater",
         produces = [MediaType.APPLICATION_JSON_VALUE],
