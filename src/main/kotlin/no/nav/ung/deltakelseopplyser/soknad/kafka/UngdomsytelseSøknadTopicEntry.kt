@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.soknad
+package no.nav.ung.deltakelseopplyser.soknad.kafka
 
 import no.nav.k9.søknad.Søknad
 
