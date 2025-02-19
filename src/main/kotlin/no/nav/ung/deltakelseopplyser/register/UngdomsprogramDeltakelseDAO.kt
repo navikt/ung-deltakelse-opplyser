@@ -12,7 +12,7 @@ import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDAO
 import org.springframework.data.annotation.CreatedDate
 
 @Entity(name = "ungdomsprogram_deltakelse")
-data class UngdomsprogramDeltakelseDAO(
+class UngdomsprogramDeltakelseDAO(
     @Id
     @Column(name = "id")
     val id: UUID = UUID.randomUUID(),
@@ -23,17 +23,16 @@ data class UngdomsprogramDeltakelseDAO(
 
     @Type(value = PostgreSQLRangeType::class)
     @Column(name = "periode", columnDefinition = "daterange")
-    private val periode: Range<LocalDate>,
+    private var periode: Range<LocalDate>,
 
     @Column(name = "har_sokt")
-    val harSøkt: Boolean,
+    var harSøkt: Boolean,
 
     /**
      * Oppgaver som er knyttet til deltakelsen.
-     * Ved å bruke @JoinColumn definerer vi at kolonnen "deltakelseId" i oppgaver-tabellen, refererer til denne entiteten
+     * Oppgavene knyttes til denne deltakelsen via feltet `deltakelse` i OppgaveDAO.
      */
-    @OneToMany(fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
-    @JoinColumn(name = "deltakelse_id", referencedColumnName = "id")
+    @OneToMany(mappedBy = "deltakelse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
     val oppgaver: MutableSet<OppgaveDAO> = mutableSetOf(),
 
     @CreatedDate
@@ -41,7 +40,7 @@ data class UngdomsprogramDeltakelseDAO(
     val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
 
     @Column(name = "endret_tidspunkt")
-    val endretTidspunkt: ZonedDateTime? = null,
+    var endretTidspunkt: ZonedDateTime? = null,
 ) {
 
     fun getFom(): LocalDate {
@@ -68,6 +67,19 @@ data class UngdomsprogramDeltakelseDAO(
     fun oppdaterOppgave(oppdatertOppgave: OppgaveDAO) {
         oppgaver.removeAll { it.id == oppdatertOppgave.id }
         oppgaver.add(oppdatertOppgave)
+    }
+
+    /**
+     * Oppdaterer periode og endretTidspunkt for denne deltakelsen.
+     */
+    fun oppdaterPeriode(nyPeriode: Range<LocalDate>) {
+        periode = nyPeriode
+        endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
+    }
+
+    fun markerSomHarSøkt() {
+        harSøkt = true
+        endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
     }
 }
 

@@ -122,29 +122,20 @@ class UngdomsprogramregisterService(
             Range.closed(deltakelseOpplysningDTO.fraOgMed, deltakelseOpplysningDTO.tilOgMed)
         }
 
-        val oppdatert = deltakelseRepository.save(
-            eksiterende.copy(
-                periode = periode,
-                endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
-            )
-        )
+        eksiterende.oppdaterPeriode(periode)
 
-        if (oppdatert.getTom() != null) {
-            sendOpphørsHendelseTilK9(oppdatert)
+        if (eksiterende.getTom() != null) {
+            sendOpphørsHendelseTilK9(eksiterende)
         }
 
-        return oppdatert.mapToDTO()
+        return deltakelseRepository.save(eksiterende).mapToDTO()
     }
 
     fun markerSomHarSøkt(id: UUID): UngdomsprogramDeltakelseDAO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererIProgram(id)
-        return deltakelseRepository.save(
-            eksisterende.copy(
-                harSøkt = true,
-                endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
-            )
-        )
+        eksisterende.markerSomHarSøkt()
+        return deltakelseRepository.save(eksisterende)
     }
 
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
@@ -232,12 +223,8 @@ class UngdomsprogramregisterService(
             Range.closed(deltakelseOpplysningDTO.fraOgMed, deltakelseOpplysningDTO.tilOgMed)
         }
 
-        val oppdatert = deltakelseRepository.save(
-            eksiterende.copy(
-                periode = periode,
-                endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
-            )
-        )
+        eksiterende.oppdaterPeriode(periode)
+        val oppdatert = deltakelseRepository.save(eksiterende)
 
         if (oppdatert.getTom() != null) {
             sendOpphørsHendelseTilK9(oppdatert)
@@ -250,47 +237,45 @@ class UngdomsprogramregisterService(
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $dato")
 
-        val periode = if (eksisterende.getTom() == null) {
+        val nyPeriode = if (eksisterende.getTom() == null) {
             Range.closedInfinite(dato)
         } else {
             Range.closed(dato, eksisterende.getTom())
         }
 
-        eksisterende.leggTilOppgave(
-            OppgaveDAO(
-                id = UUID.randomUUID(),
-                oppgavetype = OppgaveType.BEKREFT_ENDRET_STARTDATO,
-                status = OppgaveStatus.ULØST
-            )
+        val nyOppgave = OppgaveDAO(
+            id = UUID.randomUUID(),
+            deltakelse = eksisterende,
+            oppgavetype = OppgaveType.BEKREFT_ENDRET_STARTDATO,
+            status = OppgaveStatus.ULØST,
+            opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
+            løstDato = null
         )
 
-        return deltakelseRepository.save(
-            eksisterende.copy(
-                periode = periode,
-                endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC),
+        eksisterende.leggTilOppgave(nyOppgave)
+        eksisterende.oppdaterPeriode(nyPeriode)
 
-                )
-        ).mapToDTO()
+        // Lagre den oppdaterte entiteten direkte – unngå bruk av copy()
+        return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
     fun endreSluttdato(deltakelseId: UUID, dato: LocalDate): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $dato")
 
-        eksisterende.leggTilOppgave(
-            OppgaveDAO(
-                id = UUID.randomUUID(),
-                oppgavetype = OppgaveType.BEKREFT_ENDRET_SLUTTDATO,
-                status = OppgaveStatus.ULØST
-            )
+        val bekreftEndretSluttdatoOppgave = OppgaveDAO(
+            id = UUID.randomUUID(),
+            oppgavetype = OppgaveType.BEKREFT_ENDRET_SLUTTDATO,
+            status = OppgaveStatus.ULØST,
+            deltakelse = eksisterende
         )
 
-        return deltakelseRepository.save(
-            eksisterende.copy(
-                periode = Range.closed(eksisterende.getFom(), dato),
-                endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
-            )
-        ).mapToDTO()
+        val nyPeriode = Range.closed(eksisterende.getFom(), dato)
+
+        eksisterende.leggTilOppgave(bekreftEndretSluttdatoOppgave)
+        eksisterende.oppdaterPeriode(nyPeriode)
+
+        return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {

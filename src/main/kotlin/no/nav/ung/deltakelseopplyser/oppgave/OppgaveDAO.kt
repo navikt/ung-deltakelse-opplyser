@@ -4,19 +4,24 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseDAO
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
 
 @Entity(name = "oppgave")
-data class OppgaveDAO(
+class OppgaveDAO(
     @Id
     @Column(name = "id", nullable = false)
     val id: UUID,
 
-    // Her definerer vi kun oppgavetype og status.
-    // Kolonnen "deltakelse_id" vil settes automatisk via relasjonen i UngdomsprogramDeltakelseDAO.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deltakelse_id", nullable = false)
+    val deltakelse: UngdomsprogramDeltakelseDAO,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "oppgavetype", nullable = false)
