@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.oppgave
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
 import jakarta.persistence.Column
-import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -10,6 +10,9 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseDAO
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.annotations.Type
+import org.hibernate.type.SqlTypes
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
@@ -35,8 +38,9 @@ class OppgaveDAO(
     /**
      * JSON-kolonne for oppgavetype-spesifikk data.
      */
+    @Type(JsonBinaryType::class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "oppgavetype_data", columnDefinition = "jsonb")
-    @Convert(converter = OppgavetypeDataConverter::class)
     val oppgavetypeData: OppgavetypeData,
 
     @Column(name = "opprettet_dato", nullable = false)
