@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.oppgave
 
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -25,11 +26,18 @@ class OppgaveDAO(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "oppgavetype", nullable = false)
-    val oppgavetype: OppgaveType,
+    val oppgavetype: Oppgavetype,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     val status: OppgaveStatus,
+
+    /**
+     * JSON-kolonne for oppgavetype-spesifikk data.
+     */
+    @Column(name = "oppgavetype_data", columnDefinition = "jsonb")
+    @Convert(converter = OppgavetypeDataConverter::class)
+    val oppgavetypeData: OppgavetypeData,
 
     @Column(name = "opprettet_dato", nullable = false)
     val opprettetDato: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
@@ -42,7 +50,7 @@ class OppgaveDAO(
     }
 }
 
-enum class OppgaveType {
+enum class Oppgavetype {
     BEKREFT_ENDRET_STARTDATO,
     BEKREFT_ENDRET_SLUTTDATO,
 }

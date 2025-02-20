@@ -5,10 +5,12 @@ import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeData
+import no.nav.ung.deltakelseopplyser.oppgave.EndretStartdatoOppgavetypeData
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.oppgave.OppgaveType
+import no.nav.ung.deltakelseopplyser.oppgave.Oppgavetype
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
@@ -237,23 +239,17 @@ class UngdomsprogramregisterService(
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $dato")
 
-        val nyPeriode = if (eksisterende.getTom() == null) {
-            Range.closedInfinite(dato)
-        } else {
-            Range.closed(dato, eksisterende.getTom())
-        }
-
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
             deltakelse = eksisterende,
-            oppgavetype = OppgaveType.BEKREFT_ENDRET_STARTDATO,
+            oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
+            oppgavetypeData = EndretStartdatoOppgavetypeData(nyStartdato = dato),
             status = OppgaveStatus.ULØST,
             opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
             løstDato = null
         )
 
         eksisterende.leggTilOppgave(nyOppgave)
-        eksisterende.oppdaterPeriode(nyPeriode)
 
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
@@ -264,15 +260,13 @@ class UngdomsprogramregisterService(
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
-            oppgavetype = OppgaveType.BEKREFT_ENDRET_SLUTTDATO,
+            oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
+            oppgavetypeData = EndretSluttdatoOppgavetypeData(nySluttdato = dato),
             status = OppgaveStatus.ULØST,
             deltakelse = eksisterende
         )
 
-        val nyPeriode = Range.closed(eksisterende.getFom(), dato)
-
         eksisterende.leggTilOppgave(bekreftEndretSluttdatoOppgave)
-        eksisterende.oppdaterPeriode(nyPeriode)
 
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }

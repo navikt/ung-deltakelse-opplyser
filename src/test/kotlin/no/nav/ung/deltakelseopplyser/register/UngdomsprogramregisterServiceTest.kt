@@ -3,13 +3,15 @@ package no.nav.ung.deltakelseopplyser.register
 import com.ninjasquad.springmockk.MockkBean
 import io.hypersistence.utils.hibernate.type.range.Range
 import io.mockk.every
-import io.mockk.verify
 import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.oppgave.OppgaveType
+import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.oppgave.EndretStartdatoOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.oppgave.Oppgavetype
+import no.nav.ung.deltakelseopplyser.oppgave.OppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException
@@ -249,11 +251,13 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(endretStartdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretStartdatoDeltakelse.deltaker)
-        assertEquals(onsdag, endretStartdatoDeltakelse.fraOgMed)
+
+        val endretStartdatoOppgavetypeDataDTO = endretStartdatoDeltakelse.oppgaver.first().oppgavetypeDataDTO as EndretStartdatoOppgavetypeDataDTO
+        assertEquals(onsdag, endretStartdatoOppgavetypeDataDTO.nyStartdato)
 
         val oppgaver = endretStartdatoDeltakelse.oppgaver
         assertThat(oppgaver).hasSize(1)
-        assertThat(oppgaver.first().oppgavetype).isEqualTo(OppgaveType.BEKREFT_ENDRET_STARTDATO)
+        assertThat(oppgaver.first().oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_STARTDATO)
     }
 
     @Test
@@ -289,10 +293,12 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(endretSluttdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
-        assertEquals(onsdag.plusWeeks(1), endretSluttdatoDeltakelse.tilOgMed)
+
+        val endretSluttdatoOppgavetypeDataDTO = endretSluttdatoDeltakelse.oppgaver.first().oppgavetypeDataDTO as EndretSluttdatoOppgavetypeDataDTO
+        assertEquals(onsdag.plusWeeks(1), endretSluttdatoOppgavetypeDataDTO.nySluttdato)
 
         val oppgaver = endretSluttdatoDeltakelse.oppgaver
         assertThat(oppgaver).hasSize(1)
-        assertThat(oppgaver.first().oppgavetype).isEqualTo(OppgaveType.BEKREFT_ENDRET_SLUTTDATO)
+        assertThat(oppgaver.first().oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_SLUTTDATO)
     }
 }

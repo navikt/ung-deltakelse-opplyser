@@ -5,7 +5,8 @@ import java.util.*
 
 data class OppgaveDTO(
     val id: UUID,
-    val oppgavetype: OppgaveType,
+    val oppgavetype: Oppgavetype,
+    val oppgavetypeDataDTO: OppgavetypeDataDTO,
     val status: OppgaveStatus,
     val opprettetDato: ZonedDateTime,
     val løstDato: ZonedDateTime?,
@@ -14,6 +15,7 @@ data class OppgaveDTO(
         fun OppgaveDAO.tilDTO() = OppgaveDTO(
             id = id,
             oppgavetype = oppgavetype,
+            oppgavetypeDataDTO = oppgavetypeData.tilDTO(),
             status = status,
             opprettetDato = opprettetDato,
             løstDato = løstDato
