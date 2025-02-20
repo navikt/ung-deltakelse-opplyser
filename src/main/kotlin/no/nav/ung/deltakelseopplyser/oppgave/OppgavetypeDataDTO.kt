@@ -3,7 +3,7 @@ package no.nav.ung.deltakelseopplyser.oppgave
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType
-sealed class OppgavetypeDataDTO
+open class OppgavetypeDataDTO
 
 data class EndretStartdatoOppgavetypeDataDTO(
     val nyStartdato: LocalDate,
