@@ -12,5 +12,5 @@ CREATE TABLE IF NOT EXISTS oppgave
 );
 
 -- Partial unique index: For hver deltakelse kan det maksimalt finnes én ULØST oppgave per oppgavetype
-CREATE UNIQUE INDEX unique_ulost_oppgavetype ON oppgave (deltakelse_id, oppgavetype)
+CREATE UNIQUE INDEX IF NOT EXISTS unique_ulost_oppgavetype ON oppgave (deltakelse_id, oppgavetype)
     WHERE status = 'ULØST';
