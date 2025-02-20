@@ -13,7 +13,7 @@ data class EndretSluttdatoOppgavetypeDataDTO(
     val nySluttdato: LocalDate,
 ) : OppgavetypeDataDTO()
 
-fun OppgavetypeData.tilDTO(): OppgavetypeDataDTO = when (this) {
-    is EndretStartdatoOppgavetypeData -> EndretStartdatoOppgavetypeDataDTO(nyStartdato)
-    is EndretSluttdatoOppgavetypeData -> EndretSluttdatoOppgavetypeDataDTO(nySluttdato)
+fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
+    is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(nyStartdato)
+    is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(nySluttdato)
 }

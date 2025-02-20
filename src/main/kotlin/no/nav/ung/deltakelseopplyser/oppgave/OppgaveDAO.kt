@@ -41,7 +41,7 @@ class OppgaveDAO(
     @Type(JsonBinaryType::class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "oppgavetype_data", columnDefinition = "jsonb")
-    val oppgavetypeData: OppgavetypeData,
+    val oppgavetypeDataDAO: OppgavetypeDataDAO,
 
     @Column(name = "opprettet_dato", nullable = false)
     val opprettetDato: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),

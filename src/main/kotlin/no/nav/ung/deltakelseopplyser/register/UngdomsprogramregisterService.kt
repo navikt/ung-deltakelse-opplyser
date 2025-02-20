@@ -5,8 +5,8 @@ import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeData
-import no.nav.ung.deltakelseopplyser.oppgave.EndretStartdatoOppgavetypeData
+import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.oppgave.EndretStartdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveStatus
@@ -243,7 +243,7 @@ class UngdomsprogramregisterService(
             id = UUID.randomUUID(),
             deltakelse = eksisterende,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
-            oppgavetypeData = EndretStartdatoOppgavetypeData(nyStartdato = dato),
+            oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(nyStartdato = dato),
             status = OppgaveStatus.ULØST,
             opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
             løstDato = null
@@ -261,7 +261,7 @@ class UngdomsprogramregisterService(
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
-            oppgavetypeData = EndretSluttdatoOppgavetypeData(nySluttdato = dato),
+            oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(nySluttdato = dato),
             status = OppgaveStatus.ULØST,
             deltakelse = eksisterende
         )

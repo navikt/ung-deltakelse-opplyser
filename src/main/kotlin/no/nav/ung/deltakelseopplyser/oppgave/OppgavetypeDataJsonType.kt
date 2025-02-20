@@ -24,10 +24,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 @JsonSubTypes(
     // Endret startdato oppgavetype data
     JsonSubTypes.Type(value = EndretStartdatoOppgavetypeDataDTO::class, name = "BEKREFT_ENDRET_STARTDATO"),
-    JsonSubTypes.Type(value = EndretStartdatoOppgavetypeData::class, name = "BEKREFT_ENDRET_STARTDATO"),
+    JsonSubTypes.Type(value = EndretStartdatoOppgavetypeDataDAO::class, name = "BEKREFT_ENDRET_STARTDATO"),
 
     // Endret sluttdato oppgavetype data
     JsonSubTypes.Type(value = EndretSluttdatoOppgavetypeDataDTO::class, name = "BEKREFT_ENDRET_SLUTTDATO"),
-    JsonSubTypes.Type(value = EndretSluttdatoOppgavetypeData::class, name = "BEKREFT_ENDRET_SLUTTDATO"),
+    JsonSubTypes.Type(value = EndretSluttdatoOppgavetypeDataDAO::class, name = "BEKREFT_ENDRET_SLUTTDATO"),
 )
 annotation class OppgavetypeDataJsonType

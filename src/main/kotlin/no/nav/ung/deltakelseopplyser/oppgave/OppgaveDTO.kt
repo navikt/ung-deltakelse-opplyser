@@ -15,7 +15,7 @@ data class OppgaveDTO(
         fun OppgaveDAO.tilDTO() = OppgaveDTO(
             id = id,
             oppgavetype = oppgavetype,
-            oppgavetypeDataDTO = oppgavetypeData.tilDTO(),
+            oppgavetypeDataDTO = oppgavetypeDataDAO.tilDTO(),
             status = status,
             opprettetDato = opprettetDato,
             løstDato = løstDato
