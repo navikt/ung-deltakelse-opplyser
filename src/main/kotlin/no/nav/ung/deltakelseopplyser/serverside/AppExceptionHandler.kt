@@ -147,7 +147,7 @@ class AppExceptionHandler : ResponseEntityExceptionHandler() {
             }
         }
 
-        log.error("DataIntegrityViolationException problemdetails: {}", problemDetails, exception)
+        log.error("DataIntegrityViolationException problemdetails: {}", problemDetails.toString(), exception)
         return problemDetails
     }
 
