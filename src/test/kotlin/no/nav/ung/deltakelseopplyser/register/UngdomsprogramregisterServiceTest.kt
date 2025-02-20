@@ -11,7 +11,6 @@ import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.oppgave.EndretStartdatoOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.oppgave.Oppgavetype
-import no.nav.ung.deltakelseopplyser.oppgave.OppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException
@@ -252,7 +251,7 @@ class UngdomsprogramregisterServiceTest {
         assertNotNull(endretStartdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretStartdatoDeltakelse.deltaker)
 
-        val endretStartdatoOppgavetypeDataDTO = endretStartdatoDeltakelse.oppgaver.first().oppgavetypeDataDTO as EndretStartdatoOppgavetypeDataDTO
+        val endretStartdatoOppgavetypeDataDTO = endretStartdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretStartdatoOppgavetypeDataDTO
         assertEquals(onsdag, endretStartdatoOppgavetypeDataDTO.nyStartdato)
 
         val oppgaver = endretStartdatoDeltakelse.oppgaver
@@ -294,7 +293,7 @@ class UngdomsprogramregisterServiceTest {
         assertNotNull(endretSluttdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
 
-        val endretSluttdatoOppgavetypeDataDTO = endretSluttdatoDeltakelse.oppgaver.first().oppgavetypeDataDTO as EndretSluttdatoOppgavetypeDataDTO
+        val endretSluttdatoOppgavetypeDataDTO = endretSluttdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO
         assertEquals(onsdag.plusWeeks(1), endretSluttdatoOppgavetypeDataDTO.nySluttdato)
 
         val oppgaver = endretSluttdatoDeltakelse.oppgaver
