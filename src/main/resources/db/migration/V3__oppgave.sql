@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS oppgave;
-
 CREATE TABLE IF NOT EXISTS oppgave
 (
     id               UUID PRIMARY KEY NOT NULL,
