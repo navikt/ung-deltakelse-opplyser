@@ -19,12 +19,6 @@ data class DeltakelseOpplysningDTO(
     val oppgaver: List<OppgaveDTO>,
 ) {
 
-    companion object {
-        fun DeltakerDTO.mapToDAO(): DeltakerDAO {
-            return DeltakerDAO(deltakerIdent = deltakerIdent)
-        }
-    }
-
     override fun toString(): String {
         return "DeltakerProgramOpplysningDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
     }

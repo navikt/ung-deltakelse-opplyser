@@ -2,9 +2,9 @@ package no.nav.ung.deltakelseopplyser.deltaker
 
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO.Companion.mapToDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO.Companion.mapToDAO
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
