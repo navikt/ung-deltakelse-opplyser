@@ -40,8 +40,8 @@ class UngSakKlientKonfig(
         mdcInterceptor: MDCValuesPropagatingClientHttpRequestInterceptor,
     ): RestTemplate {
         return builder
-            .setConnectTimeout(Duration.ofSeconds(20))
-            .setReadTimeout(Duration.ofSeconds(20))
+            .connectTimeout(Duration.ofSeconds(20))
+            .readTimeout(Duration.ofSeconds(20))
             .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .rootUri(ungSakUrl)
             .defaultMessageConverters()
@@ -55,7 +55,7 @@ class UngSakKlientKonfig(
                 request.uri.path == "/isalive" -> {} // ignorer
 
                 else -> {
-                    oAuth2AccessTokenService.getAccessToken(azureUngSakClientProperties).accessToken?.let {
+                    oAuth2AccessTokenService.getAccessToken(azureUngSakClientProperties).access_token?.let {
                         request.headers.setBearerAuth(it)
                     }?: throw SecurityException("Access token er null")
                 }

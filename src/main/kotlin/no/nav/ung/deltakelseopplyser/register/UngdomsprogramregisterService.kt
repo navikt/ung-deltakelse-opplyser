@@ -13,7 +13,7 @@ import no.nav.ung.deltakelseopplyser.oppgave.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.oppgave.Oppgavetype
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
-import no.nav.ung.sak.kontrakt.ungdomsytelse.hendelser.UngdomsprogramOpphørHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus

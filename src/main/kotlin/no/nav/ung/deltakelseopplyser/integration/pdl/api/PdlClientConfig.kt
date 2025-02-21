@@ -68,7 +68,7 @@ class PdlClientConfig(
     )
 
     private fun exchangeBearerTokenFilter() = ExchangeFilterFunction { request: ClientRequest, next: ExchangeFunction ->
-        val accessToken: String = oAuth2AccessTokenService.getAccessToken(azurePdlClientProperties).accessToken
+        val accessToken: String = oAuth2AccessTokenService.getAccessToken(azurePdlClientProperties).access_token
             ?: throw IllegalStateException("Access token mangler")
 
         val filtered = ClientRequest.from(request)
