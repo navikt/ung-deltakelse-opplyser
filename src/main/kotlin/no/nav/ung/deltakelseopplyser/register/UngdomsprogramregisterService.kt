@@ -5,7 +5,8 @@ import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.deltaker.UngdomsprogramDeltakerRepository
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerRepository
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDAO
@@ -32,7 +33,7 @@ import java.util.*
 @Service
 class UngdomsprogramregisterService(
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
-    private val deltakerRepository: UngdomsprogramDeltakerRepository,
+    private val deltakerService: DeltakerService,
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
 ) {
@@ -80,11 +81,10 @@ class UngdomsprogramregisterService(
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
 
-        val deltakerDAO =
-            deltakerRepository.findByDeltakerIdent(deltakelseOpplysningDTO.deltaker.deltakerIdent) ?: run {
-                logger.info("Deltaker eksisterer ikke. Oppretter ny deltaker.")
-                deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker.mapToDAO())
-            }
+        val deltakerDAO = deltakerService.finnDeltakerGittIdent(deltakelseOpplysningDTO.deltaker.deltakerIdent) ?: run {
+            logger.info("Deltaker eksisterer ikke. Oppretter ny deltaker.")
+            deltakerService.lagreDeltaker(deltakelseOpplysningDTO)
+        }
 
         val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO(deltakerDAO))
         return ungdomsprogramDAO.mapToDTO()
@@ -177,9 +177,8 @@ class UngdomsprogramregisterService(
 
     fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseOpplysningDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
-        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
-        val deltakerIdenter = deltakerRepository.findByDeltakerIdentIn(identer)
-        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIdenter.map { it.id })
+        val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIder)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }
@@ -187,7 +186,7 @@ class UngdomsprogramregisterService(
 
     fun hentAlleForDeltakerId(deltakerId: UUID): List<DeltakelseOpplysningDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
-        val deltakerDAO = deltakerRepository.findById(deltakerId).orElseThrow {
+        val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
@@ -197,9 +196,8 @@ class UngdomsprogramregisterService(
             )
         }
 
-        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerDAO.deltakerIdent).map { it.ident }
-        val deltakerIdenter = deltakerRepository.findByDeltakerIdentIn(identer)
-        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIdenter.map { it.id })
+        val deltakterIder = deltakerService.hentDeltakterIder(deltakerDAO.deltakerIdent)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }
@@ -207,9 +205,9 @@ class UngdomsprogramregisterService(
 
     fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelsePeriodInfo> {
         logger.info("Henter alle programopplysninger for deltaker.")
-        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
-        val deltakerIdenter = deltakerRepository.findByDeltakerIdentIn(identer)
-        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIdenter.map { it.id })
+
+        val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.somDeltakelsePeriodInfo()
@@ -315,9 +313,5 @@ class UngdomsprogramregisterService(
             id = id,
             deltakerIdent = deltakerIdent
         )
-    }
-
-    private fun DeltakerDTO.mapToDAO(): DeltakerDAO {
-        return DeltakerDAO(deltakerIdent = deltakerIdent)
     }
 }

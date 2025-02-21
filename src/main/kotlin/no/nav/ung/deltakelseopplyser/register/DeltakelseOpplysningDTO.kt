@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO
 import java.time.LocalDate
@@ -17,6 +18,12 @@ data class DeltakelseOpplysningDTO(
     val tilOgMed: LocalDate? = null,
     val oppgaver: List<OppgaveDTO>,
 ) {
+
+    companion object {
+        fun DeltakerDTO.mapToDAO(): DeltakerDAO {
+            return DeltakerDAO(deltakerIdent = deltakerIdent)
+        }
+    }
 
     override fun toString(): String {
         return "DeltakerProgramOpplysningDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"

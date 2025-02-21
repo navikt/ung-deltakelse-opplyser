@@ -3,7 +3,7 @@ package no.nav.ung.deltakelseopplyser.register
 import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.deltaker.UngdomsprogramDeltakerRepository
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
@@ -40,7 +40,7 @@ class UngdomsprogramregisterRepositoryTest {
     lateinit var repository: UngdomsprogramDeltakelseRepository
 
     @Autowired
-    lateinit var deltakerRepository: UngdomsprogramDeltakerRepository
+    lateinit var deltakerRepository: DeltakerRepository
 
     @Autowired
     lateinit var entityManager: EntityManager

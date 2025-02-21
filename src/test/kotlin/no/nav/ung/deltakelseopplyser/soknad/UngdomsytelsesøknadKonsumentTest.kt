@@ -8,7 +8,7 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.deltaker.DeltakerInfoService
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseRepository
@@ -34,7 +34,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     lateinit var ungdomsytelsesøknadService: UngdomsytelsesøknadService
 
     @SpykBean
-    lateinit var deltakerInfoService: DeltakerInfoService
+    lateinit var deltakerService: DeltakerService
 
     @SpykBean
     lateinit var ungdomsprogramDeltakelseRepository: UngdomsprogramDeltakelseRepository
@@ -99,7 +99,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
 
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
             verify(exactly = 1) { ungdomsytelsesøknadService.håndterMottattSøknad(any()) }
-            verify(exactly = 1) { deltakerInfoService.hentDeltakterIder(any()) }
+            verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
             verify(exactly = 1) { ungdomsprogramDeltakelseRepository.finnDeltakelseSomStarter(any(), any()) }
             verify(exactly = 1) { søknadRepository.save(any()) }
         }

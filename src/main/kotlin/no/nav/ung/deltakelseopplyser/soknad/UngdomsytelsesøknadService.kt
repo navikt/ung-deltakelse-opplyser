@@ -2,7 +2,7 @@ package no.nav.ung.deltakelseopplyser.soknad
 
 import no.nav.k9.søknad.JsonUtils
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
-import no.nav.ung.deltakelseopplyser.deltaker.DeltakerInfoService
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.soknad.repository.SøknadRepository
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 @Service
 class UngdomsytelsesøknadService(
     private val søknadRepository: SøknadRepository,
-    private val deltakerInfoService: DeltakerInfoService,
+    private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository
 ) {
 
@@ -29,7 +29,7 @@ class UngdomsytelsesøknadService(
         val deltakerIdent = søknad.søker.personIdent.verdi
 
         logger.info("Henter deltakerIder for søker oppgitt i søknaden")
-        val deltakterIder = deltakerInfoService.hentDeltakterIder(deltakerIdent)
+        val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdent)
         if (deltakterIder.isEmpty()) {
             throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
         }

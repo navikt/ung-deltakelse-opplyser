@@ -12,7 +12,7 @@ import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.deltaker.DeltakerInfoService
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
@@ -21,7 +21,6 @@ import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.soknad.kafka.Ungdomsytelsesøknad
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -29,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
@@ -43,7 +41,7 @@ import java.time.ZonedDateTime
     replace = AutoConfigureTestDatabase.Replace.NONE
 )
 @Import(
-    DeltakerInfoService::class,
+    DeltakerService::class,
     UngdomsytelsesøknadService::class,
     UngdomsprogramregisterService::class,
 )
