@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
@@ -10,6 +11,7 @@ data class DeltakelsePeriodInfo(
     val programperiodeTilOgMed: LocalDate? = null,
     val harSøkt: Boolean,
     val rapporteringsPerioder: List<RapportPeriodeinfoDTO> = emptyList(),
+    val oppgaver: List<OppgaveDTO>,
 )
 
 data class RapportPeriodeinfoDTO(

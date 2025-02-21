@@ -4,7 +4,7 @@ import java.util.UUID
 import jakarta.persistence.*
 
 @Entity(name = "deltaker")
-data class DeltakerDAO(
+class DeltakerDAO(
     @Id
     @Column(name = "id")
     val id: UUID = UUID.randomUUID(),

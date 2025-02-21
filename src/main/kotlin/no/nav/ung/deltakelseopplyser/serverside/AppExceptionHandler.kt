@@ -109,20 +109,31 @@ class AppExceptionHandler : ResponseEntityExceptionHandler() {
         val problemDetails = when (konkretFeil) {
             is PSQLException -> {
                 val serverErrorMessage = konkretFeil.serverErrorMessage
-                if (serverErrorMessage != null && serverErrorMessage.message?.contains("ingen_overlappende_periode") == true) {
-                    request.respondProblemDetails(
-                        status = HttpStatus.CONFLICT,
-                        title = "Deltaker er allerede i programmet for oppgitt periode",
-                        type = URI("/problem-details/deltaker-med-overlappende-periode"),
-                        detail = serverErrorMessage.detail!!
-                    )
-                } else {
-                    request.respondProblemDetails(
-                        status = INTERNAL_SERVER_ERROR,
-                        title = "Dataintegritetsfeil - uventet feil",
-                        type = URI("/problem-details/data-integritetsfeil"),
-                        detail = konkretFeil.message ?: "Uforventet feil"
-                    )
+                when {
+                    serverErrorMessage != null && serverErrorMessage.message?.contains("ingen_overlappende_periode") == true -> {
+                        request.respondProblemDetails(
+                            status = HttpStatus.CONFLICT,
+                            title = "Deltaker er allerede i programmet for oppgitt periode",
+                            type = URI("/problem-details/deltaker-med-overlappende-periode"),
+                            detail = serverErrorMessage.detail!!
+                        )
+                    }
+                    serverErrorMessage != null && serverErrorMessage.message?.contains("unique_ulost_oppgavetype") == true -> {
+                        request.respondProblemDetails(
+                            status = HttpStatus.CONFLICT,
+                            title = "Det finnes allerede en oppgave av samme type som er uløst",
+                            type = URI("/problem-details/duplikat-uløst-oppgavetype"),
+                            detail = serverErrorMessage.detail!!
+                        )
+                    }
+                    else -> {
+                        request.respondProblemDetails(
+                            status = INTERNAL_SERVER_ERROR,
+                            title = "Dataintegritetsfeil - uventet feil",
+                            type = URI("/problem-details/data-integritetsfeil"),
+                            detail = konkretFeil.message ?: "Uforventet feil"
+                        )
+                    }
                 }
             }
 
@@ -136,7 +147,7 @@ class AppExceptionHandler : ResponseEntityExceptionHandler() {
             }
         }
 
-        log.error("DataIntegrityViolationException problemdetails: {}", problemDetails, exception)
+        log.error("DataIntegrityViolationException problemdetails: {}", problemDetails.toString(), exception)
         return problemDetails
     }
 
