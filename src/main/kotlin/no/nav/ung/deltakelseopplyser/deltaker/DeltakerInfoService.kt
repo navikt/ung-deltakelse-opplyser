@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.register
+package no.nav.ung.deltakelseopplyser.deltaker
 
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
@@ -30,6 +30,19 @@ class DeltakerInfoService(
                 )
             }
         }
+    }
+
+    fun hentDeltakerIdenter(deltakerIdentEllerAktørId: String): List<String> {
+        return pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
+    }
+
+    fun hentDeltakterIder(deltakerIdentEllerAktørId: String): List<UUID> {
+        return hentDeltakere(deltakerIdentEllerAktørId).map { it.id }
+    }
+
+    private fun hentDeltakere(deltakerIdentEllerAktørId: String): List<DeltakerDAO> {
+        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
+        return deltakerRepository.findByDeltakerIdentIn(identer)
     }
 
     private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia? {

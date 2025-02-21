@@ -15,7 +15,6 @@ data class JournalførtUngdomsytelseSøknad(
 )
 
 data class Ungdomsytelsesøknad(
-    val type: String,
     val journalpostId: String,
     val søknad: Søknad
 )

@@ -1,7 +1,8 @@
-package no.nav.ung.deltakelseopplyser.register
+package no.nav.ung.deltakelseopplyser.deltaker
 
 import java.util.UUID
 import jakarta.persistence.*
+import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseDAO
 
 @Entity(name = "deltaker")
 class DeltakerDAO(

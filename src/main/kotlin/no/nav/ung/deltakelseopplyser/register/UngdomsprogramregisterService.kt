@@ -3,6 +3,9 @@ package no.nav.ung.deltakelseopplyser.register
 import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.deltaker.UngdomsprogramDeltakerRepository
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDAO

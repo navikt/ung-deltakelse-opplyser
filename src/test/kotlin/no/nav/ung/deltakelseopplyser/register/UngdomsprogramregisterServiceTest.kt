@@ -6,6 +6,8 @@ import io.mockk.every
 import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDTO

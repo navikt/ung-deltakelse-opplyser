@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.register
+package no.nav.ung.deltakelseopplyser.deltaker
 
 import java.util.*
 

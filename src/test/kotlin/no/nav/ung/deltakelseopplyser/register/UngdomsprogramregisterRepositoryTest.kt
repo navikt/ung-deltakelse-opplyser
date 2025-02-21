@@ -2,10 +2,14 @@ package no.nav.ung.deltakelseopplyser.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.deltaker.UngdomsprogramDeltakerRepository
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -19,6 +23,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
+import java.util.*
 import java.util.stream.Stream
 
 
@@ -91,6 +96,60 @@ class UngdomsprogramregisterRepositoryTest {
                 entityManager.flush()
             }
         }
+    }
+
+    @Test
+    fun `Forventer å finne deltakelse som starter på eksakt dato`() {
+        val deltaker = DeltakerDAO(
+            id = UUID.randomUUID(),
+            deltakerIdent = "123",
+            deltakelseList = mutableListOf(),
+        )
+        entityManager.persist(deltaker)
+        val deltakerIdenter = listOf(deltaker.id)
+
+        val førsteDeltakelseStartdato = LocalDate.of(2025, 1, 1)
+        val førsteDeltakelse = UngdomsprogramDeltakelseDAO(
+            deltaker = deltaker,
+            harSøkt = false,
+            periode = Range.closed(førsteDeltakelseStartdato, førsteDeltakelseStartdato.plusWeeks(1))
+        )
+        entityManager.persist(førsteDeltakelse)
+
+        val andreDeltakelseStartdato = førsteDeltakelseStartdato.plusWeeks(1).plusDays(1)
+        val andreDeltakelse = UngdomsprogramDeltakelseDAO(
+            deltaker = deltaker,
+            harSøkt = false,
+            periode = Range.closedInfinite(andreDeltakelseStartdato)
+        )
+        entityManager.persist(andreDeltakelse)
+
+        entityManager.flush()
+
+        val førsteDeltakelseResultat = repository.finnDeltakelseSomStarter(deltakerIdenter, førsteDeltakelseStartdato)
+        assertThat(førsteDeltakelseResultat)
+            .withFailMessage("Forventet å finne deltakelse som starter på %s, men fikk null", førsteDeltakelseStartdato)
+            .isNotNull
+        assertThat(førsteDeltakelseResultat!!.getFom())
+            .withFailMessage("Forventet at deltakelse skulle starte %s", førsteDeltakelseStartdato)
+            .isEqualTo(førsteDeltakelseStartdato)
+
+        val andreDeltakelseResultat = repository.finnDeltakelseSomStarter(deltakerIdenter, andreDeltakelseStartdato)
+        assertThat(andreDeltakelseResultat)
+            .withFailMessage("Forventet å finne deltakelse som starter %s, men fikk null", andreDeltakelseStartdato)
+            .isNotNull
+        assertThat(andreDeltakelseResultat!!.getFom())
+            .withFailMessage("Forventet at deltakelse skulle starte %s", andreDeltakelseStartdato)
+            .isEqualTo(andreDeltakelseStartdato)
+
+        val ikkeEksisterendeStartdato = LocalDate.of(2025, 1, 1).minusDays(1)
+        val ikkeEksisterendeDeltakelseResultat = repository.finnDeltakelseSomStarter(
+            deltakerIdenter,
+            ikkeEksisterendeStartdato
+        )
+        assertThat(ikkeEksisterendeDeltakelseResultat)
+            .withFailMessage("Forventet å ikke finne deltakelse som starter %s", ikkeEksisterendeStartdato)
+            .isNull()
     }
 
     companion object {

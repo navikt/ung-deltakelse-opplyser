@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.register
+package no.nav.ung.deltakelseopplyser.deltaker
 
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
