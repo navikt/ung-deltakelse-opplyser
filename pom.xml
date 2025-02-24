@@ -41,6 +41,7 @@
         <fp-sak.version>2.7.1</fp-sak.version>
         <k9-format.version>11.3.0</k9-format.version>
         <graphql-kotlin.version>8.3.0</graphql-kotlin.version>
+        <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
     </properties>
     <dependencies>
         <dependency>
@@ -172,6 +173,15 @@
             <scope>test</scope>
         </dependency>
         <!-- Database -->
+
+        <!-- Mine Sider (Nav.no) -->
+        <dependency>
+            <groupId>no.nav.tms.varsel</groupId>
+            <artifactId>kotlin-builder</artifactId>
+            <version>${tms-kotlin-builder.version}</version>
+        </dependency>
+
+        <!-- Mine Sider (Nav.no) -->
 
         <!-- Kotlin -->
         <dependency>
@@ -321,4 +331,10 @@
             </plugin>
         </plugins>
     </build>
+    <repositories>
+        <repository>
+            <id>nav-maven-repo</id>
+            <url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>
+        </repository>
+    </repositories>
 </project>
