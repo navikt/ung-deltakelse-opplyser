@@ -6,6 +6,9 @@ import io.mockk.every
 import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDTO
@@ -41,7 +44,10 @@ import java.util.*
 @AutoConfigureTestDatabase(
     replace = AutoConfigureTestDatabase.Replace.NONE
 )
-@Import(UngdomsprogramregisterService::class)
+@Import(
+    UngdomsprogramregisterService::class,
+    DeltakerService::class,
+)
 class UngdomsprogramregisterServiceTest {
 
     @Autowired
@@ -118,7 +124,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
-        val deltakerDTO = DeltakerDTO(deltakerIdent =  "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             harSøkt = false,
@@ -251,7 +257,8 @@ class UngdomsprogramregisterServiceTest {
         assertNotNull(endretStartdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretStartdatoDeltakelse.deltaker)
 
-        val endretStartdatoOppgavetypeDataDTO = endretStartdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretStartdatoOppgavetypeDataDTO
+        val endretStartdatoOppgavetypeDataDTO =
+            endretStartdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretStartdatoOppgavetypeDataDTO
         assertEquals(onsdag, endretStartdatoOppgavetypeDataDTO.nyStartdato)
 
         val oppgaver = endretStartdatoDeltakelse.oppgaver
@@ -288,12 +295,14 @@ class UngdomsprogramregisterServiceTest {
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
 
-        val endretSluttdatoDeltakelse = ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, onsdag.plusWeeks(1))
+        val endretSluttdatoDeltakelse =
+            ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, onsdag.plusWeeks(1))
 
         assertNotNull(endretSluttdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
 
-        val endretSluttdatoOppgavetypeDataDTO = endretSluttdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO
+        val endretSluttdatoOppgavetypeDataDTO =
+            endretSluttdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO
         assertEquals(onsdag.plusWeeks(1), endretSluttdatoOppgavetypeDataDTO.nySluttdato)
 
         val oppgaver = endretSluttdatoDeltakelse.oppgaver

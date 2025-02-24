@@ -1,8 +1,10 @@
-package no.nav.ung.deltakelseopplyser.register
+package no.nav.ung.deltakelseopplyser.deltaker
 
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO.Companion.mapToDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -10,8 +12,8 @@ import org.springframework.web.ErrorResponseException
 import java.util.*
 
 @Service
-class DeltakerInfoService(
-    private val deltakerRepository: UngdomsprogramDeltakerRepository,
+class DeltakerService(
+    private val deltakerRepository: DeltakerRepository,
     private val pdlService: PdlService,
 ) {
 
@@ -32,16 +34,20 @@ class DeltakerInfoService(
         }
     }
 
-    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia? {
-        val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
+    fun hentDeltakterIder(deltakerIdentEllerAktørId: String): List<UUID> {
+        return hentDeltakere(deltakerIdentEllerAktørId).map { it.id }
+    }
 
-        val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)
+    fun finnDeltakerGittIdent(deltakerIdent: String): DeltakerDAO? {
+        return deltakerRepository.findByDeltakerIdent(deltakerIdent)
+    }
 
-        return DeltakerPersonlia(
-            id = deltakerDAO?.id,
-            deltakerIdent = deltakerIdent,
-            navn = PdlPerson.navn.first()
-        )
+    fun finnDeltakerGittId(id: UUID): Optional<DeltakerDAO> {
+        return deltakerRepository.findById(id)
+    }
+
+    fun lagreDeltaker(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakerDAO {
+        return deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker.mapToDAO())
     }
 
     private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia? {
@@ -81,6 +87,23 @@ class DeltakerInfoService(
                 }
             )
         return PdlPerson
+    }
+
+    private fun hentDeltakere(deltakerIdentEllerAktørId: String): List<DeltakerDAO> {
+        val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
+        return deltakerRepository.findByDeltakerIdentIn(identer)
+    }
+
+    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia? {
+        val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
+
+        val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)
+
+        return DeltakerPersonlia(
+            id = deltakerDAO?.id,
+            deltakerIdent = deltakerIdent,
+            navn = PdlPerson.navn.first()
+        )
     }
 
     data class DeltakerPersonlia(

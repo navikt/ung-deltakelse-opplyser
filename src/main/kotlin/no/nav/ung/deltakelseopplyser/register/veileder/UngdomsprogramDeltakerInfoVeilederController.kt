@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.register.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.register.DeltakerInfoService
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -31,22 +31,22 @@ import java.util.*
 )
 @Tag(name = "Oppslag", description = "API for å hente informasjon om deltakere.")
 class UngdomsprogramDeltakerInfoVeilederController(
-    private val deltakerInfoService: DeltakerInfoService,
+    private val deltakerService: DeltakerService,
 ) {
 
     @PostMapping("/deltaker", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personlia for en deltaker")
     @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakerInfo(@RequestBody deltakerDTO: DeltakerDTO): DeltakerInfoService.DeltakerPersonlia? {
+    fun hentDeltakerInfo(@RequestBody deltakerDTO: DeltakerDTO): DeltakerService.DeltakerPersonlia? {
         // TODO: Må implementere tilgangskontroll for å sjekke at veileder har tilgang til å hente personlia for deltakeren
-        return deltakerInfoService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
+        return deltakerService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
     }
 
     @GetMapping("/deltaker/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personlia for en deltaker gitt en UUID")
     @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakerInfo(@PathVariable id: UUID): DeltakerInfoService.DeltakerPersonlia? {
+    fun hentDeltakerInfo(@PathVariable id: UUID): DeltakerService.DeltakerPersonlia? {
         // TODO: Må implementere tilgangskontroll for å sjekke at veileder har tilgang til å hente personlia for deltakeren
-        return deltakerInfoService.hentDeltakerInfo(deltakerId = id)
+        return deltakerService.hentDeltakerInfo(deltakerId = id)
     }
 }

@@ -1,6 +1,9 @@
 package no.nav.ung.deltakelseopplyser.soknad
 
 import no.nav.k9.søknad.JsonUtils
+import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.soknad.repository.UngSøknadDAO
@@ -9,7 +12,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class UngdomsytelsesøknadService(
-    private val søknadRepository: SøknadRepository
+    private val søknadRepository: SøknadRepository,
+    private val deltakerService: DeltakerService,
+    private val deltakelseRepository: UngdomsprogramDeltakelseRepository
 ) {
 
     private companion object {
@@ -17,12 +22,34 @@ class UngdomsytelsesøknadService(
     }
 
     fun håndterMottattSøknad(ungdomsytelsesøknad: Ungdomsytelsesøknad) {
+        logger.info("Håndterer mottatt søknad.")
+        val søknad = ungdomsytelsesøknad.søknad
+        val ungdomsytelse = søknad.getYtelse<Ungdomsytelse>()
+        val søktFraDato = ungdomsytelse.søknadsperiode.fraOgMed
+        val deltakerIdent = søknad.søker.personIdent.verdi
+
+        logger.info("Henter deltakerIder for søker oppgitt i søknaden")
+        val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdent)
+        if (deltakterIder.isEmpty()) {
+            throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
+        }
+
+        logger.info("Henter deltakelse som starter $søktFraDato")
+        val deltakelseDAO = deltakelseRepository.finnDeltakelseSomStarter(deltakterIder, søktFraDato)
+            ?: throw IllegalStateException("Fant ingen deltakelse som starter $søktFraDato")
+
+        if (deltakelseDAO.harSøkt.not()) {
+            logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)
+            deltakelseDAO.markerSomHarSøkt()
+            deltakelseRepository.save(deltakelseDAO)
+        } else {
+            logger.info("Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.", deltakelseDAO.id)
+        }
+
+        // TODO: Marker deltakelsens relevante oppgave som løst hvis den har en endret startdato eller sluttdato
+
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
         søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
-
-        // TODO: Hent tilhørende deltakelse for søknadens startdato
-        // TODO: Marker deltakelse som søkt om den ikke er det
-        // TODO: Marker deltakelsens relevante oppgave som løst hvis den har en endret startdato eller sluttdato
     }
 
     private fun Ungdomsytelsesøknad.somUngSøknadDAO(): UngSøknadDAO {

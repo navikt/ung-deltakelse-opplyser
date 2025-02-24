@@ -1,5 +1,7 @@
 package no.nav.ung.deltakelseopplyser.register
 
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO
 import java.time.LocalDate
 import java.util.*

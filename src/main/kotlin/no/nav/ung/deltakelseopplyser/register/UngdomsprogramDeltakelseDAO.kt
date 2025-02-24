@@ -8,6 +8,7 @@ import java.time.ZonedDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 import jakarta.persistence.*
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDAO
 import org.springframework.data.annotation.CreatedDate
 
