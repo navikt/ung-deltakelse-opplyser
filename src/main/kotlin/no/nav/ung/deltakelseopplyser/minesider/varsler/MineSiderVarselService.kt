@@ -103,6 +103,7 @@ class MineSiderVarselService(
      * Deaktiverer et varsel.
      * @param oppgaveId Id til varselet som skal deaktiveres.
      */
+    @Transactional
     fun deaktiverOppgave(oppgaveId: String) {
         /**
          * Deaktiverer et varsel
