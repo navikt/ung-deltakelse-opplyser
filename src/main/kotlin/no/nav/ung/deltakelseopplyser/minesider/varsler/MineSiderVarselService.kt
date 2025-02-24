@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.minesider.varsler
 
+import jakarta.transaction.Transactional
 import no.nav.tms.varsel.action.EksternKanal
 import no.nav.tms.varsel.action.Sensitivitet
 import no.nav.tms.varsel.action.Tekst
@@ -27,6 +28,7 @@ class MineSiderVarselService(
      * @param oppgavetekster Teksten som faktisk vises i varselet med språkkode.
      * @param oppgavelenke Lenke som blir aktivert når en person trykker på varselet i varselbjella eller på min side.
      */
+    @Transactional
     fun opprettOppgve(oppgaveId: String, deltakerIdent: String, oppgavetekster: List<Tekst>, oppgavelenke: String) {
         logger.info("Oppretter min-side oppgave med id $oppgaveId")
 
