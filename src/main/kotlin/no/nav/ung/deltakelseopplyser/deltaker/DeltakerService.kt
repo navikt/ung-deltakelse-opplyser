@@ -110,5 +110,8 @@ class DeltakerService(
         val id: UUID? = null,
         val deltakerIdent: String,
         val navn: Navn,
+        // TODO: Fødsesldato
+        // TODO: Første mulige innmeldingsdato
+        // TODO: Siste mulige innmeldingsdato
     )
 }
