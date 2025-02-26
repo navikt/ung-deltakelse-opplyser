@@ -35,7 +35,7 @@ class UngdomsprogramRegisterK9SakController(
     @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(@RequestBody aktørIdDto: AktørIdDto): DeltakerOpplysningerDTO {
+    fun hentAlleDeltakelserGittDeltakerAktør(@RequestBody aktørIdDto: AktørIdDto): DeltakerOpplysningerDTO {
         val opplysninger = registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
         return DeltakerOpplysningerDTO(opplysninger)
     }

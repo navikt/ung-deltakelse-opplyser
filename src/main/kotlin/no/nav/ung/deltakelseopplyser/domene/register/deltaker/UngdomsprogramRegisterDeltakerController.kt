@@ -38,7 +38,7 @@ class UngdomsprogramRegisterDeltakerController(
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(): List<DeltakelsePeriodInfo> {
+    fun hentAlleMineDeltakelser(): List<DeltakelsePeriodInfo> {
         val personIdent = tokenValidationContextHolder.personIdent()
         return registerService.hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId = personIdent)
     }

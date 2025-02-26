@@ -114,7 +114,7 @@ class UngdomsprogramRegisterVeilederController(
     )
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleProgramopplysningerForDeltaker(@PathVariable deltakerId: UUID): List<DeltakelseOpplysningDTO> {
+    fun hentAlleDeltakelserGittDeltakerId(@PathVariable deltakerId: UUID): List<DeltakelseOpplysningDTO> {
         return registerService.hentAlleForDeltakerId(deltakerId)
     }
 
