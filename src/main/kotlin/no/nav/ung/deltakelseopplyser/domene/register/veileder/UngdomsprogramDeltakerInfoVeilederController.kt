@@ -37,7 +37,7 @@ class UngdomsprogramDeltakerInfoVeilederController(
     @PostMapping("/deltaker", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personlia for en deltaker")
     @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakerInfo(@RequestBody deltakerDTO: DeltakerDTO): DeltakerService.DeltakerPersonlia? {
+    fun hentDeltakerInfoGittDeltaker(@RequestBody deltakerDTO: DeltakerDTO): DeltakerService.DeltakerPersonlia? {
         // TODO: Må implementere tilgangskontroll for å sjekke at veileder har tilgang til å hente personlia for deltakeren
         return deltakerService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
     }
@@ -45,7 +45,7 @@ class UngdomsprogramDeltakerInfoVeilederController(
     @GetMapping("/deltaker/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personlia for en deltaker gitt en UUID")
     @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakerInfo(@PathVariable id: UUID): DeltakerService.DeltakerPersonlia? {
+    fun hentDeltakerInfoGittDeltakerId(@PathVariable id: UUID): DeltakerService.DeltakerPersonlia? {
         // TODO: Må implementere tilgangskontroll for å sjekke at veileder har tilgang til å hente personlia for deltakeren
         return deltakerService.hentDeltakerInfo(deltakerId = id)
     }
