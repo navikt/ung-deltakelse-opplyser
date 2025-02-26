@@ -1,5 +1,7 @@
 package no.nav.ung.deltakelseopplyser.deltaker
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO.Companion.mapToDAO
@@ -9,6 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
+import java.time.LocalDate
 import java.util.*
 
 @Service
@@ -67,7 +70,8 @@ class DeltakerService(
         return DeltakerPersonlia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerDAO.deltakerIdent,
-            navn = PdlPerson.navn.first()
+            navn = PdlPerson.navn.first(),
+            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate()
         )
     }
 
@@ -102,16 +106,27 @@ class DeltakerService(
         return DeltakerPersonlia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerIdent,
-            navn = PdlPerson.navn.first()
+            navn = PdlPerson.navn.first(),
+            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate()
         )
+    }
+
+    private fun Foedselsdato.toLocalDate(): LocalDate {
+        return LocalDate.parse(foedselsdato.toString())
     }
 
     data class DeltakerPersonlia(
         val id: UUID? = null,
         val deltakerIdent: String,
         val navn: Navn,
-        // TODO: Fødsesldato
-        // TODO: Første mulige innmeldingsdato
-        // TODO: Siste mulige innmeldingsdato
-    )
+        val fødselsdato: LocalDate,
+    ) {
+        @get:JsonProperty("førsteMuligeInnmeldingsdato")
+        val førsteMuligeInnmeldingsdato: LocalDate
+            get() = fødselsdato.plusYears(18).plusMonths(1)
+
+        @get:JsonProperty("sisteMuligeInnmeldingsdato")
+        val sisteMuligeInnmeldingsdato: LocalDate
+            get() = fødselsdato.plusYears(29)
+    }
 }
