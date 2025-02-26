@@ -240,6 +240,15 @@
             <scope>test</scope>
         </dependency>
         <!-- Diverse testing -->
+
+        <!--Krevd for openapitools plugin-->
+        <!-- https://mvnrepository.com/artifact/org.openapitools/jackson-databind-nullable -->
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
+        </dependency>
+        <!--Krevd for openapitools plugin-->
     </dependencies>
 
     <build>
@@ -318,6 +327,35 @@
                 <configuration>
                     <argLine>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argLine>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.10.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <generatorName>java</generatorName>
+                            <library>resttemplate</library>
+                            <configOptions>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <useJakartaEe>true</useJakartaEe>
+                                <java8>true</java8>
+                                <serializationLibrary>jackson</serializationLibrary>
+                                <generateApiTests>false</generateApiTests>
+                                <testOutput>${project.build.directory}/generated-test-sources/openapi</testOutput>
+                            </configOptions>
+                            <output>${project.build.directory}/generated-sources/openapi</output>
+                            <skipValidateSpec>true</skipValidateSpec>
+                            <inputSpec>https://ung-deltakelse-opplyser.intern.dev.nav.no/v3/api-docs</inputSpec>
+                            <apiPackage>no.nav.ung.deltakelseopplyser.domene</apiPackage>
+                            <modelPackage>no.nav.ung.deltakelseopplyser.domene</modelPackage>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
