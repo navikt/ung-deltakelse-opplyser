@@ -7,11 +7,11 @@ import java.util.*
 
 data class DeltakelsePeriodInfo(
     val id: UUID,
-    val programperiodeFraOgMed: LocalDate,
-    val programperiodeTilOgMed: LocalDate? = null,
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate? = null,
     val harSøkt: Boolean,
-    val rapporteringsPerioder: List<RapportPeriodeinfoDTO> = emptyList(),
     val oppgaver: List<OppgaveDTO>,
+    val rapporteringsPerioder: List<RapportPeriodeinfoDTO> = emptyList(),
 )
 
 data class RapportPeriodeinfoDTO(

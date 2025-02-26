@@ -44,8 +44,8 @@ class UngdomsprogramregisterService(
             map { deltakelseDAO ->
                 DeltakelsePeriodInfo(
                     id = deltakelseDAO.id,
-                    programperiodeFraOgMed = deltakelseDAO.getFom(),
-                    programperiodeTilOgMed = deltakelseDAO.getTom(),
+                    fraOgMed = deltakelseDAO.getFom(),
+                    tilOgMed = deltakelseDAO.getTom(),
                     harSøkt = deltakelseDAO.harSøkt,
                     rapporteringsPerioder = deltakelseDAO.rapporteringsperioder(),
                     oppgaver = deltakelseDAO.oppgaver.map { it.tilDTO() }
