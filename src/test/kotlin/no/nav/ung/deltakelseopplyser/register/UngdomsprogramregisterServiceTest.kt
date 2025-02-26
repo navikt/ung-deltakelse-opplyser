@@ -15,6 +15,7 @@ import no.nav.ung.deltakelseopplyser.oppgave.EndretSluttdatoOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.oppgave.EndretStartdatoOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.oppgave.Oppgavetype
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
+import no.nav.ung.deltakelseopplyser.register.veileder.EndrePeriodeDatoDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.AfterAll
@@ -89,7 +90,7 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
-        assertNotNull(innmelding.deltaker?.id)
+        assertNotNull(innmelding.deltaker.id)
     }
 
     @Test
@@ -136,7 +137,7 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(innmelding)
         assertNotNull(innmelding.id)
-        assertNotNull(innmelding.deltaker?.id)
+        assertNotNull(innmelding.deltaker.id)
     }
 
     @Test
@@ -171,7 +172,7 @@ class UngdomsprogramregisterServiceTest {
         val hentetDto = ungdomsprogramregisterService.hentFraProgram(innmelding.id!!)
 
         assertNotNull(hentetDto)
-        assertNotNull(hentetDto.deltaker?.id)
+        assertNotNull(hentetDto.deltaker.id)
     }
 
     @Test
@@ -252,7 +253,7 @@ class UngdomsprogramregisterServiceTest {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val endretStartdatoDeltakelse = ungdomsprogramregisterService.endreStartdato(innmelding.id!!, onsdag)
+        val endretStartdatoDeltakelse = ungdomsprogramregisterService.endreStartdato(innmelding.id!!, mockEndrePeriodeDTO(onsdag))
 
         assertNotNull(endretStartdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretStartdatoDeltakelse.deltaker)
@@ -263,7 +264,9 @@ class UngdomsprogramregisterServiceTest {
 
         val oppgaver = endretStartdatoDeltakelse.oppgaver
         assertThat(oppgaver).hasSize(1)
-        assertThat(oppgaver.first().oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_STARTDATO)
+        val oppgave = oppgaver.first()
+        assertThat(oppgave.oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_STARTDATO)
+        assertThat((oppgave.oppgavetypeData as EndretStartdatoOppgavetypeDataDTO).veilederRef).isEqualTo("abc-123")
     }
 
     @Test
@@ -296,7 +299,7 @@ class UngdomsprogramregisterServiceTest {
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
 
         val endretSluttdatoDeltakelse =
-            ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, onsdag.plusWeeks(1))
+            ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, mockEndrePeriodeDTO(onsdag.plusWeeks(1)))
 
         assertNotNull(endretSluttdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
@@ -307,6 +310,14 @@ class UngdomsprogramregisterServiceTest {
 
         val oppgaver = endretSluttdatoDeltakelse.oppgaver
         assertThat(oppgaver).hasSize(1)
-        assertThat(oppgaver.first().oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_SLUTTDATO)
+        val oppgave = oppgaver.first()
+        assertThat(oppgave.oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_SLUTTDATO)
+        assertThat((oppgave.oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO).veilederRef).isEqualTo("abc-123")
     }
+
+    private fun mockEndrePeriodeDTO(onsdag: LocalDate) = EndrePeriodeDatoDTO(
+        dato = onsdag,
+        veilederRef = "abc-123",
+        meldingFraVeileder = "Dette er en melding"
+    )
 }

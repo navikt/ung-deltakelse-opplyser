@@ -91,7 +91,7 @@ class UngdomsprogramRegisterVeilederController(
         @PathVariable deltakelseId: UUID,
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
     ): DeltakelseOpplysningDTO {
-        return registerService.endreStartdato(deltakelseId, endrePeriodeDatoDTO.dato)
+        return registerService.endreStartdato(deltakelseId, endrePeriodeDatoDTO)
     }
 
     @PutMapping(
@@ -105,7 +105,7 @@ class UngdomsprogramRegisterVeilederController(
         @PathVariable deltakelseId: UUID,
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
     ): DeltakelseOpplysningDTO {
-        return registerService.endreSluttdato(deltakelseId, endrePeriodeDatoDTO.dato)
+        return registerService.endreSluttdato(deltakelseId, endrePeriodeDatoDTO)
     }
 
     @GetMapping(
