@@ -87,7 +87,7 @@ class UngdomsprogramRegisterVeilederController(
     )
     @Operation(summary = "Endrer startdato på en deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun oppdaterStartsdatoP(
+    fun endreStartdato(
         @PathVariable deltakelseId: UUID,
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
     ): DeltakelseOpplysningDTO {
@@ -101,7 +101,7 @@ class UngdomsprogramRegisterVeilederController(
     )
     @Operation(summary = "Endrer startdato på en deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun oppdaterSluttdato(
+    fun endreSluttdato(
         @PathVariable deltakelseId: UUID,
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
     ): DeltakelseOpplysningDTO {
