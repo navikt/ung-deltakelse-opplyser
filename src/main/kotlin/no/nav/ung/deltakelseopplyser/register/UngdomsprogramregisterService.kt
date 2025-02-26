@@ -136,11 +136,11 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksiterende).mapToDTO()
     }
 
-    fun markerSomHarSøkt(id: UUID): UngdomsprogramDeltakelseDAO {
+    fun markerSomHarSøkt(id: UUID): DeltakelseOpplysningDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererIProgram(id)
         eksisterende.markerSomHarSøkt()
-        return deltakelseRepository.save(eksisterende)
+        return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
