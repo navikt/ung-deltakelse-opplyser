@@ -1,6 +1,5 @@
 package no.nav.ung.deltakelseopplyser.register
 
-import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO
 import java.time.LocalDate
@@ -13,9 +12,9 @@ data class DeltakerOpplysningerDTO(
 data class DeltakelseOpplysningDTO(
     val id: UUID? = null,
     val deltaker: DeltakerDTO,
-    val harSøkt: Boolean,
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate? = null,
+    val harSøkt: Boolean,
     val oppgaver: List<OppgaveDTO>,
 ) {
 

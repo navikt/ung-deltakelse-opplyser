@@ -5,7 +5,6 @@ import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -15,6 +14,7 @@ import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveDTO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.oppgave.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.oppgave.Oppgavetype
+import no.nav.ung.deltakelseopplyser.register.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
@@ -44,8 +44,8 @@ class UngdomsprogramregisterService(
             map { deltakelseDAO ->
                 DeltakelsePeriodInfo(
                     id = deltakelseDAO.id,
-                    programperiodeFraOgMed = deltakelseDAO.getFom(),
-                    programperiodeTilOgMed = deltakelseDAO.getTom(),
+                    fraOgMed = deltakelseDAO.getFom(),
+                    tilOgMed = deltakelseDAO.getTom(),
                     harSøkt = deltakelseDAO.harSøkt,
                     rapporteringsPerioder = deltakelseDAO.rapporteringsperioder(),
                     oppgaver = deltakelseDAO.oppgaver.map { it.tilDTO() }
@@ -136,11 +136,11 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksiterende).mapToDTO()
     }
 
-    fun markerSomHarSøkt(id: UUID): UngdomsprogramDeltakelseDAO {
+    fun markerSomHarSøkt(id: UUID): DeltakelseOpplysningDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererIProgram(id)
         eksisterende.markerSomHarSøkt()
-        return deltakelseRepository.save(eksisterende)
+        return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
     private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
@@ -236,15 +236,19 @@ class UngdomsprogramregisterService(
         return oppdatert.mapToDTO()
     }
 
-    fun endreStartdato(deltakelseId: UUID, dato: LocalDate): DeltakelseOpplysningDTO {
+    fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
-        logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $dato")
+        logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
 
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
             deltakelse = eksisterende,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
-            oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(nyStartdato = dato),
+            oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
+                nyStartdato = endrePeriodeDatoDTO.dato,
+                veilederRef = endrePeriodeDatoDTO.veilederRef,
+                meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
+            ),
             status = OppgaveStatus.ULØST,
             opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
             løstDato = null
@@ -255,14 +259,28 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
-    fun endreSluttdato(deltakelseId: UUID, dato: LocalDate): DeltakelseOpplysningDTO {
+    fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
-        logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $dato")
+        if (eksisterende.getTom() == null) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.title = "Kan ikke endre sluttdato for deltakelse med id $deltakelseId"
+                    it.detail = "Kan ikke endre sluttdato for en deltakelse som ikke har en sluttdato."
+                },
+                null
+            )
+        }
+        logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
-            oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(nySluttdato = dato),
+            oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
+                nySluttdato = endrePeriodeDatoDTO.dato,
+                veilederRef = endrePeriodeDatoDTO.veilederRef,
+                meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
+            ),
             status = OppgaveStatus.ULØST,
             deltakelse = eksisterende
         )
