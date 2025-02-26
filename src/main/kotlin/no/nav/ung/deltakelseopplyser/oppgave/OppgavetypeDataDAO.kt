@@ -7,12 +7,12 @@ sealed class OppgavetypeDataDAO
 
 data class EndretStartdatoOppgavetypeDataDAO(
     val nyStartdato: LocalDate,
-    val veilederRef: String,
+    val veilederRef: String? = "n/a",
     val meldingFraVeileder: String?,
 ) : OppgavetypeDataDAO()
 
 data class EndretSluttdatoOppgavetypeDataDAO(
     val nySluttdato: LocalDate,
-    val veilederRef: String,
+    val veilederRef: String? = "n/a",
     val meldingFraVeileder: String?,
 ) : OppgavetypeDataDAO()
