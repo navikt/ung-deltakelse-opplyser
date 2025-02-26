@@ -261,6 +261,16 @@ class UngdomsprogramregisterService(
 
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
+        if (eksisterende.getTom() == null) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.title = "Kan ikke endre sluttdato for deltakelse med id $deltakelseId"
+                    it.detail = "Kan ikke endre sluttdato for en deltakelse som ikke har en sluttdato."
+                },
+                null
+            )
+        }
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
