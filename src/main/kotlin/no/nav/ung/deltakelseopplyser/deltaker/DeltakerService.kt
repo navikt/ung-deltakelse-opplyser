@@ -123,7 +123,7 @@ class DeltakerService(
     ) {
         @get:JsonProperty("førsteMuligeInnmeldingsdato")
         val førsteMuligeInnmeldingsdato: LocalDate
-            get() = fødselsdato.plusYears(18)
+            get() = fødselsdato.plusYears(18).plusMonths(1)
 
         @get:JsonProperty("sisteMuligeInnmeldingsdato")
         val sisteMuligeInnmeldingsdato: LocalDate
