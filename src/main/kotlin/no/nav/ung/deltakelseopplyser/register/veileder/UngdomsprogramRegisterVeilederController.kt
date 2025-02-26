@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
+import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.register.DeltakelseUtmeldingDTO
-import no.nav.ung.deltakelseopplyser.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.register.UngdomsprogramregisterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
