@@ -3,19 +3,19 @@ package no.nav.ung.deltakelseopplyser.domene.oppgave
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType
-open class OppgavetypeDataDTO
+interface OppgavetypeDataDTO
 
 data class EndretStartdatoOppgavetypeDataDTO(
     val nyStartdato: LocalDate,
     val veilederRef: String,
     val meldingFraVeileder: String?,
-) : OppgavetypeDataDTO()
+) : OppgavetypeDataDTO
 
 data class EndretSluttdatoOppgavetypeDataDTO(
     val nySluttdato: LocalDate,
     val veilederRef: String,
     val meldingFraVeileder: String?,
-) : OppgavetypeDataDTO()
+) : OppgavetypeDataDTO
 
 fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
     is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(nyStartdato, veilederRef, meldingFraVeileder)
