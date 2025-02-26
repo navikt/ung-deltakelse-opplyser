@@ -40,7 +40,24 @@ Denne tjenesten understøtter behovet for:
 # 7. Infrastrukturarkitektur
 
 ## System Context Diagram
-![system-context-diagram.png](docs/system-context-diagram.png)
+```mermaid
+flowchart TD
+    ung-veileder("ungdomsytelse-veileder") -- Melder inn deltaker --> ung-register("ung-deltakelse-opplyser")
+    ung-veileder -- Henter opp deltakelser på deltaker --> ung-register
+    ung-register -- Lagrer ned opplysninger --> ung-register-db[("ung-deltakelse-opplyser-db")]
+    ung-register -- Sender opphørshendelse --> ung-sak("ung-sak")
+    ung-register -- Henter personopplysninger for deltaker --> pdl-api("pdl-api")
+    ung-register -. Konsumerer og lagrer ned mottatte søknader .-> mottatt-soknad["ungdomsytelse-soknad-cleanup"]
+    ung-deltaker("ungdomsytelse-deltaker") --> |Henter registrete deltakelser| ung-register
+    
+    ung-sak --> |Henter registrerte deltakelser for deltaker| ung-register
+    ung-register-db --> deltakelse-table[["Deltakelse"]] & deltaker-table[["Deltaker"]] & oppgave-table[["Oppgave"]] & søknad-tabel[["Søknad"]]
+
+    mottatt-soknad@{ shape: h-cyl}
+     pdl-api:::Sky
+    classDef Sky stroke-width:1px, stroke-dasharray:none, stroke:#374D7C, fill:#E2EBFF, color:#374D7C
+```
+Link til [mermaid](https://mermaid.live/edit#pako:eNqFVMuK2zAU_RWhgdKCNdAHDGgxDK0zFNrSRbpqPAuNdWMby5KQ5JmaJJ_Tf5h9fqxXsZ3Ek4R6JZ1zde65D7yiuZFAOV0q85yXwgXyK800wa_VBXuCSoEE9zajeJWm8V0A5WFPZPQdYYz8AIUXUmlNJKggarwwdrvTcFBUPowabOCjiLFWdX4ncpoyyn4FjQ8JxpHDM0fs9u_lNAelEYlK30Xh8KRBkj6rrnRx5jWTj4vLRpFFrw_nU8xBy95suX1xvoxXfLxP4UU9KONpUvKxylCyBeeNnlhdGjet2krFhK1QdDhdEL0m34z2bQOxA6Yg6tCLxoQgQgDity-1FtH_NSoPMPMmgovXw-9hlisQurUZPWrIaPBkYUaiX5hbsh4K7W06QA9HI16fGekhCfbvrIabikw6tv7PkuBod5pHUw_iUcECq0_3GNb6QN7sRU9C3BCAgyvE05HEzx4Y6KHbkQYV6XkPRDrTvbnpDO5WxJfCAiclyzu16WPGFeCcz-uux3IlvE9hSRAh2BVTA3uuZCj5e_snGREpUM450XFtNIwwv_p48ym9-ZKQZaUUv5p9mH2-v09IbpRxI0kTiqvUiErib2MVk2Y0lNBgcRyPUjjc7kxvME60wcw7nVMeXAsJdaYtSsqXAluZ0NZKESCtcB1FM4ZYoX8b07wKmskqGDeAm39mg6Wb) for å redigere diagrammet.
 
 # 8. Distribusjon av tjenesten (deployment)
 
