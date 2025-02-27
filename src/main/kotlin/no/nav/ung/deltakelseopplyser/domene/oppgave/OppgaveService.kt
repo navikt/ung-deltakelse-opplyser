@@ -11,7 +11,7 @@ class OppgaveService(
 
     fun håndterMottattOppgavebekreftelse(oppgavebekreftelse: UngdomsytelseOppgavebekreftelse) {
         // TODO: hent deltakelse gitt oppgaveId
-        //TODO: hent oppgaven og merker den som løst.
+        // TODO: hent oppgaven og merker den som løst.
         // TODO: Lagre deltakelsen igjen.
         // TODO: Inaktivere oppgave på mine-sider.
     }
