@@ -1,7 +1,8 @@
-package no.nav.ung.deltakelseopplyser.domene.oppgave
+package no.nav.ung.deltakelseopplyser.domene.oppgave.repository
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgavetypeDataJsonType
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType

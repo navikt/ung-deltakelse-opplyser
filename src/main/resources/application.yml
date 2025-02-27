@@ -39,6 +39,12 @@ topic:
       navn: dusseldorf.ungdomsytelse-soknad-cleanup
       bryter: true
       auto-offset-reset: latest
+    # topic.listener.ung-soknad
+    ung-oppgavebekreftelse:
+      id: ungdomsytelseOppgavebekreftelse-listener
+      navn: dusseldorf.ungdomsytelse-oppgavebekreftelse-cleanup
+      bryter: true
+      auto-offset-reset: latest
 
 management:
   endpoint:

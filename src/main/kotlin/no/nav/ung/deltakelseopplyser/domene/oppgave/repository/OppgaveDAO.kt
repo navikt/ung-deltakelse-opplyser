@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.domene.oppgave
+package no.nav.ung.deltakelseopplyser.domene.oppgave.repository
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
 import jakarta.persistence.Column

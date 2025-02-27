@@ -13,11 +13,7 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretSluttdatoOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretStartdatoOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.Oppgavetype
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.domene.register.veileder.EndrePeriodeDatoDTO
 import org.assertj.core.api.Assertions.assertThat

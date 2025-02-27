@@ -4,8 +4,11 @@ import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
@@ -152,6 +155,57 @@ class UngdomsprogramregisterRepositoryTest {
         assertThat(ikkeEksisterendeDeltakelseResultat)
             .withFailMessage("Forventet å ikke finne deltakelse som starter %s", ikkeEksisterendeStartdato)
             .isNull()
+    }
+
+    @Test
+    fun `Forventer å finne deltakelse gitt oppgaveId`() {
+        val deltaker = DeltakerDAO(
+            id = UUID.randomUUID(),
+            deltakerIdent = "123",
+            deltakelseList = mutableListOf(),
+        )
+        entityManager.persist(deltaker)
+
+        val deltakelse = UngdomsprogramDeltakelseDAO(
+            deltaker = deltaker,
+            harSøkt = false,
+            periode = Range.closed(LocalDate.now(), LocalDate.now().plusWeeks(1))
+        )
+        entityManager.persist(deltakelse)
+
+        val oppgaveId = UUID.randomUUID()
+        deltakelse.leggTilOppgave(OppgaveDAO(
+            id = oppgaveId,
+            deltakelse = deltakelse,
+            oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
+            oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
+                nyStartdato = LocalDate.now(),
+                veilederRef = "abc-123",
+                meldingFraVeileder = null
+            ),
+            status = OppgaveStatus.ULØST,
+        ))
+        deltakelse.leggTilOppgave(OppgaveDAO(
+            id = UUID.randomUUID(),
+            deltakelse = deltakelse,
+            oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
+            oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
+                nySluttdato = LocalDate.now(),
+                veilederRef = "abc-123",
+                meldingFraVeileder = null
+            ),
+            status = OppgaveStatus.ULØST,
+        ))
+        entityManager.persist(deltakelse)
+        entityManager.flush()
+
+        val resultat = repository.finnDeltakelseGittOppgaveId(oppgaveId)
+        assertThat(resultat)
+            .withFailMessage("Forventet å finne deltakelse for oppgaveId %s, men fikk null", oppgaveId)
+            .isNotNull
+        assertThat(resultat!!.id)
+            .withFailMessage("Forventet at deltakelse id skulle være %s", deltakelse.id)
+            .isEqualTo(deltakelse.id)
     }
 
     companion object {

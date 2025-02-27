@@ -8,12 +8,12 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretSluttdatoOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretStartdatoOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO.Companion.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.domene.oppgave.Oppgavetype
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
 import no.nav.ung.deltakelseopplyser.domene.register.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo

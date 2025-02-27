@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
-class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
+class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
 
     companion object {
         const val TOPIC = "dusseldorf.ungdomsytelse-soknad-cleanup"

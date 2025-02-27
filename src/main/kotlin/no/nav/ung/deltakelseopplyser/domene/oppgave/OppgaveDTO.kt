@@ -1,5 +1,8 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
 import java.time.ZonedDateTime
 import java.util.*
 
