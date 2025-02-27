@@ -13,5 +13,6 @@ class OppgaveService(
         // TODO: hent deltakelse gitt oppgaveId
         //TODO: hent oppgaven og merker den som løst.
         // TODO: Lagre deltakelsen igjen.
+        // TODO: Inaktivere oppgave på mine-sider.
     }
 }
