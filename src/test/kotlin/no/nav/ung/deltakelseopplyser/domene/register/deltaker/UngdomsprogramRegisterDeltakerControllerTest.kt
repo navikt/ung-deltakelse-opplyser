@@ -1,36 +1,49 @@
 package no.nav.ung.deltakelseopplyser.domene.register.deltaker
 
 import com.ninjasquad.springmockk.MockkBean
+import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
+import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.ApiClient
-import no.nav.ung.deltakelseopplyser.config.JacksonConfiguration
-import no.nav.ung.deltakelseopplyser.domene.DeltakelseApi
+import no.nav.ung.deltakelseopplyser.UngDeltakelseOpplyserApplication
+import no.nav.ung.deltakelseopplyser.api.DeltakelseApi
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
+import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Import
+import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpRequest
+import org.springframework.http.client.ClientHttpRequestExecution
+import org.springframework.http.client.ClientHttpRequestInterceptor
+import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+
+@DirtiesContext
 @ExtendWith(SpringExtension::class)
-@WebMvcTest(
-    controllers = [UngdomsprogramRegisterDeltakerController::class]
+@EnableMockOAuth2Server
+@ActiveProfiles("test")
+@SpringBootTest(
+    classes = [UngDeltakelseOpplyserApplication::class],
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-@Import(
-    JacksonConfiguration::class,
-    UngdomsprogramregisterService::class,
-    //UngdomsprogramRegisterDeltakerControllerTest.TestConfig::class
-)
+
 class UngdomsprogramRegisterDeltakerControllerTest {
 
     @LocalServerPort
     private var port: Int = 0
+
+    @Autowired
+    private lateinit var restTemplateBuilder: RestTemplateBuilder
+
+    @Autowired
+    private lateinit var mockOAuth2Server: MockOAuth2Server
 
     @MockkBean
     private lateinit var registerService: UngdomsprogramregisterService
@@ -38,23 +51,28 @@ class UngdomsprogramRegisterDeltakerControllerTest {
     @MockkBean
     private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
-    @Autowired
-    private lateinit var apiClient: ApiClient
-
     @Test
     fun `Innsending av søknad er OK`() {
+        springTokenValidationContextHolder.mockContext()
 
-        DeltakelseApi(apiClient).hentAlleMineDeltakelser()
+        DeltakelseApi(apiClient()).hentAlleMineDeltakelser()
 
     }
 
-    @TestConfiguration
-    class TestConfig {
+    fun apiClient(): ApiClient {
+        return ApiClient(
+            restTemplateBuilder
+                .rootUri("http://localhost:$port")
+                .additionalInterceptors(exchangeBearerTokenInterceptor())
+                .build()
+        )
+    }
 
-        @Bean
-        fun api(): ApiClient {
-            return ApiClient()
-                .setBasePath("http://localhost:")
+    fun exchangeBearerTokenInterceptor(): ClientHttpRequestInterceptor {
+        return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray, execution: ClientHttpRequestExecution ->
+            val accessToken: String = mockOAuth2Server.hentToken().serialize()
+            request.headers[HttpHeaders.AUTHORIZATION] = "Bearer $accessToken"
+            execution.execute(request, body)
         }
     }
 }

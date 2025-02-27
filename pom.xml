@@ -351,8 +351,8 @@
                             <output>${project.build.directory}/generated-sources/openapi</output>
                             <skipValidateSpec>true</skipValidateSpec>
                             <inputSpec>https://ung-deltakelse-opplyser.intern.dev.nav.no/v3/api-docs</inputSpec>
-                            <apiPackage>no.nav.ung.deltakelseopplyser.domene</apiPackage>
-                            <modelPackage>no.nav.ung.deltakelseopplyser.domene</modelPackage>
+                            <apiPackage>no.nav.ung.deltakelseopplyser.api</apiPackage>
+                            <modelPackage>no.nav.ung.deltakelseopplyser.model</modelPackage>
                         </configuration>
                     </execution>
                 </executions>
