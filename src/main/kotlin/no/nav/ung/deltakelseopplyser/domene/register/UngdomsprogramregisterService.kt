@@ -256,6 +256,8 @@ class UngdomsprogramregisterService(
 
         eksisterende.leggTilOppgave(nyOppgave)
 
+        // TODO: Send hendelse til ung-sak om at startdato er endret
+
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
@@ -286,6 +288,8 @@ class UngdomsprogramregisterService(
         )
 
         eksisterende.leggTilOppgave(bekreftEndretSluttdatoOppgave)
+
+        // TODO: Send hendelse til ung-sak om at sluttdato er endret.
 
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
