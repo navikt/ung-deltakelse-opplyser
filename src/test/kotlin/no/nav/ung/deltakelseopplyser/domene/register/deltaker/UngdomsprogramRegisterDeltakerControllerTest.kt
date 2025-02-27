@@ -60,19 +60,14 @@ class UngdomsprogramRegisterDeltakerControllerTest {
     }
 
     fun apiClient(): ApiClient {
-        return ApiClient(
+        val apiClient = ApiClient(
             restTemplateBuilder
                 .rootUri("http://localhost:$port")
-                .additionalInterceptors(exchangeBearerTokenInterceptor())
                 .build()
         )
-    }
 
-    fun exchangeBearerTokenInterceptor(): ClientHttpRequestInterceptor {
-        return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray, execution: ClientHttpRequestExecution ->
-            val accessToken: String = mockOAuth2Server.hentToken().serialize()
-            request.headers[HttpHeaders.AUTHORIZATION] = "Bearer $accessToken"
-            execution.execute(request, body)
-        }
+        apiClient.setBearerToken(mockOAuth2Server.hentToken().serialize())
+
+        return apiClient
     }
 }
