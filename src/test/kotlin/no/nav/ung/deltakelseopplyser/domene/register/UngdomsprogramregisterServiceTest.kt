@@ -261,6 +261,8 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(endretStartdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretStartdatoDeltakelse.deltaker)
+        assertThat(endretStartdatoDeltakelse.fraOgMed).isEqualTo(onsdag)
+        assertThat(endretStartdatoDeltakelse.tilOgMed).isNull()
 
         val endretStartdatoOppgavetypeDataDTO =
             endretStartdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretStartdatoOppgavetypeDataDTO
@@ -307,6 +309,8 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(endretSluttdatoDeltakelse)
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
+        assertThat(endretSluttdatoDeltakelse.fraOgMed).isEqualTo(mandag)
+        assertThat(endretSluttdatoDeltakelse.tilOgMed).isEqualTo(onsdag.plusWeeks(1))
 
         val endretSluttdatoOppgavetypeDataDTO =
             endretSluttdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO
