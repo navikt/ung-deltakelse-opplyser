@@ -254,6 +254,13 @@ class UngdomsprogramregisterService(
             løstDato = null
         )
 
+        val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (eksisterende.getTom() != null) {
+            Range.closed(endrePeriodeDatoDTO.dato, eksisterende.getTom())
+        } else {
+            Range.closedInfinite(endrePeriodeDatoDTO.dato)
+        }
+
+        eksisterende.oppdaterPeriode(nyPeriodeMedEndretStartdato)
         eksisterende.leggTilOppgave(nyOppgave)
 
         // TODO: Send hendelse til ung-sak om at startdato er endret
@@ -287,6 +294,9 @@ class UngdomsprogramregisterService(
             deltakelse = eksisterende
         )
 
+        val nyPeriodeMedEndretSluttdato = Range.closed(eksisterende.getFom(), endrePeriodeDatoDTO.dato)
+
+        eksisterende.oppdaterPeriode(nyPeriodeMedEndretSluttdato)
         eksisterende.leggTilOppgave(bekreftEndretSluttdatoOppgave)
 
         // TODO: Send hendelse til ung-sak om at sluttdato er endret.
