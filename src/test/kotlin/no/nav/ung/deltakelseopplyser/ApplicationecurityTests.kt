@@ -127,18 +127,18 @@ class ApplicationecurityTests {
                     return@mapNotNull null
                 }
                 val pathPattern = mappingInfo.pathPatternsCondition!!.patterns.first()
+                val path = pathPattern.patternString
+
+                val urlVariables: Array<String>? = if (path.contains("{") && path.contains("}")) {
+                    generateUrlVariables(path)
+                } else {
+                    null
+                }
+
+                val contentType = mappingInfo.consumesCondition.consumableMediaTypes.firstOrNull()
 
                 val requiredIssuers: RequiredIssuers = handlerMethod.beanType.getAnnotation(RequiredIssuers::class.java)
                 val issuers = requiredIssuers.value.map { it.issuer }
-
-                var urlVariables: String? = null
-                if (pathPattern.hasPatternSyntax()) {
-                    println("Pattern syntax error: ${pathPattern.patternString}")
-                    urlVariables = UUID.randomUUID().toString()
-                }
-                val path = pathPattern.patternString
-
-                val contentType = mappingInfo.consumesCondition.consumableMediaTypes.firstOrNull()
 
                 Endpoint(
                     method = requestMethod.asHttpMethod(),
@@ -196,19 +196,14 @@ class ApplicationecurityTests {
         token: SignedJWT?,
     ): ResponseEntity<String> {
         val httpEntity = HttpHeaders().let {
-
             if (token != null) {
                 it.setBearerAuth(token.serialize())
             }
-
             it.contentType = endpoint.contentType
-
             var body: Any? = null
-
             if (it.contentType == MediaType.MULTIPART_FORM_DATA) {
                 body = håndterMultipartUpload(it)
             }
-
             HttpEntity(body, it)
         }
 
@@ -218,7 +213,7 @@ class ApplicationecurityTests {
                 httpMethod,
                 httpEntity,
                 String::class.java,
-                endpoint.urlVariables
+                *(endpoint.urlVariables)
             )
         } else {
             exchange(
@@ -229,6 +224,7 @@ class ApplicationecurityTests {
             )
         }
     }
+
 
     private fun håndterMultipartUpload(httpHeaders: HttpHeaders): LinkedMultiValueMap<String, Any> {
         httpHeaders.setContentDispositionFormData("vedlegg", "test-file.pdf")
@@ -243,10 +239,16 @@ class ApplicationecurityTests {
         }
     }
 
+    private fun generateUrlVariables(url: String): Array<String> {
+        val regex = "\\{[^}]+\\}".toRegex()
+        val matches = regex.findAll(url)
+        return matches.map { UUID.randomUUID().toString() }.toList().toTypedArray()
+    }
+
     data class Endpoint(
         val method: HttpMethod,
         val url: String,
-        val urlVariables: String? = null,
+        val urlVariables: Array<String>? = null,
         val contentType: MediaType? = MediaType.APPLICATION_JSON,
         val issuers: List<String>,
     ) {

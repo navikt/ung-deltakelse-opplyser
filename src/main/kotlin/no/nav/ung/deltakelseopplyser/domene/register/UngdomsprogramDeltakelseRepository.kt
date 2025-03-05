@@ -9,6 +9,8 @@ import java.util.*
 interface UngdomsprogramDeltakelseRepository : JpaRepository<UngdomsprogramDeltakelseDAO, UUID> {
     fun findByDeltaker_IdIn(deltakerIds: List<UUID>): List<UngdomsprogramDeltakelseDAO>
 
+    fun findByIdAndDeltaker_IdIn(id: UUID, deltakerIds: List<UUID>): UngdomsprogramDeltakelseDAO?
+
     @Query(
         value = """
         SELECT * FROM ungdomsprogram_deltakelse

@@ -28,6 +28,11 @@
       "cluster": "dev-gcp"
     },
     {
+      "app": "k9-brukerdialog-prosessering",
+      "namespace": "dusseldorf",
+      "cluster": "dev-gcp"
+    },
+    {
       "app": "ung-sak",
       "namespace": "k9saksbehandling",
       "cluster": "dev-gcp"
