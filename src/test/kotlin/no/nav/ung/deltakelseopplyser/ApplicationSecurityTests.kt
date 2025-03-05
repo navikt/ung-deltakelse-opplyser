@@ -35,7 +35,7 @@ import java.util.*
 @ActiveProfiles("test")
 @EnableMockOAuth2Server
 @AutoConfigureWireMock
-class ApplicationecurityTests {
+class ApplicationSecurityTests {
 
     @Autowired
     lateinit var applicationContext: ApplicationContext
@@ -47,7 +47,7 @@ class ApplicationecurityTests {
     lateinit var mockOAuth2Server: MockOAuth2Server
 
     private companion object {
-        private val logger = LoggerFactory.getLogger(ApplicationecurityTests::class.java)
+        private val logger = LoggerFactory.getLogger(ApplicationSecurityTests::class.java)
     }
 
     @Test
