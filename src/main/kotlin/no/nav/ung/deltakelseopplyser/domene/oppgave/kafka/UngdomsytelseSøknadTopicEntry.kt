@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave.kafka
 
-import no.nav.k9.søknad.Søknad
+import com.fasterxml.jackson.annotation.JsonAlias
+import no.nav.k9.oppgave.OppgaveBekreftelse
 import no.nav.ung.deltakelseopplyser.domene.felles.MetaInfo
 
 data class UngdomsytelseOppgavebekreftelseTopicEntry(val metadata: MetaInfo, val data: JournalførtUngdomsytelseOppgavebekreftelse)
@@ -11,5 +12,5 @@ data class JournalførtUngdomsytelseOppgavebekreftelse(
 
 data class UngdomsytelseOppgavebekreftelse(
     val journalpostId: String,
-    val søknad: Søknad // TODO: Bytt til riktig type fra k9-format når den er tilgjengelig.
+    @JsonAlias("søknad") val oppgaveBekreftelse: OppgaveBekreftelse
 )

@@ -33,7 +33,7 @@ class OppgaveDAO(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    val status: OppgaveStatus,
+    var status: OppgaveStatus,
 
     /**
      * JSON-kolonne for oppgavetype-spesifikk data.
@@ -51,6 +51,11 @@ class OppgaveDAO(
 ) {
     override fun toString(): String {
         return "OppgaveDAO(id=$id, oppgavetype=$oppgavetype, status=$status, opprettetDato=$opprettetDato, losDato=$løstDato)"
+    }
+
+    fun markerSomLøst(): OppgaveDAO {
+        this.status = OppgaveStatus.LØST
+        return this
     }
 }
 
