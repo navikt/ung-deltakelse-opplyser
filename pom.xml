@@ -31,15 +31,15 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.1.10</kotlin.version>
-        <tokenSupport.version>5.0.17</tokenSupport.version>
+        <tokenSupport.version>5.0.19</tokenSupport.version>
         <springdoc.version>2.8.5</springdoc.version>
         <spring-cloud.version>4.2.0</spring-cloud.version>
         <logback.logstash.version>8.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>1.0.1</ung-sak.version>
+        <ung-sak.version>1.1.0</ung-sak.version>
         <fp-sak.version>2.7.1</fp-sak.version>
-        <k9-format.version>11.3.0</k9-format.version>
+        <k9-format.version>11.4.2</k9-format.version>
         <graphql-kotlin.version>8.3.0</graphql-kotlin.version>
     </properties>
     <dependencies>
@@ -247,8 +247,36 @@
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/target/lib/</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                            <prependGroupId>true</prependGroupId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathLayoutType>custom</classpathLayoutType>
+                            <customClasspathLayout>lib/$${artifact.groupId}.$${artifact.artifactId}-$${artifact.version}$${dashClassifier?}.$${artifact.extension}</customClasspathLayout>
+                            <mainClass>no.nav.ung.deltakelseopplyser.UngDeltakelseOpplyserApplicationKt</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
