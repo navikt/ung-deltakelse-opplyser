@@ -33,7 +33,7 @@ class UngdomsytelseOppgavebekreftelseKonsument(
         autoStartup = "#{'\${topic.listener.ung-oppgavebekreftelse.bryter}'}",
         filter = UNGDOMSYTELSESØKNAD_FILTER,
         properties = [
-            "auto.offset.reset=#{'\${topic.listener.ung-soknad.auto-offset-reset}'}"
+            "auto.offset.reset=#{'\${topic.listener.ung-oppgavebekreftelse.auto-offset-reset}'}"
         ]
     )
     fun konsumer(
