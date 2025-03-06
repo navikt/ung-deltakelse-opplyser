@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.domene.oppgave
+package no.nav.ung.deltakelseopplyser.domene.oppgave.repository
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
 import jakarta.persistence.Column
@@ -33,7 +33,7 @@ class OppgaveDAO(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    val status: OppgaveStatus,
+    var status: OppgaveStatus,
 
     /**
      * JSON-kolonne for oppgavetype-spesifikk data.
@@ -47,10 +47,16 @@ class OppgaveDAO(
     val opprettetDato: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
 
     @Column(name = "løst_dato")
-    val løstDato: ZonedDateTime? = null,
+    var løstDato: ZonedDateTime? = null,
 ) {
     override fun toString(): String {
         return "OppgaveDAO(id=$id, oppgavetype=$oppgavetype, status=$status, opprettetDato=$opprettetDato, losDato=$løstDato)"
+    }
+
+    fun markerSomLøst(): OppgaveDAO {
+        this.status = OppgaveStatus.LØST
+        this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
+        return this
     }
 }
 

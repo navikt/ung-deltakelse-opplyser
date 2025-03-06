@@ -1,5 +1,8 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType

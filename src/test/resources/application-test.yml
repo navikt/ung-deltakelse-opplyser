@@ -23,6 +23,9 @@ topic:
     # topic.listener.ung-soknad
     ung-soknad:
       auto-offset-reset: earliest
+    # topic.listener.ung-oppgavebekreftelse
+    ung-oppgavebekreftelse:
+      auto-offset-reset: earliest
 
 no.nav:
   security:

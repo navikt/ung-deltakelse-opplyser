@@ -9,7 +9,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import jakarta.persistence.*
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import org.springframework.data.annotation.CreatedDate
 
 @Entity(name = "ungdomsprogram_deltakelse")
