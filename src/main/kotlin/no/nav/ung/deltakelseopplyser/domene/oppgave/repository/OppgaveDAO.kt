@@ -59,9 +59,10 @@ class OppgaveDAO(
         return this
     }
 
-    fun markerSomKansellert() {
+    fun markerSomKansellert(): OppgaveDAO {
         this.status = OppgaveStatus.KANSELLERT
         this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
+        return this
     }
 }
 
