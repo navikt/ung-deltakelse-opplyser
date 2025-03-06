@@ -47,7 +47,7 @@ class OppgaveDAO(
     val opprettetDato: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
 
     @Column(name = "løst_dato")
-    val løstDato: ZonedDateTime? = null,
+    var løstDato: ZonedDateTime? = null,
 ) {
     override fun toString(): String {
         return "OppgaveDAO(id=$id, oppgavetype=$oppgavetype, status=$status, opprettetDato=$opprettetDato, losDato=$løstDato)"
@@ -55,6 +55,7 @@ class OppgaveDAO(
 
     fun markerSomLøst(): OppgaveDAO {
         this.status = OppgaveStatus.LØST
+        this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
         return this
     }
 }
