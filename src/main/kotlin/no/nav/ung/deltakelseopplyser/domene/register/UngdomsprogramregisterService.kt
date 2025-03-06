@@ -216,12 +216,24 @@ class UngdomsprogramregisterService(
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
 
+        val startdato = endrePeriodeDatoDTO.dato
+        val sluttdato = eksisterende.getTom()
+        forsikreGyldigPeriode(sluttdato, startdato)
+
+        eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
+            ?.apply {
+                logger.info("Fant uløst oppgave for endring av startdato. Markerer som kansellert.")
+                eksisterende.oppdaterOppgave(markerSomKansellert())
+                deltakelseRepository.save(eksisterende)
+            }
+
+        logger.info("Oppretter ny oppgave for bekreftelse av endret startdato")
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
             deltakelse = eksisterende,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
             oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
-                nyStartdato = endrePeriodeDatoDTO.dato,
+                nyStartdato = startdato,
                 veilederRef = endrePeriodeDatoDTO.veilederRef,
                 meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
             ),
@@ -230,10 +242,10 @@ class UngdomsprogramregisterService(
             løstDato = null
         )
 
-        val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (eksisterende.getTom() != null) {
-            Range.closed(endrePeriodeDatoDTO.dato, eksisterende.getTom())
+        val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (sluttdato != null) {
+            Range.closed(startdato, sluttdato)
         } else {
-            Range.closedInfinite(endrePeriodeDatoDTO.dato)
+            Range.closedInfinite(startdato)
         }
 
         eksisterende.oppdaterPeriode(nyPeriodeMedEndretStartdato)
@@ -247,8 +259,18 @@ class UngdomsprogramregisterService(
 
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
-
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
+
+        val startdato = eksisterende.getFom()
+        val sluttdato = endrePeriodeDatoDTO.dato
+        forsikreGyldigPeriode(sluttdato, startdato)
+
+        eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
+            ?.apply {
+                logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som kansellert.")
+                eksisterende.oppdaterOppgave(markerSomKansellert())
+                deltakelseRepository.save(eksisterende)
+            }
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
@@ -385,5 +407,17 @@ class UngdomsprogramregisterService(
             id = id,
             deltakerIdent = deltakerIdent
         )
+    }
+
+    private fun forsikreGyldigPeriode(sluttdato: LocalDate?, startdato: LocalDate) {
+        if (sluttdato != null && sluttdato < startdato) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail = "Ny startdato kan ikke være etter sluttdato"
+                },
+                null
+            )
+        }
     }
 }
