@@ -6,6 +6,7 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
@@ -48,5 +49,13 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseOpplysningDTO {
         return registerService.markerSomHarSøkt(id)
+    }
+
+    @GetMapping("/{deltakelseId}/oppgave/{oppgaveId}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Henter en oppgave for en gitt deltakelse")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentOppgaveForDeltakelse(@PathVariable deltakelseId: UUID, @PathVariable oppgaveId: UUID): OppgaveDTO {
+        val personIdent = tokenValidationContextHolder.personIdent()
+        return registerService.hentOppgaveForDeltakelse(personIdent, deltakelseId, oppgaveId)
     }
 }

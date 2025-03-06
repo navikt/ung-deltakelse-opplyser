@@ -6,15 +6,16 @@ import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretSluttdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretStartdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.domene.oppgave.Oppgavetype
 import no.nav.ung.deltakelseopplyser.domene.register.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
@@ -345,5 +346,30 @@ class UngdomsprogramregisterService(
             id = id,
             deltakerIdent = deltakerIdent
         )
+    }
+
+    fun hentOppgaveForDeltakelse(personIdent: String, deltakelseId: UUID, oppgaveId: UUID): OppgaveDTO {
+        logger.info("Henter oppgave med id $oppgaveId for deltakelse med id $deltakelseId")
+        val deltakerIder = deltakerService.hentDeltakterIder(personIdent)
+        val deltakelse =
+            deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakerIder) ?: throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen deltakelse med id $deltakelseId"
+                },
+                null
+            )
+
+        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.id == oppgaveId } ?: run {
+            throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen oppgave med id $oppgaveId for deltakelse med id $deltakelseId"
+                },
+                null
+            )
+        }
+
+        return oppgave.tilDTO()
     }
 }
