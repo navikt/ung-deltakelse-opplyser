@@ -18,6 +18,7 @@ import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
 import org.slf4j.LoggerFactory
@@ -131,7 +132,7 @@ class UngdomsprogramregisterService(
         eksiterende.oppdaterPeriode(periode)
 
         if (eksiterende.getTom() != null) {
-            sendOpphørsHendelseTilK9(eksiterende)
+            sendEndretSluttdatoHendelseTilUngSak(eksiterende)
         }
 
         return deltakelseRepository.save(eksiterende).mapToDTO()
@@ -142,32 +143,6 @@ class UngdomsprogramregisterService(
         val eksisterende = forsikreEksistererIProgram(id)
         eksisterende.markerSomHarSøkt()
         return deltakelseRepository.save(eksisterende).mapToDTO()
-    }
-
-    private fun sendOpphørsHendelseTilK9(oppdatert: UngdomsprogramDeltakelseDAO) {
-        val opphørsdato = oppdatert.getTom()
-        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
-
-        logger.info("Henter aktørIder for deltaker")
-        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent, historisk = true)
-        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
-
-        logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
-
-        val hendelsedato =
-            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
-        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
-        aktørIder.forEach {
-            hendelseInfo.leggTilAktør(AktørId(it.ident))
-        }
-
-        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
-        ungSakService.sendInnHendelse(
-            hendelse = HendelseDto(
-                hendelse,
-                AktørId(nåværendeAktørId)
-            )
-        )
     }
 
     fun hentFraProgram(id: UUID): DeltakelseOpplysningDTO {
@@ -231,7 +206,7 @@ class UngdomsprogramregisterService(
         val oppdatert = deltakelseRepository.save(eksiterende)
 
         if (oppdatert.getTom() != null) {
-            sendOpphørsHendelseTilK9(oppdatert)
+            sendEndretSluttdatoHendelseTilUngSak(oppdatert)
         }
 
         return oppdatert.mapToDTO()
@@ -263,24 +238,16 @@ class UngdomsprogramregisterService(
 
         eksisterende.oppdaterPeriode(nyPeriodeMedEndretStartdato)
         eksisterende.leggTilOppgave(nyOppgave)
+        val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
 
-        // TODO: Send hendelse til ung-sak om at startdato er endret
+        sendEndretStartdatoHendelseTilUngSak(oppdatertDeltakelse)
 
-        return deltakelseRepository.save(eksisterende).mapToDTO()
+        return oppdatertDeltakelse.mapToDTO()
     }
 
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
-        if (eksisterende.getTom() == null) {
-            throw ErrorResponseException(
-                HttpStatus.BAD_REQUEST,
-                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
-                    it.title = "Kan ikke endre sluttdato for deltakelse med id $deltakelseId"
-                    it.detail = "Kan ikke endre sluttdato for en deltakelse som ikke har en sluttdato."
-                },
-                null
-            )
-        }
+
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
@@ -299,10 +266,82 @@ class UngdomsprogramregisterService(
 
         eksisterende.oppdaterPeriode(nyPeriodeMedEndretSluttdato)
         eksisterende.leggTilOppgave(bekreftEndretSluttdatoOppgave)
+        val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
 
-        // TODO: Send hendelse til ung-sak om at sluttdato er endret.
+        sendEndretSluttdatoHendelseTilUngSak(oppdatertDeltakelse)
 
-        return deltakelseRepository.save(eksisterende).mapToDTO()
+        return oppdatertDeltakelse.mapToDTO()
+    }
+
+    fun hentOppgaveForDeltakelse(personIdent: String, deltakelseId: UUID, oppgaveId: UUID): OppgaveDTO {
+        logger.info("Henter oppgave med id $oppgaveId for deltakelse med id $deltakelseId")
+        val deltakerIder = deltakerService.hentDeltakterIder(personIdent)
+        val deltakelse =
+            deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakerIder) ?: throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen deltakelse med id $deltakelseId"
+                },
+                null
+            )
+
+        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.id == oppgaveId } ?: run {
+            throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen oppgave med id $oppgaveId for deltakelse med id $deltakelseId"
+                },
+                null
+            )
+        }
+
+        return oppgave.tilDTO()
+    }
+
+    private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: UngdomsprogramDeltakelseDAO) {
+        val opphørsdato = oppdatert.getTom()
+        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
+
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent, historisk = true)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+
+        logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
+
+        val hendelsedato =
+            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
+        ungSakService.sendInnHendelse(
+            hendelse = HendelseDto(
+                hendelse,
+                AktørId(nåværendeAktørId)
+            )
+        )
+    }
+
+    private fun sendEndretStartdatoHendelseTilUngSak(oppdatert: UngdomsprogramDeltakelseDAO) {
+        val startdato = oppdatert.getFom()
+
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent, historisk = true)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+
+        logger.info("Sender inn hendelse til ung-sak om at programmet har endret startdato")
+
+        val hendelsedato =
+            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramEndretStartdatoHendelse(hendelseInfo.build(), startdato)
+        ungSakService.sendInnHendelse(hendelse = HendelseDto(hendelse, AktørId(nåværendeAktørId)))
     }
 
     private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
@@ -346,30 +385,5 @@ class UngdomsprogramregisterService(
             id = id,
             deltakerIdent = deltakerIdent
         )
-    }
-
-    fun hentOppgaveForDeltakelse(personIdent: String, deltakelseId: UUID, oppgaveId: UUID): OppgaveDTO {
-        logger.info("Henter oppgave med id $oppgaveId for deltakelse med id $deltakelseId")
-        val deltakerIder = deltakerService.hentDeltakterIder(personIdent)
-        val deltakelse =
-            deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakerIder) ?: throw ErrorResponseException(
-                HttpStatus.NOT_FOUND,
-                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant ingen deltakelse med id $deltakelseId"
-                },
-                null
-            )
-
-        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.id == oppgaveId } ?: run {
-            throw ErrorResponseException(
-                HttpStatus.NOT_FOUND,
-                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant ingen oppgave med id $oppgaveId for deltakelse med id $deltakelseId"
-                },
-                null
-            )
-        }
-
-        return oppgave.tilDTO()
     }
 }
