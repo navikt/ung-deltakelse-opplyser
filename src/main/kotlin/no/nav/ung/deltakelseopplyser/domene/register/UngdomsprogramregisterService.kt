@@ -221,6 +221,7 @@ class UngdomsprogramregisterService(
                 logger.info("Fant uløst oppgave for endring av startdato. Markerer som kansellert.")
                 markerSomKansellert()
                 eksisterende.oppdaterOppgave(this)
+                deltakelseRepository.save(eksisterende)
             }
 
         logger.info("Oppretter ny oppgave for bekreftelse av endret startdato")
@@ -262,6 +263,7 @@ class UngdomsprogramregisterService(
                 logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som kansellert.")
                 markerSomKansellert()
                 eksisterende.oppdaterOppgave(this)
+                deltakelseRepository.save(eksisterende)
             }
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
