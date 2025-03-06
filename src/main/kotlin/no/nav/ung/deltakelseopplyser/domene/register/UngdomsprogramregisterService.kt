@@ -216,6 +216,14 @@ class UngdomsprogramregisterService(
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
 
+        eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
+            ?.apply {
+                logger.info("Fant uløst oppgave for endring av startdato. Markerer som kansellert.")
+                markerSomKansellert()
+                eksisterende.oppdaterOppgave(this)
+            }
+
+        logger.info("Oppretter ny oppgave for bekreftelse av endret startdato")
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
             deltakelse = eksisterende,
@@ -247,8 +255,14 @@ class UngdomsprogramregisterService(
 
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
-
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
+
+        eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
+            ?.apply {
+                logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som kansellert.")
+                markerSomKansellert()
+                eksisterende.oppdaterOppgave(this)
+            }
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
             id = UUID.randomUUID(),

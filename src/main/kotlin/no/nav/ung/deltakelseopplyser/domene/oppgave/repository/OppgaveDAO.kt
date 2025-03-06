@@ -58,6 +58,11 @@ class OppgaveDAO(
         this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
         return this
     }
+
+    fun markerSomKansellert() {
+        this.status = OppgaveStatus.KANSELLERT
+        this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
+    }
 }
 
 enum class Oppgavetype {
@@ -67,5 +72,6 @@ enum class Oppgavetype {
 
 enum class OppgaveStatus {
     LØST,
-    ULØST
+    ULØST,
+    KANSELLERT
 }
