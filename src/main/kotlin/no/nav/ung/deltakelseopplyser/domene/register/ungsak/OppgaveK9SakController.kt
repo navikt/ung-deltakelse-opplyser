@@ -27,8 +27,8 @@ import java.util.*
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
 @Tag(
-    name = "Les register data",
-    description = "API for å hente deltakelser for en gitt deltaker i ungdomsprogrammet. Er sikret med Azure."
+    name = "Oppretter og endrer på oppgaver",
+    description = "API for å opprette, avbryte og sette oppgaver til utløpt. Er sikret med Azure."
 )
 class OppgaveK9SakController(
     private val deltakerService: DeltakerService,
