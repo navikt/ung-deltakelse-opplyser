@@ -62,6 +62,7 @@ class OppgaveK9SakController(
 
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
+            eksternReferanse = opprettOppgaveDto.referanse,
             deltakelse = eksisterende,
             oppgavetype = Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT,
             oppgavetypeDataDAO = KontrollerRegisterInntektOppgaveTypeDataDAO(

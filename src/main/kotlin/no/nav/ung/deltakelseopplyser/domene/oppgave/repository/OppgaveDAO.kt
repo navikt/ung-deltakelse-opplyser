@@ -23,6 +23,10 @@ class OppgaveDAO(
     @Column(name = "id", nullable = false)
     val id: UUID,
 
+    @Id
+    @Column(name = "ekstern_ref", nullable = false)
+    val eksternReferanse: UUID,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deltakelse_id", nullable = false)
     val deltakelse: UngdomsprogramDeltakelseDAO,

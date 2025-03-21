@@ -8,6 +8,7 @@ import java.util.*
 
 data class OppgaveDTO(
     val id: UUID,
+    val eksternReferanse: UUID,
     val oppgavetype: Oppgavetype,
     val oppgavetypeData: OppgavetypeDataDTO,
     val status: OppgaveStatus,
@@ -17,6 +18,7 @@ data class OppgaveDTO(
     companion object {
         fun OppgaveDAO.tilDTO() = OppgaveDTO(
             id = id,
+            eksternReferanse = eksternReferanse,
             oppgavetype = oppgavetype,
             oppgavetypeData = oppgavetypeDataDAO.tilDTO(),
             status = status,
