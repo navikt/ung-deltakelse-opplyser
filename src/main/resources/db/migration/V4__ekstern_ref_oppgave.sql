@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS oppgave
+    ADD COLUMN ekstern_ref UUID NOT NULL;
