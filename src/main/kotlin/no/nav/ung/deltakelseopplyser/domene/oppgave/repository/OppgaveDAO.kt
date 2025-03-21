@@ -23,6 +23,10 @@ class OppgaveDAO(
     @Column(name = "id", nullable = false)
     val id: UUID,
 
+    @Id
+    @Column(name = "ekstern_ref", nullable = false)
+    val eksternReferanse: UUID,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deltakelse_id", nullable = false)
     val deltakelse: UngdomsprogramDeltakelseDAO,
@@ -69,6 +73,7 @@ class OppgaveDAO(
 enum class Oppgavetype {
     BEKREFT_ENDRET_STARTDATO,
     BEKREFT_ENDRET_SLUTTDATO,
+    BEKREFT_AVVIK_REGISTERINNTEKT,
 }
 
 enum class OppgaveStatus {

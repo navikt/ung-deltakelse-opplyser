@@ -2,7 +2,9 @@ package no.nav.ung.deltakelseopplyser.domene.oppgave
 
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.register.ungsak.RegisterInntektOppgaveDTO
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType
@@ -20,7 +22,13 @@ data class EndretSluttdatoOppgavetypeDataDTO(
     val meldingFraVeileder: String?,
 ) : OppgavetypeDataDTO
 
+data class KontrollerRegisterinntektOppgavetypeDataDTO(
+    val fomDato: LocalDate,
+    val tomDato: LocalDate,
+) : OppgavetypeDataDTO
+
 fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
     is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(nyStartdato, veilederRef, meldingFraVeileder)
     is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(nySluttdato, veilederRef, meldingFraVeileder)
+    is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(fomDato, tomDato)
 }

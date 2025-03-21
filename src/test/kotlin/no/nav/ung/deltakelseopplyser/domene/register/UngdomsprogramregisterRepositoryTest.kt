@@ -176,6 +176,7 @@ class UngdomsprogramregisterRepositoryTest {
         val oppgaveId = UUID.randomUUID()
         deltakelse.leggTilOppgave(OppgaveDAO(
             id = oppgaveId,
+            eksternReferanse = UUID.randomUUID(),
             deltakelse = deltakelse,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
             oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
@@ -187,6 +188,7 @@ class UngdomsprogramregisterRepositoryTest {
         ))
         deltakelse.leggTilOppgave(OppgaveDAO(
             id = UUID.randomUUID(),
+            eksternReferanse = UUID.randomUUID(),
             deltakelse = deltakelse,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
             oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
