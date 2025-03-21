@@ -19,3 +19,27 @@ data class EndretSluttdatoOppgavetypeDataDAO(
     @JsonProperty(defaultValue = "n/a") val veilederRef: String,
     val meldingFraVeileder: String?,
 ) : OppgavetypeDataDAO()
+
+data class KontrollerRegisterInntektOppgaveTypeDataDAO(
+    @JsonProperty(defaultValue = "n/a") val registerinntekt: RegisterinntektDAO,
+    @JsonProperty(defaultValue = "n/a") val fomDato: LocalDate,
+    @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
+    ) : OppgavetypeDataDAO()
+
+
+data class RegisterinntektDAO(
+    @JsonProperty("arbeidOgFrilansInntekter") val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDAO>,
+    @JsonProperty("ytelseInntekter") val ytelseInntekter: List<YtelseRegisterInntektDAO>,
+
+    )
+
+data class ArbeidOgFrilansRegisterInntektDAO(
+    @JsonProperty("inntekt") val inntekt: Int,
+    @JsonProperty("arbeidsgiver") val arbeidsgiver: String
+)
+
+
+data class YtelseRegisterInntektDAO(
+    @JsonProperty("inntekt") val inntekt: Int,
+    @JsonProperty("ytelsetype") val ytelsetype: String
+)

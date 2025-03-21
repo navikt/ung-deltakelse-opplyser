@@ -69,6 +69,7 @@ class OppgaveDAO(
 enum class Oppgavetype {
     BEKREFT_ENDRET_STARTDATO,
     BEKREFT_ENDRET_SLUTTDATO,
+    BEKREFT_AVVIK_REGISTERINNTEKT,
 }
 
 enum class OppgaveStatus {
