@@ -12,6 +12,9 @@ target/
 .springBeans
 .sts4-cache
 
+.flattened*
+
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
