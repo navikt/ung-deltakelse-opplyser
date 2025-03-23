@@ -1,8 +1,11 @@
 package no.nav.ung.deltakelseopplyser.domene.deltaker
 
-import java.util.UUID
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import java.util.*
 
 @Entity(name = "deltaker")
 class DeltakerDAO(

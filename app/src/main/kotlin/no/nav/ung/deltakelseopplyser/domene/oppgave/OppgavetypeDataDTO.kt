@@ -4,7 +4,6 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOp
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.register.ungsak.RegisterInntektOppgaveDTO
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType

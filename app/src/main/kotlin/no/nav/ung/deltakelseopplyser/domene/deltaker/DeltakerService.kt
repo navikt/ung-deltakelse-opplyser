@@ -5,8 +5,8 @@ import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO.Companion.mapToDAO
-import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
