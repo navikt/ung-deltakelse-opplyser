@@ -1,3 +1,4 @@
+
 name: Publish kontrakt
 on:
   release:
@@ -5,27 +6,22 @@ on:
 
 jobs:
   build:
-    name: Release kontrakt
+    name: Bygg pull-request
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
-          cache: 'maven'
-      - name: Build artifacts
-        run: mvn clean install -DskipTests --settings ./.github/.m2/settings.xml --file pom.xml
-        env:
-          GH_ACCESS_TOKEN: ${{ secrets.READER_TOKEN }}
+          distribution: temurin
+          java-version: 21
+          cache: maven
       - name: Publish artifacts
         shell: bash
         run: |
-           mvn deploy -e --batch-mode --settings ./.github/.m2/settings.xml --file pom.xml -am -pl kontrakt -DtrimStackTrace=false -Dchangelist= -Dsha1= -Drevision=$NEW_VERSION -Dfile.encoding=UTF-8 -DdeployAtEnd=true
+          mvn deploy -e -B --settings ./.m2/settings.xml -am -pl kontrakt -DtrimStackTrace=false -Dchangelist= -Dsha1= -Drevision=$NEW_VERSION -Dfile.encoding=UTF-8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
