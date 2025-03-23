@@ -33,7 +33,6 @@
         <dependency>
             <groupId>no.nav.ung.deltakelseopplyser</groupId>
             <artifactId>kontrakt</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

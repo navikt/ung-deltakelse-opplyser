@@ -34,6 +34,16 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>no.nav.ung.deltakelseopplyser</groupId>
+                <artifactId>kontrakt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.nav.ung.deltakelseopplyser</groupId>
+                <artifactId>app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>1.27.1</version>
