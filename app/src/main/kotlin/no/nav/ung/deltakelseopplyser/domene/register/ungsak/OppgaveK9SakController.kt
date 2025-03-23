@@ -11,6 +11,8 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
 import no.nav.ung.deltakelseopplyser.domene.oppgave.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
+
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
@@ -84,7 +86,7 @@ class OppgaveK9SakController(
     }
 
     private fun gjelderSammePeriode(it: OppgaveDAO, ny: RegisterInntektOppgaveDTO) : Boolean {
-        val eksisterende :KontrollerRegisterinntektOppgavetypeDataDTO = it.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
+        val eksisterende : KontrollerRegisterinntektOppgavetypeDataDTO = it.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
         return !eksisterende.fomDato.isAfter(ny.tomDato) && !eksisterende.tomDato.isBefore(ny.fomDato)
     }
 
