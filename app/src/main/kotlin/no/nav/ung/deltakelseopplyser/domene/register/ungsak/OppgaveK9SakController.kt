@@ -98,7 +98,7 @@ class OppgaveK9SakController(
     private fun gjelderSammePeriode(it: OppgaveDAO, ny: RegisterInntektOppgaveDTO): Boolean {
         val eksisterende: KontrollerRegisterinntektOppgavetypeDataDTO =
             it.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
-        return !eksisterende.fomDato.isAfter(ny.tomDato) && !eksisterende.tomDato.isBefore(ny.fomDato)
+        return !eksisterende.fraOgMed.isAfter(ny.tomDato) && !eksisterende.tilOgMed.isBefore(ny.fomDato)
     }
 
     private fun forsikreEksistererIProgram(hentDeltakterIder: List<UUID>): UngdomsprogramDeltakelseDAO {

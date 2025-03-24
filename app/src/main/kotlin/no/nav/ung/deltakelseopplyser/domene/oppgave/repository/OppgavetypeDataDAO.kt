@@ -22,7 +22,12 @@ data class EndretSluttdatoOppgavetypeDataDAO(
 
 data class KontrollerRegisterInntektOppgaveTypeDataDAO(
     @JsonProperty(defaultValue = "n/a") val registerinntekt: RegisterinntektDAO,
-    @JsonProperty(defaultValue = "n/a") val fomDato: LocalDate,
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty(defaultValue = "n/a")
+    val fomDato: LocalDate,
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
     ) : OppgavetypeDataDAO()
 

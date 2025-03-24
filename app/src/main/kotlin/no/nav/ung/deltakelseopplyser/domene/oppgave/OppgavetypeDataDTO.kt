@@ -24,8 +24,8 @@ data class EndretSluttdatoOppgavetypeDataDTO(
 ) : OppgavetypeDataDTO
 
 data class KontrollerRegisterinntektOppgavetypeDataDTO(
-    val fomDato: LocalDate,
-    val tomDato: LocalDate,
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate,
     val registerinntekt: RegisterinntektDTO,
 ) : OppgavetypeDataDTO
 
