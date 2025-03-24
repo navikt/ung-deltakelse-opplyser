@@ -29,9 +29,8 @@ data class KontrollerRegisterInntektOppgaveTypeDataDAO(
 
 data class RegisterinntektDAO(
     @JsonProperty("arbeidOgFrilansInntekter") val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDAO>,
-    @JsonProperty("ytelseInntekter") val ytelseInntekter: List<YtelseRegisterInntektDAO>,
-
-    )
+    @JsonProperty("ytelseInntekter") val ytelseInntekter: List<YtelseRegisterInntektDAO>
+)
 
 data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,

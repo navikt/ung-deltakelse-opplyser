@@ -4,6 +4,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOp
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType
@@ -24,10 +25,11 @@ data class EndretSluttdatoOppgavetypeDataDTO(
 data class KontrollerRegisterinntektOppgavetypeDataDTO(
     val fomDato: LocalDate,
     val tomDato: LocalDate,
+    val registerinntekt: RegisterinntektDAO,
 ) : OppgavetypeDataDTO
 
 fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
     is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(nyStartdato, veilederRef, meldingFraVeileder)
     is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(nySluttdato, veilederRef, meldingFraVeileder)
-    is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(fomDato, tomDato)
+    is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(fomDato, tomDato, registerinntekt)
 }
