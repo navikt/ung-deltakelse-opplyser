@@ -30,13 +30,12 @@ data class KontrollerRegisterinntektOppgavetypeDataDTO(
 ) : OppgavetypeDataDTO
 
 data class RegisterinntektDTO(
-    @JsonProperty("arbeidOgFrilansInntekter") val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDTO>,
-    @JsonProperty("ytelseInntekter") val ytelseInntekter: List<YtelseRegisterInntektDTO>,
-) {
-    val totalInntektArbeidOgFrilans: Int get() = arbeidOgFrilansInntekter.sumOf { it.inntekt }
-    val totalInntektYtelse: Int get() = ytelseInntekter.sumOf { it.inntekt }
-    val totalInntekt: Int get() = totalInntektArbeidOgFrilans + totalInntektYtelse
-}
+    val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDTO>,
+    val ytelseInntekter: List<YtelseRegisterInntektDTO>,
+    val totalInntektArbeidOgFrilans: Int = arbeidOgFrilansInntekter.sumOf { it.inntekt },
+    val totalInntektYtelse: Int = ytelseInntekter.sumOf { it.inntekt },
+    val totalInntekt: Int = totalInntektArbeidOgFrilans + totalInntektYtelse,
+)
 
 data class ArbeidOgFrilansRegisterInntektDTO(
     @JsonProperty("inntekt") val inntekt: Int,
