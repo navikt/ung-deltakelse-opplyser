@@ -35,7 +35,7 @@ import java.util.*
 class OppgaveK9SakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
-    ) {
+) {
 
     @PostMapping("/opprett", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave")
@@ -49,7 +49,7 @@ class OppgaveK9SakController(
             throw IllegalStateException("Fant ingen deltakelser for id")
         }
 
-        val eksisterende = forsikreEksistererIProgram(hentDeltakterIder.get(0))
+        val eksisterende = forsikreEksistererIProgram(hentDeltakterIder)
 
         val harUløstOppgaveForSammePeriode = eksisterende.oppgaver.stream()
             .anyMatch {
@@ -71,8 +71,18 @@ class OppgaveK9SakController(
                 fomDato = opprettOppgaveDto.fomDato,
                 tomDato = opprettOppgaveDto.tomDato,
                 registerinntekt = RegisterinntektDAO(
-                    opprettOppgaveDto.registerInntekter.registerinntekterForArbeidOgFrilans?.map { ArbeidOgFrilansRegisterInntektDAO(it.beløp, it.arbeidsgiverIdent) } ?: emptyList(),
-                    opprettOppgaveDto.registerInntekter.registerinntekterForYtelse?.map { YtelseRegisterInntektDAO(it.beløp, it.ytelseType) } ?: emptyList(),
+                    opprettOppgaveDto.registerInntekter.registerinntekterForArbeidOgFrilans?.map {
+                        ArbeidOgFrilansRegisterInntektDAO(
+                            it.beløp,
+                            it.arbeidsgiverIdent
+                        )
+                    } ?: emptyList(),
+                    opprettOppgaveDto.registerInntekter.registerinntekterForYtelse?.map {
+                        YtelseRegisterInntektDAO(
+                            it.beløp,
+                            it.ytelseType
+                        )
+                    } ?: emptyList(),
                 )
             ),
             status = OppgaveStatus.ULØST,
@@ -85,21 +95,35 @@ class OppgaveK9SakController(
         return oppdatertDeltakelse;
     }
 
-    private fun gjelderSammePeriode(it: OppgaveDAO, ny: RegisterInntektOppgaveDTO) : Boolean {
-        val eksisterende : KontrollerRegisterinntektOppgavetypeDataDTO = it.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
+    private fun gjelderSammePeriode(it: OppgaveDAO, ny: RegisterInntektOppgaveDTO): Boolean {
+        val eksisterende: KontrollerRegisterinntektOppgavetypeDataDTO =
+            it.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
         return !eksisterende.fomDato.isAfter(ny.tomDato) && !eksisterende.tomDato.isBefore(ny.fomDato)
     }
 
+    private fun forsikreEksistererIProgram(hentDeltakterIder: List<UUID>): UngdomsprogramDeltakelseDAO {
+        val deltagelser = deltakelseRepository.findByDeltaker_IdIn(hentDeltakterIder)
 
-    private fun forsikreEksistererIProgram(id: UUID): UngdomsprogramDeltakelseDAO =
-        deltakelseRepository.findById(id).orElseThrow {
-            ErrorResponseException(
+        if (deltagelser.isEmpty()) {
+            throw ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant ingen deltakelse med id $id"
+                    it.detail = "Fant ingen deltakelse med id ${hentDeltakterIder}"
                 },
                 null
             )
         }
+
+        if (deltagelser.size > 1) {
+            throw ErrorResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
+                    it.detail = "Fant flere deltakelser med id ${hentDeltakterIder}"
+                },
+                null
+            )
+        }
+        return deltagelser.first()
+    }
 
 }
