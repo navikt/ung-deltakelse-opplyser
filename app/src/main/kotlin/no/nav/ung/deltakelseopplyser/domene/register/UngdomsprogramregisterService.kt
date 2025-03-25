@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOp
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.register.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -368,18 +369,6 @@ class UngdomsprogramregisterService(
         ungSakService.sendInnHendelse(hendelse = HendelseDto(hendelse, AktørId(nåværendeAktørId)))
     }
 
-    private fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
-
-        return DeltakelseOpplysningDTO(
-            id = id,
-            deltaker = deltaker.mapToDTO(),
-            harSøkt = harSøkt,
-            fraOgMed = getFom(),
-            tilOgMed = getTom(),
-            oppgaver = oppgaver.map { it.tilDTO() }
-        )
-    }
-
     private fun DeltakelseOpplysningDTO.mapToDAO(deltakerDAO: DeltakerDAO): UngdomsprogramDeltakelseDAO {
         val periode = if (tilOgMed == null) {
             Range.closedInfinite(fraOgMed)
@@ -403,13 +392,6 @@ class UngdomsprogramregisterService(
                 null
             )
         }
-
-    private fun DeltakerDAO.mapToDTO(): DeltakerDTO {
-        return DeltakerDTO(
-            id = id,
-            deltakerIdent = deltakerIdent
-        )
-    }
 
     private fun forsikreGyldigPeriode(sluttdato: LocalDate?, startdato: LocalDate) {
         if (sluttdato != null && sluttdato < startdato) {

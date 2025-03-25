@@ -10,5 +10,12 @@ data class DeltakerDTO(
         fun DeltakerDTO.mapToDAO(): DeltakerDAO {
             return DeltakerDAO(deltakerIdent = deltakerIdent)
         }
+
+        fun DeltakerDAO.mapToDTO(): DeltakerDTO {
+            return DeltakerDTO(
+                id = id,
+                deltakerIdent = deltakerIdent
+            )
+        }
     }
 }

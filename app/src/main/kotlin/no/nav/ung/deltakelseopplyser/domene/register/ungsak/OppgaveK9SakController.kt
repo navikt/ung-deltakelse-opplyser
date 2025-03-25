@@ -9,6 +9,8 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
 import no.nav.ung.deltakelseopplyser.domene.oppgave.tilDTO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
@@ -40,7 +42,7 @@ class OppgaveK9SakController(
     @PostMapping("/opprett", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave")
     @ResponseStatus(HttpStatus.OK)
-    fun opprettOppgaveForKontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): UngdomsprogramDeltakelseDAO {
+    fun opprettOppgaveForKontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): DeltakelseOpplysningDTO {
         val hentDeltakterIder = deltakerService.hentDeltakterIder(opprettOppgaveDto.aktørId)
         if (hentDeltakterIder.size > 1) {
             throw IllegalStateException("Fant flere deltakelser for samme id")
@@ -92,7 +94,7 @@ class OppgaveK9SakController(
 
         eksisterende.leggTilOppgave(nyOppgave)
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
-        return oppdatertDeltakelse;
+        return oppdatertDeltakelse.mapToDTO()
     }
 
     private fun gjelderSammePeriode(it: OppgaveDAO, ny: RegisterInntektOppgaveDTO): Boolean {
