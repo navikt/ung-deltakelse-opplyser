@@ -74,8 +74,7 @@ class UngdomsprogramregisterService(
                     RapportPeriodeinfoDTO(
                         fraOgMed = månedSegment.fom,
                         tilOgMed = månedSegment.tom,
-                        harRapportert = false,
-                        inntekt = null
+                        harRapportert = false
                     )
                 }
         }

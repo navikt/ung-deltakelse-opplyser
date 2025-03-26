@@ -18,5 +18,7 @@ data class RapportPeriodeinfoDTO(
     val fraOgMed: LocalDate,
     val tilOgMed: LocalDate,
     val harRapportert: Boolean,
-    val inntekt: BigDecimal? = null,
+    val arbeidstakerOgFrilansInntekt: BigDecimal? = null,
+    val inntektFraYtelse: BigDecimal? = null,
+    val summertInntekt: BigDecimal = arbeidstakerOgFrilansInntekt?.add(inntektFraYtelse ?: BigDecimal.ZERO) ?: BigDecimal.ZERO,
 )
