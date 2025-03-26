@@ -4,19 +4,21 @@ import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO.Companion.mapToDTO
-import no.nav.ung.deltakelseopplyser.domene.register.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportPeriodeinfoDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
@@ -54,6 +56,18 @@ class UngdomsprogramregisterService(
                     oppgaver = deltakelseDAO.oppgaver.map { it.tilDTO() }
                 )
             }
+
+        fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
+
+            return DeltakelseOpplysningDTO(
+                id = id,
+                deltaker = deltaker.mapToDTO(),
+                harSøkt = harSøkt,
+                fraOgMed = getFom(),
+                tilOgMed = getTom(),
+                oppgaver = oppgaver.map { it.tilDTO() }
+            )
+        }
 
         private fun UngdomsprogramDeltakelseDAO.rapporteringsperioder(): List<RapportPeriodeinfoDTO> {
             val deltakelsetidsLinje = LocalDateTimeline(
@@ -223,7 +237,7 @@ class UngdomsprogramregisterService(
         eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
                 logger.info("Fant uløst oppgave for endring av startdato. Markerer som kansellert.")
-                eksisterende.oppdaterOppgave(markerSomKansellert())
+                eksisterende.oppdaterOppgave(markerSomAvbrutt())
                 deltakelseRepository.save(eksisterende)
             }
 
@@ -269,7 +283,7 @@ class UngdomsprogramregisterService(
         eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
                 logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som kansellert.")
-                eksisterende.oppdaterOppgave(markerSomKansellert())
+                eksisterende.oppdaterOppgave(markerSomAvbrutt())
                 deltakelseRepository.save(eksisterende)
             }
 

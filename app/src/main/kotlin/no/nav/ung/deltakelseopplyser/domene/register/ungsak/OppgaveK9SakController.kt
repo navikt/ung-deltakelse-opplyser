@@ -6,13 +6,16 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.KontrollerRegisterinntektOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
-import no.nav.ung.deltakelseopplyser.domene.oppgave.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO.Companion.mapToDTO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppdaterOppgaveStatusDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 
 import org.springframework.http.HttpStatus
@@ -94,6 +97,29 @@ class OppgaveK9SakController(
 
         eksisterende.leggTilOppgave(nyOppgave)
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
+        return oppdatertDeltakelse.mapToDTO()
+    }
+
+    @PutMapping("/{oppgaveId}/status", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Oppdaterer status på en oppgave")
+    @ResponseStatus(HttpStatus.OK)
+    fun oppdaterOppgaveStatus(
+        @PathVariable oppgaveId: UUID,
+        @RequestBody oppdaterOppgaveStatusDTO: OppdaterOppgaveStatusDTO
+    ): DeltakelseOpplysningDTO {
+        val eksisterendeDeltakelse = deltakelseRepository.finnDeltakelseGittOppgaveId(oppgaveId) ?: throw ErrorResponseException(
+            HttpStatus.NOT_FOUND,
+            ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                it.detail = "Fant ingen deltakelse med oppgaveId $oppgaveId"
+            },
+            null
+        )
+
+        val oppgave = eksisterendeDeltakelse.oppgaver.first { it.id == oppgaveId }
+        val oppdatertOppgave = oppgave.settStatus(oppdaterOppgaveStatusDTO.status)
+
+        eksisterendeDeltakelse.oppdaterOppgave(oppdatertOppgave)
+        val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
         return oppdatertDeltakelse.mapToDTO()
     }
 
