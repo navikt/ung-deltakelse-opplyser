@@ -39,10 +39,16 @@ topic:
       navn: dusseldorf.ungdomsytelse-soknad-cleanup
       bryter: true
       auto-offset-reset: earliest
-    # topic.listener.ung-soknad
+    # topic.listener.ung-oppgavebekreftelse
     ung-oppgavebekreftelse:
       id: ungdomsytelseOppgavebekreftelse-listener
       navn: dusseldorf.ungdomsytelse-oppgavebekreftelse-cleanup
+      bryter: true
+      auto-offset-reset: earliest
+    # topic.listener.ung-rapportert-inntekt
+    ung-rapportert-inntekt:
+      id: ungdomsytelseRapportertInntekt-listener
+      navn: dusseldorf.ungdomsytelse-inntektsrapportering-cleanup
       bryter: true
       auto-offset-reset: earliest
 
