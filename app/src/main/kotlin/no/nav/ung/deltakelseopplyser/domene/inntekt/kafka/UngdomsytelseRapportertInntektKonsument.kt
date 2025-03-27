@@ -2,7 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.inntekt.kafka
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
-import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
+import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektHåndtererService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.kafka.UngdomsytelseRapportertInntektKonsumentConfiguration.Companion.UNGDOMSYTELSE_RAPPORTERT_INNTEKT_FILTER
 import no.nav.ung.deltakelseopplyser.utils.Constants
 import no.nav.ung.deltakelseopplyser.utils.MDCUtil
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class UngdomsytelseRapportertInntektKonsument(
     private val objectMapper: ObjectMapper,
-    private val rapportertInntektService: RapportertInntektService,
+    private val rapportertInntektHåndtererService: RapportertInntektHåndtererService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsytelseRapportertInntektKonsument::class.java)
@@ -45,7 +45,7 @@ class UngdomsytelseRapportertInntektKonsument(
                 UngdomsytelseRapportertInntektTopicEntry::class.java
             )
         logger.info("Mottar og håndterer UngdomsytelseRapportertInntekt for ungdomsytelsen")
-        rapportertInntektService.håndterRapportertInntekt(rapportertInntektTopicEntry.data.journalførtMelding)
+        rapportertInntektHåndtererService.håndterRapportertInntekt(rapportertInntektTopicEntry.data.journalførtMelding)
         logger.info("Håndtert UngdomsytelseRapportertInntekt for ungdomsytelsen.")
     }
 }

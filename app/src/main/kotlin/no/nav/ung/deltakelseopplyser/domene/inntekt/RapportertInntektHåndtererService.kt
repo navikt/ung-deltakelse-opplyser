@@ -10,12 +10,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class RapportertInntektService(
+class RapportertInntektHåndtererService(
     private val rapportertInntektRepository: RapportertInntektRepository,
     private val deltakerService: DeltakerService
 ) {
     private companion object {
-        private val logger = LoggerFactory.getLogger(RapportertInntektService::class.java)
+        private val logger = LoggerFactory.getLogger(RapportertInntektHåndtererService::class.java)
     }
 
     fun håndterRapportertInntekt(rapportertInntektTopicEntry: UngdomsytelseRapportertInntekt) {

@@ -9,7 +9,7 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
+import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektHåndtererService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
@@ -31,7 +31,7 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     override val consumerGroupTopics: List<String> = listOf(TOPIC)
 
     @SpykBean
-    lateinit var rapportertInntektService: RapportertInntektService
+    lateinit var rapportertInntektHåndtererService: RapportertInntektHåndtererService
 
     @SpykBean
     lateinit var deltakerService: DeltakerService
@@ -104,7 +104,7 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         producer.leggPåTopic(søknadId, søknad, TOPIC)
 
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
-            verify(exactly = 1) { rapportertInntektService.håndterRapportertInntekt(any()) }
+            verify(exactly = 1) { rapportertInntektHåndtererService.håndterRapportertInntekt(any()) }
             verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
             verify(exactly = 1) { rapportertInntektRepository.save(any()) }
         }
