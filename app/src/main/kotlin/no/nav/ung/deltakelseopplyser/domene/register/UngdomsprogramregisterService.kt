@@ -4,7 +4,6 @@ import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.fpsak.tidsserie.LocalDateSegment
 import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO.Companion.tilDTO
@@ -222,8 +221,8 @@ class UngdomsprogramregisterService(
 
         eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
-                logger.info("Fant uløst oppgave for endring av startdato. Markerer som kansellert.")
-                eksisterende.oppdaterOppgave(markerSomKansellert())
+                logger.info("Fant uløst oppgave for endring av startdato. Markerer som avbrutt.")
+                eksisterende.oppdaterOppgave(markerSomAvbrutt())
                 deltakelseRepository.save(eksisterende)
             }
 
@@ -268,8 +267,8 @@ class UngdomsprogramregisterService(
 
         eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
-                logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som kansellert.")
-                eksisterende.oppdaterOppgave(markerSomKansellert())
+                logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som avbrutt.")
+                eksisterende.oppdaterOppgave(markerSomAvbrutt())
                 deltakelseRepository.save(eksisterende)
             }
 

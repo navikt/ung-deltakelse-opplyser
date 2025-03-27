@@ -63,8 +63,8 @@ class OppgaveDAO(
         return this
     }
 
-    fun markerSomKansellert(): OppgaveDAO {
-        this.status = OppgaveStatus.KANSELLERT
+    fun markerSomAvbrutt(): OppgaveDAO {
+        this.status = OppgaveStatus.AVRBUTT
         this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
         return this
     }
@@ -79,5 +79,5 @@ enum class Oppgavetype {
 enum class OppgaveStatus {
     LØST,
     ULØST,
-    KANSELLERT
+    AVRBUTT
 }
