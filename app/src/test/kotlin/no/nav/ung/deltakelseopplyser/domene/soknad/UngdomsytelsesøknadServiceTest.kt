@@ -13,6 +13,7 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
@@ -44,6 +45,7 @@ import java.time.ZonedDateTime
     DeltakerService::class,
     UngdomsytelsesøknadService::class,
     UngdomsprogramregisterService::class,
+    RapportertInntektService::class
 )
 class UngdomsytelsesøknadServiceTest {
 

@@ -54,6 +54,10 @@ class DeltakerService(
         return hentDeltakere(deltakerIdentEllerAktørId).map { it.id }
     }
 
+    fun hentDeltakterIdenter(deltakerIdentEllerAktørId: String): List<String> {
+        return hentDeltakere(deltakerIdentEllerAktørId).map { it.deltakerIdent }
+    }
+
     fun finnDeltakerGittIdent(deltakerIdent: String): DeltakerDAO? {
         return deltakerRepository.findByDeltakerIdent(deltakerIdent)
     }
