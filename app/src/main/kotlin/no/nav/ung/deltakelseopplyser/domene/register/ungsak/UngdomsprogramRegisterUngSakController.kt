@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*
     name = "Les register data",
     description = "API for å hente deltakelser for en gitt deltaker i ungdomsprogrammet. Er sikret med Azure."
 )
-class UngdomsprogramRegisterK9SakController(
+class UngdomsprogramRegisterUngSakController(
     private val registerService: UngdomsprogramregisterService,
 ) {
 

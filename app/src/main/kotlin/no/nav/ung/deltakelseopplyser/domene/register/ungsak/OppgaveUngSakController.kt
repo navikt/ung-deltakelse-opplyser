@@ -37,7 +37,7 @@ import java.util.*
     name = "Oppretter og endrer på oppgaver",
     description = "API for å opprette, avbryte og sette oppgaver til utløpt. Er sikret med Azure."
 )
-class OppgaveK9SakController(
+class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
 ) {
