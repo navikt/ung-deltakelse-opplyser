@@ -9,5 +9,5 @@ data class RapportPeriodeinfoDTO(
     val harRapportert: Boolean,
     val arbeidstakerOgFrilansInntekt: BigDecimal? = null,
     val inntektFraYtelse: BigDecimal? = null,
-    val summertInntekt: BigDecimal = arbeidstakerOgFrilansInntekt?.add(inntektFraYtelse ?: BigDecimal.ZERO) ?: BigDecimal.ZERO,
+    val ≈: BigDecimal? = arbeidstakerOgFrilansInntekt?.add(inntektFraYtelse ?: BigDecimal.ZERO) ?: null,
 )
