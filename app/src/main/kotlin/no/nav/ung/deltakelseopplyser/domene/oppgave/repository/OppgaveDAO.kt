@@ -64,7 +64,7 @@ class OppgaveDAO(
     }
 
     fun markerSomAvbrutt(): OppgaveDAO {
-        this.status = OppgaveStatus.AVRBUTT
+        this.status = OppgaveStatus.AVBRUTT
         this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
         return this
     }
@@ -79,5 +79,5 @@ enum class Oppgavetype {
 enum class OppgaveStatus {
     LØST,
     ULØST,
-    AVRBUTT
+    AVBRUTT
 }
