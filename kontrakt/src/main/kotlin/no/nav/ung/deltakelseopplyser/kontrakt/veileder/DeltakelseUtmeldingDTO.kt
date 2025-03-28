@@ -1,7 +1,6 @@
-package no.nav.ung.deltakelseopplyser.domene.register
+package no.nav.ung.deltakelseopplyser.kontrakt.veileder
 
 import java.time.LocalDate
-import java.util.*
 
 data class DeltakelseUtmeldingDTO(
     val utmeldingsdato: LocalDate,

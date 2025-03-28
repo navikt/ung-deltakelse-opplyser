@@ -5,11 +5,12 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseInnmeldingDTO
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseUtmeldingDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.DeleteMapping

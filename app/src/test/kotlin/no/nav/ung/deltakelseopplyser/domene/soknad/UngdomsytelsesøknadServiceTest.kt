@@ -11,12 +11,12 @@ import no.nav.k9.søknad.ytelse.ung.v1.UngSøknadstype
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
+import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
@@ -45,6 +45,7 @@ import java.time.ZonedDateTime
     DeltakerService::class,
     UngdomsytelsesøknadService::class,
     UngdomsprogramregisterService::class,
+    RapportertInntektService::class
 )
 class UngdomsytelsesøknadServiceTest {
 

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus

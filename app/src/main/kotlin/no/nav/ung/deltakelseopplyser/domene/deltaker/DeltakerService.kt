@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO.Companion.mapToDAO
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -19,6 +19,19 @@ class DeltakerService(
     private val deltakerRepository: DeltakerRepository,
     private val pdlService: PdlService,
 ) {
+
+    companion object {
+        fun DeltakerDTO.mapToDAO(): DeltakerDAO {
+            return DeltakerDAO(deltakerIdent = deltakerIdent)
+        }
+
+        fun DeltakerDAO.mapToDTO(): DeltakerDTO {
+            return DeltakerDTO(
+                id = id,
+                deltakerIdent = deltakerIdent
+            )
+        }
+    }
 
     fun hentDeltakerInfo(deltakerId: UUID? = null, deltakerIdent: String? = null): DeltakerPersonlia? {
         return when {
@@ -39,6 +52,10 @@ class DeltakerService(
 
     fun hentDeltakterIder(deltakerIdentEllerAktørId: String): List<UUID> {
         return hentDeltakere(deltakerIdentEllerAktørId).map { it.id }
+    }
+
+    fun hentDeltakterIdenter(deltakerIdentEllerAktørId: String): List<String> {
+        return hentDeltakere(deltakerIdentEllerAktørId).map { it.deltakerIdent }
     }
 
     fun finnDeltakerGittIdent(deltakerIdent: String): DeltakerDAO? {
