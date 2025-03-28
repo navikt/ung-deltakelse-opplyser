@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS unique_ulost_oppgavetype;
