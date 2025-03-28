@@ -28,7 +28,6 @@ spring:
     producer:
       client-id: ${HOSTNAME}
       retries: 3
-      transaction-id-prefix: -tx
 
 topic:
   # Bryter betegner av/på funksjon for kafkalytter. True (på), False (av).

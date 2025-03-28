@@ -207,7 +207,7 @@ class UngdomsprogramregisterService(
 
         eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
-                logger.info("Fant uløst oppgave for endring av startdato. Markerer som kansellert.")
+                logger.info("Fant uløst oppgave for endring av startdato. Markerer som avbrutt.")
                 eksisterende.oppdaterOppgave(markerSomAvbrutt())
                 deltakelseRepository.save(eksisterende)
             }
@@ -253,7 +253,7 @@ class UngdomsprogramregisterService(
 
         eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
-                logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som kansellert.")
+                logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som avbrutt.")
                 eksisterende.oppdaterOppgave(markerSomAvbrutt())
                 deltakelseRepository.save(eksisterende)
             }

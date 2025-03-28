@@ -8,6 +8,8 @@ spring:
       ddl-auto: none
 
   kafka:
+    producer:
+      transaction-id-prefix: -tx
     security:
       protocol: SSL
     ssl:

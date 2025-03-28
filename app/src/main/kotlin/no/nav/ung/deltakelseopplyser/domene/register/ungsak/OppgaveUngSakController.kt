@@ -41,6 +41,29 @@ class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
 ) {
+    @PostMapping("/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Avbryter oppgave")
+    @ResponseStatus(HttpStatus.OK)
+    fun avbrytOppgave(@RequestBody eksternReferanse: UUID) {
+
+        val deltakelse =
+            deltakelseRepository.finnDeltakelseGittOppgaveEksternReferanse(eksternReferanse)
+
+        if (deltakelse == null) {
+            throw ErrorResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
+                    it.detail = "Fant ingen deltakelse med oppgave $eksternReferanse"
+                },
+                null
+            )
+        }
+
+        val oppgave = deltakelse.oppgaver.find { it.eksternReferanse == eksternReferanse }
+        oppgave!!.markerSomAvbrutt()
+        deltakelse.oppdaterOppgave(oppgave);
+        deltakelseRepository.save(deltakelse)
+    }
 
     @PostMapping("/opprett", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave")
