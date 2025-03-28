@@ -56,7 +56,7 @@ class RapportertInntektService(
                 rapporterteInntekter
                     .find {
                         logger.info("Sjekker om inntekt ${it.periode} er innenfor periode $rapporteringsPeriode")
-                        it.periode.fraOgMed >= rapporteringsPeriode.fraOgMed && it.periode.tilOgMed <= rapporteringsPeriode.tilOgMed
+                        it.periode.fraOgMed <= rapporteringsPeriode.fraOgMed && it.periode.tilOgMed >= rapporteringsPeriode.tilOgMed
                     }
                     ?.let { inntekt: OppgittInntektForPeriode ->
                         RapportPeriodeinfoDTO(
