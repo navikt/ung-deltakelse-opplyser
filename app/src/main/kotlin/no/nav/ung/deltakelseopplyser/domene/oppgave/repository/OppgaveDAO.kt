@@ -114,6 +114,7 @@ class OppgaveDAO(
     }
 
     fun markerSomAvbrutt(): OppgaveDAO {
+        this.status = OppgaveStatus.AVBRUTT
         return settStatus(OppgaveStatus.AVBRUTT)
     }
 
