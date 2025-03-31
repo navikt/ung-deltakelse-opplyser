@@ -46,17 +46,13 @@ class OppgaveUngSakController(
     fun avbrytOppgave(@PathVariable oppgaveReferanse: UUID) {
 
         val deltakelse =
-            deltakelseRepository.finnDeltakelseGittOppgaveReferanse(oppgaveReferanse)
-
-        if (deltakelse == null) {
-            throw ErrorResponseException(
+            deltakelseRepository.finnDeltakelseGittOppgaveReferanse(oppgaveReferanse) ?: throw ErrorResponseException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
                     it.detail = "Fant ingen deltakelse med oppgave $oppgaveReferanse"
                 },
                 null
             )
-        }
 
         val oppgave = deltakelse.oppgaver.find { it.oppgaveReferanse == oppgaveReferanse }
         oppgave!!.markerSomAvbrutt()
