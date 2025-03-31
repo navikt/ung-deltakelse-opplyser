@@ -40,7 +40,7 @@ class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
 ) {
-    @PostMapping("/{oppgaveReferanse}/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PutMapping("/{oppgaveReferanse}/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Avbryter oppgave")
     @ResponseStatus(HttpStatus.OK)
     fun avbrytOppgave(@PathVariable oppgaveReferanse: UUID) {
