@@ -40,7 +40,33 @@ Denne tjenesten understøtter behovet for:
 # 7. Infrastrukturarkitektur
 
 ## System Context Diagram
-![system-context-diagram.png](docs/system-context-diagram.png)
+```mermaid
+flowchart TD
+    ung-veileder("ungdomsytelse-veileder") -- Melder inn deltaker --> ung-register("ung-deltakelse-opplyser")
+    ung-veileder -- Henter opp deltakelser på deltaker --> ung-register
+    ung-register -- Lagrer ned opplysninger --> ung-register-db[("ung-deltakelse-opplyser-db")]
+    ung-register -- Sender opphørshendelse --> ung-sak("ung-sak")
+    ung-register -- Henter personopplysninger for deltaker --> pdl-api("pdl-api")
+    ung-register -. Konsumerer og lagrer ned mottatte søknader .-> mottatt-soknad["ungdomsytelse-soknad-cleanup"]
+    ung-deltaker("ungdomsytelse-deltaker") -- Henter registrete deltakelser --> ung-register
+    ung-sak -- Henter registrerte deltakelser for deltaker --> ung-register
+    ung-register-db --> deltakelse-table[["Deltakelse"]] & deltaker-table[["Deltaker"]] & oppgave-table[["Oppgave"]] & søknad-tabel[["Søknad"]]
+
+    mottatt-soknad@{ shape: h-cyl}
+     pdl-api:::Sky
+    classDef Sky stroke-width:1px, stroke-dasharray:none, stroke:#374D7C, fill:#E2EBFF, color:#374D7C
+    style ung-veileder fill:#2962FF
+    style ung-register fill:#2962FF
+    style ung-register-db fill:#2962FF
+    style ung-sak fill:#2962FF
+    style pdl-api fill:#BBDEFB
+    style ung-deltaker fill:#2962FF
+    style deltakelse-table fill:#FFFFFF,color:#000000
+    style deltaker-table fill:#FFFFFF,color:#000000
+    style oppgave-table fill:#FFFFFF,color:#000000
+    style søknad-tabel fill:#FFFFFF,color:#000000
+```
+Link til [mermaid](https://www.mermaidchart.com/play#pako:eNqVU8GO0zAQ_RUrKyGQ6hUUxIocECpphASIQ7k1e_Am0ySKa0e2u0u02s_hH_beH2McO2mTNtWSk_3evDfjmcljkMoMgjDYcPmQFkwZ8jtKBMFvJ3J6DyWHDNTrJMBrJre6McA19EQSvCGUkp_A8UJKIUgG3LAKL5R-bj0U5KU2nQf1vDWRdc0b3ZqcprS230CgkGAcOcgUqfd_p9McnDrEOv1gucKTgIy4rKIU-Rk1ze7W04Uii7Xenk-xApG5Yov9s9KFvaK4T6FZ5Z3xNHjysYt_cg1KSzEodSPV8NV1ximrSzT1pwnTa_JdCr3bgu2AzAk_9GIrjWHGANH750owW_81OnuYamnB9Xj4DqYpByZ2dRIcNaQr8GRhOsIvjH-mK1IBVnA84OmZYuvOyNVIf9KqywuCY22jjiZu2B2HNb486jF85y151fuehCgfgEPL2f2RxS8HeNp32tLALb1ygKUT4Yob9v_LI9EFqyEkBU0b_uRiuvGHYbiqGoelnGkdwYYgQrAxsgL6UGamCN_Vf2YdkjG0U4o1oZACOji8en_zIbr5OiObkvPwajlfLuJ4RlLJpepIl0abhsPwZ3Wa-aeP8zgeB_Wb-JIgO4tLcXYBpnjfEc8vFtEyXoz1_VpMmYyXwAfG7Tfz3Xjbfmdk6r9Eg1V5oWawPxc0wdM_Blj_JQ) for å redigere diagrammet.
 
 # 8. Distribusjon av tjenesten (deployment)
 

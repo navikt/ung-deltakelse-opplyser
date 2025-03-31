@@ -1,0 +1,65 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  flyway:
+    enabled: true
+
+  jpa:
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092} # placeholder
+    consumer:
+      group-id: ung-deltakelse-opplyser
+      auto-offset-reset: earliest
+    producer:
+      client-id: ung-deltakelse-opplyser
+
+topic:
+  # Bryter betegner av/på funksjon for kafkalytter. True (på), False (av).
+  listener:
+    # topic.listener.ung-soknad
+    ung-soknad:
+      auto-offset-reset: earliest
+    # topic.listener.ung-oppgavebekreftelse
+    ung-oppgavebekreftelse:
+      auto-offset-reset: earliest
+    # topic.listener.ung-rapportert-inntekt
+    ung-rapportert-inntekt:
+      auto-offset-reset: earliest
+
+no.nav:
+  security:
+    jwt:
+      issuer:
+        tokenx:
+          discoveryurl: http://localhost:${mock-oauth2-server.port}/tokenx/.well-known/openid-configuration
+          accepted_audience: aud-localhost
+        azure:
+          discoveryurl: http://localhost:${mock-oauth2-server.port}/azure/.well-known/openid-configuration
+          accepted_audience: aud-localhost
+      client:
+        registration:
+          azure-ung-sak:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: client_credentials
+            scope: api://dev-fss:k9saksbehandling:ung-sak/.default
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
+
+          azure-pdl-api:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: client_credentials
+            scope: api://dev-fss:pdl:pdl-api/.default
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
+
+  gateways:
+    ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/k9/sak
+    pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock

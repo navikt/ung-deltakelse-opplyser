@@ -1,5 +1,5 @@
-FROM amazoncorretto:21-alpine3.20
+FROM ghcr.io/navikt/sif-baseimages/java-21:2025.03.26.1425Z
+LABEL org.opencontainers.image.source=https://github.com/navikt/ung-deltakelse-opplyser
 
-COPY target/*.jar app.jar
-
-CMD ["java", "-jar", "app.jar"]
+COPY app/target/lib/*.jar /app/lib/
+COPY app/target/*.jar app.jar
