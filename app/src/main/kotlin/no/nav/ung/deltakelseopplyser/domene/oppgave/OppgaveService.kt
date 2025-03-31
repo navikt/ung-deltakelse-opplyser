@@ -16,11 +16,11 @@ class OppgaveService(
 
     fun håndterMottattOppgavebekreftelse(ungdomsytelseOppgavebekreftelse: UngdomsytelseOppgavebekreftelse) {
         val oppgaveBekreftelse = ungdomsytelseOppgavebekreftelse.oppgaveBekreftelse
-        val oppgaveId = UUID.fromString(oppgaveBekreftelse.søknadId.id)
+        val oppgaveReferanse = UUID.fromString(oppgaveBekreftelse.søknadId.id)
 
-        logger.info("Henter deltakelse for oppgaveId=$oppgaveId")
-        val deltakelse = deltakelseRepository.finnDeltakelseGittOppgaveId(oppgaveId) ?: throw RuntimeException("Fant ikke deltakelse for oppgaveId=$oppgaveId")
-        val oppgave = deltakelse.oppgaver.find { it.id == oppgaveId } ?: throw RuntimeException("Fant ikke oppgave for oppgaveId=$oppgaveId")
+        logger.info("Henter deltakelse for oppgaveReferanse=$oppgaveReferanse")
+        val deltakelse = deltakelseRepository.finnDeltakelseGittOppgaveReferanse(oppgaveReferanse) ?: throw RuntimeException("Fant ikke deltakelse for oppgaveReferanse=$oppgaveReferanse")
+        val oppgave = deltakelse.oppgaver.find { it.oppgaveReferanse == oppgaveReferanse } ?: throw RuntimeException("Fant ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
         logger.info("Markerer oppgave som løst for deltakelseId=${deltakelse.id}")
         val løstOppgave = oppgave.markerSomLøst()

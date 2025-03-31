@@ -282,8 +282,8 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
-    fun hentOppgaveForDeltakelse(personIdent: String, deltakelseId: UUID, oppgaveId: UUID): OppgaveDTO {
-        logger.info("Henter oppgave med id $oppgaveId for deltakelse med id $deltakelseId")
+    fun hentOppgaveForDeltakelse(personIdent: String, deltakelseId: UUID, oppgaveReferanse: UUID): OppgaveDTO {
+        logger.info("Henter oppgave med id $oppgaveReferanse for deltakelse med id $deltakelseId")
         val deltakerIder = deltakerService.hentDeltakterIder(personIdent)
         val deltakelse =
             deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakerIder) ?: throw ErrorResponseException(
@@ -294,11 +294,11 @@ class UngdomsprogramregisterService(
                 null
             )
 
-        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.id == oppgaveId } ?: run {
+        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.id == oppgaveReferanse } ?: run {
             throw ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant ingen oppgave med id $oppgaveId for deltakelse med id $deltakelseId"
+                    it.detail = "Fant ingen oppgave med id $oppgaveReferanse for deltakelse med id $deltakelseId"
                 },
                 null
             )

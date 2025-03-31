@@ -158,7 +158,7 @@ class UngdomsprogramregisterRepositoryTest {
     }
 
     @Test
-    fun `Forventer å finne deltakelse gitt oppgaveId`() {
+    fun `Forventer å finne deltakelse gitt oppgaveReferanse`() {
         val deltaker = DeltakerDAO(
             id = UUID.randomUUID(),
             deltakerIdent = "123",
@@ -173,10 +173,10 @@ class UngdomsprogramregisterRepositoryTest {
         )
         entityManager.persist(deltakelse)
 
-        val oppgaveId = UUID.randomUUID()
+        val oppgaveReferanse = UUID.randomUUID()
         deltakelse.leggTilOppgave(OppgaveDAO(
-            id = oppgaveId,
-            oppgaveReferanse = UUID.randomUUID(),
+            id = UUID.randomUUID(),
+            oppgaveReferanse = oppgaveReferanse,
             deltakelse = deltakelse,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
             oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
@@ -201,9 +201,9 @@ class UngdomsprogramregisterRepositoryTest {
         entityManager.persist(deltakelse)
         entityManager.flush()
 
-        val resultat = repository.finnDeltakelseGittOppgaveId(oppgaveId)
+        val resultat = repository.finnDeltakelseGittOppgaveReferanse(oppgaveReferanse)
         assertThat(resultat)
-            .withFailMessage("Forventet å finne deltakelse for oppgaveId %s, men fikk null", oppgaveId)
+            .withFailMessage("Forventet å finne deltakelse for oppgaveReferanse %s, men fikk null", oppgaveReferanse)
             .isNotNull
         assertThat(resultat!!.id)
             .withFailMessage("Forventet at deltakelse id skulle være %s", deltakelse.id)

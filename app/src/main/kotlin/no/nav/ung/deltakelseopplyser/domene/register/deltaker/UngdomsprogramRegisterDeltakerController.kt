@@ -51,11 +51,11 @@ class UngdomsprogramRegisterDeltakerController(
         return registerService.markerSomHarSøkt(id)
     }
 
-    @GetMapping("/{deltakelseId}/oppgave/{oppgaveId}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/{deltakelseId}/oppgave/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Henter en oppgave for en gitt deltakelse")
     @ResponseStatus(HttpStatus.OK)
-    fun hentOppgaveForDeltakelse(@PathVariable deltakelseId: UUID, @PathVariable oppgaveId: UUID): OppgaveDTO {
+    fun hentOppgaveForDeltakelse(@PathVariable deltakelseId: UUID, @PathVariable oppgaveReferanse: UUID): OppgaveDTO {
         val personIdent = tokenValidationContextHolder.personIdent()
-        return registerService.hentOppgaveForDeltakelse(personIdent, deltakelseId, oppgaveId)
+        return registerService.hentOppgaveForDeltakelse(personIdent, deltakelseId, oppgaveReferanse)
     }
 }
