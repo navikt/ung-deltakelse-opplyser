@@ -4,8 +4,7 @@ import java.time.ZonedDateTime
 import java.util.*
 
 data class OppgaveDTO(
-    val id: UUID,
-    val eksternReferanse: UUID,
+    val oppgaveReferanse: UUID,
     val oppgavetype: Oppgavetype,
     val oppgavetypeData: OppgavetypeDataDTO,
     val status: OppgaveStatus,

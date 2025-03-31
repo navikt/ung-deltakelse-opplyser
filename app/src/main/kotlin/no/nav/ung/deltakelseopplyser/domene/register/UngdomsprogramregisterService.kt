@@ -215,7 +215,7 @@ class UngdomsprogramregisterService(
         logger.info("Oppretter ny oppgave for bekreftelse av endret startdato")
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
-            eksternReferanse = UUID.randomUUID(),
+            oppgaveReferanse = UUID.randomUUID(),
             deltakelse = eksisterende,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
             oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
@@ -260,7 +260,7 @@ class UngdomsprogramregisterService(
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
-            eksternReferanse = UUID.randomUUID(),
+            oppgaveReferanse = UUID.randomUUID(),
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
             oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
                 nySluttdato = endrePeriodeDatoDTO.dato,
