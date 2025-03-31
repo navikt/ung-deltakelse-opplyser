@@ -13,7 +13,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppdaterOppgaveStatusDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
@@ -41,25 +40,21 @@ class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
 ) {
-    @PostMapping("/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PutMapping("/{oppgaveReferanse}/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Avbryter oppgave")
     @ResponseStatus(HttpStatus.OK)
-    fun avbrytOppgave(@RequestBody eksternReferanse: UUID) {
+    fun avbrytOppgave(@PathVariable oppgaveReferanse: UUID) {
 
         val deltakelse =
-            deltakelseRepository.finnDeltakelseGittOppgaveEksternReferanse(eksternReferanse)
-
-        if (deltakelse == null) {
-            throw ErrorResponseException(
+            deltakelseRepository.finnDeltakelseGittOppgaveReferanse(oppgaveReferanse) ?: throw ErrorResponseException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
-                    it.detail = "Fant ingen deltakelse med oppgave $eksternReferanse"
+                    it.detail = "Fant ingen deltakelse med oppgave $oppgaveReferanse"
                 },
                 null
             )
-        }
 
-        val oppgave = deltakelse.oppgaver.find { it.eksternReferanse == eksternReferanse }
+        val oppgave = deltakelse.oppgaver.find { it.oppgaveReferanse == oppgaveReferanse }
         oppgave!!.markerSomAvbrutt()
         deltakelse.oppdaterOppgave(oppgave);
         deltakelseRepository.save(deltakelse)
@@ -92,7 +87,7 @@ class OppgaveUngSakController(
 
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
-            eksternReferanse = opprettOppgaveDto.referanse,
+            oppgaveReferanse = opprettOppgaveDto.referanse,
             deltakelse = eksisterende,
             oppgavetype = Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT,
             oppgavetypeDataDAO = KontrollerRegisterInntektOppgaveTypeDataDAO(

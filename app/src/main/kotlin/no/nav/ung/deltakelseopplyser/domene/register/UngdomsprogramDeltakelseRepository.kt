@@ -29,19 +29,9 @@ interface UngdomsprogramDeltakelseRepository : JpaRepository<UngdomsprogramDelta
         value = """
         SELECT u.* FROM ungdomsprogram_deltakelse u
         INNER JOIN oppgave o on u.id = o.deltakelse_id
-        WHERE o.id = :oppgaveId
+        WHERE o.oppgave_referanse = :oppgaveReferanse
     """,
         nativeQuery = true
     )
-    fun finnDeltakelseGittOppgaveId(@Param("oppgaveId") oppgaveId: UUID): UngdomsprogramDeltakelseDAO?
-
-    @Query(
-        value = """
-        SELECT u.* FROM ungdomsprogram_deltakelse u
-        INNER JOIN oppgave o on u.id = o.deltakelse_id
-        WHERE o.ekstern_ref = :eksternRef
-    """,
-        nativeQuery = true
-    )
-    fun finnDeltakelseGittOppgaveEksternReferanse(@Param("eksternRef") eksternRef: UUID): UngdomsprogramDeltakelseDAO?
+    fun finnDeltakelseGittOppgaveReferanse(@Param("oppgaveReferanse") oppgaveReferanse: UUID): UngdomsprogramDeltakelseDAO?
 }

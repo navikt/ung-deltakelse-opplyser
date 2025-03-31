@@ -34,8 +34,8 @@ class OppgaveDAO(
     val id: UUID,
 
     @Id
-    @Column(name = "ekstern_ref", nullable = false)
-    val eksternReferanse: UUID,
+    @Column(name = "oppgave_referanse", nullable = false)
+    val oppgaveReferanse: UUID,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deltakelse_id", nullable = false)
@@ -65,8 +65,7 @@ class OppgaveDAO(
 ) {
     companion object {
         fun OppgaveDAO.tilDTO() = OppgaveDTO(
-            id = id,
-            eksternReferanse = eksternReferanse,
+            oppgaveReferanse = oppgaveReferanse,
             oppgavetype = oppgavetype,
             oppgavetypeData = oppgavetypeDataDAO.tilDTO(),
             status = status,
