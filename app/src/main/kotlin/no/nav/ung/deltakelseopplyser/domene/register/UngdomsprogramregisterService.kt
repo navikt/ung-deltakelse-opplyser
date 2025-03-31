@@ -294,11 +294,11 @@ class UngdomsprogramregisterService(
                 null
             )
 
-        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.id == oppgaveReferanse } ?: run {
+        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.oppgaveReferanse == oppgaveReferanse } ?: run {
             throw ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant ingen oppgave med id $oppgaveReferanse for deltakelse med id $deltakelseId"
+                    it.detail = "Fant ingen oppgave med oppgaveReferanse $oppgaveReferanse for deltakelse med id $deltakelseId"
                 },
                 null
             )
