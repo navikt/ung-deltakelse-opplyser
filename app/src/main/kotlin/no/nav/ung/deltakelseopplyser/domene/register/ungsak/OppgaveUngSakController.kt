@@ -123,29 +123,6 @@ class OppgaveUngSakController(
         return oppdatertDeltakelse.mapToDTO()
     }
 
-    @PutMapping("/{oppgaveId}/status", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Oppdaterer status på en oppgave")
-    @ResponseStatus(HttpStatus.OK)
-    fun oppdaterOppgaveStatus(
-        @PathVariable oppgaveId: UUID,
-        @RequestBody oppdaterOppgaveStatusDTO: OppdaterOppgaveStatusDTO
-    ): DeltakelseOpplysningDTO {
-        val eksisterendeDeltakelse = deltakelseRepository.finnDeltakelseGittOppgaveId(oppgaveId) ?: throw ErrorResponseException(
-            HttpStatus.NOT_FOUND,
-            ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                it.detail = "Fant ingen deltakelse med oppgaveId $oppgaveId"
-            },
-            null
-        )
-
-        val oppgave = eksisterendeDeltakelse.oppgaver.first { it.id == oppgaveId }
-        val oppdatertOppgave = oppgave.settStatus(oppdaterOppgaveStatusDTO.status)
-
-        eksisterendeDeltakelse.oppdaterOppgave(oppdatertOppgave)
-        val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
-        return oppdatertDeltakelse.mapToDTO()
-    }
-
     private fun gjelderSammePeriode(it: OppgaveDAO, ny: RegisterInntektOppgaveDTO): Boolean {
         val eksisterende: KontrollerRegisterinntektOppgavetypeDataDTO =
             it.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
