@@ -10,6 +10,16 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.Type
 import org.hibernate.type.SqlTypes
@@ -53,31 +63,64 @@ class OppgaveDAO(
     @Column(name = "løst_dato")
     var løstDato: ZonedDateTime? = null,
 ) {
+    companion object {
+        fun OppgaveDAO.tilDTO() = OppgaveDTO(
+            id = id,
+            eksternReferanse = eksternReferanse,
+            oppgavetype = oppgavetype,
+            oppgavetypeData = oppgavetypeDataDAO.tilDTO(),
+            status = status,
+            opprettetDato = opprettetDato,
+            løstDato = løstDato
+        )
+
+        fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
+            is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(
+                nyStartdato,
+                veilederRef,
+                meldingFraVeileder
+            )
+
+            is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(
+                nySluttdato,
+                veilederRef,
+                meldingFraVeileder
+            )
+
+            is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(
+                fomDato,
+                tomDato,
+                registerinntekt.tilDTO()
+            )
+        }
+
+        fun RegisterinntektDAO.tilDTO() = RegisterinntektDTO(
+            arbeidOgFrilansInntekter = arbeidOgFrilansInntekter.map {
+                ArbeidOgFrilansRegisterInntektDTO(
+                    it.inntekt,
+                    it.arbeidsgiver
+                )
+            },
+            ytelseInntekter = ytelseInntekter.map { YtelseRegisterInntektDTO(it.inntekt, it.ytelsetype) }
+        )
+    }
+
     override fun toString(): String {
         return "OppgaveDAO(id=$id, oppgavetype=$oppgavetype, status=$status, opprettetDato=$opprettetDato, losDato=$løstDato)"
     }
 
     fun markerSomLøst(): OppgaveDAO {
-        this.status = OppgaveStatus.LØST
-        this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
-        return this
+        return settStatus(OppgaveStatus.LØST)
     }
 
     fun markerSomAvbrutt(): OppgaveDAO {
         this.status = OppgaveStatus.AVBRUTT
+        return settStatus(OppgaveStatus.AVBRUTT)
+    }
+
+    fun settStatus(oppgaveStatus: OppgaveStatus): OppgaveDAO {
+        this.status = oppgaveStatus
         this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
         return this
     }
-}
-
-enum class Oppgavetype {
-    BEKREFT_ENDRET_STARTDATO,
-    BEKREFT_ENDRET_SLUTTDATO,
-    BEKREFT_AVVIK_REGISTERINNTEKT,
-}
-
-enum class OppgaveStatus {
-    LØST,
-    ULØST,
-    AVBRUTT
 }

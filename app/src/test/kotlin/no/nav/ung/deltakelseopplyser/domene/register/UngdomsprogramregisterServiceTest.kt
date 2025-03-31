@@ -7,15 +7,17 @@ import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
+import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService.Companion.rapporteringsPerioder
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretSluttdatoOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.EndretStartdatoOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.somDeltakelsePeriodInfo
-import no.nav.ung.deltakelseopplyser.domene.register.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.AfterAll
@@ -65,6 +67,9 @@ class UngdomsprogramregisterServiceTest {
 
     @MockkBean(relaxed = true)
     lateinit var pdlService: PdlService
+
+    @MockkBean
+    lateinit var rapportertInntektService: RapportertInntektService
 
     @BeforeEach
     fun setUp() {
@@ -186,10 +191,10 @@ class UngdomsprogramregisterServiceTest {
                 opprettetTidspunkt = ZonedDateTime.now(),
                 endretTidspunkt = null
             )
-        ).somDeltakelsePeriodInfo()
+        )
 
         assertThat(deltakelsePeriodInfos).hasSize(1)
-        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder
+        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder()
         assertThat(rapporteringsPerioder).hasSize(6)
 
         assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(LocalDate.parse("2024-01-15"))
@@ -225,10 +230,10 @@ class UngdomsprogramregisterServiceTest {
                 opprettetTidspunkt = ZonedDateTime.now(),
                 endretTidspunkt = null
             )
-        ).somDeltakelsePeriodInfo()
+        )
 
         assertThat(deltakelsePeriodInfos).hasSize(1)
-        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder
+        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder()
         assertThat(rapporteringsPerioder).hasSize(3)
 
         assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(toMånederSiden)

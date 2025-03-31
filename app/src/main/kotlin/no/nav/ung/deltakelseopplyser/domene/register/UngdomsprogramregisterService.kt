@@ -1,21 +1,22 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
-import no.nav.fpsak.tidsserie.LocalDateSegment
-import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveDTO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
+import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Oppgavetype
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseOpplysningDTO.Companion.mapToDTO
-import no.nav.ung.deltakelseopplyser.domene.register.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
@@ -27,7 +28,6 @@ import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
-import java.time.Period
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
@@ -38,44 +38,21 @@ class UngdomsprogramregisterService(
     private val deltakerService: DeltakerService,
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
+    private val rapportertInntektService: RapportertInntektService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
 
-        fun List<UngdomsprogramDeltakelseDAO>.somDeltakelsePeriodInfo(): List<DeltakelsePeriodInfo> =
-            map { deltakelseDAO ->
-                DeltakelsePeriodInfo(
-                    id = deltakelseDAO.id,
-                    fraOgMed = deltakelseDAO.getFom(),
-                    tilOgMed = deltakelseDAO.getTom(),
-                    harSøkt = deltakelseDAO.harSøkt,
-                    rapporteringsPerioder = deltakelseDAO.rapporteringsperioder(),
-                    oppgaver = deltakelseDAO.oppgaver.map { it.tilDTO() }
-                )
-            }
+        fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
 
-        private fun UngdomsprogramDeltakelseDAO.rapporteringsperioder(): List<RapportPeriodeinfoDTO> {
-            val deltakelsetidsLinje = LocalDateTimeline(
-                getFom(),
-                getTom() ?: LocalDate.now(),
-                this
+            return DeltakelseOpplysningDTO(
+                id = id,
+                deltaker = deltaker.mapToDTO(),
+                harSøkt = harSøkt,
+                fraOgMed = getFom(),
+                tilOgMed = getTom(),
+                oppgaver = oppgaver.map { it.tilDTO() }
             )
-
-            val deltakelseperiodeMånedForMånedTidslinje: LocalDateTimeline<UngdomsprogramDeltakelseDAO> =
-                deltakelsetidsLinje.splitAtRegular(
-                    getFom().withDayOfMonth(1),
-                    deltakelsetidsLinje.maxLocalDate,
-                    Period.ofMonths(1)
-                )
-
-            return deltakelseperiodeMånedForMånedTidslinje.toSegments()
-                .map { månedSegment: LocalDateSegment<UngdomsprogramDeltakelseDAO> ->
-                    RapportPeriodeinfoDTO(
-                        fraOgMed = månedSegment.fom,
-                        tilOgMed = månedSegment.tom,
-                        harRapportert = false
-                    )
-                }
         }
     }
 
@@ -185,7 +162,16 @@ class UngdomsprogramregisterService(
         val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
-        return ungdomsprogramDAOs.somDeltakelsePeriodInfo()
+        return ungdomsprogramDAOs.map { deltakelseDAO ->
+            DeltakelsePeriodInfo(
+                id = deltakelseDAO.id,
+                fraOgMed = deltakelseDAO.getFom(),
+                tilOgMed = deltakelseDAO.getTom(),
+                harSøkt = deltakelseDAO.harSøkt,
+                rapporteringsPerioder = rapportertInntektService.hentRapporteringsperioder(deltakelseDAO),
+                oppgaver = deltakelseDAO.oppgaver.map { it.tilDTO() }
+            )
+        }
     }
 
     fun avsluttDeltakelse(

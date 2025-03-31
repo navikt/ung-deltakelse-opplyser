@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.domene.register.veileder
+package no.nav.ung.deltakelseopplyser.kontrakt.veileder
 
 import java.time.LocalDate
 

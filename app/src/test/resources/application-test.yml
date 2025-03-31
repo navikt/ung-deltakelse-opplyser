@@ -26,6 +26,9 @@ topic:
     # topic.listener.ung-oppgavebekreftelse
     ung-oppgavebekreftelse:
       auto-offset-reset: earliest
+    # topic.listener.ung-rapportert-inntekt
+    ung-rapportert-inntekt:
+      auto-offset-reset: earliest
 
 no.nav:
   security:
