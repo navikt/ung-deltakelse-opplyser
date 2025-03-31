@@ -54,10 +54,7 @@ class RapportertInntektService(
         return deltakelse.rapporteringsPerioder()
             .map { rapporteringsPeriode ->
                 rapporterteInntekter
-                    .find {
-                        logger.info("Sjekker om inntekt ${it.periode} er innenfor periode $rapporteringsPeriode")
-                        it.periode.fraOgMed <= rapporteringsPeriode.fraOgMed && it.periode.tilOgMed >= rapporteringsPeriode.tilOgMed
-                    }
+                    .find { it.periode.fraOgMed <= rapporteringsPeriode.fraOgMed && it.periode.tilOgMed >= rapporteringsPeriode.tilOgMed }
                     ?.let { inntekt: OppgittInntektForPeriode ->
                         RapportPeriodeinfoDTO(
                             fraOgMed = rapporteringsPeriode.fraOgMed,
