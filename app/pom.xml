@@ -12,8 +12,6 @@
 
     <artifactId>app</artifactId>
 
-
-
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.1.20</kotlin.version>
@@ -27,6 +25,7 @@
         <fp-sak.version>2.7.1</fp-sak.version>
         <k9-format.version>11.4.4</k9-format.version>
         <graphql-kotlin.version>8.4.0</graphql-kotlin.version>
+        <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
     </properties>
     <dependencies>
 
@@ -169,6 +168,14 @@
         </dependency>
         <!-- Database -->
 
+        <!-- Mine Sider (Nav.no) -->
+        <dependency>
+            <groupId>no.nav.tms.varsel</groupId>
+            <artifactId>kotlin-builder</artifactId>
+            <version>${tms-kotlin-builder.version}</version>
+        </dependency>
+        <!-- Mine Sider (Nav.no) -->
+
         <!-- Kotlin -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -268,7 +275,9 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathLayoutType>custom</classpathLayoutType>
-                            <customClasspathLayout>lib/$${artifact.groupId}.$${artifact.artifactId}-$${artifact.version}$${dashClassifier?}.$${artifact.extension}</customClasspathLayout>
+                            <customClasspathLayout>
+                                lib/$${artifact.groupId}.$${artifact.artifactId}-$${artifact.version}$${dashClassifier?}.$${artifact.extension}
+                            </customClasspathLayout>
                             <mainClass>no.nav.ung.deltakelseopplyser.UngDeltakelseOpplyserApplicationKt</mainClass>
                         </manifest>
                     </archive>
@@ -346,5 +355,11 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>nav-maven-repo</id>
+            <url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>
+        </repository>
+    </repositories>
 
 </project>

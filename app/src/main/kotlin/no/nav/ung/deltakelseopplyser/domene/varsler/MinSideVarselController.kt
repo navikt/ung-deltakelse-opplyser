@@ -3,7 +3,6 @@ package no.nav.ung.deltakelseopplyser.minesider.varsler
 import io.swagger.v3.oas.annotations.Operation
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.tms.varsel.action.Tekst
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import org.springframework.http.MediaType
