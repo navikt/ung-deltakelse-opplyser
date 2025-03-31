@@ -40,10 +40,10 @@ class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
 ) {
-    @PutMapping("/{oppgaveReferanse}/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Avbryter oppgave")
     @ResponseStatus(HttpStatus.OK)
-    fun avbrytOppgave(@PathVariable oppgaveReferanse: UUID) {
+    fun avbrytOppgave(@RequestBody oppgaveReferanse: UUID) {
 
         val deltakelse =
             deltakelseRepository.finnDeltakelseGittOppgaveReferanse(oppgaveReferanse) ?: throw ErrorResponseException(
