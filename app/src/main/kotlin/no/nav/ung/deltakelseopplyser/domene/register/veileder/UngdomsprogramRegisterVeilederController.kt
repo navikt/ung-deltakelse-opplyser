@@ -39,14 +39,6 @@ class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
 ) {
 
-    @Deprecated("Bruk /innmelding i stedet")
-    @PostMapping("/legg-til", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Legg til en ny deltakelse i ungdomsprogrammet")
-    @ResponseStatus(HttpStatus.CREATED)
-    fun leggTilIProgram(@RequestBody deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
-        return registerService.leggTilIProgram(deltakelseOpplysningDTO)
-    }
-
     @PostMapping(
         "/deltaker/innmelding",
         produces = [MediaType.APPLICATION_JSON_VALUE],
@@ -117,21 +109,6 @@ class UngdomsprogramRegisterVeilederController(
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleDeltakelserGittDeltakerId(@PathVariable deltakerId: UUID): List<DeltakelseOpplysningDTO> {
         return registerService.hentAlleForDeltakerId(deltakerId)
-    }
-
-    @Deprecated("Bruk spesifikke endepunkter for å oppdatere en deltakelse")
-    @PutMapping(
-        "/deltakelse/{deltakelseId}/oppdater",
-        produces = [MediaType.APPLICATION_JSON_VALUE],
-        consumes = [MediaType.APPLICATION_JSON_VALUE]
-    )
-    @Operation(summary = "Oppdater opplysninger for en eksisterende deltakelse i ungdomsprogrammet")
-    @ResponseStatus(HttpStatus.OK)
-    fun oppdaterFraProgram(
-        @PathVariable deltakelseId: UUID,
-        @RequestBody deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
-    ): DeltakelseOpplysningDTO {
-        return registerService.oppdaterProgram(deltakelseId, deltakelseOpplysningDTO)
     }
 
     @DeleteMapping("/deltakelse/{deltakelseId}/fjern")

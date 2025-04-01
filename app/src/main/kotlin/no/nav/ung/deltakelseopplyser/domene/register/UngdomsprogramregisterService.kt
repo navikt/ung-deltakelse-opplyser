@@ -92,28 +92,6 @@ class UngdomsprogramregisterService(
         return true
     }
 
-    fun oppdaterProgram(
-        id: UUID,
-        deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
-    ): DeltakelseOpplysningDTO {
-        logger.info("Oppdaterer program for deltaker med $deltakelseOpplysningDTO")
-        val eksiterende = forsikreEksistererIProgram(id)
-
-        val periode = if (deltakelseOpplysningDTO.tilOgMed == null) {
-            Range.closedInfinite(deltakelseOpplysningDTO.fraOgMed)
-        } else {
-            Range.closed(deltakelseOpplysningDTO.fraOgMed, deltakelseOpplysningDTO.tilOgMed)
-        }
-
-        eksiterende.oppdaterPeriode(periode)
-
-        if (eksiterende.getTom() != null) {
-            sendEndretSluttdatoHendelseTilUngSak(eksiterende)
-        }
-
-        return deltakelseRepository.save(eksiterende).mapToDTO()
-    }
-
     fun markerSomHarSøkt(id: UUID): DeltakelseOpplysningDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererIProgram(id)
