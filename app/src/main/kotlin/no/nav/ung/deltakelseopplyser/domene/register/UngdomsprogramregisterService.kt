@@ -178,18 +178,45 @@ class UngdomsprogramregisterService(
 
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
+        val deltaker = eksisterende.deltaker
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
 
         val startdato = endrePeriodeDatoDTO.dato
         val sluttdato = eksisterende.getTom()
         forsikreGyldigPeriode(sluttdato, startdato)
 
+        // TODO: Opprettelse av denne oppgaven skal flyttes til ung-sak når det er klart
+        deltaker.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
+            ?.apply {
+                logger.info("Fant uløst oppgave for endring av startdato. Markerer som avbrutt.")
+                deltaker.oppdaterOppgave(markerSomAvbrutt())
+                deltakerService.oppdaterDeltaker(deltaker)
+            }
+
+        logger.info("Oppretter ny oppgave for bekreftelse av endret startdato")
+        val nyOppgave = OppgaveDAO(
+            id = UUID.randomUUID(),
+            oppgaveReferanse = UUID.randomUUID(),
+            deltaker = deltaker,
+            oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
+            oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
+                nyStartdato = startdato,
+                veilederRef = endrePeriodeDatoDTO.veilederRef,
+                meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
+            ),
+            status = OppgaveStatus.ULØST,
+            opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
+            løstDato = null
+        )
+
+        deltaker.oppdaterOppgave(nyOppgave)
+        deltakerService.oppdaterDeltaker(deltaker)
+
         val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (sluttdato != null) {
             Range.closed(startdato, sluttdato)
         } else {
             Range.closedInfinite(startdato)
         }
-
         eksisterende.oppdaterPeriode(nyPeriodeMedEndretStartdato)
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
 
@@ -200,14 +227,38 @@ class UngdomsprogramregisterService(
 
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
+        val deltaker = eksisterende.deltaker
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
 
         val startdato = eksisterende.getFom()
         val sluttdato = endrePeriodeDatoDTO.dato
         forsikreGyldigPeriode(sluttdato, startdato)
 
-        val nyPeriodeMedEndretSluttdato = Range.closed(eksisterende.getFom(), endrePeriodeDatoDTO.dato)
+        // TODO: Opprettelse av denne oppgaven skal flyttes til ung-sak når det er klart
+        deltaker.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
+            ?.apply {
+                logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som avbrutt.")
+                deltaker.oppdaterOppgave(markerSomAvbrutt())
+                deltakerService.oppdaterDeltaker(deltaker)
+            }
 
+        val bekreftEndretSluttdatoOppgave = OppgaveDAO(
+            id = UUID.randomUUID(),
+            oppgaveReferanse = UUID.randomUUID(),
+            oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
+            oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
+                nySluttdato = endrePeriodeDatoDTO.dato,
+                veilederRef = endrePeriodeDatoDTO.veilederRef,
+                meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
+            ),
+            status = OppgaveStatus.ULØST,
+            deltaker = deltaker
+        )
+
+        deltaker.oppdaterOppgave(bekreftEndretSluttdatoOppgave)
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        val nyPeriodeMedEndretSluttdato = Range.closed(eksisterende.getFom(), endrePeriodeDatoDTO.dato)
         eksisterende.oppdaterPeriode(nyPeriodeMedEndretSluttdato)
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
 
