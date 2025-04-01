@@ -29,13 +29,6 @@ class UngdomsprogramDeltakelseDAO(
     @Column(name = "har_sokt")
     var harSøkt: Boolean,
 
-    /**
-     * Oppgaver som er knyttet til deltakelsen.
-     * Oppgavene knyttes til denne deltakelsen via feltet `deltakelse` i OppgaveDAO.
-     */
-    @OneToMany(mappedBy = "deltakelse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
-    val oppgaver: MutableSet<OppgaveDAO> = mutableSetOf(),
-
     @CreatedDate
     @Column(name = "opprettet_tidspunkt")
     val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
@@ -53,21 +46,6 @@ class UngdomsprogramDeltakelseDAO(
             return null
         }
         return if (periode.hasMask(Range.UPPER_EXCLUSIVE)) periode.upper().minusDays(1) else periode.upper()
-    }
-
-    /**
-     * Legger til en ny oppgave i samlingen.
-     */
-    fun leggTilOppgave(oppgave: OppgaveDAO) {
-        oppgaver.add(oppgave)
-    }
-
-    /**
-     * Oppdaterer en eksisterende oppgave. Oppgaven med samme id blir erstattet.
-     */
-    fun oppdaterOppgave(oppdatertOppgave: OppgaveDAO) {
-        oppgaver.removeAll { it.id == oppdatertOppgave.id }
-        oppgaver.add(oppdatertOppgave)
     }
 
     /**

@@ -9,7 +9,7 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoOppgavetypeDataDTO
@@ -38,8 +38,8 @@ class OppgaveDAO(
     val oppgaveReferanse: UUID,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "deltakelse_id", nullable = false)
-    val deltakelse: UngdomsprogramDeltakelseDAO,
+    @JoinColumn(name = "deltaker_id", nullable = false)
+    val deltaker: DeltakerDAO,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "oppgavetype", nullable = false)

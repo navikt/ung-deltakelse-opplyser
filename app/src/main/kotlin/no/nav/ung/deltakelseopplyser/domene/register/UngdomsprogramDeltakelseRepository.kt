@@ -24,14 +24,4 @@ interface UngdomsprogramDeltakelseRepository : JpaRepository<UngdomsprogramDelta
         @Param("deltakterIder") deltakterIder: List<UUID>,
         @Param("periodeStartdato") periodeStartdato: LocalDate
     ): UngdomsprogramDeltakelseDAO?
-
-    @Query(
-        value = """
-        SELECT u.* FROM ungdomsprogram_deltakelse u
-        INNER JOIN oppgave o on u.id = o.deltakelse_id
-        WHERE o.oppgave_referanse = :oppgaveReferanse
-    """,
-        nativeQuery = true
-    )
-    fun finnDeltakelseGittOppgaveReferanse(@Param("oppgaveReferanse") oppgaveReferanse: UUID): UngdomsprogramDeltakelseDAO?
 }
