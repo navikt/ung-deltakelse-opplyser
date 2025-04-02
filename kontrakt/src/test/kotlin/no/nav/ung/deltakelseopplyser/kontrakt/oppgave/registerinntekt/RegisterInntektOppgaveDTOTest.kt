@@ -20,24 +20,26 @@ class RegisterInntektOppgaveDTOTest {
 
     @Test
     fun `skal serialisere input uten ytelse`() {
-        val utenYtelse = """{
-  "aktørId": "9915498730261",
-  "referanse": "0fc3f6fc-0eb1-4c51-9822-61ab3e71090b",
-  "frist": "2025-04-04T07:37:20.251902",
-  "fomDato": "2025-01-01",
-  "tomDato": "2025-02-01",
-  "registerInntekter": {
-    "registerinntekterForArbeidOgFrilans": [
-      {
-        "beløp": 10000,
-        "arbeidsgiverIdent": "910909088"
-      }
-    ]
-  }
-}"""
+        //language=JSON
+        val utenYtelse = """
+            {
+              "deltakerIdent": "99154987302",
+              "referanse": "0fc3f6fc-0eb1-4c51-9822-61ab3e71090b",
+              "frist": "2025-04-04T07:37:20.251902",
+              "fomDato": "2025-01-01",
+              "tomDato": "2025-02-01",
+              "registerInntekter": {
+                "registerinntekterForArbeidOgFrilans": [
+                  {
+                    "beløp": 10000,
+                    "arbeidsgiverIdent": "910909088"
+                  }
+                ]
+              }
+            }"""
         val dto: RegisterInntektOppgaveDTO = mapper.readValue(utenYtelse, RegisterInntektOppgaveDTO::class.java)
 
-        assertEquals("9915498730261", dto.deltakerIdent)
+        assertEquals("99154987302", dto.deltakerIdent)
         assertEquals(null, dto.registerInntekter.registerinntekterForYtelse)
         assertEquals(1, dto.registerInntekter.registerinntekterForArbeidOgFrilans?.size)
         assertEquals(10000, dto.registerInntekter.registerinntekterForArbeidOgFrilans?.get(0)?.beløp)
@@ -47,18 +49,20 @@ class RegisterInntektOppgaveDTOTest {
 
     @Test
     fun `skal serialisere input uten arbeidsinntekt`() {
-        val utenYtelse = """{
-  "aktørId": "9915498730261",
-  "referanse": "0fc3f6fc-0eb1-4c51-9822-61ab3e71090b",
-  "frist": "2025-04-04T07:37:20.251902",
-  "fomDato": "2025-01-01",
-  "tomDato": "2025-02-01",
-  "registerInntekter": {
-  }
-}"""
+        //language=JSON
+        val utenYtelse = """
+            {
+              "deltakerIdent": "99154987302",
+              "referanse": "0fc3f6fc-0eb1-4c51-9822-61ab3e71090b",
+              "frist": "2025-04-04T07:37:20.251902",
+              "fomDato": "2025-01-01",
+              "tomDato": "2025-02-01",
+              "registerInntekter": {
+              }
+            }"""
         val dto: RegisterInntektOppgaveDTO = mapper.readValue(utenYtelse, RegisterInntektOppgaveDTO::class.java)
 
-        assertEquals("9915498730261", dto.deltakerIdent)
+        assertEquals("99154987302", dto.deltakerIdent)
         assertEquals(null, dto.registerInntekter.registerinntekterForYtelse)
         assertEquals(null, dto.registerInntekter.registerinntekterForArbeidOgFrilans)
     }
