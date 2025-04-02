@@ -70,7 +70,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Oppretter oppgave")
     @ResponseStatus(HttpStatus.OK)
     fun opprettOppgaveForKontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): OppgaveDTO {
-        val deltaker = deltakerService.finnDeltakerGittIdent(opprettOppgaveDto.aktørId) ?: throw ErrorResponseException(
+        val deltaker = deltakerService.finnDeltakerGittIdent(opprettOppgaveDto.deltakerIdent) ?: throw ErrorResponseException(
             HttpStatus.NOT_FOUND,
             ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
                 it.detail = "Fant ingen deltaker å opprette oppgave for"
@@ -80,7 +80,7 @@ class OppgaveUngSakController(
 
         forsikreEksistererIProgram(deltaker)
 
-        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(opprettOppgaveDto.aktørId)
+        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(opprettOppgaveDto.deltakerIdent)
 
         val harUløstOppgaveForSammePeriode = deltakersOppgaver.stream()
             .anyMatch {

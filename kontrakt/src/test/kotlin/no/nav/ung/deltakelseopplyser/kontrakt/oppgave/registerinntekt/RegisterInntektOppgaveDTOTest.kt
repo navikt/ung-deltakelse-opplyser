@@ -37,7 +37,7 @@ class RegisterInntektOppgaveDTOTest {
 }"""
         val dto: RegisterInntektOppgaveDTO = mapper.readValue(utenYtelse, RegisterInntektOppgaveDTO::class.java)
 
-        assertEquals("9915498730261", dto.aktørId)
+        assertEquals("9915498730261", dto.deltakerIdent)
         assertEquals(null, dto.registerInntekter.registerinntekterForYtelse)
         assertEquals(1, dto.registerInntekter.registerinntekterForArbeidOgFrilans?.size)
         assertEquals(10000, dto.registerInntekter.registerinntekterForArbeidOgFrilans?.get(0)?.beløp)
@@ -58,7 +58,7 @@ class RegisterInntektOppgaveDTOTest {
 }"""
         val dto: RegisterInntektOppgaveDTO = mapper.readValue(utenYtelse, RegisterInntektOppgaveDTO::class.java)
 
-        assertEquals("9915498730261", dto.aktørId)
+        assertEquals("9915498730261", dto.deltakerIdent)
         assertEquals(null, dto.registerInntekter.registerinntekterForYtelse)
         assertEquals(null, dto.registerInntekter.registerinntekterForArbeidOgFrilans)
     }

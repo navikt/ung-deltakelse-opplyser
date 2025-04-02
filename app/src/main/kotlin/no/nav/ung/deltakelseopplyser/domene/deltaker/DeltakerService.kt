@@ -83,7 +83,7 @@ class DeltakerService(
         return deltakerRepository.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
     }
 
-    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia? {
+    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia {
         val deltakerDAO = deltakerRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
@@ -95,13 +95,13 @@ class DeltakerService(
             )
         }
 
-        val PdlPerson = hentPdlPerson(deltakerDAO.deltakerIdent)
+        val pdlPerson = hentPdlPerson(deltakerDAO.deltakerIdent)
 
         return DeltakerPersonlia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerDAO.deltakerIdent,
-            navn = PdlPerson.navn.first(),
-            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate()
+            navn = pdlPerson.navn.first(),
+            fødselsdato = pdlPerson.foedselsdato.first().toLocalDate()
         )
     }
 
