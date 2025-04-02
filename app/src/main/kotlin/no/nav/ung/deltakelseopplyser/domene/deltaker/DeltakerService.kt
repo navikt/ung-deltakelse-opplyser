@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -70,6 +71,18 @@ class DeltakerService(
         return deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker.mapToDAO())
     }
 
+    fun oppdaterDeltaker(deltaker: DeltakerDAO): DeltakerDAO {
+        return deltakerRepository.save(deltaker)
+    }
+
+    fun hentDeltakersOppgaver(deltakerIdentEllerAktørId: String): List<OppgaveDAO> {
+        return hentDeltakere(deltakerIdentEllerAktørId).flatMap { it.oppgaver }
+    }
+
+    fun finnDeltakerGittOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO? {
+        return deltakerRepository.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
+    }
+
     private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia? {
         val deltakerDAO = deltakerRepository.findById(id).orElseThrow {
             ErrorResponseException(
@@ -115,7 +128,7 @@ class DeltakerService(
         return deltakerRepository.findByDeltakerIdentIn(identer)
     }
 
-    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia? {
+    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia {
         val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
 
         val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)

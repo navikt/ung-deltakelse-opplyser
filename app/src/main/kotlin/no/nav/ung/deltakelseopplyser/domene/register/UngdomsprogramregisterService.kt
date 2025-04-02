@@ -51,7 +51,7 @@ class UngdomsprogramregisterService(
                 harSøkt = harSøkt,
                 fraOgMed = getFom(),
                 tilOgMed = getTom(),
-                oppgaver = oppgaver.map { it.tilDTO() }
+                oppgaver = deltaker.oppgaver.map { it.tilDTO() }
             )
         }
     }
@@ -90,28 +90,6 @@ class UngdomsprogramregisterService(
         }
 
         return true
-    }
-
-    fun oppdaterProgram(
-        id: UUID,
-        deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
-    ): DeltakelseOpplysningDTO {
-        logger.info("Oppdaterer program for deltaker med $deltakelseOpplysningDTO")
-        val eksiterende = forsikreEksistererIProgram(id)
-
-        val periode = if (deltakelseOpplysningDTO.tilOgMed == null) {
-            Range.closedInfinite(deltakelseOpplysningDTO.fraOgMed)
-        } else {
-            Range.closed(deltakelseOpplysningDTO.fraOgMed, deltakelseOpplysningDTO.tilOgMed)
-        }
-
-        eksiterende.oppdaterPeriode(periode)
-
-        if (eksiterende.getTom() != null) {
-            sendEndretSluttdatoHendelseTilUngSak(eksiterende)
-        }
-
-        return deltakelseRepository.save(eksiterende).mapToDTO()
     }
 
     fun markerSomHarSøkt(id: UUID): DeltakelseOpplysningDTO {
@@ -159,6 +137,7 @@ class UngdomsprogramregisterService(
         logger.info("Henter alle programopplysninger for deltaker.")
 
         val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
+        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdentEllerAktørId)
         val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
@@ -169,7 +148,7 @@ class UngdomsprogramregisterService(
                 tilOgMed = deltakelseDAO.getTom(),
                 harSøkt = deltakelseDAO.harSøkt,
                 rapporteringsPerioder = rapportertInntektService.hentRapporteringsperioder(deltakelseDAO),
-                oppgaver = deltakelseDAO.oppgaver.map { it.tilDTO() }
+                oppgaver = deltakersOppgaver.map { it.tilDTO() }
             )
         }
     }
@@ -199,24 +178,26 @@ class UngdomsprogramregisterService(
 
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
+        val deltaker = eksisterende.deltaker
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
 
         val startdato = endrePeriodeDatoDTO.dato
         val sluttdato = eksisterende.getTom()
         forsikreGyldigPeriode(sluttdato, startdato)
 
-        eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
+        // TODO: Opprettelse av denne oppgaven skal flyttes til ung-sak når det er klart
+        deltaker.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
                 logger.info("Fant uløst oppgave for endring av startdato. Markerer som avbrutt.")
-                eksisterende.oppdaterOppgave(markerSomAvbrutt())
-                deltakelseRepository.save(eksisterende)
+                deltaker.oppdaterOppgave(markerSomAvbrutt())
+                deltakerService.oppdaterDeltaker(deltaker)
             }
 
         logger.info("Oppretter ny oppgave for bekreftelse av endret startdato")
         val nyOppgave = OppgaveDAO(
             id = UUID.randomUUID(),
             oppgaveReferanse = UUID.randomUUID(),
-            deltakelse = eksisterende,
+            deltaker = deltaker,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
             oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
                 nyStartdato = startdato,
@@ -228,14 +209,15 @@ class UngdomsprogramregisterService(
             løstDato = null
         )
 
+        deltaker.oppdaterOppgave(nyOppgave)
+        deltakerService.oppdaterDeltaker(deltaker)
+
         val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (sluttdato != null) {
             Range.closed(startdato, sluttdato)
         } else {
             Range.closedInfinite(startdato)
         }
-
         eksisterende.oppdaterPeriode(nyPeriodeMedEndretStartdato)
-        eksisterende.leggTilOppgave(nyOppgave)
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
 
         sendEndretStartdatoHendelseTilUngSak(oppdatertDeltakelse)
@@ -245,17 +227,19 @@ class UngdomsprogramregisterService(
 
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
+        val deltaker = eksisterende.deltaker
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
 
         val startdato = eksisterende.getFom()
         val sluttdato = endrePeriodeDatoDTO.dato
         forsikreGyldigPeriode(sluttdato, startdato)
 
-        eksisterende.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
+        // TODO: Opprettelse av denne oppgaven skal flyttes til ung-sak når det er klart
+        deltaker.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
                 logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som avbrutt.")
-                eksisterende.oppdaterOppgave(markerSomAvbrutt())
-                deltakelseRepository.save(eksisterende)
+                deltaker.oppdaterOppgave(markerSomAvbrutt())
+                deltakerService.oppdaterDeltaker(deltaker)
             }
 
         val bekreftEndretSluttdatoOppgave = OppgaveDAO(
@@ -268,43 +252,19 @@ class UngdomsprogramregisterService(
                 meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
             ),
             status = OppgaveStatus.ULØST,
-            deltakelse = eksisterende
+            deltaker = deltaker
         )
 
-        val nyPeriodeMedEndretSluttdato = Range.closed(eksisterende.getFom(), endrePeriodeDatoDTO.dato)
+        deltaker.oppdaterOppgave(bekreftEndretSluttdatoOppgave)
+        deltakerService.oppdaterDeltaker(deltaker)
 
+        val nyPeriodeMedEndretSluttdato = Range.closed(eksisterende.getFom(), endrePeriodeDatoDTO.dato)
         eksisterende.oppdaterPeriode(nyPeriodeMedEndretSluttdato)
-        eksisterende.leggTilOppgave(bekreftEndretSluttdatoOppgave)
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
 
         sendEndretSluttdatoHendelseTilUngSak(oppdatertDeltakelse)
 
         return oppdatertDeltakelse.mapToDTO()
-    }
-
-    fun hentOppgaveForDeltakelse(personIdent: String, deltakelseId: UUID, oppgaveReferanse: UUID): OppgaveDTO {
-        logger.info("Henter oppgave med id $oppgaveReferanse for deltakelse med id $deltakelseId")
-        val deltakerIder = deltakerService.hentDeltakterIder(personIdent)
-        val deltakelse =
-            deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakerIder) ?: throw ErrorResponseException(
-                HttpStatus.NOT_FOUND,
-                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant ingen deltakelse med id $deltakelseId"
-                },
-                null
-            )
-
-        val oppgave = deltakelse.oppgaver.find { oppgave -> oppgave.oppgaveReferanse == oppgaveReferanse } ?: run {
-            throw ErrorResponseException(
-                HttpStatus.NOT_FOUND,
-                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
-                    it.detail = "Fant ingen oppgave med oppgaveReferanse $oppgaveReferanse for deltakelse med id $deltakelseId"
-                },
-                null
-            )
-        }
-
-        return oppgave.tilDTO()
     }
 
     private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: UngdomsprogramDeltakelseDAO) {
