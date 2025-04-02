@@ -8,29 +8,29 @@ import java.time.LocalDate
 interface OppgavetypeDataDTO
 
 data class EndretStartdatoOppgavetypeDataDTO(
-    val nyStartdato: LocalDate,
-    val veilederRef: String,
-    val meldingFraVeileder: String?,
+    @JsonProperty("nyStartdato") val nyStartdato: LocalDate,
+    @JsonProperty("veilederRef") val veilederRef: String,
+    @JsonProperty("meldingFraVeileder") val meldingFraVeileder: String?,
 ) : OppgavetypeDataDTO
 
 data class EndretSluttdatoOppgavetypeDataDTO(
-    val nySluttdato: LocalDate,
-    val veilederRef: String,
-    val meldingFraVeileder: String?,
+    @JsonProperty("nySluttdato") val nySluttdato: LocalDate,
+    @JsonProperty("veilederRef") val veilederRef: String,
+    @JsonProperty("meldingFraVeileder") val meldingFraVeileder: String?,
 ) : OppgavetypeDataDTO
 
 data class KontrollerRegisterinntektOppgavetypeDataDTO(
-    val fraOgMed: LocalDate,
-    val tilOgMed: LocalDate,
-    val registerinntekt: RegisterinntektDTO,
+    @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
+    @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
+    @JsonProperty("registerinntekt") val registerinntekt: RegisterinntektDTO,
 ) : OppgavetypeDataDTO
 
 data class RegisterinntektDTO(
-    val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDTO>,
-    val ytelseInntekter: List<YtelseRegisterInntektDTO>,
-    val totalInntektArbeidOgFrilans: Int = arbeidOgFrilansInntekter.sumOf { it.inntekt },
-    val totalInntektYtelse: Int = ytelseInntekter.sumOf { it.inntekt },
-    val totalInntekt: Int = totalInntektArbeidOgFrilans + totalInntektYtelse,
+    @JsonProperty("arbeidOgFrilansInntekter") val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDTO>,
+    @JsonProperty("ytelseInntekter") val ytelseInntekter: List<YtelseRegisterInntektDTO>,
+    @JsonProperty("totalInntektArbeidOgFrilans") val totalInntektArbeidOgFrilans: Int = arbeidOgFrilansInntekter.sumOf { it.inntekt },
+    @JsonProperty("totalInntektYtelse") val totalInntektYtelse: Int = ytelseInntekter.sumOf { it.inntekt },
+    @JsonProperty("totalInntekt") val totalInntekt: Int = totalInntektArbeidOgFrilans + totalInntektYtelse,
 )
 
 data class ArbeidOgFrilansRegisterInntektDTO(

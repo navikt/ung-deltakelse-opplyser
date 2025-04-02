@@ -1,8 +1,9 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.deltaker
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.*
 
 data class DeltakerDTO(
-    val id: UUID ? = null,
-    val deltakerIdent: String,
+    @JsonProperty("id") val id: UUID ? = null,
+    @JsonProperty("deltakerIdent") val deltakerIdent: String,
 )

@@ -1,13 +1,14 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.ZonedDateTime
 import java.util.*
 
 data class OppgaveDTO(
-    val oppgaveReferanse: UUID,
-    val oppgavetype: Oppgavetype,
-    val oppgavetypeData: OppgavetypeDataDTO,
-    val status: OppgaveStatus,
-    val opprettetDato: ZonedDateTime,
-    val løstDato: ZonedDateTime?,
+    @JsonProperty("oppgaveReferanse") val oppgaveReferanse: UUID,
+    @JsonProperty("oppgavetype") val oppgavetype: Oppgavetype,
+    @JsonProperty("oppgavetypeData") val oppgavetypeData: OppgavetypeDataDTO,
+    @JsonProperty("status") val status: OppgaveStatus,
+    @JsonProperty("opprettetDato") val opprettetDato: ZonedDateTime,
+    @JsonProperty("løstDato") val løstDato: ZonedDateTime?,
 )

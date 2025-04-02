@@ -1,13 +1,14 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.deltaker
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.math.BigDecimal
 import java.time.LocalDate
 
 data class RapportPeriodeinfoDTO(
-    val fraOgMed: LocalDate,
-    val tilOgMed: LocalDate,
-    val harRapportert: Boolean,
-    val arbeidstakerOgFrilansInntekt: BigDecimal? = null,
-    val inntektFraYtelse: BigDecimal? = null,
-    val summertInntekt: BigDecimal? = arbeidstakerOgFrilansInntekt?.add(inntektFraYtelse ?: BigDecimal.ZERO) ?: null,
+    @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
+    @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
+    @JsonProperty("harRapportert") val harRapportert: Boolean,
+    @JsonProperty("arbeidstakerOgFrilansInntekt") val arbeidstakerOgFrilansInntekt: BigDecimal? = null,
+    @JsonProperty("inntektFraYtelse") val inntektFraYtelse: BigDecimal? = null,
+    @JsonProperty("summertInntekt") val summertInntekt: BigDecimal? = arbeidstakerOgFrilansInntekt?.add(inntektFraYtelse ?: BigDecimal.ZERO) ?: null,
 )
