@@ -74,17 +74,9 @@ class OppgaveDAO(
         )
 
         fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
-            is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(
-                nyStartdato,
-                veilederRef,
-                meldingFraVeileder
-            )
+            is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(nyStartdato)
 
-            is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(
-                nySluttdato,
-                veilederRef,
-                meldingFraVeileder
-            )
+            is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(nySluttdato)
 
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(
                 fomDato,

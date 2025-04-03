@@ -278,7 +278,6 @@ class UngdomsprogramregisterServiceTest {
         assertThat(oppgaver).hasSize(1)
         val oppgave = oppgaver.first()
         assertThat(oppgave.oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_STARTDATO)
-        assertThat((oppgave.oppgavetypeData as EndretStartdatoOppgavetypeDataDTO).veilederRef).isEqualTo("abc-123")
     }
 
     @Test
@@ -326,12 +325,7 @@ class UngdomsprogramregisterServiceTest {
         assertThat(oppgaver).hasSize(1)
         val oppgave = oppgaver.first()
         assertThat(oppgave.oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_SLUTTDATO)
-        assertThat((oppgave.oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO).veilederRef).isEqualTo("abc-123")
     }
 
-    private fun mockEndrePeriodeDTO(onsdag: LocalDate) = EndrePeriodeDatoDTO(
-        dato = onsdag,
-        veilederRef = "abc-123",
-        meldingFraVeileder = "Dette er en melding"
-    )
+    private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
 }

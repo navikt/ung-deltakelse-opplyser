@@ -72,9 +72,7 @@ class DeltakerRepositoryTest {
                 deltaker = deltaker,
                 oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
                 oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
-                    nyStartdato = LocalDate.now(),
-                    veilederRef = "abc-123",
-                    meldingFraVeileder = null
+                    nyStartdato = LocalDate.now()
                 ),
                 status = OppgaveStatus.ULØST,
             )
@@ -87,9 +85,7 @@ class DeltakerRepositoryTest {
                 deltaker = deltaker,
                 oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
                 oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
-                    nySluttdato = LocalDate.now(),
-                    veilederRef = "abc-123",
-                    meldingFraVeileder = null
+                    nySluttdato = LocalDate.now()
                 ),
                 status = OppgaveStatus.ULØST,
             )

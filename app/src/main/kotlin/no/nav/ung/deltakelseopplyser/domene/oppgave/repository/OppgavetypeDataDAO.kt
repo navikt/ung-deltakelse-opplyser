@@ -30,15 +30,11 @@ import java.time.LocalDate
 sealed class OppgavetypeDataDAO
 
 data class EndretStartdatoOppgavetypeDataDAO(
-    @JsonFormat(pattern = "yyyy-MM-dd") val nyStartdato: LocalDate,
-    @JsonProperty(defaultValue = "n/a") val veilederRef: String = "n/a",
-    val meldingFraVeileder: String?,
+    @JsonFormat(pattern = "yyyy-MM-dd") val nyStartdato: LocalDate
 ) : OppgavetypeDataDAO()
 
 data class EndretSluttdatoOppgavetypeDataDAO(
-    @JsonFormat(pattern = "yyyy-MM-dd") val nySluttdato: LocalDate,
-    @JsonProperty(defaultValue = "n/a") val veilederRef: String,
-    val meldingFraVeileder: String?,
+    @JsonFormat(pattern = "yyyy-MM-dd") val nySluttdato: LocalDate
 ) : OppgavetypeDataDAO()
 
 data class KontrollerRegisterInntektOppgaveTypeDataDAO(

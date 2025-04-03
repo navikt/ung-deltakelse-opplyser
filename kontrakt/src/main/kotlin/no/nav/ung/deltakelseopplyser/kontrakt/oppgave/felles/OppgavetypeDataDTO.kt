@@ -9,14 +9,10 @@ interface OppgavetypeDataDTO
 
 data class EndretStartdatoOppgavetypeDataDTO(
     @JsonProperty("nyStartdato") val nyStartdato: LocalDate,
-    @JsonProperty("veilederRef") val veilederRef: String,
-    @JsonProperty("meldingFraVeileder") val meldingFraVeileder: String?,
 ) : OppgavetypeDataDTO
 
 data class EndretSluttdatoOppgavetypeDataDTO(
-    @JsonProperty("nySluttdato") val nySluttdato: LocalDate,
-    @JsonProperty("veilederRef") val veilederRef: String,
-    @JsonProperty("meldingFraVeileder") val meldingFraVeileder: String?,
+    @JsonProperty("nySluttdato") val nySluttdato: LocalDate
 ) : OppgavetypeDataDTO
 
 data class KontrollerRegisterinntektOppgavetypeDataDTO(

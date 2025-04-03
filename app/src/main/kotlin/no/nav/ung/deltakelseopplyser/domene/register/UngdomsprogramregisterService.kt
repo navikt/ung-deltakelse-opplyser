@@ -200,9 +200,7 @@ class UngdomsprogramregisterService(
             deltaker = deltaker,
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
             oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
-                nyStartdato = startdato,
-                veilederRef = endrePeriodeDatoDTO.veilederRef,
-                meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
+                nyStartdato = startdato
             ),
             status = OppgaveStatus.ULØST,
             opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
@@ -247,9 +245,7 @@ class UngdomsprogramregisterService(
             oppgaveReferanse = UUID.randomUUID(),
             oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
             oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
-                nySluttdato = endrePeriodeDatoDTO.dato,
-                veilederRef = endrePeriodeDatoDTO.veilederRef,
-                meldingFraVeileder = endrePeriodeDatoDTO.meldingFraVeileder
+                nySluttdato = endrePeriodeDatoDTO.dato
             ),
             status = OppgaveStatus.ULØST,
             deltaker = deltaker
