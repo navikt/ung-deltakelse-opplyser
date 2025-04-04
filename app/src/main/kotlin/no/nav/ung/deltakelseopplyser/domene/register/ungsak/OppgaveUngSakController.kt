@@ -63,18 +63,11 @@ class OppgaveUngSakController(
         logger.info("Avbryter oppgave med referanse $oppgaveReferanse")
 
         logger.info("Henter deltaker med oppgaveReferanse $oppgaveReferanse")
-        val deltaker =
-            deltakerService.finnDeltakerGittOppgaveReferanse(oppgaveReferanse) ?: throw ErrorResponseException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
-                    it.detail = "Fant ingen deltakelse med oppgave $oppgaveReferanse"
-                },
-                null
-            )
+        val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
 
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
-        val oppgave =
-            deltaker.oppgaver.find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
+            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
         oppgave.markerSomAvbrutt()
@@ -82,6 +75,39 @@ class OppgaveUngSakController(
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltaker.oppdaterOppgave(oppgave);
         deltakerService.oppdaterDeltaker(deltaker)
+    }
+
+    @PostMapping("/utløp", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Setter oppgave til utløpt")
+    @ResponseStatus(HttpStatus.OK)
+    fun utløperOppgave(@RequestBody oppgaveReferanse: UUID) {
+        logger.info("Utløper oppgave med referanse $oppgaveReferanse")
+
+        logger.info("Henter deltaker med oppgaveReferanse $oppgaveReferanse")
+        val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
+
+        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
+            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
+
+        logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
+        oppgave.markerSomUtløpt()
+
+        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
+        deltaker.oppdaterOppgave(oppgave);
+        deltakerService.oppdaterDeltaker(deltaker)
+    }
+
+    private fun deltakerEksistererMedOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO {
+        val deltaker =
+            deltakerService.finnDeltakerGittOppgaveReferanse(oppgaveReferanse) ?: throw ErrorResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
+                    it.detail = "Fant ingen deltaker med oppgave $oppgaveReferanse"
+                },
+                null
+            )
+        return deltaker
     }
 
     @Deprecated("Bruk /opprett/kontroll/registerinntekt")

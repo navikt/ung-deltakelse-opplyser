@@ -105,7 +105,10 @@ class OppgaveDAO(
     }
 
     fun markerSomAvbrutt(): OppgaveDAO {
-        this.status = OppgaveStatus.AVBRUTT
+        return settStatus(OppgaveStatus.AVBRUTT)
+    }
+
+    fun markerSomUtløpt(): OppgaveDAO {
         return settStatus(OppgaveStatus.AVBRUTT)
     }
 
