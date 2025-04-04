@@ -5,9 +5,10 @@ import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -22,6 +23,7 @@ class DeltakerService(
 ) {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(DeltakerService::class.java)
         fun DeltakerDTO.mapToDAO(): DeltakerDAO {
             return DeltakerDAO(deltakerIdent = deltakerIdent)
         }
@@ -76,7 +78,10 @@ class DeltakerService(
     }
 
     fun hentDeltakersOppgaver(deltakerIdentEllerAktørId: String): List<OppgaveDAO> {
-        return hentDeltakere(deltakerIdentEllerAktørId).flatMap { it.oppgaver }
+        logger.info("Henter deltakers oppgaver")
+        val oppgaver = hentDeltakere(deltakerIdentEllerAktørId).flatMap { it.oppgaver }
+        logger.info("Fant ${oppgaver.size} oppgaver for deltaker.")
+        return oppgaver
     }
 
     fun finnDeltakerGittOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO? {
