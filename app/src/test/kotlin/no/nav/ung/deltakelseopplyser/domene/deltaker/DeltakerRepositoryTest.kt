@@ -101,4 +101,49 @@ class DeltakerRepositoryTest {
             .withFailMessage("Forventet at deltaker id skulle være %s", deltaker.id)
             .isEqualTo(deltaker.id)
     }
+
+    @Test
+    fun `Tester at oppgave blir oppdatert`() {
+        val deltaker = DeltakerDAO(
+            id = UUID.randomUUID(),
+            deltakerIdent = "123",
+            deltakelseList = mutableListOf(),
+        )
+        entityManager.persist(deltaker)
+
+        val deltakelse = UngdomsprogramDeltakelseDAO(
+            deltaker = deltaker,
+            harSøkt = false,
+            periode = Range.closed(LocalDate.now(), LocalDate.now().plusWeeks(1))
+        )
+        entityManager.persist(deltakelse)
+
+        val oppgaveReferanse = UUID.randomUUID()
+        deltaker.leggTilOppgave(
+            OppgaveDAO(
+                id = UUID.randomUUID(),
+                oppgaveReferanse = oppgaveReferanse,
+                deltaker = deltaker,
+                oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
+                oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
+                    nyStartdato = LocalDate.now()
+                ),
+                status = OppgaveStatus.ULØST,
+            )
+        )
+
+        entityManager.persist(deltaker)
+        entityManager.flush()
+
+        val oppdatertDeltaker = deltakerRepository.findByDeltakerIdent(deltaker.deltakerIdent)?.let {
+            assertThat(it.oppgaver).isNotEmpty
+            val oppgaveDAO = it.oppgaver.first()
+            oppgaveDAO.markerSomLøst()
+            deltakerRepository.save(it)
+        }
+
+        assertThat(oppdatertDeltaker!!.oppgaver.first().status)
+            .withFailMessage("Forventet at oppgave skulle være løst")
+            .isEqualTo(OppgaveStatus.LØST)
+    }
 }

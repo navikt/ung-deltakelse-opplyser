@@ -30,8 +30,7 @@ class OppgaveService(
 
 
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
-        val løstOppgave = oppgave.markerSomLøst()
-        deltaker.oppdaterOppgave(løstOppgave)
+        oppgave.markerSomLøst()
 
         deltakerService.oppdaterDeltaker(deltaker)
         // TODO: Inaktivere oppgave på mine-sider.

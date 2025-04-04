@@ -189,7 +189,7 @@ class UngdomsprogramregisterService(
         deltaker.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
                 logger.info("Fant uløst oppgave for endring av startdato. Markerer som avbrutt.")
-                deltaker.oppdaterOppgave(markerSomAvbrutt())
+                markerSomAvbrutt()
                 deltakerService.oppdaterDeltaker(deltaker)
             }
 
@@ -207,7 +207,7 @@ class UngdomsprogramregisterService(
             løstDato = null
         )
 
-        deltaker.oppdaterOppgave(nyOppgave)
+        deltaker.leggTilOppgave(nyOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
 
         val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (sluttdato != null) {
@@ -236,7 +236,7 @@ class UngdomsprogramregisterService(
         deltaker.oppgaver.find { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
             ?.apply {
                 logger.info("Fant uløst oppgave for endring av sluttdato. Markerer som avbrutt.")
-                deltaker.oppdaterOppgave(markerSomAvbrutt())
+                markerSomAvbrutt()
                 deltakerService.oppdaterDeltaker(deltaker)
             }
 
@@ -251,7 +251,7 @@ class UngdomsprogramregisterService(
             deltaker = deltaker
         )
 
-        deltaker.oppdaterOppgave(bekreftEndretSluttdatoOppgave)
+        deltaker.leggTilOppgave(bekreftEndretSluttdatoOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
 
         val nyPeriodeMedEndretSluttdato = Range.closed(eksisterende.getFom(), endrePeriodeDatoDTO.dato)

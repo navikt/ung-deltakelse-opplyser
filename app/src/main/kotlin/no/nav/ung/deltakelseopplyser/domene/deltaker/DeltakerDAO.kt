@@ -33,12 +33,4 @@ class DeltakerDAO(
     fun leggTilOppgave(oppgave: OppgaveDAO) {
         oppgaver.add(oppgave)
     }
-
-    /**
-     * Oppdaterer en eksisterende oppgave. Oppgaven med samme id blir erstattet.
-     */
-    fun oppdaterOppgave(oppdatertOppgave: OppgaveDAO) {
-        oppgaver.removeAll { it.id == oppdatertOppgave.id }
-        oppgaver.add(oppdatertOppgave)
-    }
 }

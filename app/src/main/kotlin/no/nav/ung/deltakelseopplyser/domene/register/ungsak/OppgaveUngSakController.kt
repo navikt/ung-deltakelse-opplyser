@@ -73,7 +73,6 @@ class OppgaveUngSakController(
         oppgave.markerSomAvbrutt()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltaker.oppdaterOppgave(oppgave)
         deltakerService.oppdaterDeltaker(deltaker)
     }
 
@@ -94,7 +93,6 @@ class OppgaveUngSakController(
         oppgave.markerSomUtløpt()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltaker.oppdaterOppgave(oppgave)
         deltakerService.oppdaterDeltaker(deltaker)
     }
 
