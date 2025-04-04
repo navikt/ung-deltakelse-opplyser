@@ -109,7 +109,7 @@ class OppgaveDAO(
     }
 
     fun markerSomUtløpt(): OppgaveDAO {
-        return settStatus(OppgaveStatus.AVBRUTT)
+        return settStatus(OppgaveStatus.UTLØPT)
     }
 
     fun settStatus(oppgaveStatus: OppgaveStatus): OppgaveDAO {
