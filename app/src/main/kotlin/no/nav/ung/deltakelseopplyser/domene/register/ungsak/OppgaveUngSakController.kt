@@ -184,7 +184,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Oppretter oppgave for endret startdato")
     @ResponseStatus(HttpStatus.OK)
     fun opprettOppgaveForEndretStartdato(@RequestBody endretPeriodeOppgaveDTO: EndretPeriodeOppgaveDTO): OppgaveDTO {
-        logger.info("Oppretter oppgave for endret startdato")
+        logger.info("Oppretter oppgave for endret startdato med referanse ${endretPeriodeOppgaveDTO.oppgaveReferanse}")
         val deltaker = forsikreEksistererIProgram(endretPeriodeOppgaveDTO.deltakerIdent)
 
         val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
@@ -218,7 +218,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Oppretter oppgave for endret sluttdato")
     @ResponseStatus(HttpStatus.OK)
     fun opprettOppgaveForEndretSluttdato(@RequestBody endretPeriodeOppgaveDTO: EndretPeriodeOppgaveDTO): OppgaveDTO {
-        logger.info("Oppretter oppgave for endret sluttdato")
+        logger.info("Oppretter oppgave for endret sluttdato med referanse ${endretPeriodeOppgaveDTO.oppgaveReferanse}")
         val deltaker = forsikreEksistererIProgram(endretPeriodeOppgaveDTO.deltakerIdent)
 
         val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
