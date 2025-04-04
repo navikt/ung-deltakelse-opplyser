@@ -77,7 +77,7 @@ class OppgaveUngSakController(
         deltakerService.oppdaterDeltaker(deltaker)
     }
 
-    @PostMapping("/utløp", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/utløpt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Setter oppgave til utløpt")
     @ResponseStatus(HttpStatus.OK)
     fun utløperOppgave(@RequestBody oppgaveReferanse: UUID) {
