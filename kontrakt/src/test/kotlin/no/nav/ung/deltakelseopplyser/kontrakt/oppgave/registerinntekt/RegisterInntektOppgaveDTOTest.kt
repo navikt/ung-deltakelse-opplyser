@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class EndretPeriodeOppgaveDTOTest {
+class RegisterInntektOppgaveDTOTest {
 
 
     internal val mapper = ObjectMapper().registerModule(JavaTimeModule())
