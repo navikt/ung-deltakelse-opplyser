@@ -62,12 +62,12 @@ class OppgaveUngSakController(
     fun avbrytOppgave(@RequestBody oppgaveReferanse: UUID) {
         logger.info("Avbryter oppgave med referanse $oppgaveReferanse")
 
-        logger.info("Henter deltaker med oppgaveReferanse $oppgaveReferanse")
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
 
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
         val oppgave = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
+            .also { forsikreOppgaveIkkeErLøst(it) }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
         oppgave.markerSomAvbrutt()
@@ -83,12 +83,12 @@ class OppgaveUngSakController(
     fun utløperOppgave(@RequestBody oppgaveReferanse: UUID) {
         logger.info("Utløper oppgave med referanse $oppgaveReferanse")
 
-        logger.info("Henter deltaker med oppgaveReferanse $oppgaveReferanse")
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
 
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
         val oppgave = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
+            .also { forsikreOppgaveIkkeErLøst(it) }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
         oppgave.markerSomUtløpt()
@@ -96,18 +96,6 @@ class OppgaveUngSakController(
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltaker.oppdaterOppgave(oppgave);
         deltakerService.oppdaterDeltaker(deltaker)
-    }
-
-    private fun deltakerEksistererMedOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO {
-        val deltaker =
-            deltakerService.finnDeltakerGittOppgaveReferanse(oppgaveReferanse) ?: throw ErrorResponseException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
-                    it.detail = "Fant ingen deltaker med oppgave $oppgaveReferanse"
-                },
-                null
-            )
-        return deltaker
     }
 
     @Deprecated("Bruk /opprett/kontroll/registerinntekt")
@@ -163,24 +151,25 @@ class OppgaveUngSakController(
 
         val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(opprettOppgaveDto.deltakerIdent)
 
-        val harUløstOppgaveForSammePeriode = deltakersOppgaver.stream()
+        deltakersOppgaver.stream()
             .anyMatch {
                 it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT &&
                         it.status == OppgaveStatus.ULØST &&
                         gjelderSammePeriode(it, opprettOppgaveDto)
             }
-
-        if (harUløstOppgaveForSammePeriode) {
-            logger.error("Det finnes allerede en uløst oppgave for samme periode")
-            throw ErrorResponseException(
-                HttpStatus.CONFLICT,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.CONFLICT,
-                    "Det finnes allerede en uløst oppgave for samme periode"
-                ),
-                null
-            )
-        }
+            .also { harUløstOppgaveForSammePeriode ->
+                if (harUløstOppgaveForSammePeriode) {
+                    logger.error("Det finnes allerede en uløst oppgave for samme periode")
+                    throw ErrorResponseException(
+                        HttpStatus.CONFLICT,
+                        ProblemDetail.forStatusAndDetail(
+                            HttpStatus.CONFLICT,
+                            "Det finnes allerede en uløst oppgave for samme periode"
+                        ),
+                        null
+                    )
+                }
+            }
 
         return opprettOppgave(
             deltaker = deltaker,
@@ -215,21 +204,21 @@ class OppgaveUngSakController(
 
         val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
 
-        val harUløstEndreStartdatoOppgave = deltakersOppgaver
-            .stream()
+        deltakersOppgaver.stream()
             .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
-
-        if (harUløstEndreStartdatoOppgave) {
-            logger.error("Det finnes allerede en uløst oppgave for endret startdato")
-            throw ErrorResponseException(
-                HttpStatus.CONFLICT,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.CONFLICT,
-                    "Det finnes allerede en uløst oppgave for endret startdato"
-                ),
-                null
-            )
-        }
+            .also { harUløstEndreStartdatoOppgave ->
+                if (harUløstEndreStartdatoOppgave) {
+                    logger.error("Det finnes allerede en uløst oppgave for endret startdato")
+                    throw ErrorResponseException(
+                        HttpStatus.CONFLICT,
+                        ProblemDetail.forStatusAndDetail(
+                            HttpStatus.CONFLICT,
+                            "Det finnes allerede en uløst oppgave for endret startdato"
+                        ),
+                        null
+                    )
+                }
+            }
 
         return opprettOppgave(
             deltaker = deltaker,
@@ -249,21 +238,21 @@ class OppgaveUngSakController(
 
         val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
 
-        val harUløstEndreSluttdatoOppgave = deltakersOppgaver
-            .stream()
+        deltakersOppgaver.stream()
             .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
-
-        if (harUløstEndreSluttdatoOppgave) {
-            logger.info("Det finnes allerede en uløst oppgave for endret sluttdato")
-            throw ErrorResponseException(
-                HttpStatus.CONFLICT,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.CONFLICT,
-                    "Det finnes allerede en uløst oppgave for endret sluttdato"
-                ),
-                null
-            )
-        }
+            .also { harUløstEndreSluttdatoOppgave ->
+                if (harUløstEndreSluttdatoOppgave) {
+                    logger.info("Det finnes allerede en uløst oppgave for endret sluttdato")
+                    throw ErrorResponseException(
+                        HttpStatus.CONFLICT,
+                        ProblemDetail.forStatusAndDetail(
+                            HttpStatus.CONFLICT,
+                            "Det finnes allerede en uløst oppgave for endret sluttdato"
+                        ),
+                        null
+                    )
+                }
+            }
 
         return opprettOppgave(
             deltaker = deltaker,
@@ -333,10 +322,43 @@ class OppgaveUngSakController(
         return deltaker
     }
 
-    private fun gjelderSammePeriode(oppgaveDAO: OppgaveDAO, registerInntektOppgaveDTO: RegisterInntektOppgaveDTO): Boolean {
+    private fun gjelderSammePeriode(
+        oppgaveDAO: OppgaveDAO,
+        registerInntektOppgaveDTO: RegisterInntektOppgaveDTO,
+    ): Boolean {
         val eksisterende: KontrollerRegisterinntektOppgavetypeDataDTO =
             oppgaveDAO.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
         logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [${eksisterende.fraOgMed}/${eksisterende.tilOgMed}], Ny: [${registerInntektOppgaveDTO.fomDato}/${registerInntektOppgaveDTO.tomDato}]")
-        return !eksisterende.fraOgMed.isAfter(registerInntektOppgaveDTO.tomDato) && !eksisterende.tilOgMed.isBefore(registerInntektOppgaveDTO.fomDato)
+        return !eksisterende.fraOgMed.isAfter(registerInntektOppgaveDTO.tomDato) && !eksisterende.tilOgMed.isBefore(
+            registerInntektOppgaveDTO.fomDato
+        )
+    }
+
+    private fun forsikreOppgaveIkkeErLøst(oppgave: OppgaveDAO) {
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.error("Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres.")
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres."
+                ),
+                null
+            )
+        }
+    }
+
+
+    private fun deltakerEksistererMedOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO {
+        logger.info("Henter deltaker med oppgaveReferanse $oppgaveReferanse")
+        val deltaker =
+            deltakerService.finnDeltakerGittOppgaveReferanse(oppgaveReferanse) ?: throw ErrorResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
+                    it.detail = "Fant ingen deltaker med oppgave $oppgaveReferanse"
+                },
+                null
+            )
+        return deltaker
     }
 }
