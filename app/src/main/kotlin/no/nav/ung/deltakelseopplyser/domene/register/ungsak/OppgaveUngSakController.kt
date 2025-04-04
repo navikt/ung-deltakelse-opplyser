@@ -65,7 +65,7 @@ class OppgaveUngSakController(
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
 
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
-        val oppgave = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
+        val oppgave = deltaker.oppgaver
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
             .also { forsikreOppgaveIkkeErLøst(it) }
 
@@ -86,7 +86,7 @@ class OppgaveUngSakController(
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
 
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
-        val oppgave = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
+        val oppgave = deltaker.oppgaver
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
             .also { forsikreOppgaveIkkeErLøst(it) }
 
