@@ -73,7 +73,7 @@ class OppgaveUngSakController(
         oppgave.markerSomAvbrutt()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltaker.oppdaterOppgave(oppgave);
+        deltaker.oppdaterOppgave(oppgave)
         deltakerService.oppdaterDeltaker(deltaker)
     }
 
@@ -94,7 +94,7 @@ class OppgaveUngSakController(
         oppgave.markerSomUtløpt()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltaker.oppdaterOppgave(oppgave);
+        deltaker.oppdaterOppgave(oppgave)
         deltakerService.oppdaterDeltaker(deltaker)
     }
 
@@ -327,7 +327,7 @@ class OppgaveUngSakController(
         registerInntektOppgaveDTO: RegisterInntektOppgaveDTO,
     ): Boolean {
         val eksisterende: KontrollerRegisterinntektOppgavetypeDataDTO =
-            oppgaveDAO.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO;
+            oppgaveDAO.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO
         logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [${eksisterende.fraOgMed}/${eksisterende.tilOgMed}], Ny: [${registerInntektOppgaveDTO.fomDato}/${registerInntektOppgaveDTO.tomDato}]")
         return !eksisterende.fraOgMed.isAfter(registerInntektOppgaveDTO.tomDato) && !eksisterende.tilOgMed.isBefore(
             registerInntektOppgaveDTO.fomDato
