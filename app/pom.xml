@@ -20,7 +20,7 @@
         <tokenSupport.version>5.0.24</tokenSupport.version>
         <springdoc.version>2.8.6</springdoc.version>
         <spring-cloud.version>4.2.1</spring-cloud.version>
-        <logback.logstash.version>8.0</logback.logstash.version>
+        <logback.logstash.version>8.1</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
         <ung-sak.version>1.2.1</ung-sak.version>
