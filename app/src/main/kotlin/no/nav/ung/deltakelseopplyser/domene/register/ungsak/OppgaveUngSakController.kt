@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
@@ -17,6 +18,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDA
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
@@ -48,6 +50,7 @@ import java.util.*
     description = "API for å opprette, avbryte og sette oppgaver til utløpt. Er sikret med Azure."
 )
 class OppgaveUngSakController(
+    private val tilgangskontrollService: TilgangskontrollService,
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
 ) {
@@ -60,6 +63,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Avbryter oppgave")
     @ResponseStatus(HttpStatus.OK)
     fun avbrytOppgave(@RequestBody oppgaveReferanse: UUID) {
+        tilgangskontrollService.krevSystemtilgang()
         logger.info("Avbryter oppgave med referanse $oppgaveReferanse")
 
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
@@ -80,6 +84,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Setter oppgave til utløpt")
     @ResponseStatus(HttpStatus.OK)
     fun utløperOppgave(@RequestBody oppgaveReferanse: UUID) {
+        tilgangskontrollService.krevSystemtilgang()
         logger.info("Utløper oppgave med referanse $oppgaveReferanse")
 
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
@@ -101,6 +106,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Oppretter oppgave")
     @ResponseStatus(HttpStatus.OK)
     fun kontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
         val deltaker = forsikreEksistererIProgram(opprettOppgaveDto.deltakerIdent)
 
         val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(opprettOppgaveDto.deltakerIdent)
@@ -144,6 +150,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Oppretter oppgave for kontroll av registerinntekt")
     @ResponseStatus(HttpStatus.OK)
     fun opprettOppgaveForKontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for kontroll av registerinntekt")
         val deltaker = forsikreEksistererIProgram(opprettOppgaveDto.deltakerIdent)
 
@@ -197,6 +204,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Oppretter oppgave for endret startdato")
     @ResponseStatus(HttpStatus.OK)
     fun opprettOppgaveForEndretStartdato(@RequestBody endretPeriodeOppgaveDTO: EndretPeriodeOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for endret startdato med referanse ${endretPeriodeOppgaveDTO.oppgaveReferanse}")
         val deltaker = forsikreEksistererIProgram(endretPeriodeOppgaveDTO.deltakerIdent)
 
@@ -231,6 +239,7 @@ class OppgaveUngSakController(
     @Operation(summary = "Oppretter oppgave for endret sluttdato")
     @ResponseStatus(HttpStatus.OK)
     fun opprettOppgaveForEndretSluttdato(@RequestBody endretPeriodeOppgaveDTO: EndretPeriodeOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for endret sluttdato med referanse ${endretPeriodeOppgaveDTO.oppgaveReferanse}")
         val deltaker = forsikreEksistererIProgram(endretPeriodeOppgaveDTO.deltakerIdent)
 

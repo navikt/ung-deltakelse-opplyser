@@ -55,6 +55,8 @@ class ApplicationSecurityTests {
         assertThat(endpointsProvider()).isNotEmpty
     }
 
+    //ender i testen
+
     @ParameterizedTest
     @MethodSource("endpointsProvider")
     fun `Forventer at autorisasjon på endepunkter fungerer som forventet`(endpoint: Endpoint) {
