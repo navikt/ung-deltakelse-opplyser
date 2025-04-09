@@ -2,7 +2,6 @@ package no.nav.ung.deltakelseopplyser.integration.abac
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.k9.felles.konfigurasjon.env.Environment
 import no.nav.security.token.support.client.core.context.JwtBearerTokenResolver
 import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
 import no.nav.security.token.support.core.jwt.JwtToken
@@ -30,42 +29,38 @@ class TilgangskontrollService(
         private val logger: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
     }
 
-    val ungSakClientId: String by lazy {
-        val ungSakApplikasjon = objectMapper.readValue<List<PreauthorizedApp>>(azureAppPreAuthorizedAppsString)
-            .filter { it.clientId.substringAfterLast(":") == "ung-sak" }
-        if (ungSakApplikasjon.size == 1) {
-            return@lazy ungSakApplikasjon.first().clientId
-        } else {
-            throw IllegalArgumentException("Kan ikke unikt identifisere applikasjon ung-sak, har følgende kandidater: " + ungSakApplikasjon.map { PreauthorizedApp::name })
+    val azureAppPreAuthorizedApps: List<PreauthorizedApp> by lazy {
+        objectMapper.readValue<List<PreauthorizedApp>>(azureAppPreAuthorizedAppsString)
+    }
+
+    fun krevAnsattTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>) {
+        if (!ansattHarTilgang(action, personIdenter)) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Har ikke tilgang"),
+                null
+            )
         }
     }
 
-    fun krevSystemtilgang() {
-        try {
-            logger.info("Tilgjengelige issuers: {}", multiIssuerConfiguration.issuers.keys)
-            val azureIssuer = multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
-            logger.info("Utledet azure issuer til å være '{}'", azureIssuer)
-            val jwtAsString: String = tokenResolver.token() ?: throw ErrorResponseException(
-                HttpStatus.UNAUTHORIZED,
-                ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Fant ikke JWT"),
-                null
-            )
-            val jwt = JwtToken(jwtAsString)
-            val erAzureToken = jwt.issuer == azureIssuer
-            logger.info("Issuer i token '{}' erAzureToken {}", jwt.issuer, erAzureToken)
-            val idtype = jwt.jwtTokenClaims.getStringClaim("idtyp")
-            val erClientCredentials = idtype == "app"
-            logger.info("Er client credentials {} pga idtyp '{}'", erClientCredentials, idtype)
-            val azp = jwt.jwtTokenClaims.getStringClaim("azp")
-            val erUngSak = ungSakClientId == azp
-            logger.info(
-                "Azp name '{}' azp '{}' ungsak-clientId '{}'",
-                jwt.jwtTokenClaims.getStringClaim("azp_name"),
-                azp,
-                ungSakClientId
-            )
+    fun ansattHarTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>): Boolean {
+        if (abacEnabled == "false") {
+            logger.info("Tilgangskontroll er disabled")
+            return true;
+        }
+        return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
+    }
 
-            val tilgang = erAzureToken && erClientCredentials && erUngSak
+    fun krevSystemtilgang(godkjenteApplikasjoner: List<String> = listOf("ung-sak")) {
+        try {
+            val jwt = hentTokenForInnloggetBruker()
+            val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
+            val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
+            val azp = jwt.jwtTokenClaims.getStringClaim("azp")
+            val godkjenteClidentIds = godkjenteApplikasjoner.map { clientIdForApplikasjon(it) }
+            val erGodkjentApplikasjon = godkjenteClidentIds.contains(azp)
+            logger.info("Azp i token '{}' azpname '{}' godkjente applikasjoner '{}' godkjente clientID '{}'", azp, jwt.jwtTokenClaims.getStringClaim("azp_name"), godkjenteApplikasjoner, godkjenteClidentIds)
+            val tilgang = erAzureToken && erClientCredentials && erGodkjentApplikasjon
             if (abacEnabled == "false") {
                 logger.info("Tilgangskontroll er disabled")
                 return;
@@ -91,22 +86,28 @@ class TilgangskontrollService(
         }
     }
 
-    fun krevAnsattTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>) {
-        if (!ansattHarTilgang(action, personIdenter)) {
-            throw ErrorResponseException(
-                HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Har ikke tilgang"),
-                null
-            )
+    fun clientIdForApplikasjon(appname: String): String {
+        val matches = azureAppPreAuthorizedApps
+            .filter { it.name.substringAfterLast(":") == appname }
+        if (matches.size == 1) {
+            return matches.first().clientId
+        } else {
+            throw IllegalArgumentException("Kan ikke unikt identifisere applikasjon " + appname + ", har følgende kandidater: " + matches.map { it.name })
         }
     }
 
-    fun ansattHarTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>): Boolean {
-        if (abacEnabled == "false") {
-            logger.info("Tilgangskontroll er disabled")
-            return true;
-        }
-        return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
+    private fun hentTokenForInnloggetBruker(): JwtToken {
+        val jwtAsString: String = tokenResolver.token() ?: throw ErrorResponseException(
+            HttpStatus.UNAUTHORIZED,
+            ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Fant ikke JWT"),
+            null
+        )
+        return jwtToken(jwtAsString)
+    }
+
+    private fun jwtToken(jwtAsString: String): JwtToken {
+        val jwt = JwtToken(jwtAsString)
+        return jwt
     }
 
     data class PreauthorizedApp(val name: String, val clientId: String)
