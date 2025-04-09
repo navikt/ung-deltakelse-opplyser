@@ -53,15 +53,17 @@ class UngdomsprogramRegisterDeltakerController(
     @Operation(summary = "Markerer at deltakelsen er søkt om")
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseOpplysningDTO {
-        val personIdent = tokenValidationContextHolder.personIdent() //TODO bør slå opp mot PDL og sjekke også mot brukes historiske identer
+        val alleDeltakersIdenter = deltakerService.hentDeltakterIdenter(tokenValidationContextHolder.personIdent())
         val personPåDeltakelsen = registerService.hentFraProgram(id).deltaker.deltakerIdent
-        if (personIdent != personPåDeltakelsen) {
-            throw IllegalAccessException("Bruker kan kun endre på egne data")
+        if (!alleDeltakersIdenter.contains(personPåDeltakelsen)) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Bruker kan kun endre på egne data"),
+                null
+            )
         }
 
-        val resultat = registerService.markerSomHarSøkt(id)
-        resultat.deltaker.deltakerIdent
-        return resultat
+        return registerService.markerSomHarSøkt(id)
     }
 
     @GetMapping("/oppgave/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])

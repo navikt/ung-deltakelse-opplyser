@@ -9,19 +9,13 @@ import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @Profile("!prod-gcp") //TOGGLE kan fjernes når tilgangskontroll ferdig og TOKEN_X er fjernet
@@ -29,7 +23,7 @@ import java.util.*
 @RequestMapping("/oppslag")
 @RequiredIssuers(
     ProtectedWithClaims(
-        issuer = TOKEN_X, //må endres til AZURE
+        issuer = TOKEN_X, //fjernes når AZURE er tatt i bruk
         claimMap = ["acr=Level4", "acr=idporten-loa-high"],
         combineWithOr = true
     ),
@@ -46,12 +40,9 @@ class UngdomsprogramDeltakerInfoVeilederController(
     @Operation(summary = "Hent personlia for en deltaker")
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakerInfoGittDeltaker(@RequestBody deltakerDTO: DeltakerDTO): DeltakerService.DeltakerPersonlia? {
-        if (tilgangskontrollService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(CREATE, listOf(PersonIdent.fra(deltakerDTO.deltakerIdent))))){
-            //TODO logg til sporingslogg
-            return deltakerService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
-        } else {
-            throw IllegalAccessException("Har ikke tilgang")
-        }
+        tilgangskontrollService.krevAnsattTilgang(CREATE, listOf(PersonIdent.fra(deltakerDTO.deltakerIdent)))
+        //TODO logg til sporingslogg
+        return deltakerService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
     }
 
     @GetMapping("/deltaker/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -59,11 +50,8 @@ class UngdomsprogramDeltakerInfoVeilederController(
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakerInfoGittDeltakerId(@PathVariable id: UUID): DeltakerService.DeltakerPersonlia? {
         val deltakerInfo = deltakerService.hentDeltakerInfo(deltakerId = id) ?: return null
-        if (tilgangskontrollService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(CREATE, listOf(PersonIdent.fra(deltakerInfo.deltakerIdent))))){
-            //TODO logg til sporingslogg
-            return deltakerInfo
-        } else {
-            throw IllegalAccessException("Har ikke tilgang")
-        }
+        tilgangskontrollService.krevAnsattTilgang(CREATE,listOf(PersonIdent.fra(deltakerInfo.deltakerIdent)))
+        //TODO logg til sporingslogg
+        return deltakerInfo
     }
 }

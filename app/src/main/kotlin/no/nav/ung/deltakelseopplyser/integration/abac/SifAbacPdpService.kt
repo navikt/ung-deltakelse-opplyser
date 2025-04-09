@@ -6,20 +6,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.ProblemDetail
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
-import org.springframework.web.ErrorResponseException
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
-import java.net.URI
 
 @Service
 @Retryable(
-    noRetryFor = [SifAbacPdpException::class, HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
+    noRetryFor = [HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
     backoff = Backoff(
         delayExpression = "\${spring.rest.retry.initialDelay}",
         multiplierExpression = "\${spring.rest.retry.multiplier}",
@@ -56,22 +52,3 @@ class SifAbacPdpService(
 
 }
 
-class SifAbacPdpException(
-    melding: String,
-    httpStatus: HttpStatus,
-) : ErrorResponseException(httpStatus, asProblemDetail(melding, httpStatus), null) {
-    private companion object {
-        private fun asProblemDetail(
-            melding: String,
-            httpStatus: HttpStatus,
-        ): ProblemDetail {
-            val problemDetail = ProblemDetail.forStatus(httpStatus)
-            problemDetail.title = "Feil ved kall mot sif-abac-pdp"
-            problemDetail.detail = melding
-
-            problemDetail.type = URI("/problem-details/sif-abac-pdp")
-
-            return problemDetail
-        }
-    }
-}
