@@ -32,6 +32,7 @@ spec:
     outbound:
       rules:
         - application: k9-selvbetjening-oppslag
+        - application: sif-abac-pdp
       external:
         {{#each externalHosts as |host|}}
         - host: {{host}}

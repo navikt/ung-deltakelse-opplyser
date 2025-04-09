@@ -114,6 +114,11 @@
             <artifactId>oppgave-ungdomsytelse</artifactId>
             <version>${k9-format.version}</version>
         </dependency>
+        <dependency>
+            <groupId>no.nav.sif.abac</groupId>
+            <artifactId>kontrakt</artifactId>
+            <version>1.1.4</version>
+        </dependency>
         <!-- K9 Kontrakter -->
 
         <!-- GraphQL -->

@@ -53,6 +53,16 @@ class UngdomsprogramRegisterDeltakerController(
     @Operation(summary = "Markerer at deltakelsen er søkt om")
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseOpplysningDTO {
+        val alleDeltakersIdenter = deltakerService.hentDeltakterIdenter(tokenValidationContextHolder.personIdent())
+        val personPåDeltakelsen = registerService.hentFraProgram(id).deltaker.deltakerIdent
+        if (!alleDeltakersIdenter.contains(personPåDeltakelsen)) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Bruker kan kun endre på egne data"),
+                null
+            )
+        }
+
         return registerService.markerSomHarSøkt(id)
     }
 
