@@ -64,6 +64,9 @@ management:
         prometheus: /metrics
 
 no.nav:
+  audit:
+    vendor: k9
+    product: ung-deltakelse-opplyser
   security:
     jwt:
       issuer:
