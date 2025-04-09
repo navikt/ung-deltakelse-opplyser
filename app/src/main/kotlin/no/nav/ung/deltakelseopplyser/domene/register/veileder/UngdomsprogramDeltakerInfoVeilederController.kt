@@ -4,9 +4,9 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.CREATE
-import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.READ
 import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
@@ -32,17 +32,24 @@ import java.util.*
 
 @Tag(name = "Oppslag", description = "API for å hente informasjon om deltakere.")
 class UngdomsprogramDeltakerInfoVeilederController(
+    private val sporingsloggService: SporingsloggService,
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakerService: DeltakerService,
 ) {
 
     @PostMapping("/deltaker", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Hent personlia for en deltaker")
+    @Operation(summary = "Hent personalia for en deltaker")
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakerInfoGittDeltaker(@RequestBody deltakerDTO: DeltakerDTO): DeltakerService.DeltakerPersonlia? {
-        tilgangskontrollService.krevAnsattTilgang(CREATE, listOf(PersonIdent.fra(deltakerDTO.deltakerIdent)))
-        //TODO logg til sporingslogg
+        tilgangskontrollService.krevAnsattTilgang(READ, listOf(PersonIdent.fra(deltakerDTO.deltakerIdent)))
         return deltakerService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
+            .also {
+                sporingsloggService.loggLesetilgang(
+                    "/deltaker",
+                    "Hent personalia for en deltaker",
+                    PersonIdent.fra(deltakerDTO.deltakerIdent)
+                )
+            }
     }
 
     @GetMapping("/deltaker/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -50,8 +57,15 @@ class UngdomsprogramDeltakerInfoVeilederController(
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakerInfoGittDeltakerId(@PathVariable id: UUID): DeltakerService.DeltakerPersonlia? {
         val deltakerInfo = deltakerService.hentDeltakerInfo(deltakerId = id) ?: return null
-        tilgangskontrollService.krevAnsattTilgang(CREATE,listOf(PersonIdent.fra(deltakerInfo.deltakerIdent)))
-        //TODO logg til sporingslogg
+        val personIdent = PersonIdent.fra(deltakerInfo.deltakerIdent)
+        tilgangskontrollService.krevAnsattTilgang(READ, listOf(personIdent))
         return deltakerInfo
+            .also {
+                sporingsloggService.loggLesetilgang(
+                    "/deltaker/{id}",
+                    "Hent personalia for en deltaker gitt UUID",
+                    personIdent
+                )
+            }
     }
 }

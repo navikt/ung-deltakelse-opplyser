@@ -6,6 +6,7 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.*
 import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
@@ -33,6 +34,7 @@ import java.util.*
 )
 @Tag(name = "Veileder", description = "API for å legge til, hente, oppdatere og fjerne deltakelser i ungdomsprogrammet")
 class UngdomsprogramRegisterVeilederController(
+    private val sporingsloggService: SporingsloggService,
     private val tilgangskontrollService: TilgangskontrollService,
     private val registerService: UngdomsprogramregisterService,
 ) {
@@ -44,7 +46,10 @@ class UngdomsprogramRegisterVeilederController(
     )
     @Operation(summary = "Meld inn en deltaker i ungdomsprogrammet.")
     fun meldInnDeltaker(@RequestBody deltakelseInnmeldingDTO: DeltakelseInnmeldingDTO): DeltakelseOpplysningDTO {
-        tilgangskontrollService.krevAnsattTilgang(CREATE,listOf(PersonIdent.fra(deltakelseInnmeldingDTO.deltakerIdent)))
+        tilgangskontrollService.krevAnsattTilgang(
+            CREATE,
+            listOf(PersonIdent.fra(deltakelseInnmeldingDTO.deltakerIdent))
+        )
         val deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
             harSøkt = false,
@@ -67,7 +72,10 @@ class UngdomsprogramRegisterVeilederController(
         @RequestBody deltakelseUtmeldingDTO: DeltakelseUtmeldingDTO,
     ): DeltakelseOpplysningDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
-        tilgangskontrollService.krevAnsattTilgang(UPDATE,listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent)))
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
         val utmeldtDeltakelse = eksisterendeDeltakelse.copy(tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato)
         return registerService.avsluttDeltakelse(deltakelseId, utmeldtDeltakelse)
     }
@@ -84,7 +92,10 @@ class UngdomsprogramRegisterVeilederController(
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
     ): DeltakelseOpplysningDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
-        tilgangskontrollService.krevAnsattTilgang(UPDATE,listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent)))
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
         return registerService.endreStartdato(deltakelseId, endrePeriodeDatoDTO)
     }
 
@@ -100,7 +111,10 @@ class UngdomsprogramRegisterVeilederController(
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
     ): DeltakelseOpplysningDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
-        tilgangskontrollService.krevAnsattTilgang(UPDATE,listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent)))
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
         return registerService.endreSluttdato(deltakelseId, endrePeriodeDatoDTO)
     }
 
@@ -114,8 +128,14 @@ class UngdomsprogramRegisterVeilederController(
         val deltakelser = registerService.hentAlleForDeltakerId(deltakerId)
         val personIdenter = deltakelser.map { it.deltaker.deltakerIdent }.distinct().map { PersonIdent.fra(it) }
         tilgangskontrollService.krevAnsattTilgang(READ, personIdenter)
-        //TODO sporingslogg
         return deltakelser
+            .also {
+                sporingsloggService.loggLesetilgang(
+                    "/deltaker/deltakerId/deltakelser",
+                    "Hent alle deltakelser for en deltaker",
+                    personIdenter.first()
+                )
+            }
     }
 
     @DeleteMapping("/deltakelse/{deltakelseId}/fjern")
@@ -123,7 +143,10 @@ class UngdomsprogramRegisterVeilederController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun fjernFraProgram(@PathVariable deltakelseId: UUID) {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
-        tilgangskontrollService.krevAnsattTilgang(UPDATE,listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent)))
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
         registerService.fjernFraProgram(deltakelseId)
     }
 }
