@@ -205,6 +205,12 @@
             <artifactId>k9-felles-log</artifactId>
             <version>${k9-felles.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.papertrailapp</groupId>
+            <artifactId>logback-syslog4j</artifactId>
+            <version>1.0.0</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- Logging -->
 
