@@ -11,6 +11,12 @@
   "ingresses": [
     "https://ung-deltakelse-opplyser.intern.nav.no"
   ],
+  "azure": {
+    "replyURLs": [
+      "https://ung-deltakelse-opplyser.intern.nav.no/swagger-ui/oauth2-redirect.html"
+    ],
+    "groups": []
+  },
   "inboundRules": [
     {
       "app": "ungdomsytelse-veileder",
@@ -58,6 +64,8 @@
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.prod-fss-pub.nais.io",
     "PDL_API_AZURE_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
 
+    "SWAGGER_ENABLED": "true",
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0",
     "ABAC_ENABLED": "true"
   }
 }

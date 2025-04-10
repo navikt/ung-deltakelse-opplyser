@@ -19,6 +19,20 @@ spec:
   azure:
     application:
       enabled: true
+      allowAllUsers: false
+      claims:
+        extra:
+          - "NAVident"
+          - "azp_name"
+        groups:
+          {{ #each azure.groups as |group|}}
+            - id: {{group.objectId }}
+            {{/each}}
+      singlePageApplication: true
+      replyURLs:
+        {{ #each azure.replyURLs as |url|}}
+          - {{url }}
+          {{/each}}
   kafka:
     pool: {{kafkaPool}}
   accessPolicy:
