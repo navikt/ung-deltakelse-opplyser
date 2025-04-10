@@ -34,6 +34,11 @@
       "cluster": "dev-gcp"
     },
     {
+      "app": "ungdomsytelse-veileder-dev",
+      "namespace": "dusseldorf",
+      "cluster": "dev-gcp"
+    },
+    {
       "app": "ungdomsytelse-deltaker",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
