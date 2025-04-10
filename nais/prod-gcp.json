@@ -15,7 +15,12 @@
     "replyURLs": [
       "https://ung-deltakelse-opplyser.intern.nav.no/swagger-ui/oauth2-redirect.html"
     ],
-    "groups": []
+    "groups": [
+      {
+        "name": "0000-GA-k9-drift",
+        "objectId": "TODO"
+      }
+    ]
   },
   "inboundRules": [
     {
