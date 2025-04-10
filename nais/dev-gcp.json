@@ -11,6 +11,17 @@
   "ingresses": [
     "https://ung-deltakelse-opplyser.intern.dev.nav.no"
   ],
+  "azure": {
+    "replyURLs": [
+      "https://ung-deltakelse-opplyser.intern.dev.nav.no/swagger-ui/oauth2-redirect.html"
+    ],
+    "groups": [
+      {
+        "name": "0000-CA-ung-programveileder",
+        "objectId": "37538533-e91c-4a53-b155-f4448dcada0d"
+      }
+    ]
+  },
   "inboundRules": [
     {
       "app": "tokenx-token-generator",
@@ -64,6 +75,7 @@
     "PDL_API_AZURE_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
 
     "SWAGGER_ENABLED": "true",
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
 
     "ABAC_ENABLED": "false"
   }
