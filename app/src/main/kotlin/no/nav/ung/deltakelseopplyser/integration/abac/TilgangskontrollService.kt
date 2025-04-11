@@ -22,7 +22,7 @@ class TilgangskontrollService(
     private val sifAbacPdpService: SifAbacPdpService,
     private val tokenResolver: JwtBearerTokenResolver,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
-    @Value("\${abac.enabled}") private val abacEnabled: String,
+    @Value("\${ABAC_ENABLED}") private val abacEnabled: String,
     @Value("\${azure.app.pre.authorized.apps") private val azureAppPreAuthorizedAppsString: String
 ) {
     private companion object {
