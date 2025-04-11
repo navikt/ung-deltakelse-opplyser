@@ -82,9 +82,3 @@ data class YtelseRegisterInntektDAO(
     @JsonProperty("ytelsetype") val ytelsetype: String,
 )
 
-data class ProgramperiodeDAO(
-    @JsonProperty("fomDato") val fomDato: LocalDate,
-    @JsonProperty("tomDato") val tomDato: LocalDate? = null,
-)
-
-
