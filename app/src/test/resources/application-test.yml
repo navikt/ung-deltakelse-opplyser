@@ -1,3 +1,5 @@
+ABAC_ENABLED: false
+
 spring:
   datasource:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
@@ -29,8 +31,7 @@ topic:
     # topic.listener.ung-rapportert-inntekt
     ung-rapportert-inntekt:
       auto-offset-reset: earliest
-abac:
-  enabled: false
+
 no.nav:
   security:
     jwt:
