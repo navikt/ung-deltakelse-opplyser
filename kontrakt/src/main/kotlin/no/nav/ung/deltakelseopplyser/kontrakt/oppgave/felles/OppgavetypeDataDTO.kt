@@ -7,6 +7,12 @@ import java.time.LocalDate
 @OppgavetypeDataJsonType
 interface OppgavetypeDataDTO
 
+
+data class EndretProgramperiodeDataDTO(
+    @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
+    @JsonProperty("tilOgMed") val tilOgMed: LocalDate? = null,
+) : OppgavetypeDataDTO
+
 data class EndretStartdatoOppgavetypeDataDTO(
     @JsonProperty("nyStartdato") val nyStartdato: LocalDate,
 ) : OppgavetypeDataDTO

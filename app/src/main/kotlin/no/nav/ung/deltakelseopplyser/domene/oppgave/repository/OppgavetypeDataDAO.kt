@@ -29,6 +29,11 @@ import java.time.LocalDate
 )
 sealed class OppgavetypeDataDAO
 
+data class EndretProgramperiodeOppgavetypeDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd") val fomDato: LocalDate,
+    @JsonFormat(pattern = "yyyy-MM-dd") val tomDato: LocalDate? = null
+) : OppgavetypeDataDAO()
+
 data class EndretStartdatoOppgavetypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd") val nyStartdato: LocalDate
 ) : OppgavetypeDataDAO()
@@ -76,3 +81,10 @@ data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("ytelsetype") val ytelsetype: String,
 )
+
+data class ProgramperiodeDAO(
+    @JsonProperty("fomDato") val fomDato: LocalDate,
+    @JsonProperty("tomDato") val tomDato: LocalDate? = null,
+)
+
+
