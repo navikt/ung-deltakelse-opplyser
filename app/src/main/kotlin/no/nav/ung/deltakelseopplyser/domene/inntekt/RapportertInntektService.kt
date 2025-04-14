@@ -24,7 +24,7 @@ class RapportertInntektService(
 
         fun UngdomsprogramDeltakelseDAO.rapporteringsPerioder(): List<RapportPeriodeinfoDTO> {
             val startDato = getFom().withDayOfMonth(1)
-            val sluttDato = getTom() ?: LocalDate.now()
+            val sluttDato = getTom() ?: startDato.withDayOfMonth(startDato.lengthOfMonth())
             val tidslinje = LocalDateTimeline(getFom(), sluttDato, this)
             val månedTidslinje = tidslinje.splitAtRegular(startDato, tidslinje.maxLocalDate, Period.ofMonths(1))
             return månedTidslinje.toSegments().map { segment ->
