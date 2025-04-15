@@ -7,15 +7,21 @@ import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretPeriodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import org.slf4j.LoggerFactory
@@ -223,80 +229,13 @@ class OppgaveUngSakController(
             deltaker = deltaker,
             oppgaveReferanse = endretProgramperiodeOppgaveDTO.oppgaveReferanse,
             oppgaveTypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
-                fomDato = endretProgramperiodeOppgaveDTO.programperiode.fomDato,
-                tomDato = endretProgramperiodeOppgaveDTO.programperiode.tomDato,
-                )
-        )
-    }
-
-    @Deprecated("Bruk /opprett/endre/programperiode")
-    @PostMapping("/opprett/endre/startdato", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Oppretter oppgave for endret startdato")
-    @ResponseStatus(HttpStatus.OK)
-    fun opprettOppgaveForEndretStartdato(@RequestBody endretPeriodeOppgaveDTO: EndretPeriodeOppgaveDTO): OppgaveDTO {
-        tilgangskontrollService.krevSystemtilgang()
-        logger.info("Oppretter oppgave for endret startdato med referanse ${endretPeriodeOppgaveDTO.oppgaveReferanse}")
-        val deltaker = forsikreEksistererIProgram(endretPeriodeOppgaveDTO.deltakerIdent)
-
-        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
-
-        deltakersOppgaver.stream()
-            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST }
-            .also { harUløstEndreStartdatoOppgave ->
-                if (harUløstEndreStartdatoOppgave) {
-                    logger.error("Det finnes allerede en uløst oppgave for endret startdato")
-                    throw ErrorResponseException(
-                        HttpStatus.CONFLICT,
-                        ProblemDetail.forStatusAndDetail(
-                            HttpStatus.CONFLICT,
-                            "Det finnes allerede en uløst oppgave for endret startdato"
-                        ),
-                        null
-                    )
+                programperiode = ProgramperiodeDAO(
+                    fomDato = endretProgramperiodeOppgaveDTO.programperiode.fomDato,
+                    tomDato = endretProgramperiodeOppgaveDTO.programperiode.tomDato
+                ),
+                forrigeProgramperiode = endretProgramperiodeOppgaveDTO.forrigeProgramperiode?.let {
+                    ProgramperiodeDAO(fomDato = it.fomDato, tomDato = it.tomDato)
                 }
-            }
-
-        return opprettOppgave(
-            deltaker = deltaker,
-            oppgaveReferanse = endretPeriodeOppgaveDTO.oppgaveReferanse,
-            oppgaveTypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
-                nyStartdato = endretPeriodeOppgaveDTO.programperiodeDato
-            )
-        )
-    }
-
-    @Deprecated("Bruk /opprett/endre/programperiode")
-    @PostMapping("/opprett/endre/sluttdato", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Oppretter oppgave for endret sluttdato")
-    @ResponseStatus(HttpStatus.OK)
-    fun opprettOppgaveForEndretSluttdato(@RequestBody endretPeriodeOppgaveDTO: EndretPeriodeOppgaveDTO): OppgaveDTO {
-        tilgangskontrollService.krevSystemtilgang()
-        logger.info("Oppretter oppgave for endret sluttdato med referanse ${endretPeriodeOppgaveDTO.oppgaveReferanse}")
-        val deltaker = forsikreEksistererIProgram(endretPeriodeOppgaveDTO.deltakerIdent)
-
-        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
-
-        deltakersOppgaver.stream()
-            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
-            .also { harUløstEndreSluttdatoOppgave ->
-                if (harUløstEndreSluttdatoOppgave) {
-                    logger.info("Det finnes allerede en uløst oppgave for endret sluttdato")
-                    throw ErrorResponseException(
-                        HttpStatus.CONFLICT,
-                        ProblemDetail.forStatusAndDetail(
-                            HttpStatus.CONFLICT,
-                            "Det finnes allerede en uløst oppgave for endret sluttdato"
-                        ),
-                        null
-                    )
-                }
-            }
-
-        return opprettOppgave(
-            deltaker = deltaker,
-            oppgaveReferanse = endretPeriodeOppgaveDTO.oppgaveReferanse,
-            oppgaveTypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
-                nySluttdato = endretPeriodeOppgaveDTO.programperiodeDato
             )
         )
     }
@@ -308,8 +247,6 @@ class OppgaveUngSakController(
     ): OppgaveDTO {
         val oppgavetype = when (oppgaveTypeDataDAO) {
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
-            is EndretStartdatoOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_STARTDATO
-            is EndretSluttdatoOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_SLUTTDATO
             is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
         }
 

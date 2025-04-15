@@ -2,9 +2,9 @@ package no.nav.ung.deltakelseopplyser.domene.deltaker
 
 import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -70,26 +70,17 @@ class DeltakerRepositoryTest {
                 id = UUID.randomUUID(),
                 oppgaveReferanse = oppgaveReferanse,
                 deltaker = deltaker,
-                oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
-                oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
-                    nyStartdato = LocalDate.now()
+                oppgavetype = Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE,
+                oppgavetypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
+                    programperiode = ProgramperiodeDAO(
+                        fomDato = LocalDate.now(),
+                        tomDato = null
+                    )
                 ),
                 status = OppgaveStatus.ULØST,
             )
         )
 
-        deltaker.leggTilOppgave(
-            OppgaveDAO(
-                id = UUID.randomUUID(),
-                oppgaveReferanse = UUID.randomUUID(),
-                deltaker = deltaker,
-                oppgavetype = Oppgavetype.BEKREFT_ENDRET_SLUTTDATO,
-                oppgavetypeDataDAO = EndretSluttdatoOppgavetypeDataDAO(
-                    nySluttdato = LocalDate.now()
-                ),
-                status = OppgaveStatus.ULØST,
-            )
-        )
         entityManager.persist(deltaker)
         entityManager.flush()
 
@@ -124,9 +115,12 @@ class DeltakerRepositoryTest {
                 id = UUID.randomUUID(),
                 oppgaveReferanse = oppgaveReferanse,
                 deltaker = deltaker,
-                oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
-                oppgavetypeDataDAO = EndretStartdatoOppgavetypeDataDAO(
-                    nyStartdato = LocalDate.now()
+                oppgavetype = Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE,
+                oppgavetypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
+                    programperiode = ProgramperiodeDAO(
+                        fomDato = LocalDate.now(),
+                        tomDato = null
+                    )
                 ),
                 status = OppgaveStatus.ULØST,
             )

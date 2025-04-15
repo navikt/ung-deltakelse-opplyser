@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
 
 import java.time.LocalDate
 
@@ -9,16 +10,8 @@ interface OppgavetypeDataDTO
 
 
 data class EndretProgramperiodeDataDTO(
-    @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
-    @JsonProperty("tilOgMed") val tilOgMed: LocalDate? = null,
-) : OppgavetypeDataDTO
-
-data class EndretStartdatoOppgavetypeDataDTO(
-    @JsonProperty("nyStartdato") val nyStartdato: LocalDate,
-) : OppgavetypeDataDTO
-
-data class EndretSluttdatoOppgavetypeDataDTO(
-    @JsonProperty("nySluttdato") val nySluttdato: LocalDate
+    @JsonProperty("programperiode") val programperiode: ProgramperiodeDTO,
+    @JsonProperty("forrigeProgramperiode") val forrigeProgramperiode: ProgramperiodeDTO? = null,
 ) : OppgavetypeDataDTO
 
 data class KontrollerRegisterinntektOppgavetypeDataDTO(
