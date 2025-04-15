@@ -1,9 +1,8 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.veileder
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
 data class EndrePeriodeDatoDTO(
-    val dato: LocalDate,
-    val veilederRef: String,
-    val meldingFraVeileder: String?,
+    @JsonProperty("dato") val dato: LocalDate
 )

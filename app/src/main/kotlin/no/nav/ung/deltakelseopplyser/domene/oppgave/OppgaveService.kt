@@ -1,14 +1,14 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.UUID
+import java.util.*
 
 @Service
 class OppgaveService(
-    private val deltakelseRepository: UngdomsprogramDeltakelseRepository
+    private val deltakerService: DeltakerService,
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
@@ -16,17 +16,23 @@ class OppgaveService(
 
     fun håndterMottattOppgavebekreftelse(ungdomsytelseOppgavebekreftelse: UngdomsytelseOppgavebekreftelse) {
         val oppgaveBekreftelse = ungdomsytelseOppgavebekreftelse.oppgaveBekreftelse
-        val oppgaveId = UUID.fromString(oppgaveBekreftelse.søknadId.id)
+        val oppgaveReferanse = UUID.fromString(oppgaveBekreftelse.søknadId.id)
 
-        logger.info("Henter deltakelse for oppgaveId=$oppgaveId")
-        val deltakelse = deltakelseRepository.finnDeltakelseGittOppgaveId(oppgaveId) ?: throw RuntimeException("Fant ikke deltakelse for oppgaveId=$oppgaveId")
-        val oppgave = deltakelse.oppgaver.find { it.id == oppgaveId } ?: throw RuntimeException("Fant ikke oppgave for oppgaveId=$oppgaveId")
+        logger.info("Henter deltakers oppgave for oppgaveReferanse=$oppgaveReferanse")
+        val deltakerIdent = oppgaveBekreftelse.søker.personIdent.verdi
+        val deltaker =
+            deltakerService.finnDeltakerGittIdent(deltakerIdent) ?: throw RuntimeException("Deltaker ikke funnet.")
 
-        logger.info("Markerer oppgave som løst for deltakelseId=${deltakelse.id}")
-        val løstOppgave = oppgave.markerSomLøst()
-        deltakelse.oppdaterOppgave(løstOppgave)
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
+            .find { it.oppgaveReferanse == oppgaveReferanse }
+            ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
-        deltakelseRepository.save(deltakelse)
+
+
+        logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
+        oppgave.markerSomLøst()
+
+        deltakerService.oppdaterDeltaker(deltaker)
         // TODO: Inaktivere oppgave på mine-sider.
     }
 }

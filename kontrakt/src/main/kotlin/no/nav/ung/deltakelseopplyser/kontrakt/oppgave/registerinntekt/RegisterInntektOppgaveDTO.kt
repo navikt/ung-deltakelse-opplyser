@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class RegisterInntektOppgaveDTO(
-    @JsonProperty("aktørId") val aktørId: String,
+    @JsonProperty("deltakerIdent") val deltakerIdent: String,
     @JsonProperty("referanse") val referanse: UUID,
     @JsonProperty("frist") val frist: LocalDateTime,
     @JsonProperty("fomDato") val fomDato: LocalDate,

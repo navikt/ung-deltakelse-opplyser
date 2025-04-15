@@ -1,3 +1,5 @@
+ABAC_ENABLED: false
+
 spring:
   datasource:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
@@ -51,6 +53,15 @@ no.nav:
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
 
+          azure-sif-abac-pdp:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: client_credentials
+            scope: api://dev-fss:k9saksbehandling:sif-abac-pdp-sak/.default
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
+
           azure-pdl-api:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: client_credentials
@@ -62,4 +73,5 @@ no.nav:
 
   gateways:
     ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/k9/sak
+    sif-abac-pdp: http://localhost:${wiremock.server.port}/sif-abac-pdp-mock
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock

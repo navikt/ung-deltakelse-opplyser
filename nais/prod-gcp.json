@@ -11,6 +11,17 @@
   "ingresses": [
     "https://ung-deltakelse-opplyser.intern.nav.no"
   ],
+  "azure": {
+    "replyURLs": [
+      "https://ung-deltakelse-opplyser.intern.nav.no/swagger-ui/oauth2-redirect.html"
+    ],
+    "groups": [
+      {
+        "name": "0000-CA-ung-programveileder",
+        "objectId": "7de1df55-11f7-4b65-853c-01f2e775ad0a"
+      }
+    ]
+  },
   "inboundRules": [
     {
       "app": "ungdomsytelse-veileder",
@@ -52,7 +63,14 @@
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.nav.no/ung/sak",
     "UNG_SAK_AZURE_SCOPE": "api://prod-gcp.k9saksbehandling.ung-sak/.default",
 
+    "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api/tilgangskontroll/ung",
+    "SIF_ABAC_PDP_AZURE_SCOPE": "api://prod-gcp.k9saksbehandling.sif-abac-pdp/.default",
+
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.prod-fss-pub.nais.io",
-    "PDL_API_AZURE_SCOPE": "api://prod-fss.pdl.pdl-api/.default"
+    "PDL_API_AZURE_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
+
+    "SWAGGER_ENABLED": "true",
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0",
+    "ABAC_ENABLED": "true"
   }
 }

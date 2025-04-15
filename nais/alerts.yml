@@ -32,7 +32,7 @@ spec:
             severity: danger
 
         - alert: Konsumering av meldinger feiler
-          expr: ceil(increase(spring_kafka_listener_seconds_count{result="failure", app="{{app}}"}[3m])) > 0
+          expr: ceil(increase(spring_kafka_listener_seconds_count{result="failure", app="{{app}}"}[30m])) > 0
           for: 1m
           annotations:
             summary: "Konsumering av melding i \{{ $labels.name }} feiler. Sjekk loggene for å finne ut hvorfor dette feiler."

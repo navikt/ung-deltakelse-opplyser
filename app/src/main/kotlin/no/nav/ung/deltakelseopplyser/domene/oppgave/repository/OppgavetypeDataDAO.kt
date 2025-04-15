@@ -21,6 +21,9 @@ import java.time.LocalDate
     // Endret sluttdato oppgavetype data
     JsonSubTypes.Type(value = EndretSluttdatoOppgavetypeDataDAO::class, name = "BEKREFT_ENDRET_SLUTTDATO"),
 
+    // Endret programperiode oppgavetype data
+    JsonSubTypes.Type(value = EndretProgramperiodeOppgavetypeDataDAO::class, name = "BEKREFT_ENDRET_PROGRAMPERIODE"),
+
     // Kontroller registerinntekt oppgavetype data
     JsonSubTypes.Type(
         value = KontrollerRegisterInntektOppgaveTypeDataDAO::class,
@@ -29,16 +32,17 @@ import java.time.LocalDate
 )
 sealed class OppgavetypeDataDAO
 
+data class EndretProgramperiodeOppgavetypeDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd") val fomDato: LocalDate,
+    @JsonFormat(pattern = "yyyy-MM-dd") val tomDato: LocalDate? = null
+) : OppgavetypeDataDAO()
+
 data class EndretStartdatoOppgavetypeDataDAO(
-    @JsonFormat(pattern = "yyyy-MM-dd") val nyStartdato: LocalDate,
-    @JsonProperty(defaultValue = "n/a") val veilederRef: String = "n/a",
-    val meldingFraVeileder: String?,
+    @JsonFormat(pattern = "yyyy-MM-dd") val nyStartdato: LocalDate
 ) : OppgavetypeDataDAO()
 
 data class EndretSluttdatoOppgavetypeDataDAO(
-    @JsonFormat(pattern = "yyyy-MM-dd") val nySluttdato: LocalDate,
-    @JsonProperty(defaultValue = "n/a") val veilederRef: String,
-    val meldingFraVeileder: String?,
+    @JsonFormat(pattern = "yyyy-MM-dd") val nySluttdato: LocalDate
 ) : OppgavetypeDataDAO()
 
 data class KontrollerRegisterInntektOppgaveTypeDataDAO(
@@ -80,3 +84,4 @@ data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("ytelsetype") val ytelsetype: String,
 )
+

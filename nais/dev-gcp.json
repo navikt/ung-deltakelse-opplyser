@@ -11,6 +11,17 @@
   "ingresses": [
     "https://ung-deltakelse-opplyser.intern.dev.nav.no"
   ],
+  "azure": {
+    "replyURLs": [
+      "https://ung-deltakelse-opplyser.intern.dev.nav.no/swagger-ui/oauth2-redirect.html"
+    ],
+    "groups": [
+      {
+        "name": "0000-CA-ung-programveileder",
+        "objectId": "37538533-e91c-4a53-b155-f4448dcada0d"
+      }
+    ]
+  },
   "inboundRules": [
     {
       "app": "tokenx-token-generator",
@@ -19,6 +30,11 @@
     },
     {
       "app": "ungdomsytelse-veileder",
+      "namespace": "dusseldorf",
+      "cluster": "dev-gcp"
+    },
+    {
+      "app": "ungdomsytelse-veileder-dev",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
     },
@@ -57,9 +73,15 @@
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.dev.nav.no/ung/sak",
     "UNG_SAK_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.ung-sak/.default",
 
+    "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api/tilgangskontroll/ung",
+    "SIF_ABAC_PDP_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.sif-abac-pdp/.default",
+
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.dev-fss-pub.nais.io",
     "PDL_API_AZURE_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
 
-    "SWAGGER_ENABLED": "true"
+    "SWAGGER_ENABLED": "true",
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
+
+    "ABAC_ENABLED": "false"
   }
 }

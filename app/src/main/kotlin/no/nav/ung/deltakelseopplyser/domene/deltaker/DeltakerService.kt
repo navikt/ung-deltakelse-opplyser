@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -21,6 +23,7 @@ class DeltakerService(
 ) {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(DeltakerService::class.java)
         fun DeltakerDTO.mapToDAO(): DeltakerDAO {
             return DeltakerDAO(deltakerIdent = deltakerIdent)
         }
@@ -70,7 +73,22 @@ class DeltakerService(
         return deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker.mapToDAO())
     }
 
-    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia? {
+    fun oppdaterDeltaker(deltaker: DeltakerDAO): DeltakerDAO {
+        return deltakerRepository.save(deltaker)
+    }
+
+    fun hentDeltakersOppgaver(deltakerIdentEllerAktørId: String): List<OppgaveDAO> {
+        logger.info("Henter deltakers oppgaver")
+        val oppgaver = hentDeltakere(deltakerIdentEllerAktørId).flatMap { it.oppgaver }
+        logger.info("Fant ${oppgaver.size} oppgaver for deltaker.")
+        return oppgaver
+    }
+
+    fun finnDeltakerGittOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO? {
+        return deltakerRepository.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
+    }
+
+    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia {
         val deltakerDAO = deltakerRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
@@ -82,13 +100,13 @@ class DeltakerService(
             )
         }
 
-        val PdlPerson = hentPdlPerson(deltakerDAO.deltakerIdent)
+        val pdlPerson = hentPdlPerson(deltakerDAO.deltakerIdent)
 
         return DeltakerPersonlia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerDAO.deltakerIdent,
-            navn = PdlPerson.navn.first(),
-            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate()
+            navn = pdlPerson.navn.first(),
+            fødselsdato = pdlPerson.foedselsdato.first().toLocalDate()
         )
     }
 
@@ -115,7 +133,7 @@ class DeltakerService(
         return deltakerRepository.findByDeltakerIdentIn(identer)
     }
 
-    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia? {
+    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia {
         val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
 
         val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)

@@ -9,17 +9,10 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.Type
 import org.hibernate.type.SqlTypes
@@ -34,12 +27,12 @@ class OppgaveDAO(
     val id: UUID,
 
     @Id
-    @Column(name = "ekstern_ref", nullable = false)
-    val eksternReferanse: UUID,
+    @Column(name = "oppgave_referanse", nullable = false)
+    val oppgaveReferanse: UUID,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "deltakelse_id", nullable = false)
-    val deltakelse: UngdomsprogramDeltakelseDAO,
+    @JoinColumn(name = "deltaker_id", nullable = false)
+    val deltaker: DeltakerDAO,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "oppgavetype", nullable = false)
@@ -65,8 +58,7 @@ class OppgaveDAO(
 ) {
     companion object {
         fun OppgaveDAO.tilDTO() = OppgaveDTO(
-            id = id,
-            eksternReferanse = eksternReferanse,
+            oppgaveReferanse = oppgaveReferanse,
             oppgavetype = oppgavetype,
             oppgavetypeData = oppgavetypeDataDAO.tilDTO(),
             status = status,
@@ -75,16 +67,13 @@ class OppgaveDAO(
         )
 
         fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
-            is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(
-                nyStartdato,
-                veilederRef,
-                meldingFraVeileder
-            )
+            is EndretStartdatoOppgavetypeDataDAO -> EndretStartdatoOppgavetypeDataDTO(nyStartdato)
 
-            is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(
-                nySluttdato,
-                veilederRef,
-                meldingFraVeileder
+            is EndretSluttdatoOppgavetypeDataDAO -> EndretSluttdatoOppgavetypeDataDTO(nySluttdato)
+
+            is EndretProgramperiodeOppgavetypeDataDAO -> EndretProgramperiodeDataDTO(
+                fraOgMed = fomDato,
+                tilOgMed = tomDato,
             )
 
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(
@@ -114,8 +103,11 @@ class OppgaveDAO(
     }
 
     fun markerSomAvbrutt(): OppgaveDAO {
-        this.status = OppgaveStatus.AVBRUTT
         return settStatus(OppgaveStatus.AVBRUTT)
+    }
+
+    fun markerSomUtløpt(): OppgaveDAO {
+        return settStatus(OppgaveStatus.UTLØPT)
     }
 
     fun settStatus(oppgaveStatus: OppgaveStatus): OppgaveDAO {

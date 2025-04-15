@@ -7,17 +7,14 @@ import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService.Companion.rapporteringsPerioder
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.AfterAll
@@ -217,7 +214,7 @@ class UngdomsprogramregisterServiceTest {
     }
 
     @Test
-    fun `Forvent at rapporteringsperiode genereres dagens dato dersom tom dato ikke er satt`() {
+    fun `Forvent at rapporteringsperiode genereres til slutten av startdatoens måned dersom tom dato ikke er satt`() {
         val idag = LocalDate.now()
         val toMånederSiden = idag.minusMonths(2)
         val periodeFra = toMånederSiden
@@ -234,13 +231,10 @@ class UngdomsprogramregisterServiceTest {
 
         assertThat(deltakelsePeriodInfos).hasSize(1)
         val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder()
-        assertThat(rapporteringsPerioder).hasSize(3)
+        assertThat(rapporteringsPerioder).hasSize(1)
 
         assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(toMånederSiden)
         assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(toMånederSiden.withDayOfMonth(toMånederSiden.lengthOfMonth()))
-
-        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(idag.withDayOfMonth(1))
-        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(idag)
     }
 
     @Test
@@ -269,16 +263,6 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(innmelding.deltaker, endretStartdatoDeltakelse.deltaker)
         assertThat(endretStartdatoDeltakelse.fraOgMed).isEqualTo(onsdag)
         assertThat(endretStartdatoDeltakelse.tilOgMed).isNull()
-
-        val endretStartdatoOppgavetypeDataDTO =
-            endretStartdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretStartdatoOppgavetypeDataDTO
-        assertEquals(onsdag, endretStartdatoOppgavetypeDataDTO.nyStartdato)
-
-        val oppgaver = endretStartdatoDeltakelse.oppgaver
-        assertThat(oppgaver).hasSize(1)
-        val oppgave = oppgaver.first()
-        assertThat(oppgave.oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_STARTDATO)
-        assertThat((oppgave.oppgavetypeData as EndretStartdatoOppgavetypeDataDTO).veilederRef).isEqualTo("abc-123")
     }
 
     @Test
@@ -317,21 +301,7 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
         assertThat(endretSluttdatoDeltakelse.fraOgMed).isEqualTo(mandag)
         assertThat(endretSluttdatoDeltakelse.tilOgMed).isEqualTo(onsdag.plusWeeks(1))
-
-        val endretSluttdatoOppgavetypeDataDTO =
-            endretSluttdatoDeltakelse.oppgaver.first().oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO
-        assertEquals(onsdag.plusWeeks(1), endretSluttdatoOppgavetypeDataDTO.nySluttdato)
-
-        val oppgaver = endretSluttdatoDeltakelse.oppgaver
-        assertThat(oppgaver).hasSize(1)
-        val oppgave = oppgaver.first()
-        assertThat(oppgave.oppgavetype).isEqualTo(Oppgavetype.BEKREFT_ENDRET_SLUTTDATO)
-        assertThat((oppgave.oppgavetypeData as EndretSluttdatoOppgavetypeDataDTO).veilederRef).isEqualTo("abc-123")
     }
 
-    private fun mockEndrePeriodeDTO(onsdag: LocalDate) = EndrePeriodeDatoDTO(
-        dato = onsdag,
-        veilederRef = "abc-123",
-        meldingFraVeileder = "Dette er en melding"
-    )
+    private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
 }
