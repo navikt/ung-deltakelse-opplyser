@@ -368,5 +368,5 @@ class OppgaveUngSakController(
         return deltaker
     }
 
-    private fun opprettOppgaveLenke(opprettetOppgave: OppgaveDAO) = "$deltakerAppBaseUrl/deltaker/oppgave/${opprettetOppgave.oppgaveReferanse}"
+    private fun opprettOppgaveLenke(opprettetOppgave: OppgaveDAO) = "$deltakerAppBaseUrl/oppgave/${opprettetOppgave.oppgaveReferanse}"
 }
