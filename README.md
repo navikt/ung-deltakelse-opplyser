@@ -128,29 +128,10 @@ Se [Henting av token](#henting-av-token) for mer info.
 # 10. Drift og støtte
 
 ## Tilkobling til database
-For å koble til databasen i dev-gcp må disse kommandoene kjøres:
-
-### Forberede database
-Forberedelse vil forberede postgres-instansen ved å koble til ved hjelp av applikasjonslegitimasjonene og som standard endre tillatelsene på det offentlige skjemaet. Alle IAM-brukere i ditt GCP-prosjekt vil kunne koble til instansen.
-Denne operasjonen trenger bare å kjøres én gang for hver postgresql-instans og skjema.
+For å koble til databasen i dev-gcp kan man kjøre denne hjelpe-scriptet:
 
 ```shell script
-nais postgres prepare --context dev-gcp --namespace k9saksbehandling ung-deltakelse-opplyser
-```
-
-### Gi tilgang til database
-Grant deg selv tilgang til en Postgres-database. Dette gjøres ved midlertidig å legge til brukeren din i listen over brukere som kan administrere Cloud SQL-instansene og opprette en databasebruker med e-posten din.
-Denne operasjonen trenger bare å kjøres én gang for hver postgresql-database.
-
-```shell script
-nais postgres grant --context dev-gcp --namespace k9saksbehandling ung-deltakelse-opplyser
-```
-
-### Koble til database
-Oppdater IAM-policyer ved å gi brukeren din en tidsbegrenset sql.cloudsql.instanceUser-rolle, og start deretter en proxy til instansen.
-
-```shell script
-nais postgres proxy --context dev-gcp --namespace k9saksbehandling ung-deltakelse-opplyser
+./scripts/nais-postgres.sh --context dev-gcp --namespace k9saksbehandling --app ung-deltakelse-opplyser
 ```
 
 ## Logging
@@ -193,3 +174,7 @@ i [nais/alerts.yml](nais/alerts.yml).
 Spørsmål koden eller prosjekttet kan rettes til team k9saksbehandling på:
 
 * [\#sif-saksbehandling](https://nav-it.slack.com/archives/CNUPK6T39)
+
+## Kode generert av GitHub Copilot
+
+Dette repoet bruker GitHub Copilot til å generere kode.

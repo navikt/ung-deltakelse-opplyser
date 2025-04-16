@@ -5,16 +5,10 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
@@ -28,8 +22,6 @@ import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.util.*
 
 @Service
