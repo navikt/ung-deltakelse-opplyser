@@ -67,6 +67,7 @@ class OppgaveUngSakController(
     @PostMapping("/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Avbryter oppgave")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     fun avbrytOppgave(@RequestBody oppgaveReferanse: UUID) {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Avbryter oppgave med referanse $oppgaveReferanse")
@@ -283,7 +284,7 @@ class OppgaveUngSakController(
         deltaker.leggTilOppgave(nyOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
 
-        mineSiderVarselService.opprettOppgve(
+        mineSiderVarselService.opprettOppgave(
             oppgaveId = nyOppgave.oppgaveReferanse.toString(),
             deltakerIdent = deltaker.deltakerIdent,
             oppgavetekster = listOf(

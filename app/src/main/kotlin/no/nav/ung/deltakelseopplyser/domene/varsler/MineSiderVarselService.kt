@@ -27,7 +27,7 @@ class MineSiderVarselService(
      * @param oppgavetekster Teksten som faktisk vises i varselet med språkkode.
      * @param oppgavelenke Lenke som blir aktivert når en person trykker på varselet i varselbjella eller på min side.
      */
-    fun opprettOppgve(oppgaveId: String, deltakerIdent: String, oppgavetekster: List<Tekst>, oppgavelenke: String) {
+    fun opprettOppgave(oppgaveId: String, deltakerIdent: String, oppgavetekster: List<Tekst>, oppgavelenke: String) {
         logger.info("Oppretter min-side oppgave med id $oppgaveId")
 
         val opprett: String = VarselActionBuilder.opprett {
@@ -91,8 +91,6 @@ class MineSiderVarselService(
                     throw RuntimeException(feilmelding, exception)
                 } else {
                     logger.info("Publiserte min-side oppgave: {}", sendResult.recordMetadata.toString())
-
-                    // TODO: Lagre oppgave.
                 }
             }
     }
@@ -120,8 +118,6 @@ class MineSiderVarselService(
                     throw RuntimeException(feilmelding, exception)
                 } else {
                     logger.info("Publiserte inaktivering av min-side oppgave: {}", sendResult.recordMetadata.toString())
-
-                    // TODO: Deaktiver oppgave i database.
                 }
             }
     }
