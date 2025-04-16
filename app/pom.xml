@@ -26,6 +26,7 @@
         <k9-format.version>11.5.0</k9-format.version>
         <k9-felles.version>4.4.24</k9-felles.version>
         <graphql-kotlin.version>8.5.0</graphql-kotlin.version>
+        <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
     </properties>
     <dependencies>
 
@@ -173,6 +174,14 @@
         </dependency>
         <!-- Database -->
 
+        <!-- Mine Sider (Nav.no) -->
+        <dependency>
+            <groupId>no.nav.tms.varsel</groupId>
+            <artifactId>kotlin-builder</artifactId>
+            <version>${tms-kotlin-builder.version}</version>
+        </dependency>
+        <!-- Mine Sider (Nav.no) -->
+
         <!-- Kotlin -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -283,7 +292,9 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathLayoutType>custom</classpathLayoutType>
-                            <customClasspathLayout>lib/$${artifact.groupId}.$${artifact.artifactId}-$${artifact.version}$${dashClassifier?}.$${artifact.extension}</customClasspathLayout>
+                            <customClasspathLayout>
+                                lib/$${artifact.groupId}.$${artifact.artifactId}-$${artifact.version}$${dashClassifier?}.$${artifact.extension}
+                            </customClasspathLayout>
                             <mainClass>no.nav.ung.deltakelseopplyser.UngDeltakelseOpplyserApplicationKt</mainClass>
                         </manifest>
                     </archive>
@@ -361,5 +372,11 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>nav-maven-repo</id>
+            <url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>
+        </repository>
+    </repositories>
 
 </project>
