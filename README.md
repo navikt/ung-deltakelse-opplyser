@@ -174,3 +174,7 @@ i [nais/alerts.yml](nais/alerts.yml).
 Spørsmål koden eller prosjekttet kan rettes til team k9saksbehandling på:
 
 * [\#sif-saksbehandling](https://nav-it.slack.com/archives/CNUPK6T39)
+
+## Kode generert av GitHub Copilot
+
+Dette repoet bruker GitHub Copilot til å generere kode.
