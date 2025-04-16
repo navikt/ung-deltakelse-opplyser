@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.oppgave
 
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
+import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
@@ -9,6 +10,7 @@ import java.util.*
 @Service
 class OppgaveService(
     private val deltakerService: DeltakerService,
+    private val mineSiderVarselService: MineSiderVarselService
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
@@ -28,11 +30,12 @@ class OppgaveService(
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
 
-
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
         oppgave.markerSomLøst()
 
         deltakerService.oppdaterDeltaker(deltaker)
-        // TODO: Inaktivere oppgave på mine-sider.
+
+        logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
+        mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 }

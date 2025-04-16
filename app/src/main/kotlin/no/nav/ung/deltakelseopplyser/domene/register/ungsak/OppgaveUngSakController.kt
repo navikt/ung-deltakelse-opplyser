@@ -2,8 +2,10 @@ package no.nav.ung.deltakelseopplyser.domene.register.ungsak
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.transaction.Transactional
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.tms.varsel.action.Tekst
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
@@ -17,6 +19,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
@@ -25,6 +28,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
@@ -52,6 +56,8 @@ class OppgaveUngSakController(
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val mineSiderVarselService: MineSiderVarselService,
+    @Value("\${UNGDOMSYTELSE_DELTAKER_BASE_URL}") private val deltakerAppBaseUrl: String
 ) {
 
     private companion object {
@@ -77,11 +83,15 @@ class OppgaveUngSakController(
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
+
+        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
+        mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
     @PostMapping("/utløpt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Setter oppgave til utløpt")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     fun utløperOppgave(@RequestBody oppgaveReferanse: UUID) {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Utløper oppgave med referanse $oppgaveReferanse")
@@ -98,12 +108,16 @@ class OppgaveUngSakController(
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
+
+        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
+        mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
     @Deprecated("Bruk /opprett/kontroll/registerinntekt")
     @PostMapping("/opprett", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     fun kontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): OppgaveDTO {
         tilgangskontrollService.krevSystemtilgang()
         val deltaker = forsikreEksistererIProgram(opprettOppgaveDto.deltakerIdent)
@@ -148,6 +162,7 @@ class OppgaveUngSakController(
     @PostMapping("/opprett/kontroll/registerinntekt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for kontroll av registerinntekt")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     fun opprettOppgaveForKontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): OppgaveDTO {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for kontroll av registerinntekt")
@@ -202,6 +217,7 @@ class OppgaveUngSakController(
     @PostMapping("/opprett/endre/programperiode", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for endret programperiode")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     fun opprettOppgaveForEndretProgramperiode(@RequestBody endretProgramperiodeOppgaveDTO: EndretProgamperiodeOppgaveDTO): OppgaveDTO {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for endret programperiode med referanse ${endretProgramperiodeOppgaveDTO.oppgaveReferanse}")
@@ -266,6 +282,20 @@ class OppgaveUngSakController(
         logger.info("Legger til oppgave med id ${nyOppgave.id} på deltaker med id ${deltaker.id}")
         deltaker.leggTilOppgave(nyOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
+
+        mineSiderVarselService.opprettOppgve(
+            oppgaveId = nyOppgave.oppgaveReferanse.toString(),
+            deltakerIdent = deltaker.deltakerIdent,
+            oppgavetekster = listOf(
+                Tekst(
+                    tekst = oppgavetype.mineSiderVarselTekst,
+                    spraakkode = "nb",
+                    default = true
+                )
+            ),
+            oppgavelenke = opprettOppgaveLenke(nyOppgave)
+        )
+
         return nyOppgave.tilDTO()
     }
 
@@ -337,4 +367,6 @@ class OppgaveUngSakController(
             )
         return deltaker
     }
+
+    private fun opprettOppgaveLenke(opprettetOppgave: OppgaveDAO) = "$deltakerAppBaseUrl/deltaker/oppgave/${opprettetOppgave.oppgaveReferanse}"
 }

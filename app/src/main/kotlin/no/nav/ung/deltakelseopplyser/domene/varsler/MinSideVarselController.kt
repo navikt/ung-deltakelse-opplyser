@@ -1,6 +1,7 @@
-package no.nav.ung.deltakelseopplyser.minesider.varsler
+package no.nav.ung.deltakelseopplyser.domene.varsler
 
 import io.swagger.v3.oas.annotations.Operation
+import jakarta.transaction.Transactional
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.tms.varsel.action.Tekst
@@ -29,6 +30,7 @@ class MinSideVarselController(
 
     @PostMapping("/opprett/oppgave", consumes = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Opprett en oppgave på Min side")
+    @Transactional
     fun meldInnDeltaker(@RequestBody opprettOppgaveDTO: OpprettOppgaveDTO) {
 
         mineSiderVarselService.opprettOppgve(
