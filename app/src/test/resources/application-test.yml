@@ -1,11 +1,3 @@
-ABAC_ENABLED: false
-UNGDOMSYTELSE_DELTAKER_BASE_URL: http://localhost:8080/ungdomsytelse-deltaker # placeholder
-AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}]\"
-
-NAIS_CLUSTER_NAME: dev-gcp
-NAIS_NAMESPACE: k9saksbehandling
-NAIS_APP_NAME: ung-deltakelse-opplyser
-
 PROGRAM_OPPSTART_DATO: 2024-01-01
 
 spring:
@@ -93,9 +85,3 @@ no.nav:
     ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/k9/sak
     sif-abac-pdp: http://localhost:${wiremock.server.port}/sif-abac-pdp-mock
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock
-    sokos-kontoregister-person-base-url: http://localhost:${wiremock.server.port}/sokos-kontoregister-person-mock
-
-wiremock:
-  reset-mappings-after-each-test: true
-  server:
-    port: 0 # random port

@@ -22,8 +22,7 @@ class TilgangskontrollService(
     private val sifAbacPdpService: SifAbacPdpService,
     private val tokenResolver: JwtBearerTokenResolver,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
-    @Value("\${ABAC_ENABLED}") private val abacEnabled: String,
-    @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String
+    @Value("\${azure.app.pre.authorized.apps") private val azureAppPreAuthorizedAppsString: String
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
@@ -52,37 +51,23 @@ class TilgangskontrollService(
     }
 
     fun krevSystemtilgang(godkjenteApplikasjoner: List<String> = listOf("ung-sak")) {
-        try {
-            val jwt = hentTokenForInnloggetBruker()
-            val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
-            val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
-            val azp = jwt.jwtTokenClaims.getStringClaim("azp")
-            val godkjenteClidentIds = godkjenteApplikasjoner.map { clientIdForApplikasjon(it) }
-            val erGodkjentApplikasjon = godkjenteClidentIds.contains(azp)
-            logger.info("Azp i token '{}' azpname '{}' godkjente applikasjoner '{}' godkjente clientID '{}'", azp, jwt.jwtTokenClaims.getStringClaim("azp_name"), godkjenteApplikasjoner, godkjenteClidentIds)
-            val tilgang = erAzureToken && erClientCredentials && erGodkjentApplikasjon
-            if (abacEnabled == "false") {
-                logger.info("Tilgangskontroll er disabled")
-                return;
-            }
-            if (!tilgang) {
-                throw ErrorResponseException(
+        val jwt = hentTokenForInnloggetBruker()
+        val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
+        val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
+        val azp = jwt.jwtTokenClaims.getStringClaim("azp")
+        val godkjenteClidentIds = godkjenteApplikasjoner.map { clientIdForApplikasjon(it) }
+        val erGodkjentApplikasjon = godkjenteClidentIds.contains(azp)
+        logger.info("Azp i token '{}' azpname '{}' godkjente applikasjoner '{}' godkjente clientID '{}'", azp, jwt.jwtTokenClaims.getStringClaim("azp_name"), godkjenteApplikasjoner, godkjenteClidentIds)
+        val tilgang = erAzureToken && erClientCredentials && erGodkjentApplikasjon
+        if (!tilgang) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
                     HttpStatus.FORBIDDEN,
-                    ProblemDetail.forStatusAndDetail(
-                        HttpStatus.FORBIDDEN,
-                        "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
-                    ),
-                    null
-                )
-            }
-        } catch (e: ErrorResponseException) {
-            throw e
-        } catch (e: Exception) {
-            if (abacEnabled == "false") {
-                logger.warn("Feil i tilgangskontroll, tilgangskontroll er disablet så ignorerer feil", e)
-            } else {
-                throw e
-            }
+                    "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
+                ),
+                null
+            )
         }
     }
 
