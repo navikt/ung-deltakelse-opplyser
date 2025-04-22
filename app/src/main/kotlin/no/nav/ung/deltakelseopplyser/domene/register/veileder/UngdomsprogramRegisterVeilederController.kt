@@ -8,7 +8,6 @@ import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.*
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
-import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -25,11 +24,6 @@ import java.util.*
 @RestController
 @RequestMapping("/veileder/register")
 @RequiredIssuers(
-    ProtectedWithClaims(
-        issuer = TOKEN_X, //TODO fjerne tokenx
-        claimMap = ["acr=Level4", "acr=idporten-loa-high"],
-        combineWithOr = true
-    ),
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
 @Tag(name = "Veileder", description = "API for å legge til, hente, oppdatere og fjerne deltakelser i ungdomsprogrammet")

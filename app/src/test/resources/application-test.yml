@@ -1,5 +1,3 @@
-ABAC_ENABLED: false
-
 spring:
   datasource:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
