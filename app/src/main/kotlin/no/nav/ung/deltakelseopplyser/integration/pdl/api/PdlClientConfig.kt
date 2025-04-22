@@ -63,7 +63,7 @@ class PdlClientConfig(
             .filter(requestTracingInterceptor())
             .defaultRequest {
                 it.header("Tema", "OMS")
-                it.header(BEHANLINGSNUMMER, "B249") // TODO: Bytt ut med riktig behandlingsnummer før lansering
+                it.header(BEHANLINGSNUMMER, "B950")
             }
     )
 

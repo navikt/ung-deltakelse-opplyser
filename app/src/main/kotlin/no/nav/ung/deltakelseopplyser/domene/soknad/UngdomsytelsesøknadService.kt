@@ -46,8 +46,6 @@ class UngdomsytelsesøknadService(
             logger.info("Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.", deltakelseDAO.id)
         }
 
-        // TODO: Marker deltakelsens relevante oppgave som løst hvis den har en endret startdato eller sluttdato
-
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
         søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
     }
