@@ -69,6 +69,8 @@
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.prod-fss-pub.nais.io",
     "PDL_API_AZURE_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
 
+    "UNGDOMSYTELSE_DELTAKER_BASE_URL": "https://www.nav.no/ungdomsytelse-deltaker",
+
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0",
     "ABAC_ENABLED": "true"
