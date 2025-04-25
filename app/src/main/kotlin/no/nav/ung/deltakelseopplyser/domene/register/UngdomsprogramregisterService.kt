@@ -68,6 +68,18 @@ class UngdomsprogramregisterService(
         }
 
         val ungdomsprogramDAO = forsikreEksistererIProgram(id)
+
+        if (ungdomsprogramDAO.harSøkt) {
+            logger.error("Klarte ikke å slette deltaker fra programmet med id $id, fordi deltakeren har søkt")
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatus(HttpStatus.FORBIDDEN).also {
+                    it.detail = "Deltakeren har søkt og deltakelsen kan derfor ikke slettes"
+                },
+                null
+            )
+        }
+
         deltakelseRepository.delete(ungdomsprogramDAO)
 
         if (deltakelseRepository.existsById(id)) {
