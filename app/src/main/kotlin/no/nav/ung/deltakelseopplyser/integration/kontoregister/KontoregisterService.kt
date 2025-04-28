@@ -26,11 +26,6 @@ import java.net.URI
 
 @Retryable(
     noRetryFor = [
-        HttpClientErrorException.BadRequest::class,
-        HttpClientErrorException.Unauthorized::class,
-        HttpClientErrorException.Forbidden::class,
-        HttpClientErrorException.NotFound::class,
-        HttpClientErrorException.MethodNotAllowed::class,
         ResourceAccessException::class,
         KontoregisterException::class
     ],
