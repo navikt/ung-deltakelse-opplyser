@@ -10,6 +10,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService.Companion.rapporteringsPerioder
+import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -61,6 +62,9 @@ class UngdomsprogramregisterServiceTest {
 
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
+
+    @MockkBean(relaxed = true)
+    lateinit var kontoregisterService: KontoregisterService
 
     @MockkBean(relaxed = true)
     lateinit var pdlService: PdlService
