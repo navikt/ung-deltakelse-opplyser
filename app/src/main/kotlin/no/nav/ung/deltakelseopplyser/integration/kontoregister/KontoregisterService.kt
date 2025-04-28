@@ -17,6 +17,12 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
 
+/**
+ * Service for å hente kontonummer fra kontoregisteret.
+ *
+ * Se [Kontoregister borger-API](https://sokos-kontoregister-person.intern.dev.nav.no/api/borger/v1/docs/#/kontoregister.v1) for mer informasjon.
+ */
+
 @Retryable(
     noRetryFor = [KontoregisterException::class, HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
     backoff = Backoff(
