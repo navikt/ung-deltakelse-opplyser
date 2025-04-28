@@ -27,7 +27,7 @@ class DeltakerRegisterInfoController(
     private val deltakerService: DeltakerService,
 ) {
 
-    @GetMapping("/aktiv-kontonummer", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/hent-kontonummer", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Henter kontonummer for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleMineDeltakelser(): DeltakerService.KontonummerDTO {
