@@ -1,7 +1,6 @@
 spring:
   application:
     name: # Settes i nais/<cluster>.json
-
   flyway:
     enabled: true
   jpa:
@@ -17,6 +16,13 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+  rest:
+    retry:
+      multiplier: 2
+      initialDelay: 1000
+      maxDelay: 4000
+      maxAttempts: 3
 
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS}
