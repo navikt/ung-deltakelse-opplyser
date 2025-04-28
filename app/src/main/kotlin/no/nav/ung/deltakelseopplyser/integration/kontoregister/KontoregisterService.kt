@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.kontoregister
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -34,7 +35,10 @@ import java.net.URI
 
     )
 @Service
-class KontoregisterService(@Qualifier("kontoregisterKlient") private val kontoregisterKlient: RestTemplate) {
+class KontoregisterService(
+    @Qualifier("kontoregisterKlient") private val kontoregisterKlient: RestTemplate,
+    private val objectMapper: ObjectMapper,
+) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(KontoregisterService::class.java)
 
@@ -54,28 +58,34 @@ class KontoregisterService(@Qualifier("kontoregisterKlient") private val kontore
     }
 
     @Recover
-    private fun hentAktivKonto(
-        exception: HttpClientErrorException,
-    ): Konto {
-        logger.error("Fikk en HttpClientErrorException ved kall mot $TJENESTE_NAVN. Error response = '${exception.responseBodyAsString}'")
-        throw exception
+    fun recoverClientError(ex: HttpClientErrorException): Konto {
+        val feilmelding = parseFeilmelding(ex.responseBodyAsString)
+        logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
+        throw KontoregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))
     }
 
     @Recover
-    private fun hentAktivKonto(
-        exception: HttpServerErrorException,
-    ): Konto {
-        logger.error("Fikk en HttpServerErrorException ved oppslag mot $TJENESTE_NAVN. Error response = '${exception.responseBodyAsString}'")
-        throw exception
+    fun recoverServerError(ex: HttpServerErrorException): Konto {
+        val feilmelding = parseFeilmelding(ex.responseBodyAsString)
+        logger.error("Serverfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
+        throw KontoregisterException("Annen feil: $feilmelding", HttpStatus.valueOf(ex.statusCode.value()))
     }
 
     @Recover
-    private fun hentAktivKonto(
-        exception: ResourceAccessException,
-    ): Konto {
-        logger.error("Fikk en ResourceAccessException oppslag mot $TJENESTE_NAVN. Error response = '${exception.message}'")
-        throw exception
+    fun recoverResourceAccess(ex: ResourceAccessException): Konto {
+        logger.error("Tilgangsfeil mot $TJENESTE_NAVN: ${ex.message}")
+        throw KontoregisterException(
+            "Kunne ikke nå kontoregisteret: ${ex.message}",
+            HttpStatus.SERVICE_UNAVAILABLE
+        )
     }
+
+    private fun parseFeilmelding(body: String): String =
+        try {
+            objectMapper.readTree(body).get("feilmelding")?.asText() ?: body
+        } catch (_: Exception) {
+            body
+        }
 }
 
 data class Konto(val kontonummer: String)
