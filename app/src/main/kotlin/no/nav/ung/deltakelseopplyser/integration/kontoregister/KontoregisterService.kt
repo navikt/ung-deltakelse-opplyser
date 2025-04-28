@@ -65,21 +65,21 @@ class KontoregisterService(
     }
 
     @Recover
-    fun recoverClientError(ex: HttpClientErrorException): Konto {
+    open fun hentAktivKonto(ex: HttpClientErrorException): Konto {
         val feilmelding = parseFeilmelding(ex.responseBodyAsString)
         logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
         throw KontoregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))
     }
 
     @Recover
-    fun recoverServerError(ex: HttpServerErrorException): Konto {
+    open fun recoverServerError(ex: HttpServerErrorException): Konto {
         val feilmelding = parseFeilmelding(ex.responseBodyAsString)
         logger.error("Serverfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
         throw KontoregisterException("Annen feil: $feilmelding", HttpStatus.valueOf(ex.statusCode.value()))
     }
 
     @Recover
-    fun recoverResourceAccess(ex: ResourceAccessException): Konto {
+    open fun recoverResourceAccess(ex: ResourceAccessException): Konto {
         logger.error("Tilgangsfeil mot $TJENESTE_NAVN: ${ex.message}")
         throw KontoregisterException(
             "Kunne ikke nå kontoregisteret: ${ex.message}",
