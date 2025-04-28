@@ -25,15 +25,22 @@ import java.net.URI
  */
 
 @Retryable(
-    noRetryFor = [KontoregisterException::class, HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
+    noRetryFor = [
+        HttpClientErrorException.BadRequest::class,
+        HttpClientErrorException.Unauthorized::class,
+        HttpClientErrorException.Forbidden::class,
+        HttpClientErrorException.NotFound::class,
+        HttpClientErrorException.MethodNotAllowed::class,
+        ResourceAccessException::class,
+        KontoregisterException::class
+    ],
     backoff = Backoff(
         delayExpression = "\${spring.rest.retry.initialDelay}",
         multiplierExpression = "\${spring.rest.retry.multiplier}",
         maxDelayExpression = "\${spring.rest.retry.maxDelay}"
     ),
     maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
-
-    )
+)
 @Service
 class KontoregisterService(
     @Qualifier("kontoregisterKlient") private val kontoregisterKlient: RestTemplate,
