@@ -64,7 +64,7 @@ class KontoregisterService(@Qualifier("kontoregisterKlient") private val kontore
     @Recover
     private fun hentAktivKonto(
         exception: HttpServerErrorException,
-    ): Boolean {
+    ): Konto {
         logger.error("Fikk en HttpServerErrorException ved oppslag mot $TJENESTE_NAVN. Error response = '${exception.responseBodyAsString}'")
         throw exception
     }
