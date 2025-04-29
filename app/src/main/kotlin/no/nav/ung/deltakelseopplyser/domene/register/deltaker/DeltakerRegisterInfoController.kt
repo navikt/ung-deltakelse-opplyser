@@ -6,6 +6,7 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.KontonummerDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
@@ -30,7 +31,7 @@ class DeltakerRegisterInfoController(
     @GetMapping("/hent-kontonummer", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Henter kontonummer for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentKontonummer(): DeltakerService.KontonummerDTO {
+    fun hentKontonummer(): KontonummerDTO {
         return deltakerService.hentKontonummer()
     }
 }

@@ -8,6 +8,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.KontonummerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -157,10 +158,6 @@ class DeltakerService(
             kontonummer = kontoregisterService.hentAktivKonto().kontonummer
         )
     }
-
-    data class KontonummerDTO(
-        val kontonummer: String,
-    )
 
     data class DeltakerPersonlia(
         val id: UUID? = null,
