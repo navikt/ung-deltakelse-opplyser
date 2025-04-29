@@ -72,7 +72,18 @@ no.nav:
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
 
+          tokenx-sokos-kontoregister-person:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
+            token-exchange:
+              audience: dev-gcp:okonomi:sokos-kontoregister-person
+
   gateways:
     ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/k9/sak
     sif-abac-pdp: http://localhost:${wiremock.server.port}/sif-abac-pdp-mock
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock
+    sokos-kontoregister-person-base-url: http://localhost:${wiremock.server.port}/sokos-kontoregister-person-mock

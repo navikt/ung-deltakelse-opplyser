@@ -5,8 +5,10 @@ import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.KontonummerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -20,6 +22,7 @@ import java.util.*
 class DeltakerService(
     private val deltakerRepository: DeltakerRepository,
     private val pdlService: PdlService,
+    private val kontoregisterService: KontoregisterService,
 ) {
 
     companion object {
@@ -148,6 +151,12 @@ class DeltakerService(
 
     private fun Foedselsdato.toLocalDate(): LocalDate {
         return LocalDate.parse(foedselsdato.toString())
+    }
+
+    fun hentKontonummer(): KontonummerDTO {
+        return KontonummerDTO(
+            kontonummer = kontoregisterService.hentAktivKonto().kontonummer
+        )
     }
 
     data class DeltakerPersonlia(

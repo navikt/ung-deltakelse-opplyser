@@ -47,6 +47,8 @@ spec:
       rules:
         - application: k9-selvbetjening-oppslag
         - application: sif-abac-pdp
+        - application: sokos-kontoregister-person
+          namespace: okonomi
       external:
         {{#each externalHosts as |host|}}
         - host: {{host}}

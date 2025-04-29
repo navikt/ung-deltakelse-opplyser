@@ -79,6 +79,9 @@
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.dev-fss-pub.nais.io",
     "PDL_API_AZURE_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
 
+    "NO_NAV_GATEWAYS_SOKOS_KONTOREGISTER_PERSON_BASE_URL": "http://sokos-kontoregister-person.okonomi",
+    "SOKOS_KONTOREGISTER_PERSON_AUDIENCE": "dev-gcp:okonomi:sokos-kontoregister-person",
+
     "UNGDOMSYTELSE_DELTAKER_BASE_URL": "https://ungdomsytelse-deltaker.intern.dev.nav.no/ungdomsytelse-deltaker",
 
     "SWAGGER_ENABLED": "true",

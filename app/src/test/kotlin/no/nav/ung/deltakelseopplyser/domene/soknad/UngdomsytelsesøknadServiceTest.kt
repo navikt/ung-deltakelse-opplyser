@@ -20,6 +20,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
+import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -54,6 +55,9 @@ class UngdomsytelsesøknadServiceTest {
 
     @MockkBean
     lateinit var ungSakService: UngSakService
+
+    @MockkBean
+    lateinit var kontoregisterService: KontoregisterService
 
     @Autowired
     lateinit var ungdomsprogramDeltakelseRepository: UngdomsprogramDeltakelseRepository
