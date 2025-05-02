@@ -23,7 +23,7 @@ class TilgangskontrollService(
     private val tokenResolver: JwtBearerTokenResolver,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
     @Value("\${ABAC_ENABLED}") private val abacEnabled: String,
-    @Value("\${azure.app.pre.authorized.apps}") private val azureAppPreAuthorizedAppsString: String
+    @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)

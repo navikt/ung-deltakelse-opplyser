@@ -1,5 +1,8 @@
 ABAC_ENABLED: false
 UNGDOMSYTELSE_DELTAKER_BASE_URL: http://localhost:8080/ungdomsytelse-deltaker # placeholder
+AZURE_APP_PRE_AUTHORIZED_APPS: \"[{\"name":\":ung-sak\", \"clientId\":\"vtp\"}]\"
+
+
 
 spring:
   datasource:
