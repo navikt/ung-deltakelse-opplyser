@@ -12,3 +12,5 @@ spring:
       sasl:
         mechanism: PLAIN
         jaas.config: "org.apache.kafka.common.security.scram.ScramLoginModule required username='vtp' password='vtp';"
+logging:
+  config: classpath:logback-vtp.xml
