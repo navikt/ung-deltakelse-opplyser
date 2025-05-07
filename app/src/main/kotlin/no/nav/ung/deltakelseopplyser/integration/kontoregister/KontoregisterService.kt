@@ -59,7 +59,7 @@ class KontoregisterService(
         )
         val konto = response.body!!
         return KontonummerDTO(
-            harKontonummmer = true,
+            harKontonummer = true,
             kontonummer = konto.kontonummer
         )
     }
@@ -70,7 +70,7 @@ class KontoregisterService(
         logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
 
         if (ex.statusCode == HttpStatus.NOT_FOUND) {
-            return KontonummerDTO(harKontonummmer = false)
+            return KontonummerDTO(harKontonummer = false)
         }
 
         throw KontoregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))

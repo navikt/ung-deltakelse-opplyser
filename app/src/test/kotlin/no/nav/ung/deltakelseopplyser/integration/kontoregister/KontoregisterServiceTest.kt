@@ -53,7 +53,7 @@ class KontoregisterServiceTest {
         )
 
         val kontonummerDTO = kontoregisterService.hentAktivKonto()
-        assertThat(kontonummerDTO.harKontonummmer).isTrue()
+        assertThat(kontonummerDTO.harKontonummer).isTrue()
         assertThat(kontonummerDTO.kontonummer).isEqualTo("12345678901")
     }
 
@@ -66,7 +66,7 @@ class KontoregisterServiceTest {
         )
 
         val kontonummerDTO = kontoregisterService.hentAktivKonto()
-        assertThat(kontonummerDTO.harKontonummmer).isFalse()
+        assertThat(kontonummerDTO.harKontonummer).isFalse()
         assertThat(kontonummerDTO.kontonummer).isNull()
     }
 
