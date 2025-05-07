@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.integration.kontoregister
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.KontonummerDTO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -49,32 +50,41 @@ class KontoregisterService(
         private val hentAktivKontoUrl = "/api/borger/v1/hent-aktiv-konto"
     }
 
-    fun hentAktivKonto(): Konto {
+    fun hentAktivKonto(): KontonummerDTO {
         val response = kontoregisterKlient.exchange(
             hentAktivKontoUrl,
             HttpMethod.GET,
             null,
             Konto::class.java
         )
-        return response.body!!
+        val konto = response.body!!
+        return KontonummerDTO(
+            harKontonummmer = true,
+            kontonummer = konto.kontonummer
+        )
     }
 
     @Recover
-    open fun hentAktivKonto(ex: HttpClientErrorException): Konto {
+    open fun hentAktivKonto(ex: HttpClientErrorException): KontonummerDTO {
         val feilmelding = parseFeilmelding(ex.responseBodyAsString)
         logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
+
+        if (ex.statusCode == HttpStatus.NOT_FOUND) {
+            return KontonummerDTO(harKontonummmer = false)
+        }
+
         throw KontoregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))
     }
 
     @Recover
-    open fun recoverServerError(ex: HttpServerErrorException): Konto {
+    open fun recoverServerError(ex: HttpServerErrorException): KontonummerDTO {
         val feilmelding = parseFeilmelding(ex.responseBodyAsString)
         logger.error("Serverfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
         throw KontoregisterException("Annen feil: $feilmelding", HttpStatus.valueOf(ex.statusCode.value()))
     }
 
     @Recover
-    open fun recoverResourceAccess(ex: ResourceAccessException): Konto {
+    open fun recoverResourceAccess(ex: ResourceAccessException): KontonummerDTO {
         logger.error("Tilgangsfeil mot $TJENESTE_NAVN: ${ex.message}")
         throw KontoregisterException(
             "Kunne ikke nå kontoregisteret: ${ex.message}",

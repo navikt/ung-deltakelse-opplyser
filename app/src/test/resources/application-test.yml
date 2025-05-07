@@ -87,3 +87,8 @@ no.nav:
     sif-abac-pdp: http://localhost:${wiremock.server.port}/sif-abac-pdp-mock
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock
     sokos-kontoregister-person-base-url: http://localhost:${wiremock.server.port}/sokos-kontoregister-person-mock
+
+wiremock:
+  reset-mappings-after-each-test: true
+  server:
+    port: 0 # random port
