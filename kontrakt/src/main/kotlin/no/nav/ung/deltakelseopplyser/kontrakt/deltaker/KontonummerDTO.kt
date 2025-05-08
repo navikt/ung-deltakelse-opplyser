@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.deltaker
 
 data class KontonummerDTO(
-    val kontonummer: String,
+    val harKontonummer: Boolean,
+    val kontonummer: String? = null,
 )

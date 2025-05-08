@@ -154,9 +154,7 @@ class DeltakerService(
     }
 
     fun hentKontonummer(): KontonummerDTO {
-        return KontonummerDTO(
-            kontonummer = kontoregisterService.hentAktivKonto().kontonummer
-        )
+        return kontoregisterService.hentAktivKonto()
     }
 
     data class DeltakerPersonlia(
