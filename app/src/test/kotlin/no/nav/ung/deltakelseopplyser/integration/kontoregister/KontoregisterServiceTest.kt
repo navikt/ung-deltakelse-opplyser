@@ -68,6 +68,8 @@ class KontoregisterServiceTest {
         val kontonummerDTO = kontoregisterService.hentAktivKonto()
         assertThat(kontonummerDTO.harKontonummer).isFalse()
         assertThat(kontonummerDTO.kontonummer).isNull()
+
+        verifiserAntallKall(1, "$KONTOREGISTER_BASE_PATH/hent-aktiv-konto")
     }
 
     @Test
@@ -82,6 +84,15 @@ class KontoregisterServiceTest {
         assertThat(kontoregisterException.body.type).isEqualTo(URI("/problem-details/sokos-kontoregister-person"))
         assertThat(kontoregisterException.body.title).isEqualTo("Feil ved kall mot sokos-kontoregister-person")
         assertThat(kontoregisterException.body.detail).isEqualTo("Annen feil: Noe har gått galt")
+
+        verifiserAntallKall(3, "$KONTOREGISTER_BASE_PATH/hent-aktiv-konto")
+    }
+
+    private fun verifiserAntallKall(antallKall: Int, urlPath: String) {
+        wireMockServer.verify(
+            antallKall,
+            WireMock.getRequestedFor(WireMock.urlPathEqualTo(urlPath))
+        )
     }
 
     private fun mockHentKontonummer(statusKode: Int, body: String?) {

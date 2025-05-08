@@ -51,16 +51,26 @@ class KontoregisterService(
     }
 
     fun hentAktivKonto(): KontonummerDTO {
-        val response = kontoregisterKlient.exchange(
-            hentAktivKontoUrl,
-            HttpMethod.GET,
-            null,
-            Konto::class.java
-        )
-        val konto = response.body!!
-        return KontonummerDTO(
-            harKontonummer = true,
-            kontonummer = konto.kontonummer
+        return kotlin.runCatching {
+            kontoregisterKlient.exchange(
+                hentAktivKontoUrl,
+                HttpMethod.GET,
+                null,
+                Konto::class.java
+            )
+        }.fold(
+            onSuccess = {
+                KontonummerDTO(
+                    harKontonummer = true,
+                    kontonummer = it.body!!.kontonummer
+                )
+            },
+            onFailure = {
+                if (it is HttpClientErrorException.NotFound) {
+                    return KontonummerDTO(harKontonummer = false)
+                }
+                throw it
+            }
         )
     }
 
@@ -68,10 +78,6 @@ class KontoregisterService(
     open fun hentAktivKonto(ex: HttpClientErrorException): KontonummerDTO {
         val feilmelding = parseFeilmelding(ex.responseBodyAsString)
         logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
-
-        if (ex.statusCode == HttpStatus.NOT_FOUND) {
-            return KontonummerDTO(harKontonummer = false)
-        }
 
         throw KontoregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))
     }
