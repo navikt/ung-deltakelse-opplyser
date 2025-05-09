@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import java.time.LocalDate
 
 @JsonTypeInfo(
@@ -76,6 +77,6 @@ data class ArbeidOgFrilansRegisterInntektDAO(
 
 data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
-    @JsonProperty("ytelsetype") val ytelsetype: String,
+    @JsonProperty("ytelsetype") val ytelsetype: YtelseType,
 )
 

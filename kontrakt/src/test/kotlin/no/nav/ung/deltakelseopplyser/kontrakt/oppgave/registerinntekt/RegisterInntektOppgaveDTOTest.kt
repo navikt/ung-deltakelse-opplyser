@@ -46,6 +46,58 @@ class RegisterInntektOppgaveDTOTest {
         assertEquals("910909088", dto.registerInntekter.registerinntekterForArbeidOgFrilans?.get(0)?.arbeidsgiverIdent)
     }
 
+    @Test
+    fun `skal serialisere input`() {
+        //language=JSON
+        val utenYtelse = """
+            {
+              "deltakerIdent": "99154987302",
+              "referanse": "0fc3f6fc-0eb1-4c51-9822-61ab3e71090b",
+              "frist": "2025-04-04T07:37:20.251902",
+              "fomDato": "2025-01-01",
+              "tomDato": "2025-02-01",
+              "registerInntekter": {
+                "registerinntekterForArbeidOgFrilans": [
+                  {
+                    "beløp": 10000,
+                    "arbeidsgiverIdent": "910909088"
+                  }
+                ],
+                "registerinntekterForYtelse": [
+                  {
+                    "beløp": 1,
+                    "ytelseType": "SP"
+                  },
+                  {
+                    "beløp": 2,
+                    "ytelseType": "PSB"
+                  },
+                  {
+                    "beløp": 3,
+                    "ytelseType": "PLS"
+                  },
+                {
+                    "beløp": 4,
+                    "ytelseType": "OP"
+                },
+                {
+                    "beløp": 5,
+                    "ytelseType": "OLP"
+                }
+              ]
+            }
+            }"""
+        val dto: RegisterInntektOppgaveDTO = mapper.readValue(utenYtelse, RegisterInntektOppgaveDTO::class.java)
+
+        assertEquals("99154987302", dto.deltakerIdent)
+        assertEquals(5, dto.registerInntekter.registerinntekterForYtelse?.size)
+        assertEquals(1, dto.registerInntekter.registerinntekterForYtelse?.first()?.beløp)
+
+        assertEquals(1, dto.registerInntekter.registerinntekterForArbeidOgFrilans?.size)
+        assertEquals(10000, dto.registerInntekter.registerinntekterForArbeidOgFrilans?.get(0)?.beløp)
+        assertEquals("910909088", dto.registerInntekter.registerinntekterForArbeidOgFrilans?.get(0)?.arbeidsgiverIdent)
+    }
+
 
     @Test
     fun `skal serialisere input uten arbeidsinntekt`() {
