@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.varsler
 
 import no.nav.tms.varsel.action.EksternKanal
+import no.nav.tms.varsel.action.Produsent
 import no.nav.tms.varsel.action.Sensitivitet
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
@@ -14,6 +15,10 @@ import org.springframework.stereotype.Service
 class MineSiderVarselService(
     @Value("\${topic.producer.min-side-varsel.navn}") private val minSideVarselTopic: String,
     private val kafkaTemplate: KafkaTemplate<String, String>,
+    @Value("\${NAIS_CLUSTER_NAME}") private val cluster: String,
+    @Value("\${NAIS_NAMESPACE}") private val namespace: String,
+    @Value("\${NAIS_APP_NAME}") private val appName: String,
+
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(MineSiderVarselService::class.java)
@@ -80,6 +85,8 @@ class MineSiderVarselService(
             eksternVarsling {
                 preferertKanal = EksternKanal.SMS
             }
+
+            produsent = produsent()
         }
 
         kafkaTemplate.send(minSideVarselTopic, oppgaveId, opprett)
@@ -107,6 +114,7 @@ class MineSiderVarselService(
          */
         val inaktiver = VarselActionBuilder.inaktiver {
             varselId = oppgaveId
+            produsent = produsent()
         }
 
         kafkaTemplate.send(minSideVarselTopic, oppgaveId, inaktiver)
@@ -121,4 +129,10 @@ class MineSiderVarselService(
                 }
             }
     }
+
+    private fun produsent() = Produsent(
+        cluster = cluster,
+        namespace = namespace,
+        appnavn = appName,
+    )
 }

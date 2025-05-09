@@ -8,6 +8,7 @@ data class OppgaveDTO(
     @JsonProperty("oppgaveReferanse") val oppgaveReferanse: UUID,
     @JsonProperty("oppgavetype") val oppgavetype: Oppgavetype,
     @JsonProperty("oppgavetypeData") val oppgavetypeData: OppgavetypeDataDTO,
+    @JsonProperty("bekreftelse") val bekreftelse: BekreftelseDTO?,
     @JsonProperty("status") val status: OppgaveStatus,
     @JsonProperty("opprettetDato") val opprettetDato: ZonedDateTime,
     @JsonProperty("løstDato") val løstDato: ZonedDateTime?,

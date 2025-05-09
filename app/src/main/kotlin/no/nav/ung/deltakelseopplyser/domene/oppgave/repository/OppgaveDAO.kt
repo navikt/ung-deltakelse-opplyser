@@ -10,8 +10,16 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretProgramperiodeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.Type
@@ -50,20 +58,32 @@ class OppgaveDAO(
     @Column(name = "oppgavetype_data", columnDefinition = "jsonb")
     val oppgavetypeDataDAO: OppgavetypeDataDAO,
 
+    @Type(JsonBinaryType::class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "oppgave_bekreftelse", columnDefinition = "jsonb")
+    var oppgaveBekreftelse: OppgaveBekreftelse? = null,
+
     @Column(name = "opprettet_dato", nullable = false)
     val opprettetDato: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
 
     @Column(name = "løst_dato")
     var løstDato: ZonedDateTime? = null,
 ) {
+
     companion object {
         fun OppgaveDAO.tilDTO() = OppgaveDTO(
             oppgaveReferanse = oppgaveReferanse,
             oppgavetype = oppgavetype,
             oppgavetypeData = oppgavetypeDataDAO.tilDTO(),
+            bekreftelse = oppgaveBekreftelse?.tilDTO(),
             status = status,
             opprettetDato = opprettetDato,
             løstDato = løstDato
+        )
+
+        fun OppgaveBekreftelse.tilDTO(): BekreftelseDTO = BekreftelseDTO(
+            harGodtattEndringen = harGodtattEndringen,
+            uttalelseFraBruker = uttalelseFraBruker,
         )
 
         fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
