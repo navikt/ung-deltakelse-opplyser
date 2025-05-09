@@ -10,7 +10,7 @@ data class DeltakerPersonalia(
     val deltakerIdent: String,
     val navn: Navn,
     val fødselsdato: LocalDate,
-    val programOppstartdato: LocalDate? = null,
+    private val programOppstartdato: LocalDate? = null,
 ) {
     @get:JsonProperty("førsteMuligeInnmeldingsdato")
     val førsteMuligeInnmeldingsdato: LocalDate
