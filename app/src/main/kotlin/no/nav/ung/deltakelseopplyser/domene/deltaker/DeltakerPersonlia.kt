@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.deltaker
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.pdl.generated.hentperson.Navn
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.*
 
@@ -18,6 +19,11 @@ data class DeltakerPersonalia(
     private fun programOppstartDato(): LocalDate? =
         System
             .getProperty(PROGRAM_OPPSTART_DATO_PROPERTY)
+            .also {
+                if (it != null) {
+                    LoggerFactory.getLogger(DeltakerPersonalia::class.java).info("Bruker system-egenskap $PROGRAM_OPPSTART_DATO_PROPERTY med verdi $it")
+                }
+            }
             .takeIf { it?.isNotBlank() == true }
             ?.let(LocalDate::parse)
 
