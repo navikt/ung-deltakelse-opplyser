@@ -9,8 +9,6 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import no.nav.k9.oppgave.OppgaveBekreftelse
-import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
@@ -83,13 +81,10 @@ class OppgaveDAO(
             løstDato = løstDato
         )
 
-        fun OppgaveBekreftelse.tilDTO(): BekreftelseDTO {
-            val bekreftelse = getBekreftelse<Bekreftelse>()
-            return BekreftelseDTO(
-                harGodtattEndringen = bekreftelse.harBrukerGodtattEndringen(),
-                uttalelseFraBruker = bekreftelse.uttalelseFraBruker,
-            )
-        }
+        fun OppgaveBekreftelse.tilDTO(): BekreftelseDTO = BekreftelseDTO(
+            harGodtattEndringen = harGodtattEndringen,
+            uttalelseFraBruker = uttalelseFraBruker,
+        )
 
         fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
             is EndretProgramperiodeOppgavetypeDataDAO -> EndretProgramperiodeDataDTO(

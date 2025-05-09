@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
-import no.nav.k9.oppgave.OppgaveBekreftelse
+import no.nav.k9.oppgave.OppgaveBekreftelse as UngOppgaveBekreftelse
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretProgramperiodeBekreftelse
@@ -42,7 +42,11 @@ class OppgaveService(
         oppgave.markerSomLøst()
 
         forsikreRiktigOppgaveBekreftelse(oppgave, oppgaveBekreftelse)
-        oppgave.oppgaveBekreftelse = oppgaveBekreftelse
+        val bekreftelse = oppgaveBekreftelse.getBekreftelse<Bekreftelse>()
+        oppgave.oppgaveBekreftelse = no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveBekreftelse(
+            harGodtattEndringen = bekreftelse.harBrukerGodtattEndringen(),
+            uttalelseFraBruker = bekreftelse.uttalelseFraBruker
+        )
 
         deltakerService.oppdaterDeltaker(deltaker)
 
@@ -52,7 +56,7 @@ class OppgaveService(
 
     private fun forsikreRiktigOppgaveBekreftelse(
         oppgave: OppgaveDAO,
-        oppgaveBekreftelse: OppgaveBekreftelse,
+        oppgaveBekreftelse: UngOppgaveBekreftelse,
     ) = when (oppgave.oppgavetype) {
         Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT ->
             oppgaveBekreftelse.getBekreftelse() as? InntektBekreftelse
@@ -67,8 +71,5 @@ class OppgaveService(
                     "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
-
-        else ->
-            throw IllegalArgumentException("Ukjent oppgavetype=${oppgave.oppgavetype}")
     }
 }
