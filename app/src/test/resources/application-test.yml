@@ -6,6 +6,8 @@ NAIS_CLUSTER_NAME: dev-gcp
 NAIS_NAMESPACE: k9saksbehandling
 NAIS_APP_NAME: ung-deltakelse-opplyser
 
+PROGRAM_OPPSTART_DATO: 2024-01-01
+
 spring:
   datasource:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql

@@ -1,8 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.deltaker
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.pdl.generated.hentperson.Foedselsdato
-import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
@@ -11,6 +9,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.KontonummerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -23,6 +22,7 @@ class DeltakerService(
     private val deltakerRepository: DeltakerRepository,
     private val pdlService: PdlService,
     private val kontoregisterService: KontoregisterService,
+    @Value("\${PROGRAM_OPPSTART_DATO}") private val programOppstartdato: String? = null,
 ) {
 
     companion object {
@@ -39,7 +39,7 @@ class DeltakerService(
         }
     }
 
-    fun hentDeltakerInfo(deltakerId: UUID? = null, deltakerIdent: String? = null): DeltakerPersonlia? {
+    fun hentDeltakerInfo(deltakerId: UUID? = null, deltakerIdent: String? = null): DeltakerPersonalia? {
         return when {
             deltakerId != null -> hentDeltakerInfoMedId(deltakerId)
             deltakerIdent != null -> hentDeltakerInfoMedIdent(deltakerIdent)
@@ -91,7 +91,7 @@ class DeltakerService(
         return deltakerRepository.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
     }
 
-    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia {
+    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonalia {
         val deltakerDAO = deltakerRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
@@ -105,11 +105,12 @@ class DeltakerService(
 
         val pdlPerson = hentPdlPerson(deltakerDAO.deltakerIdent)
 
-        return DeltakerPersonlia(
+        return DeltakerPersonalia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerDAO.deltakerIdent,
             navn = pdlPerson.navn.first(),
-            fødselsdato = pdlPerson.foedselsdato.first().toLocalDate()
+            fødselsdato = pdlPerson.foedselsdato.first().toLocalDate(),
+            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) }
         )
     }
 
@@ -136,16 +137,17 @@ class DeltakerService(
         return deltakerRepository.findByDeltakerIdentIn(identer)
     }
 
-    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia {
+    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonalia {
         val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
 
         val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)
 
-        return DeltakerPersonlia(
+        return DeltakerPersonalia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerIdent,
             navn = PdlPerson.navn.first(),
-            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate()
+            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate(),
+            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) }
         )
     }
 
@@ -155,20 +157,5 @@ class DeltakerService(
 
     fun hentKontonummer(): KontonummerDTO {
         return kontoregisterService.hentAktivKonto()
-    }
-
-    data class DeltakerPersonlia(
-        val id: UUID? = null,
-        val deltakerIdent: String,
-        val navn: Navn,
-        val fødselsdato: LocalDate,
-    ) {
-        @get:JsonProperty("førsteMuligeInnmeldingsdato")
-        val førsteMuligeInnmeldingsdato: LocalDate
-            get() = fødselsdato.plusYears(18).plusMonths(1)
-
-        @get:JsonProperty("sisteMuligeInnmeldingsdato")
-        val sisteMuligeInnmeldingsdato: LocalDate
-            get() = fødselsdato.plusYears(29)
     }
 }
