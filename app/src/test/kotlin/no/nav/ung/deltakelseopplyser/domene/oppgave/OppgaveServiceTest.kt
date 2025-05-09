@@ -35,6 +35,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterIn
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektYtelseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -268,8 +269,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                         RegisterInntektArbeidOgFrilansDTO(2000, "321"),
                     ),
                     registerinntekterForYtelse = listOf(
-                        RegisterInntektYtelseDTO(1000, "Sykepenger"),
-                        RegisterInntektYtelseDTO(2000, "Pleiepenger"),
+                        RegisterInntektYtelseDTO(1000, YtelseType.SYKEPENGER),
+                        RegisterInntektYtelseDTO(2000, YtelseType.PLEIEPENGER_SYKT_BARN),
                     )
                 )
             )

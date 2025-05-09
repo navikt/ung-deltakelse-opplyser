@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -21,11 +22,19 @@ data class RegisterInntektDTO(
 
 data class RegisterInntektYtelseDTO (
     @JsonProperty("beløp") val beløp: Int,
-    @JsonProperty("ytelseType") val ytelseType: String,
+    @JsonProperty("ytelseType") val ytelseType: YtelseType,
 )
 
 data class RegisterInntektArbeidOgFrilansDTO (
     @JsonProperty("beløp") val beløp: Int,
     @JsonProperty("arbeidsgiverIdent") val arbeidsgiverIdent: String,
 )
+
+enum class YtelseType(@JsonValue val kode: String) {
+    SYKEPENGER("SP"),
+    OMSORGSPENGER("OP"),
+    PLEIEPENGER_SYKT_BARN("PSB"),
+    PLEIEPENGER_LIVETS_SLUTTFASE("PLS"),
+    OPPLAERINGSPENGER("OLP")
+}
 
