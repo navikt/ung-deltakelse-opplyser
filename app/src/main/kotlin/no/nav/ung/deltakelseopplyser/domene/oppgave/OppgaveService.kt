@@ -1,10 +1,18 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
+import no.nav.k9.oppgave.OppgaveBekreftelse
+import no.nav.k9.oppgave.bekreftelse.Bekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretProgramperiodeBekreftelse
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Service
@@ -16,6 +24,7 @@ class OppgaveService(
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun håndterMottattOppgavebekreftelse(ungdomsytelseOppgavebekreftelse: UngdomsytelseOppgavebekreftelse) {
         val oppgaveBekreftelse = ungdomsytelseOppgavebekreftelse.oppgaveBekreftelse
         val oppgaveReferanse = UUID.fromString(oppgaveBekreftelse.søknadId.id)
@@ -29,13 +38,37 @@ class OppgaveService(
             .find { it.oppgaveReferanse == oppgaveReferanse }
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
-
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
         oppgave.markerSomLøst()
+
+        forsikreRiktigOppgaveBekreftelse(oppgave, oppgaveBekreftelse)
+        oppgave.oppgaveBekreftelse = oppgaveBekreftelse
 
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
         mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+    }
+
+    private fun forsikreRiktigOppgaveBekreftelse(
+        oppgave: OppgaveDAO,
+        oppgaveBekreftelse: OppgaveBekreftelse,
+    ) = when (oppgave.oppgavetype) {
+        Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT ->
+            oppgaveBekreftelse.getBekreftelse() as? InntektBekreftelse
+                ?: throw IllegalStateException(
+                    "For oppgavetype=${oppgave.oppgavetype} forventet InntektBekreftelse, " +
+                            "men fikk ${oppgaveBekreftelse::class.simpleName}"
+                )
+
+        Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE ->
+            oppgaveBekreftelse.getBekreftelse() as? EndretProgramperiodeBekreftelse
+                ?: throw IllegalStateException(
+                    "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
+                            "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
+                )
+
+        else ->
+            throw IllegalArgumentException("Ukjent oppgavetype=${oppgave.oppgavetype}")
     }
 }
