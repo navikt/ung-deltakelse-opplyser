@@ -24,9 +24,9 @@ data class DeltakerPersonalia(
     @get:JsonProperty("sisteMuligeInnmeldingsdato")
     val sisteMuligeInnmeldingsdato: LocalDate
         get() {
-            val aldersSiste = fødselsdato.plusYears(29)
+            val aldersDatoSiste = fødselsdato.plusYears(29)
             return programOppstartdato
-                ?.let { maxOf(aldersSiste, it) }
-                ?: aldersSiste
+                ?.let { maxOf(aldersDatoSiste, it) }
+                ?: aldersDatoSiste
         }
 }
