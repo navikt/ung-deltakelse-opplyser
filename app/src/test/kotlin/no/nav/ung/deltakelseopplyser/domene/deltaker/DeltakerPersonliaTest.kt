@@ -1,82 +1,76 @@
 package no.nav.ung.deltakelseopplyser.domene.deltaker
 
 import no.nav.pdl.generated.hentperson.Navn
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerPersonalia.Companion.PROGRAM_OPPSTART_DATO_PROPERTY
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
 internal class DeltakerPersonaliaTest {
 
-    private fun lagDeltakerPersonalia(fødselsdato: LocalDate) = DeltakerPersonalia(
+    private fun lagDeltakerPersonalia(fødselsdato: LocalDate, programOppstartdato: LocalDate?) = DeltakerPersonalia(
         id = UUID.randomUUID(),
         deltakerIdent = "12345678901",
         navn = Navn("Ola", null, "Nordmann"),
-        fødselsdato = fødselsdato
+        fødselsdato = fødselsdato,
+        programOppstartdato = programOppstartdato
     )
 
-    @BeforeEach
-    fun clearSystemProperty() {
-        System.clearProperty(PROGRAM_OPPSTART_DATO_PROPERTY)
-    }
-
     @Test
-    fun `uten system-egenskap skal førsteMuligeInnmeldingsdato være 18 år + 1 måned etter fødselsdato`() {
+    fun `uten programOppstartdato skal førsteMuligeInnmeldingsdato være 18 år + 1 måned etter fødselsdato`() {
         val fødselsdato = LocalDate.of(2000, 1, 15)
         assertEquals(
             LocalDate.of(2018, 2, 15),
-            lagDeltakerPersonalia(fødselsdato).førsteMuligeInnmeldingsdato
+            lagDeltakerPersonalia(fødselsdato, null).førsteMuligeInnmeldingsdato
         )
     }
 
     @Test
-    fun `med system-egenskap senere enn aldersdato skal førsteMuligeInnmeldingsdato override`() {
+    fun `med programOppstartdato senere enn aldersdato skal førsteMuligeInnmeldingsdato override`() {
         val fødselsdato = LocalDate.of(2000, 1, 15)
-        System.setProperty(PROGRAM_OPPSTART_DATO_PROPERTY, "2025-08-01")
+        val programOppstartdato = LocalDate.of(2025, 8, 1)
         assertEquals(
             LocalDate.of(2025, 8, 1),
-            lagDeltakerPersonalia(fødselsdato).førsteMuligeInnmeldingsdato
+            lagDeltakerPersonalia(fødselsdato, programOppstartdato).førsteMuligeInnmeldingsdato
         )
     }
 
     @Test
-    fun `med system-egenskap tidligere enn aldersdato skal aldersdato vinne for førsteMuligeInnmelding`() {
+    fun `med programOppstartdato tidligere enn aldersdato skal aldersdato vinne for førsteMuligeInnmelding`() {
         val fødselsdato = LocalDate.of(2000, 1, 15)
-        System.setProperty(PROGRAM_OPPSTART_DATO_PROPERTY, "2017-01-01")
+        val programOppstartdato = LocalDate.of(2017, 1, 1)
         assertEquals(
             LocalDate.of(2018, 2, 15),
-            lagDeltakerPersonalia(fødselsdato).førsteMuligeInnmeldingsdato
+            lagDeltakerPersonalia(fødselsdato, programOppstartdato).førsteMuligeInnmeldingsdato
         )
     }
 
     @Test
-    fun `uten system-egenskap skal sisteMuligeInnmeldingsdato være fødselsdato + 29 år`() {
+    fun `uten programOppstartdato skal sisteMuligeInnmeldingsdato være fødselsdato + 29 år`() {
         val fødselsdato = LocalDate.of(1996, 5, 10)
         assertEquals(
             LocalDate.of(2025, 5, 10),
-            lagDeltakerPersonalia(fødselsdato).sisteMuligeInnmeldingsdato
+            lagDeltakerPersonalia(fødselsdato, null).sisteMuligeInnmeldingsdato
         )
     }
 
     @Test
-    fun `med system-egenskap senere enn sisteMuligeInnmeldingsdato skal override`() {
+    fun `med programOppstartdato senere enn sisteMuligeInnmeldingsdato skal override`() {
         val fødselsdato = LocalDate.of(1996, 5, 10)
-        System.setProperty(PROGRAM_OPPSTART_DATO_PROPERTY, "2025-08-01")
+        val programOppstartdato = LocalDate.of(2025, 8, 1)
         assertEquals(
             LocalDate.of(2025, 8, 1),
-            lagDeltakerPersonalia(fødselsdato).sisteMuligeInnmeldingsdato
+            lagDeltakerPersonalia(fødselsdato, programOppstartdato).sisteMuligeInnmeldingsdato
         )
     }
 
     @Test
-    fun `med system-egenskap tidligere enn sisteMuligeInnmeldingsdato skal alder vinne`() {
+    fun `med programOppstartdato tidligere enn sisteMuligeInnmeldingsdato skal alder vinne`() {
         val fødselsdato = LocalDate.of(1996, 5, 10)
-        System.setProperty(PROGRAM_OPPSTART_DATO_PROPERTY, "2025-01-01")
+        val programOppstartdato = LocalDate.of(2025, 1, 1)
         assertEquals(
             LocalDate.of(2025, 5, 10),
-            lagDeltakerPersonalia(fødselsdato).sisteMuligeInnmeldingsdato
+            lagDeltakerPersonalia(fødselsdato, programOppstartdato).sisteMuligeInnmeldingsdato
         )
     }
 }

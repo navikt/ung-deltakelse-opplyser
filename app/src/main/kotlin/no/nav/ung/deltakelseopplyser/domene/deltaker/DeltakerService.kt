@@ -1,8 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.deltaker
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.pdl.generated.hentperson.Foedselsdato
-import no.nav.pdl.generated.hentperson.Navn
 import no.nav.pdl.generated.hentperson.Person
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
@@ -11,6 +9,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.KontonummerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -23,6 +22,7 @@ class DeltakerService(
     private val deltakerRepository: DeltakerRepository,
     private val pdlService: PdlService,
     private val kontoregisterService: KontoregisterService,
+    @Value("\${PROGRAM_OPPSTART_DATO}") private val programOppstartdato: String? = null,
 ) {
 
     companion object {
@@ -109,7 +109,8 @@ class DeltakerService(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerDAO.deltakerIdent,
             navn = pdlPerson.navn.first(),
-            fødselsdato = pdlPerson.foedselsdato.first().toLocalDate()
+            fødselsdato = pdlPerson.foedselsdato.first().toLocalDate(),
+            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) }
         )
     }
 
@@ -145,7 +146,8 @@ class DeltakerService(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerIdent,
             navn = PdlPerson.navn.first(),
-            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate()
+            fødselsdato = PdlPerson.foedselsdato.first().toLocalDate(),
+            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) }
         )
     }
 
