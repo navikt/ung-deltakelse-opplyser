@@ -1,3 +1,5 @@
+PROGRAM_OPPSTART_DATO: 2025-08-01 # Husk å flytte denne til prod-gcp profilen slik at den kun er gjeldene for prod.
+
 spring:
   application:
     name: # Settes i nais/<cluster>.json

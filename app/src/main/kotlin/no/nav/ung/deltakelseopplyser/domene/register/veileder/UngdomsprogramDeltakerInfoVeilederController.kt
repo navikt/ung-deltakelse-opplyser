@@ -9,6 +9,7 @@ import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerPersonalia
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -40,7 +41,7 @@ class UngdomsprogramDeltakerInfoVeilederController(
     @PostMapping("/deltaker", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personalia for en deltaker")
     @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakerInfoGittDeltaker(@RequestBody deltakerDTO: DeltakerDTO): DeltakerService.DeltakerPersonlia? {
+    fun hentDeltakerInfoGittDeltaker(@RequestBody deltakerDTO: DeltakerDTO): DeltakerPersonalia? {
         tilgangskontrollService.krevAnsattTilgang(READ, listOf(PersonIdent.fra(deltakerDTO.deltakerIdent)))
         return deltakerService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
             .also {
@@ -55,7 +56,7 @@ class UngdomsprogramDeltakerInfoVeilederController(
     @GetMapping("/deltaker/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent personlia for en deltaker gitt en UUID")
     @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakerInfoGittDeltakerId(@PathVariable id: UUID): DeltakerService.DeltakerPersonlia? {
+    fun hentDeltakerInfoGittDeltakerId(@PathVariable id: UUID): DeltakerPersonalia? {
         val deltakerInfo = deltakerService.hentDeltakerInfo(deltakerId = id) ?: return null
         val personIdent = PersonIdent.fra(deltakerInfo.deltakerIdent)
         tilgangskontrollService.krevAnsattTilgang(READ, listOf(personIdent))

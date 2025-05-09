@@ -39,7 +39,7 @@ class DeltakerService(
         }
     }
 
-    fun hentDeltakerInfo(deltakerId: UUID? = null, deltakerIdent: String? = null): DeltakerPersonlia? {
+    fun hentDeltakerInfo(deltakerId: UUID? = null, deltakerIdent: String? = null): DeltakerPersonalia? {
         return when {
             deltakerId != null -> hentDeltakerInfoMedId(deltakerId)
             deltakerIdent != null -> hentDeltakerInfoMedIdent(deltakerIdent)
@@ -91,7 +91,7 @@ class DeltakerService(
         return deltakerRepository.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
     }
 
-    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonlia {
+    private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonalia {
         val deltakerDAO = deltakerRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
@@ -105,7 +105,7 @@ class DeltakerService(
 
         val pdlPerson = hentPdlPerson(deltakerDAO.deltakerIdent)
 
-        return DeltakerPersonlia(
+        return DeltakerPersonalia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerDAO.deltakerIdent,
             navn = pdlPerson.navn.first(),
@@ -136,12 +136,12 @@ class DeltakerService(
         return deltakerRepository.findByDeltakerIdentIn(identer)
     }
 
-    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonlia {
+    private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonalia {
         val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
 
         val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)
 
-        return DeltakerPersonlia(
+        return DeltakerPersonalia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerIdent,
             navn = PdlPerson.navn.first(),
@@ -155,20 +155,5 @@ class DeltakerService(
 
     fun hentKontonummer(): KontonummerDTO {
         return kontoregisterService.hentAktivKonto()
-    }
-
-    data class DeltakerPersonlia(
-        val id: UUID? = null,
-        val deltakerIdent: String,
-        val navn: Navn,
-        val fødselsdato: LocalDate,
-    ) {
-        @get:JsonProperty("førsteMuligeInnmeldingsdato")
-        val førsteMuligeInnmeldingsdato: LocalDate
-            get() = fødselsdato.plusYears(18).plusMonths(1)
-
-        @get:JsonProperty("sisteMuligeInnmeldingsdato")
-        val sisteMuligeInnmeldingsdato: LocalDate
-            get() = fødselsdato.plusYears(29)
     }
 }
