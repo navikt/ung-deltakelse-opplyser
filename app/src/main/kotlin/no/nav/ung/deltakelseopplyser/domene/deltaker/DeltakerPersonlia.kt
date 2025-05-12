@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.deltaker
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.Hidden
+import io.swagger.v3.oas.annotations.media.Schema
 import no.nav.pdl.generated.hentperson.Navn
 import java.time.LocalDate
 import java.util.*
@@ -12,7 +12,7 @@ data class DeltakerPersonalia(
     val navn: Navn,
     val fødselsdato: LocalDate,
 
-    @Hidden
+    @Schema(hidden = true)
     private val programOppstartdato: LocalDate? = null,
 ) {
     @get:JsonProperty("førsteMuligeInnmeldingsdato")
