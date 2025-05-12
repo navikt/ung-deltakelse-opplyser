@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 
 import java.time.LocalDate
 
@@ -36,5 +37,5 @@ data class ArbeidOgFrilansRegisterInntektDTO(
 
 data class YtelseRegisterInntektDTO(
     @JsonProperty("inntekt") val inntekt: Int,
-    @JsonProperty("ytelsetype") val ytelsetype: String,
+    @JsonProperty("ytelsetype") val ytelsetype: YtelseType,
 )
