@@ -63,7 +63,7 @@ class RegisterInntektOppgaveDTOTest {
                 "registerinntekterForYtelse": [
                   {
                     "beløp": 10000,
-                    "ytelseType": "${ytelseType.kode}"
+                    "ytelseType": "${ytelseType.name}"
                   }
               ]
             }

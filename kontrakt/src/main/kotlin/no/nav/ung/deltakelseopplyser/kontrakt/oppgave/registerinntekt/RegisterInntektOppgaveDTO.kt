@@ -30,11 +30,11 @@ data class RegisterInntektArbeidOgFrilansDTO (
     @JsonProperty("arbeidsgiverIdent") val arbeidsgiverIdent: String,
 )
 
-enum class YtelseType(@JsonValue val kode: String) {
-    SYKEPENGER("SP"),
-    OMSORGSPENGER("OP"),
-    PLEIEPENGER_SYKT_BARN("PSB"),
-    PLEIEPENGER_LIVETS_SLUTTFASE("PLS"),
-    OPPLAERINGSPENGER("OLP")
+enum class YtelseType {
+    SYKEPENGER,
+    OMSORGSPENGER,
+    PLEIEPENGER_SYKT_BARN,
+    PLEIEPENGER_LIVETS_SLUTTFASE,
+    OPPLAERINGSPENGER
 }
 
