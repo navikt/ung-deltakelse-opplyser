@@ -6,6 +6,8 @@ import jakarta.transaction.Transactional
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.tms.varsel.action.Tekst
+import no.nav.tms.varsel.action.Varseltype
+import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
@@ -28,7 +30,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
@@ -57,7 +58,7 @@ class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
     private val mineSiderVarselService: MineSiderVarselService,
-    @Value("\${UNGDOMSYTELSE_DELTAKER_BASE_URL}") private val deltakerAppBaseUrl: String
+    private val deltakerappConfig: DeltakerappConfig
 ) {
 
     private companion object {
@@ -284,17 +285,18 @@ class OppgaveUngSakController(
         deltaker.leggTilOppgave(nyOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
 
-        mineSiderVarselService.opprettOppgave(
-            oppgaveId = nyOppgave.oppgaveReferanse.toString(),
+        mineSiderVarselService.opprettVarsel(
+            varselId = nyOppgave.oppgaveReferanse.toString(),
             deltakerIdent = deltaker.deltakerIdent,
-            oppgavetekster = listOf(
+            tekster = listOf(
                 Tekst(
                     tekst = oppgavetype.mineSiderVarselTekst,
                     spraakkode = "nb",
                     default = true
                 )
             ),
-            oppgavelenke = opprettOppgaveLenke(nyOppgave)
+            varselLink = deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString()),
+            varseltype = Varseltype.Oppgave
         )
 
         return nyOppgave.tilDTO()
@@ -368,6 +370,4 @@ class OppgaveUngSakController(
             )
         return deltaker
     }
-
-    private fun opprettOppgaveLenke(opprettetOppgave: OppgaveDAO) = "$deltakerAppBaseUrl/oppgave/${opprettetOppgave.oppgaveReferanse}"
 }

@@ -1,11 +1,16 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
+import jakarta.transaction.Transactional
+import no.nav.tms.varsel.action.Tekst
+import no.nav.tms.varsel.action.Varseltype
+import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
@@ -22,6 +27,7 @@ import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.*
 
 @Service
@@ -31,6 +37,8 @@ class UngdomsprogramregisterService(
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
     private val rapportertInntektService: RapportertInntektService,
+    private val mineSiderVarselService: MineSiderVarselService,
+    private val deltakerappConfig: DeltakerappConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -48,6 +56,7 @@ class UngdomsprogramregisterService(
         }
     }
 
+    @Transactional
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
 
@@ -57,7 +66,30 @@ class UngdomsprogramregisterService(
         }
 
         val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO(deltakerDAO))
+
+        varsleDeltakerOmInnmelding(ungdomsprogramDAO, deltakerDAO)
+
         return ungdomsprogramDAO.mapToDTO()
+    }
+
+    private fun varsleDeltakerOmInnmelding(
+        ungdomsprogramDAO: UngdomsprogramDeltakelseDAO,
+        deltakerDAO: DeltakerDAO,
+    ) {
+        mineSiderVarselService.opprettVarsel(
+            varselId = ungdomsprogramDAO.id.toString(),
+            deltakerIdent = deltakerDAO.deltakerIdent,
+            tekster = listOf(
+                Tekst(
+                    tekst = "Du er registrert i ungdomsprogrammet. Klikk her for å søke.",
+                    spraakkode = "nb",
+                    default = true
+                )
+            ),
+            varselLink = deltakerappConfig.getSøknadUrl(),
+            varseltype = Varseltype.Beskjed,
+            aktivFremTil = ZonedDateTime.now().plusMonths(3)
+        )
     }
 
     fun fjernFraProgram(id: UUID): Boolean {
