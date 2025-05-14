@@ -3,13 +3,16 @@ package no.nav.ung.deltakelseopplyser.domene.register
 import com.ninjasquad.springmockk.MockkBean
 import io.hypersistence.utils.hibernate.type.range.Range
 import io.mockk.every
+import io.mockk.justRun
 import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
+import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService.Companion.rapporteringsPerioder
+import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -48,6 +51,7 @@ import java.util.*
 @Import(
     UngdomsprogramregisterService::class,
     DeltakerService::class,
+    DeltakerappConfig::class
 )
 class UngdomsprogramregisterServiceTest {
 
@@ -59,6 +63,9 @@ class UngdomsprogramregisterServiceTest {
 
     @Autowired
     lateinit var entityManager: EntityManager
+
+    @MockkBean
+    lateinit var mineSiderVarselService: MineSiderVarselService
 
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
@@ -75,6 +82,7 @@ class UngdomsprogramregisterServiceTest {
     @BeforeEach
     fun setUp() {
         repository.deleteAll()
+        justRun { mineSiderVarselService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
     }
 
     @AfterAll
