@@ -2,6 +2,9 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import io.mockk.just
+import io.mockk.justRun
+import io.mockk.runs
 import no.nav.k9.søknad.Søknad
 import no.nav.k9.søknad.felles.Kildesystem
 import no.nav.k9.søknad.felles.personopplysninger.Søker
@@ -11,6 +14,7 @@ import no.nav.k9.søknad.ytelse.ung.v1.UngSøknadstype
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
+import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
@@ -20,6 +24,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
+import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
@@ -46,7 +51,8 @@ import java.time.ZonedDateTime
     DeltakerService::class,
     UngdomsytelsesøknadService::class,
     UngdomsprogramregisterService::class,
-    RapportertInntektService::class
+    RapportertInntektService::class,
+    DeltakerappConfig::class
 )
 class UngdomsytelsesøknadServiceTest {
 
@@ -58,6 +64,9 @@ class UngdomsytelsesøknadServiceTest {
 
     @MockkBean
     lateinit var kontoregisterService: KontoregisterService
+
+    @MockkBean
+    lateinit var mineSiderVarselService: MineSiderVarselService
 
     @Autowired
     lateinit var ungdomsprogramDeltakelseRepository: UngdomsprogramDeltakelseRepository
@@ -71,6 +80,7 @@ class UngdomsytelsesøknadServiceTest {
     @BeforeAll
     fun setUp() {
         ungdomsprogramDeltakelseRepository.deleteAll()
+        justRun { mineSiderVarselService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test

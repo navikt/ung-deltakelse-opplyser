@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
+import java.time.ZonedDateTime
 
 @Service
 class MineSiderVarselService(
@@ -27,24 +28,33 @@ class MineSiderVarselService(
     /**
      * Oppretter et varsel for en oppgave
      *
-     * @param oppgaveId Id til varselet. Produsenten bruker samme Id til å inaktivere varsel.
+     * @param varselId Id til varselet. Produsenten bruker samme Id til å inaktivere varsel.
      * @param deltakerIdent Fodselsnummer (evt. d-nummer eller tilsvarende) til mottaker av varsel.
-     * @param oppgavetekster Teksten som faktisk vises i varselet med språkkode.
-     * @param oppgavelenke Lenke som blir aktivert når en person trykker på varselet i varselbjella eller på min side.
+     * @param tekster Teksten som faktisk vises i varselet med språkkode.
+     * @param varselLink Lenke som blir aktivert når en person trykker på varselet i varselbjella eller på min side.
+     * @param varseltype Type på varsel (beskjed, oppgave, innboks).
+     * @param aktivFremTil Tidspunkt for når varslet skal inaktiverer automatisk av systemet.
      */
-    fun opprettOppgave(oppgaveId: String, deltakerIdent: String, oppgavetekster: List<Tekst>, oppgavelenke: String) {
-        logger.info("Oppretter min-side oppgave med id $oppgaveId")
+    fun opprettVarsel(
+        varselId: String,
+        deltakerIdent: String,
+        tekster: List<Tekst>,
+        varselLink: String,
+        varseltype: Varseltype,
+        aktivFremTil: ZonedDateTime? = null
+    ) {
+        logger.info("Oppretter min-side oppgave med id $varselId")
 
         val opprett: String = VarselActionBuilder.opprett {
             /**
              * Type på varsel (beskjed, oppgave, innboks)
              */
-            type = Varseltype.Oppgave
+            type = varseltype
 
             /**
              * Id til varselet. Produsenten bruker samme Id til å inaktivere varsel.
              */
-            varselId = oppgaveId
+            this.varselId = varselId
 
             /**
              * Påkrevd level-of-assurance for å kunne se innhold i varsel.
@@ -62,20 +72,21 @@ class MineSiderVarselService(
              * Dersom flere tekster på ulike språk er gitt må én tekst være satt som default.
              * Språkkode må følge ISO-639 (typen no, nb, en...)
              */
-            tekster += oppgavetekster
+            this.tekster += tekster
 
             /**
              * Lenke som blir aktivert når en person trykker på varselet i varselbjella eller på min side
              * Ikke for beskjed.
              * Må være enk omplett URL, inkludert https protokoll.
              */
-            link = oppgavelenke
+            link = varselLink
 
             /**
              * Tidspunkt for når varslet skal inaktiverer automatisk av systemet.
              * Tidspunkt med tidssone. UTC eller Z er anbefalt.
              * Støttes ikke for Innboks-varsler.
              */
+            this.aktivFremTil = aktivFremTil
 
             /**
              * Om det skal sendes sms og/eller epost til mottaker.
@@ -89,11 +100,11 @@ class MineSiderVarselService(
             produsent = produsent()
         }
 
-        kafkaTemplate.send(minSideVarselTopic, oppgaveId, opprett)
+        kafkaTemplate.send(minSideVarselTopic, varselId, opprett)
             .whenComplete { sendResult, exception ->
                 if (exception != null) {
                     val feilmelding =
-                        "Feilet med å publisere min-side oppgave til topic $minSideVarselTopic med key $oppgaveId"
+                        "Feilet med å publisere min-side oppgave til topic $minSideVarselTopic med key $varselId"
                     logger.error(feilmelding, exception)
                     throw RuntimeException(feilmelding, exception)
                 } else {
