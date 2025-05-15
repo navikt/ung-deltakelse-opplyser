@@ -130,26 +130,23 @@ class OppgaveUngSakController(
         val deltaker = deltakerEksisterer(settTilUtløptDTO.deltakerIdent)
 
         logger.info("Henter oppgave av type ${settTilUtløptDTO.oppgavetype} med periode [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}]")
-        val eksisterendeOppgaveISammePeriode = deltaker.oppgaver
-            .filter { it.oppgavetypeDataDAO is InntektsrapporteringOppgavetypeDataDAO }
+        // Ser kun på uløste oppgaver. Dersom oppgaven har en annen status blir denne stående
+        // Grunnen til dette er at ung-sak slipper å sjekke på status på oppgaven før den kaller
+        val uløstOppgaveISammePeriode = deltaker.oppgaver
+            .filter { it.oppgavetype == settTilUtløptDTO.oppgavetype }
             .find {
-                val inntektsrapporteringOppgavetypeDataDAO =
-                    it.oppgavetypeDataDAO as InntektsrapporteringOppgavetypeDataDAO
-                inntektsrapporteringOppgavetypeDataDAO.fomDato == settTilUtløptDTO.fomDato &&
-                        inntektsrapporteringOppgavetypeDataDAO.tomDato == settTilUtløptDTO.tomDato
-            }?.also { forsikreOppgaveIkkeErLøst(it) }
+                it.oppgavetype == settTilUtløptDTO.oppgavetype && gjelderSammePeriode(it, settTilUtløptDTO.fomDato, settTilUtløptDTO.tomDato) && it.status == OppgaveStatus.ULØST
+            }
 
-        if (eksisterendeOppgaveISammePeriode != null) {
+        if (uløstOppgaveISammePeriode != null) {
             logger.info("Markerer oppgave som utløpt")
-            eksisterendeOppgaveISammePeriode.markerSomUtløpt()
+            uløstOppgaveISammePeriode.markerSomUtløpt()
 
             logger.info("Lagrer oppgave på deltaker med id ${deltaker.id}")
             deltakerService.oppdaterDeltaker(deltaker)
 
             logger.info("Deaktiverer oppgave på min side")
-            mineSiderVarselService.deaktiverOppgave(eksisterendeOppgaveISammePeriode.oppgaveReferanse.toString())
-        } else {
-            logger.warn("Det finnes allerede en uløst oppgave for inntektsrapportering i perioden [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}] med id ${eksisterendeOppgaveISammePeriode.id}")
+            mineSiderVarselService.deaktiverOppgave(uløstOppgaveISammePeriode.oppgaveReferanse.toString())
         }
     }
 
