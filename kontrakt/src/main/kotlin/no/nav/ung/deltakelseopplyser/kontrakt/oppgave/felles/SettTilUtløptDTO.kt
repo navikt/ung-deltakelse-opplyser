@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 data class SettTilUtløptDTO(
     @JsonProperty("deltakerIdent") val deltakerIdent: String,
-    @JsonProperty("oppgavetype") val referanse: Oppgavetype,
+    @JsonProperty("oppgavetype") val oppgavetype: Oppgavetype,
     @JsonProperty("fomDato") val fomDato: LocalDate,
     @JsonProperty("tomDato") val tomDato: LocalDate
     )
