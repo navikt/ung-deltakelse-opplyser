@@ -229,7 +229,7 @@ class OppgaveUngSakController(
 
         val uløstOppgaveISammePeriode = deltakersOppgaver
             .firstOrNull {
-                it.oppgavetype == Oppgavetype.INNTEKTSRAPPORTERING &&
+                it.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT &&
                         it.status == OppgaveStatus.ULØST &&
                         gjelderSammePeriode(
                             it,
@@ -260,7 +260,7 @@ class OppgaveUngSakController(
         val oppgavetype = when (oppgaveTypeDataDAO) {
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
             is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
-            is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.INNTEKTSRAPPORTERING
+            is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
         }
 
         logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")
@@ -378,7 +378,7 @@ class OppgaveUngSakController(
             )
         )
 
-        Oppgavetype.INNTEKTSRAPPORTERING -> listOf(
+        Oppgavetype.RAPPORTER_INNTEKT -> listOf(
             Tekst(
                 tekst = "Du har fått en oppgave om å registrere inntekten din dersom du har det.",
                 spraakkode = "nb",

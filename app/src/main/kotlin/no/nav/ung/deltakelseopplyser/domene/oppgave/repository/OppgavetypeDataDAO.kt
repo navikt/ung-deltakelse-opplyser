@@ -28,7 +28,7 @@ import java.time.LocalDate
     // Inntektsrapportering oppgavetype data
     JsonSubTypes.Type(
         value = InntektsrapporteringOppgavetypeDataDAO::class,
-        name = "INNTEKTSRAPPORTERING"
+        name = "RAPPORTER_INNTEKT"
     )
 )
 sealed class OppgavetypeDataDAO

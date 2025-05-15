@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     // Inntektsrapportering oppgavetype data
     JsonSubTypes.Type(
         value = InntektsrapporteringOppgavetypeDataDTO::class,
-        name = "INNTEKTSRAPPORTERING"
+        name = "RAPPORTER_INNTEKT"
     )
 )
 annotation class OppgavetypeDataJsonType
