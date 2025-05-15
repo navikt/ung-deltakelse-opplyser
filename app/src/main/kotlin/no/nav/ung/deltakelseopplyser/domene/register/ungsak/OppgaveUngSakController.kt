@@ -28,6 +28,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisteri
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SettTilUtløptDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
@@ -116,6 +117,40 @@ class OppgaveUngSakController(
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
         mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+    }
+
+    @PostMapping("/utløpt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Setter oppgave til utløpt for type og periode")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    fun utløperOppgaveForTypeOgPeriode(@RequestBody settTilUtløptDTO: SettTilUtløptDTO) {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Utløper oppgave av type: ${settTilUtløptDTO.oppgavetype} med periode [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}]")
+
+        val deltaker = deltakerEksisterer(settTilUtløptDTO.deltakerIdent)
+
+        logger.info("Henter oppgave av type ${settTilUtløptDTO.oppgavetype} med periode [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}]")
+        val eksisterendeOppgaveISammePeriode = deltaker.oppgaver
+            .filter { it.oppgavetypeDataDAO is InntektsrapporteringOppgavetypeDataDAO }
+            .find {
+                val inntektsrapporteringOppgavetypeDataDAO =
+                    it.oppgavetypeDataDAO as InntektsrapporteringOppgavetypeDataDAO
+                inntektsrapporteringOppgavetypeDataDAO.fomDato == settTilUtløptDTO.fomDato &&
+                        inntektsrapporteringOppgavetypeDataDAO.tomDato == settTilUtløptDTO.tomDato
+            }?.also { forsikreOppgaveIkkeErLøst(it) }
+
+        if (eksisterendeOppgaveISammePeriode != null) {
+            logger.info("Markerer oppgave som utløpt")
+            eksisterendeOppgaveISammePeriode.markerSomUtløpt()
+
+            logger.info("Lagrer oppgave på deltaker med id ${deltaker.id}")
+            deltakerService.oppdaterDeltaker(deltaker)
+
+            logger.info("Deaktiverer oppgave på min side")
+            mineSiderVarselService.deaktiverOppgave(eksisterendeOppgaveISammePeriode.oppgaveReferanse.toString())
+        } else {
+            logger.warn("Det finnes allerede en uløst oppgave for inntektsrapportering i perioden [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}] med id ${eksisterendeOppgaveISammePeriode.id}")
+        }
     }
 
     @PostMapping("/opprett/kontroll/registerinntekt", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -355,6 +390,19 @@ class OppgaveUngSakController(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
                     it.detail = "Fant ingen deltaker med oppgave $oppgaveReferanse"
+                },
+                null
+            )
+        return deltaker
+    }
+
+    private fun deltakerEksisterer(deltakerIdent: String): DeltakerDAO {
+        logger.info("Henter deltaker.")
+        val deltaker =
+            deltakerService.finnDeltakerGittIdent(deltakerIdent) ?: throw ErrorResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
+                    it.detail = "Fant ingen deltaker"
                 },
                 null
             )
