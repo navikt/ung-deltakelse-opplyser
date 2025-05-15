@@ -1,11 +1,9 @@
-package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektrapportering
+package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 
-data class SettInntektrapporteringUtløptDTO(
+data class SettTilUtløptDTO(
     @JsonProperty("deltakerIdent") val deltakerIdent: String,
     @JsonProperty("fomDato") val fomDato: LocalDate,
     @JsonProperty("tomDato") val tomDato: LocalDate
