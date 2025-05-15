@@ -71,5 +71,8 @@ class OppgaveService(
                     "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
+
+        Oppgavetype.RAPPORTER_INNTEKT ->
+            null // TODO: Implementer håndtering av rapporter inntekt oppgavebekreftelse
     }
 }
