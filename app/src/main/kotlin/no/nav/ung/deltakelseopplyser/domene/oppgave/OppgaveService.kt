@@ -71,5 +71,7 @@ class OppgaveService(
                     "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
+
+        else -> throw IllegalStateException("Uventet oppgavetype=${oppgave.oppgavetype}")
     }
 }

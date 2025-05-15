@@ -29,6 +29,11 @@ data class RegisterinntektDTO(
     @JsonProperty("totalInntekt") val totalInntekt: Int = totalInntektArbeidOgFrilans + totalInntektYtelse,
 )
 
+data class InntektsrapporteringOppgavetypeDataDTO(
+    @JsonProperty("fomDato") val fomDato: LocalDate,
+    @JsonProperty("tomDato") val tomDato: LocalDate
+): OppgavetypeDataDTO
+
 data class ArbeidOgFrilansRegisterInntektDTO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("arbeidsgiver") val arbeidsgiver: String,

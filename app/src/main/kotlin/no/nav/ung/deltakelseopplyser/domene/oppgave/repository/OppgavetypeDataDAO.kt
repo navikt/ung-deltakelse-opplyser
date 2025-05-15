@@ -23,6 +23,12 @@ import java.time.LocalDate
     JsonSubTypes.Type(
         value = KontrollerRegisterInntektOppgaveTypeDataDAO::class,
         name = "BEKREFT_AVVIK_REGISTERINNTEKT"
+    ),
+
+    // Inntektsrapportering oppgavetype data
+    JsonSubTypes.Type(
+        value = InntektsrapporteringOppgavetypeDataDAO::class,
+        name = "INNTEKTSRAPPORTERING"
     )
 )
 sealed class OppgavetypeDataDAO
@@ -68,6 +74,15 @@ data class RegisterinntektDAO(
         )
     }
 }
+
+data class InntektsrapporteringOppgavetypeDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty(defaultValue = "n/a")
+    val fomDato: LocalDate,
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
+): OppgavetypeDataDAO()
 
 data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,

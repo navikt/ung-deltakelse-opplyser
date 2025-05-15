@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
@@ -27,6 +28,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisteri
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import org.slf4j.LoggerFactory
@@ -39,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
@@ -58,7 +61,7 @@ class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
     private val mineSiderVarselService: MineSiderVarselService,
-    private val deltakerappConfig: DeltakerappConfig
+    private val deltakerappConfig: DeltakerappConfig,
 ) {
 
     private companion object {
@@ -115,52 +118,6 @@ class OppgaveUngSakController(
         mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
-    @Deprecated("Bruk /opprett/kontroll/registerinntekt")
-    @PostMapping("/opprett", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Oppretter oppgave")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    fun kontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): OppgaveDTO {
-        tilgangskontrollService.krevSystemtilgang()
-        val deltaker = forsikreEksistererIProgram(opprettOppgaveDto.deltakerIdent)
-
-        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(opprettOppgaveDto.deltakerIdent)
-
-        val harUløstOppgaveForSammePeriode = deltakersOppgaver.stream()
-            .anyMatch {
-                it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT &&
-                        it.status == OppgaveStatus.ULØST &&
-                        gjelderSammePeriode(it, opprettOppgaveDto)
-            }
-
-        if (harUløstOppgaveForSammePeriode) {
-            throw IllegalStateException("Det finnes allerede en uløst oppgave for samme periode")
-        }
-
-        return opprettOppgave(
-            deltaker = deltaker,
-            oppgaveReferanse = opprettOppgaveDto.referanse,
-            oppgaveTypeDataDAO = KontrollerRegisterInntektOppgaveTypeDataDAO(
-                fomDato = opprettOppgaveDto.fomDato,
-                tomDato = opprettOppgaveDto.tomDato,
-                registerinntekt = RegisterinntektDAO(
-                    opprettOppgaveDto.registerInntekter.registerinntekterForArbeidOgFrilans?.map {
-                        ArbeidOgFrilansRegisterInntektDAO(
-                            it.beløp,
-                            it.arbeidsgiverIdent
-                        )
-                    } ?: emptyList(),
-                    opprettOppgaveDto.registerInntekter.registerinntekterForYtelse?.map {
-                        YtelseRegisterInntektDAO(
-                            it.beløp,
-                            it.ytelseType
-                        )
-                    } ?: emptyList(),
-                )
-            )
-        )
-    }
-
     @PostMapping("/opprett/kontroll/registerinntekt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for kontroll av registerinntekt")
     @ResponseStatus(HttpStatus.OK)
@@ -176,7 +133,7 @@ class OppgaveUngSakController(
             .anyMatch {
                 it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT &&
                         it.status == OppgaveStatus.ULØST &&
-                        gjelderSammePeriode(it, opprettOppgaveDto)
+                        gjelderSammePeriode(it, opprettOppgaveDto.fomDato, opprettOppgaveDto.tomDato)
             }
             .also { harUløstOppgaveForSammePeriode ->
                 if (harUløstOppgaveForSammePeriode) {
@@ -258,6 +215,43 @@ class OppgaveUngSakController(
         )
     }
 
+    @PostMapping("/opprett/inntektsrapportering", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Oppretter oppgave for inntektsrapportering")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    fun opprettOppgaveForInntektsrapportering(@RequestBody opprettInntektsrapporteringOppgaveDTO: InntektsrapporteringOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Oppretter oppgave for kontroll av registerinntekt")
+        val deltaker = forsikreEksistererIProgram(opprettInntektsrapporteringOppgaveDTO.deltakerIdent)
+
+        val deltakersOppgaver =
+            deltakerService.hentDeltakersOppgaver(opprettInntektsrapporteringOppgaveDTO.deltakerIdent)
+
+        val uløstOppgaveISammePeriode = deltakersOppgaver
+            .firstOrNull {
+                it.oppgavetype == Oppgavetype.INNTEKTSRAPPORTERING &&
+                        it.status == OppgaveStatus.ULØST &&
+                        gjelderSammePeriode(
+                            it,
+                            opprettInntektsrapporteringOppgaveDTO.fomDato,
+                            opprettInntektsrapporteringOppgaveDTO.tomDato
+                        )
+            }
+
+        return if (uløstOppgaveISammePeriode != null) {
+            logger.warn("Det finnes allerede en uløst oppgave for inntektsrapportering i perioden [${opprettInntektsrapporteringOppgaveDTO.fomDato} - ${opprettInntektsrapporteringOppgaveDTO.tomDato}]. Returnerer oppgave med id ${uløstOppgaveISammePeriode.id}")
+            uløstOppgaveISammePeriode.tilDTO()
+        } else opprettOppgave(
+            deltaker = deltaker,
+            oppgaveReferanse = opprettInntektsrapporteringOppgaveDTO.referanse,
+            oppgaveTypeDataDAO = InntektsrapporteringOppgavetypeDataDAO(
+                fomDato = opprettInntektsrapporteringOppgaveDTO.fomDato,
+                tomDato = opprettInntektsrapporteringOppgaveDTO.tomDato
+            )
+        )
+
+    }
+
     private fun opprettOppgave(
         deltaker: DeltakerDAO,
         oppgaveReferanse: UUID,
@@ -266,6 +260,7 @@ class OppgaveUngSakController(
         val oppgavetype = when (oppgaveTypeDataDAO) {
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
             is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
+            is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.INNTEKTSRAPPORTERING
         }
 
         logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")
@@ -288,13 +283,7 @@ class OppgaveUngSakController(
         mineSiderVarselService.opprettVarsel(
             varselId = nyOppgave.oppgaveReferanse.toString(),
             deltakerIdent = deltaker.deltakerIdent,
-            tekster = listOf(
-                Tekst(
-                    tekst = oppgavetype.mineSiderVarselTekst,
-                    spraakkode = "nb",
-                    default = true
-                )
-            ),
+            tekster = oppgavetype.minSideVarselTekster(),
             varselLink = deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString()),
             varseltype = Varseltype.Oppgave
         )
@@ -333,13 +322,14 @@ class OppgaveUngSakController(
 
     private fun gjelderSammePeriode(
         oppgaveDAO: OppgaveDAO,
-        registerInntektOppgaveDTO: RegisterInntektOppgaveDTO,
+        fom: LocalDate,
+        tom: LocalDate,
     ): Boolean {
         val eksisterende: KontrollerRegisterinntektOppgavetypeDataDTO =
             oppgaveDAO.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO
-        logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [${eksisterende.fraOgMed}/${eksisterende.tilOgMed}], Ny: [${registerInntektOppgaveDTO.fomDato}/${registerInntektOppgaveDTO.tomDato}]")
-        return !eksisterende.fraOgMed.isAfter(registerInntektOppgaveDTO.tomDato) && !eksisterende.tilOgMed.isBefore(
-            registerInntektOppgaveDTO.fomDato
+        logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [${eksisterende.fraOgMed}/${eksisterende.tilOgMed}], Ny: [$fom/$tom]")
+        return !eksisterende.fraOgMed.isAfter(tom) && !eksisterende.tilOgMed.isBefore(
+            fom
         )
     }
 
@@ -369,5 +359,32 @@ class OppgaveUngSakController(
                 null
             )
         return deltaker
+    }
+
+    private fun Oppgavetype.minSideVarselTekster(): List<Tekst> = when (this) {
+        Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å bekrefte inntekten din",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
+        Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å bekrefte endret programperiode.",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
+        Oppgavetype.INNTEKTSRAPPORTERING -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å registrere inntekten din dersom du har det.",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
     }
 }
