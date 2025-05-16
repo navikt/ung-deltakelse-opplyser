@@ -88,7 +88,7 @@ class UngdomsprogramRegisterDeltakerController(
             )
     }
 
-    @GetMapping("/oppgave/lukk/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/oppgave/{oppgaveReferanse}/lukk", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Markerer en oppgave som lukket")
     @ResponseStatus(HttpStatus.OK)
     fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
@@ -100,7 +100,7 @@ class UngdomsprogramRegisterDeltakerController(
         return oppdatertOppgave.tilDTO()
     }
 
-    @GetMapping("/oppgave/åpnet/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/oppgave/{oppgaveReferanse}/åpnet", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Markerer en oppgave som åpnet")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
