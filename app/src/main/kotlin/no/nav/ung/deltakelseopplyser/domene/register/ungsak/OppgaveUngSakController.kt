@@ -91,7 +91,7 @@ class OppgaveUngSakController(
         mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
-    @PostMapping("/utlopt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/utløpt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Setter oppgave til utløpt")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -116,7 +116,7 @@ class OppgaveUngSakController(
         mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
-    @PostMapping("/utlopt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/utløpt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Setter oppgave til utløpt for type og periode")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
