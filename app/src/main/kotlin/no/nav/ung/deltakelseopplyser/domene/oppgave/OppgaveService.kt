@@ -72,7 +72,6 @@ class OppgaveService(
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
 
-        Oppgavetype.RAPPORTER_INNTEKT ->
-            null // TODO: Implementer håndtering av rapporter inntekt oppgavebekreftelse
+        else -> throw IllegalStateException("Uventet oppgavetype=${oppgave.oppgavetype}")
     }
 }

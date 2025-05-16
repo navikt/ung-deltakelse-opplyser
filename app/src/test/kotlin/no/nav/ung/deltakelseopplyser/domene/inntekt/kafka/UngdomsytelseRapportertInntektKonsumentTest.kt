@@ -13,12 +13,20 @@ import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektHåndtererS
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
+import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.leggPåTopic
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
@@ -39,11 +47,17 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     @SpykBean
     lateinit var rapportertInntektRepository: RapportertInntektRepository
 
+    @SpykBean
+    lateinit var mineSiderVarselService: MineSiderVarselService
+
     @MockkBean
     lateinit var pdlService: PdlService
 
     @Autowired
     lateinit var registerService: UngdomsprogramregisterService
+
+    @Autowired
+    lateinit var oppgaveUngSakController: OppgaveUngSakController
 
     @Test
     fun `Forventet rapportertInntekt konsumeres og deserialiseres som forventet`() {
@@ -54,6 +68,8 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         meldInnIProgrammet(søkerIdent, deltakelseStart)
+
+        opprettOppgaveForInntektsrapportering(søkerIdent, søknadId)
 
         //language=JSON
         val søknad = """
@@ -106,8 +122,27 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
             verify(exactly = 1) { rapportertInntektHåndtererService.håndterRapportertInntekt(any()) }
             verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
+            verify(exactly = 1) { mineSiderVarselService.deaktiverOppgave(any()) }
             verify(exactly = 1) { rapportertInntektRepository.save(any()) }
+
+            val oppgave = deltakerService.hentDeltakersOppgaver(søkerIdent).first()
+            assertThat(oppgave.oppgaveReferanse).isEqualTo(UUID.fromString(søknadId))
+            assertThat(oppgave.oppgavetype).isEqualTo(Oppgavetype.RAPPORTER_INNTEKT)
+            assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         }
+    }
+
+    private fun opprettOppgaveForInntektsrapportering(deltakelseStart: String, søknadId: String) {
+        val now = LocalDate.now()
+        oppgaveUngSakController.opprettOppgaveForInntektsrapportering(
+            opprettInntektsrapporteringOppgaveDTO = InntektsrapporteringOppgaveDTO(
+                deltakerIdent = deltakelseStart,
+                referanse = UUID.fromString(søknadId),
+                frist = LocalDateTime.now().plusDays(6),
+                fomDato = now.withDayOfMonth(1),
+                tomDato = now.withDayOfMonth(now.lengthOfMonth()),
+            )
+        )
     }
 
     private fun mockPdlIdent(søkerIdent: String, identGruppe: IdentGruppe) {
