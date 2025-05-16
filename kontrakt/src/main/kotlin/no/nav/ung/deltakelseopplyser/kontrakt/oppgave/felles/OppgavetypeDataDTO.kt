@@ -30,8 +30,8 @@ data class RegisterinntektDTO(
 )
 
 data class InntektsrapporteringOppgavetypeDataDTO(
-    @JsonProperty("fomDato") val fomDato: LocalDate,
-    @JsonProperty("tomDato") val tomDato: LocalDate
+    @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
+    @JsonProperty("tilOgMed") val tilOgMed: LocalDate
 ): OppgavetypeDataDTO
 
 data class ArbeidOgFrilansRegisterInntektDTO(

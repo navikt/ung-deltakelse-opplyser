@@ -108,8 +108,8 @@ class OppgaveDAO(
             )
 
             is InntektsrapporteringOppgavetypeDataDAO -> InntektsrapporteringOppgavetypeDataDTO(
-                fomDato = fomDato,
-                tomDato = tomDato
+                fraOgMed = fomDato,
+                tilOgMed = tomDato
             )
         }
 
