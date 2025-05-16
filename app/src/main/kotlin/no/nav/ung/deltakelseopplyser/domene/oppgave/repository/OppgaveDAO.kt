@@ -69,6 +69,12 @@ class OppgaveDAO(
 
     @Column(name = "løst_dato")
     var løstDato: ZonedDateTime? = null,
+
+    @Column(name = "åpnet_dato")
+    var åpnetDato: ZonedDateTime? = null,
+
+    @Column(name = "lukket_dato")
+    var lukketDato: ZonedDateTime? = null,
 ) {
 
     companion object {
@@ -79,7 +85,9 @@ class OppgaveDAO(
             bekreftelse = oppgaveBekreftelse?.tilDTO(),
             status = status,
             opprettetDato = opprettetDato,
-            løstDato = løstDato
+            løstDato = løstDato,
+            åpnetDato = åpnetDato,
+            lukketDato = lukketDato,
         )
 
         fun OppgaveBekreftelse.tilDTO(): BekreftelseDTO = BekreftelseDTO(
@@ -138,6 +146,16 @@ class OppgaveDAO(
 
     fun markerSomUtløpt(): OppgaveDAO {
         return settStatus(OppgaveStatus.UTLØPT)
+    }
+
+    fun markerSomÅpnet(): OppgaveDAO {
+        this.åpnetDato = ZonedDateTime.now(ZoneOffset.UTC)
+        return this
+    }
+
+    fun markerSomLukket(): OppgaveDAO {
+        this.lukketDato = ZonedDateTime.now(ZoneOffset.UTC)
+        return this
     }
 
     fun settStatus(oppgaveStatus: OppgaveStatus): OppgaveDAO {

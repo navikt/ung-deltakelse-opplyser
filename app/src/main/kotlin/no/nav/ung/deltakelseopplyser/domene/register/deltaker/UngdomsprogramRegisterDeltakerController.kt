@@ -6,9 +6,12 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
@@ -16,6 +19,7 @@ import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -38,6 +42,7 @@ import java.util.*
 class UngdomsprogramRegisterDeltakerController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakerService: DeltakerService,
+    private val mineSiderVarselService: MineSiderVarselService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
 
@@ -81,5 +86,49 @@ class UngdomsprogramRegisterDeltakerController(
                 ),
                 null
             )
+    }
+
+    @GetMapping("/oppgave/lukk/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Markerer en oppgave som lukket")
+    @ResponseStatus(HttpStatus.OK)
+    fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
+        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        val oppdatertOppgave = oppgave.markerSomLukket()
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        return oppdatertOppgave.tilDTO()
+    }
+
+    @GetMapping("/oppgave/åpnet/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Markerer en oppgave som lest")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
+        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        val oppdatertOppgave = oppgave.markerSomLukket()
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        mineSiderVarselService.deaktiverOppgave(oppgaveReferanse.toString())
+
+        return oppdatertOppgave.tilDTO()
+    }
+
+    private fun hentDeltakerOppgave(oppgaveReferanse: UUID): Pair<DeltakerDAO, OppgaveDAO> {
+        val deltaker = (deltakerService.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
+            ?: throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.NOT_FOUND,
+                    "Fant ingen deltaker med oppgave referanse $oppgaveReferanse."
+                ),
+                null
+            ))
+
+        val oppgaveDAO = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
+            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Funnet deltaker via oppgave referanse over.
+
+        return Pair(deltaker, oppgaveDAO)
     }
 }
