@@ -154,6 +154,7 @@ class OppgaveDAO(
     }
 
     fun markerSomLukket(): OppgaveDAO {
+        settStatus(OppgaveStatus.LUKKET)
         this.lukketDato = ZonedDateTime.now(ZoneOffset.UTC)
         return this
     }
