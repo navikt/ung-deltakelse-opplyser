@@ -12,4 +12,6 @@ data class OppgaveDTO(
     @JsonProperty("status") val status: OppgaveStatus,
     @JsonProperty("opprettetDato") val opprettetDato: ZonedDateTime,
     @JsonProperty("løstDato") val løstDato: ZonedDateTime?,
+    @JsonProperty("åpnetDato") val åpnetDato: ZonedDateTime?,
+    @JsonProperty("lukketDato") val lukketDato: ZonedDateTime?,
 )

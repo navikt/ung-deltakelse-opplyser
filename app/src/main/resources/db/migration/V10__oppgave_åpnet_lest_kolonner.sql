@@ -1,0 +1,3 @@
+ALTER TABLE oppgave
+    ADD COLUMN åpnet_dato TIMESTAMP NULL,
+    ADD COLUMN lukket_dato TIMESTAMP NULL;

@@ -4,5 +4,6 @@ enum class OppgaveStatus {
     LØST,
     ULØST,
     AVBRUTT,
-    UTLØPT
+    UTLØPT,
+    LUKKET
 }
