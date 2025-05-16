@@ -101,13 +101,13 @@ class UngdomsprogramRegisterDeltakerController(
     }
 
     @GetMapping("/oppgave/åpnet/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Markerer en oppgave som lest")
+    @Operation(summary = "Markerer en oppgave som åpnet")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
         val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
 
-        val oppdatertOppgave = oppgave.markerSomLukket()
+        val oppdatertOppgave = oppgave.markerSomÅpnet()
         deltakerService.oppdaterDeltaker(deltaker)
 
         mineSiderVarselService.deaktiverOppgave(oppgaveReferanse.toString())
