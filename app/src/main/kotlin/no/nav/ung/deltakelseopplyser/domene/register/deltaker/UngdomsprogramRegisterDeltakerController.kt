@@ -14,6 +14,8 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
@@ -92,7 +94,31 @@ class UngdomsprogramRegisterDeltakerController(
     @Operation(summary = "Markerer en oppgave som lukket")
     @ResponseStatus(HttpStatus.OK)
     fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
+        val OPPGAVER_SOM_STØTTER_Å_LUKKES = listOf(Oppgavetype.RAPPORTER_INNTEKT)
+
         val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        if(!OPPGAVER_SOM_STØTTER_Å_LUKKES.contains(oppgave.oppgavetype)) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Oppgave med referanse $oppgaveReferanse kan kun lukkes dersom den er av type ${OPPGAVER_SOM_STØTTER_Å_LUKKES.joinToString(",")}"
+                ),
+                null
+            )
+        }
+
+        if (oppgave.status != OppgaveStatus.ULØST) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Oppgave med referanse $oppgaveReferanse kan kun lukkes dersom den er uløst."
+                ),
+                null
+            )
+        }
 
         val oppdatertOppgave = oppgave.markerSomLukket()
         deltakerService.oppdaterDeltaker(deltaker)
