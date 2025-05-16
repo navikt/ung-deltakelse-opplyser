@@ -32,6 +32,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SettTilUtløptDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
+import no.nav.ung.deltakelseopplyser.utils.DateUtils.måned
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -315,7 +316,7 @@ class OppgaveUngSakController(
         mineSiderVarselService.opprettVarsel(
             varselId = nyOppgave.oppgaveReferanse.toString(),
             deltakerIdent = deltaker.deltakerIdent,
-            tekster = oppgavetype.minSideVarselTekster(),
+            tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
             varselLink = deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString()),
             varseltype = Varseltype.Oppgave
         )
@@ -406,8 +407,8 @@ class OppgaveUngSakController(
         return deltaker
     }
 
-    private fun Oppgavetype.minSideVarselTekster(): List<Tekst> = when (this) {
-        Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT -> listOf(
+    private fun OppgavetypeDataDAO.minSideVarselTekster(): List<Tekst> = when (this) {
+        is KontrollerRegisterInntektOppgaveTypeDataDAO -> listOf(
             Tekst(
                 tekst = "Du har fått en oppgave om å bekrefte inntekten din",
                 spraakkode = "nb",
@@ -415,7 +416,7 @@ class OppgaveUngSakController(
             )
         )
 
-        Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE -> listOf(
+        is EndretProgramperiodeOppgavetypeDataDAO -> listOf(
             Tekst(
                 tekst = "Du har fått en oppgave om å bekrefte endret programperiode.",
                 spraakkode = "nb",
@@ -423,9 +424,9 @@ class OppgaveUngSakController(
             )
         )
 
-        Oppgavetype.RAPPORTER_INNTEKT -> listOf(
+        is InntektsrapporteringOppgavetypeDataDAO -> listOf(
             Tekst(
-                tekst = "Du har fått en oppgave om å registrere inntekten din dersom du har det.",
+                tekst = "Du har fått en oppgave om å registrere inntekten din for ${fomDato.måned()} dersom du har det.",
                 spraakkode = "nb",
                 default = true
             )
