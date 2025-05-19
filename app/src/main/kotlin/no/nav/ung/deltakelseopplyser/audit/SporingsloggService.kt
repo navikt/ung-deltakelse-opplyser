@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.audit
 import no.nav.k9.felles.log.audit.*
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.ung.deltakelseopplyser.utils.personIdent
 import no.nav.ung.deltakelseopplyser.utils.subject
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -27,7 +28,7 @@ class SporingsloggService (
                 setOf(
                     CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
                     CefField(CefFieldName.REQUEST, url),
-                    CefField(CefFieldName.USER_ID, tokenValidationContextHolder.subject()),
+                    CefField(CefFieldName.USER_ID, tokenValidationContextHolder.personIdent()),
                     CefField(CefFieldName.BERORT_BRUKER_ID, bruker.ident)
                 )
             )
