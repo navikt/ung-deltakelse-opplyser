@@ -1,4 +1,11 @@
 UNGDOMSYTELSE_DELTAKER_BASE_URL: http://localhost:8080/ungdomsytelse-deltaker # placeholder
+
+AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}]\"
+
+NAIS_CLUSTER_NAME: dev-gcp
+NAIS_NAMESPACE: k9saksbehandling
+NAIS_APP_NAME: ung-deltakelse-opplyser
+
 PROGRAM_OPPSTART_DATO: 2024-01-01
 
 spring:
