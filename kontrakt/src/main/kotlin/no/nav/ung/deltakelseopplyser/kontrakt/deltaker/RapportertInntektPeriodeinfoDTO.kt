@@ -3,10 +3,8 @@ package no.nav.ung.deltakelseopplyser.kontrakt.deltaker
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
 
 data class RapportertInntektPeriodeinfoDTO(
-    @JsonProperty("oppgaveReferanse") val oppgaveReferanse: UUID,
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
     @JsonProperty("arbeidstakerOgFrilansInntekt") val arbeidstakerOgFrilansInntekt: BigDecimal? = null,

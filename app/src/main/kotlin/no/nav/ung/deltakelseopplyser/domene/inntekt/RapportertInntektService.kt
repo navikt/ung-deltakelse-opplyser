@@ -36,7 +36,6 @@ class RapportertInntektService(
             .first
 
         return RapportertInntektPeriodeinfoDTO(
-            oppgaveReferanse = UUID.fromString(søknadId.id),
             fraOgMed = oppgittInntektForPeriode.periode.fraOgMed,
             tilOgMed = oppgittInntektForPeriode.periode.tilOgMed,
             arbeidstakerOgFrilansInntekt = oppgittInntektForPeriode.arbeidstakerOgFrilansInntekt,

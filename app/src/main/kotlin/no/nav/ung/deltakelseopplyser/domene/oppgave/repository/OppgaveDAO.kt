@@ -79,12 +79,11 @@ class OppgaveDAO(
 ) {
 
     companion object {
-        fun OppgaveDAO.tilDTO(rapporterteInntektPerioder: RapportertInntektPeriodeinfoDTO? = null) = OppgaveDTO(
+        fun OppgaveDAO.tilDTO() = OppgaveDTO(
             oppgaveReferanse = oppgaveReferanse,
             oppgavetype = oppgavetype,
             oppgavetypeData = oppgavetypeDataDAO.tilDTO(),
             bekreftelse = oppgaveBekreftelse?.tilDTO(),
-            rapportertInntekt = rapporterteInntektPerioder,
             status = status,
             opprettetDato = opprettetDato,
             løstDato = løstDato,

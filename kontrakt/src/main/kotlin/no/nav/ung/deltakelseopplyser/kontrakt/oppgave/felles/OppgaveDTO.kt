@@ -10,7 +10,6 @@ data class OppgaveDTO(
     @JsonProperty("oppgavetype") val oppgavetype: Oppgavetype,
     @JsonProperty("oppgavetypeData") val oppgavetypeData: OppgavetypeDataDTO,
     @JsonProperty("bekreftelse") val bekreftelse: BekreftelseDTO?,
-    @JsonProperty("rapportertInntekt") val rapportertInntekt: RapportertInntektPeriodeinfoDTO? = null,
     @JsonProperty("status") val status: OppgaveStatus,
     @JsonProperty("opprettetDato") val opprettetDato: ZonedDateTime,
     @JsonProperty("løstDato") val løstDato: ZonedDateTime?,

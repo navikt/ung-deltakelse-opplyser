@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportertInntektPeriodeinfoDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 
@@ -31,7 +32,8 @@ data class RegisterinntektDTO(
 
 data class InntektsrapporteringOppgavetypeDataDTO(
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
-    @JsonProperty("tilOgMed") val tilOgMed: LocalDate
+    @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
+    @JsonProperty("rapportertInntekt") val rapportertInntekt: RapportertInntektPeriodeinfoDTO? = null,
 ): OppgavetypeDataDTO
 
 data class ArbeidOgFrilansRegisterInntektDTO(
