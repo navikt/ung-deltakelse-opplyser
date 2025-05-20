@@ -28,7 +28,7 @@ class SporingsloggService (
                 setOf(
                     CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
                     CefField(CefFieldName.REQUEST, url),
-                    CefField(CefFieldName.USER_ID, tokenValidationContextHolder.personIdent()),
+                    CefField(CefFieldName.USER_ID, tokenValidationContextHolder.subject()),
                     CefField(CefFieldName.BERORT_BRUKER_ID, bruker.ident)
                 )
             )
