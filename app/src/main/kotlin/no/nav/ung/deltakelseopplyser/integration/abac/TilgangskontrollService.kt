@@ -43,10 +43,6 @@ class TilgangskontrollService(
     }
 
     fun ansattHarTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>): Boolean {
-        if (abacEnabled == "false") {
-            logger.info("Tilgangskontroll er disabled")
-            return true;
-        }
         return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
     }
 
