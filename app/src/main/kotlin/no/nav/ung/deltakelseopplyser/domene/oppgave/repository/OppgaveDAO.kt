@@ -10,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportertInntektPeriodeinfoDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretProgramperiodeDataDTO
@@ -78,11 +79,12 @@ class OppgaveDAO(
 ) {
 
     companion object {
-        fun OppgaveDAO.tilDTO() = OppgaveDTO(
+        fun OppgaveDAO.tilDTO(rapporterteInntektPerioder: RapportertInntektPeriodeinfoDTO? = null) = OppgaveDTO(
             oppgaveReferanse = oppgaveReferanse,
             oppgavetype = oppgavetype,
             oppgavetypeData = oppgavetypeDataDAO.tilDTO(),
             bekreftelse = oppgaveBekreftelse?.tilDTO(),
+            rapportertInntekt = rapporterteInntektPerioder,
             status = status,
             opprettetDato = opprettetDato,
             løstDato = løstDato,

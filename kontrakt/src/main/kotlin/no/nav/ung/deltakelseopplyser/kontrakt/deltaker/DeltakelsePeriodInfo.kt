@@ -11,5 +11,4 @@ data class DeltakelsePeriodInfo(
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate? = null,
     @JsonProperty("harSøkt") val harSøkt: Boolean,
     @JsonProperty("oppgaver") val oppgaver: List<OppgaveDTO>,
-    @JsonProperty("rapporteringsPerioder") val rapporteringsPerioder: List<RapportPeriodeinfoDTO> = emptyList(),
 )

@@ -14,6 +14,8 @@ import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
@@ -38,7 +40,7 @@ class UngdomsprogramregisterService(
     private val pdlService: PdlService,
     private val rapportertInntektService: RapportertInntektService,
     private val mineSiderVarselService: MineSiderVarselService,
-    private val deltakerappConfig: DeltakerappConfig
+    private val deltakerappConfig: DeltakerappConfig,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -183,8 +185,17 @@ class UngdomsprogramregisterService(
                 fraOgMed = deltakelseDAO.getFom(),
                 tilOgMed = deltakelseDAO.getTom(),
                 harSøkt = deltakelseDAO.harSøkt,
-                rapporteringsPerioder = rapportertInntektService.hentRapporteringsperioder(deltakelseDAO),
-                oppgaver = deltakersOppgaver.map { it.tilDTO() }
+                oppgaver = deltakersOppgaver.map {
+                    if (it.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT && it.status == OppgaveStatus.LØST) {
+                        val rapporterteInntektPerioder =
+                            rapportertInntektService.finnRapportertInntektGittOppgaveReferanse(it.oppgaveReferanse)
+
+                        if (rapporterteInntektPerioder == null) {
+                            logger.warn("Forventet å finne rapportert inntekt for løst oppgave med referanse ${it.oppgaveReferanse}, men fant ingen")
+                        }
+                        it.tilDTO(rapporterteInntektPerioder)
+                    } else it.tilDTO()
+                }
             )
         }
     }
