@@ -42,9 +42,9 @@ fun SpringTokenValidationContextHolder.navIdent(): String {
     val jwtToken = getTokenValidationContext().firstValidToken
         ?: throw IllegalStateException("Ingen gyldige tokens i Authorization headeren")
 
-    val sub = jwtToken.jwtTokenClaims.getStringClaim(TokenClaims.NAV_IDENT)
+    val navIdent = jwtToken.jwtTokenClaims.getStringClaim(TokenClaims.NAV_IDENT)
     return when {
-        !sub.isNullOrBlank() -> sub
+        !navIdent.isNullOrBlank() -> navIdent
         else -> throw IllegalStateException("Ugyldig token. Token inneholdt verken sub eller pid claim")
     }
 }
