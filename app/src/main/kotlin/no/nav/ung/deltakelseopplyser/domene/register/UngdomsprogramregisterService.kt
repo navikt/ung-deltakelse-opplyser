@@ -15,7 +15,6 @@ import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
@@ -328,22 +327,14 @@ class UngdomsprogramregisterService(
     }
 
     private fun UngdomsprogramDeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelsePeriodInfo {
-        val berikedeOppgaver = oppgaver.map { oppgave ->
-            oppgave.tilDTO().let { dto ->
-                if (oppgave.erLøstInntektsrapportering()) {
-                    dto.copy(
-                        oppgavetypeData = (dto.oppgavetypeData as? InntektsrapporteringOppgavetypeDataDTO)
-                            ?.copy(
-                                rapportertInntekt = rapportertInntektService
-                                    .finnRapportertInntektGittOppgaveReferanse(oppgave.oppgaveReferanse)
-                                    .also {
-                                        if (it == null)
-                                            logger.warn("Mangler rapportert inntekt for referanse=${oppgave.oppgaveReferanse}")
-                                    }
-                            ) ?: error("Fant ikke oppgavetype data for inntektsrapportering")
-                    )
-                } else dto
-            }
+        val oppgaver = oppgaver.map { oppgave ->
+            oppgave
+                .tilDTO()
+                .let { oppgaveDTO ->
+                    if (oppgave.erLøstInntektsrapportering()) {
+                        rapportertInntektService.leggPåRapportertInntekt(oppgaveDTO)
+                    } else oppgaveDTO
+                }
         }
 
         return DeltakelsePeriodInfo(
@@ -351,7 +342,7 @@ class UngdomsprogramregisterService(
             fraOgMed = getFom(),
             tilOgMed = getTom(),
             harSøkt = this.harSøkt,
-            oppgaver = berikedeOppgaver
+            oppgaver = oppgaver
         )
     }
 

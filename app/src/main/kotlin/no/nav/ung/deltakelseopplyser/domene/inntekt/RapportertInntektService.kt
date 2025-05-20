@@ -5,12 +5,10 @@ import no.nav.k9.søknad.Søknad
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportertInntektPeriodeinfoDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
-import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
-import org.springframework.web.ErrorResponseException
-import java.util.*
 
 @Service
 class RapportertInntektService(
@@ -20,13 +18,22 @@ class RapportertInntektService(
         private val logger = LoggerFactory.getLogger(RapportertInntektService::class.java)
     }
 
-    fun finnRapportertInntektGittOppgaveReferanse(oppgaveReferanse: UUID): RapportertInntektPeriodeinfoDTO? {
+    fun leggPåRapportertInntekt(oppgaveDTO: OppgaveDTO): OppgaveDTO {
         return rapportertInntektRepository
-            .finnRapportertInntektGittOppgaveReferanse(oppgaveReferanse.toString())
+            .finnRapportertInntektGittOppgaveReferanse(oppgaveDTO.oppgaveReferanse.toString())
             ?.let { ungRapportertInntektDAO ->
                 JsonUtils.fromString(ungRapportertInntektDAO.inntekt, Søknad::class.java)
             }?.rapportertInntektPeriodeInfo()
-            ?.also { logger.info("Fant rapportert inntekt i perioden [${it.fraOgMed} - ${it.tilOgMed}] for oppgave med referanse $oppgaveReferanse: $it") }
+            ?.also { logger.info("Fant rapportert inntekt i perioden [${it.fraOgMed} - ${it.tilOgMed}] for oppgave med referanse $oppgaveDTO: $it") }
+            .let {
+                val inntektsrapporteringOppgavetypeDataDTO =
+                    oppgaveDTO.oppgavetypeData as? InntektsrapporteringOppgavetypeDataDTO ?: error("OppgavetypeDataDTO er ikke av type InntektsrapporteringOppgavetypeDataDTO")
+
+                logger.info("Oppdaterer oppgave med rapportert inntekt for oppgaveReferanse $oppgaveDTO: $it")
+                oppgaveDTO.copy(
+                    oppgavetypeData = inntektsrapporteringOppgavetypeDataDTO.copy(rapportertInntekt = it)
+                )
+            }
     }
 
     private fun Søknad.rapportertInntektPeriodeInfo(): RapportertInntektPeriodeinfoDTO {
