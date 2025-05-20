@@ -1,7 +1,6 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportertInntektPeriodeinfoDTO
 import java.time.ZonedDateTime
 import java.util.*
 
