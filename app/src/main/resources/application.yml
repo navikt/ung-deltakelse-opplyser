@@ -75,7 +75,7 @@ management:
 
 no.nav:
   audit:
-    vendor: k9
+    vendor: ung
     product: ung-deltakelse-opplyser
   security:
     jwt:
