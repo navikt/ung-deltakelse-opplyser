@@ -45,7 +45,7 @@ fun SpringTokenValidationContextHolder.navIdent(): String {
     val navIdent = jwtToken.jwtTokenClaims.getStringClaim(TokenClaims.NAV_IDENT)
     return when {
         !navIdent.isNullOrBlank() -> navIdent
-        else -> throw IllegalStateException("Ugyldig token. Token inneholdt verken sub eller pid claim")
+        else -> throw IllegalStateException("Ugyldig token. Token inneholdt ikke ${TokenClaims.NAV_IDENT} claim")
     }
 }
 
