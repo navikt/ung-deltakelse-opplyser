@@ -9,11 +9,14 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
@@ -38,7 +41,7 @@ class UngdomsprogramregisterService(
     private val pdlService: PdlService,
     private val rapportertInntektService: RapportertInntektService,
     private val mineSiderVarselService: MineSiderVarselService,
-    private val deltakerappConfig: DeltakerappConfig
+    private val deltakerappConfig: DeltakerappConfig,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -177,16 +180,7 @@ class UngdomsprogramregisterService(
         val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
-        return ungdomsprogramDAOs.map { deltakelseDAO ->
-            DeltakelsePeriodInfo(
-                id = deltakelseDAO.id,
-                fraOgMed = deltakelseDAO.getFom(),
-                tilOgMed = deltakelseDAO.getTom(),
-                harSøkt = deltakelseDAO.harSøkt,
-                rapporteringsPerioder = rapportertInntektService.hentRapporteringsperioder(deltakelseDAO),
-                oppgaver = deltakersOppgaver.map { it.tilDTO() }
-            )
-        }
+        return ungdomsprogramDAOs.map { it.tilDeltakelsePeriodInfo(deltakersOppgaver) }
     }
 
     fun avsluttDeltakelse(
@@ -331,4 +325,27 @@ class UngdomsprogramregisterService(
             )
         }
     }
+
+    private fun UngdomsprogramDeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelsePeriodInfo {
+        val oppgaver = oppgaver.map { oppgave ->
+            oppgave
+                .tilDTO()
+                .let { oppgaveDTO ->
+                    if (oppgave.erLøstInntektsrapportering()) {
+                        rapportertInntektService.leggPåRapportertInntekt(oppgaveDTO)
+                    } else oppgaveDTO
+                }
+        }
+
+        return DeltakelsePeriodInfo(
+            id = this.id,
+            fraOgMed = getFom(),
+            tilOgMed = getTom(),
+            harSøkt = this.harSøkt,
+            oppgaver = oppgaver
+        )
+    }
+
+    private fun OppgaveDAO.erLøstInntektsrapportering() =
+        this.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT && this.status == OppgaveStatus.LØST
 }

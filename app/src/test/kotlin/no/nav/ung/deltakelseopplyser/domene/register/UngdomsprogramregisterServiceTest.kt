@@ -1,17 +1,14 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import com.ninjasquad.springmockk.MockkBean
-import io.hypersistence.utils.hibernate.type.range.Range
 import io.mockk.every
 import io.mockk.justRun
 import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
-import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService.Companion.rapporteringsPerioder
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
@@ -37,7 +34,6 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
-import java.time.ZonedDateTime
 import java.util.*
 
 
@@ -187,66 +183,6 @@ class UngdomsprogramregisterServiceTest {
 
         assertNotNull(hentetDto)
         assertNotNull(hentetDto.deltaker.id)
-    }
-
-    @Test
-    fun `Forventer riktig genererte rapporteringsperioder fra deltakelsesperiode`() {
-        val deltakelsePeriodInfos = listOf(
-            UngdomsprogramDeltakelseDAO(
-                id = UUID.randomUUID(),
-                deltaker = DeltakerDAO(deltakerIdent = "123"),
-                periode = Range.closed(LocalDate.parse("2024-01-15"), LocalDate.parse("2024-06-15")),
-                harSøkt = false,
-                opprettetTidspunkt = ZonedDateTime.now(),
-                endretTidspunkt = null
-            )
-        )
-
-        assertThat(deltakelsePeriodInfos).hasSize(1)
-        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder()
-        assertThat(rapporteringsPerioder).hasSize(6)
-
-        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(LocalDate.parse("2024-01-15"))
-        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(LocalDate.parse("2024-01-31"))
-
-        assertThat(rapporteringsPerioder[1].fraOgMed).isEqualTo(LocalDate.parse("2024-02-01"))
-        assertThat(rapporteringsPerioder[1].tilOgMed).isEqualTo(LocalDate.parse("2024-02-29"))
-
-        assertThat(rapporteringsPerioder[2].fraOgMed).isEqualTo(LocalDate.parse("2024-03-01"))
-        assertThat(rapporteringsPerioder[2].tilOgMed).isEqualTo(LocalDate.parse("2024-03-31"))
-
-        assertThat(rapporteringsPerioder[3].fraOgMed).isEqualTo(LocalDate.parse("2024-04-01"))
-        assertThat(rapporteringsPerioder[3].tilOgMed).isEqualTo(LocalDate.parse("2024-04-30"))
-
-        assertThat(rapporteringsPerioder[4].fraOgMed).isEqualTo(LocalDate.parse("2024-05-01"))
-        assertThat(rapporteringsPerioder[4].tilOgMed).isEqualTo(LocalDate.parse("2024-05-31"))
-
-        assertThat(rapporteringsPerioder.last().fraOgMed).isEqualTo(LocalDate.parse("2024-06-01"))
-        assertThat(rapporteringsPerioder.last().tilOgMed).isEqualTo(LocalDate.parse("2024-06-15"))
-    }
-
-    @Test
-    fun `Forvent at rapporteringsperiode genereres til slutten av startdatoens måned dersom tom dato ikke er satt`() {
-        val idag = LocalDate.now()
-        val toMånederSiden = idag.minusMonths(2)
-        val periodeFra = toMånederSiden
-        val deltakelsePeriodInfos = listOf(
-            UngdomsprogramDeltakelseDAO(
-                id = UUID.randomUUID(),
-                deltaker = DeltakerDAO(deltakerIdent = "123"),
-                periode = Range.closedInfinite(periodeFra),
-                harSøkt = false,
-                opprettetTidspunkt = ZonedDateTime.now(),
-                endretTidspunkt = null
-            )
-        )
-
-        assertThat(deltakelsePeriodInfos).hasSize(1)
-        val rapporteringsPerioder = deltakelsePeriodInfos[0].rapporteringsPerioder()
-        assertThat(rapporteringsPerioder).hasSize(1)
-
-        assertThat(rapporteringsPerioder.first().fraOgMed).isEqualTo(toMånederSiden)
-        assertThat(rapporteringsPerioder.first().tilOgMed).isEqualTo(toMånederSiden.withDayOfMonth(toMånederSiden.lengthOfMonth()))
     }
 
     @Test

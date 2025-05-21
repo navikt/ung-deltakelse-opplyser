@@ -1,69 +1,52 @@
 package no.nav.ung.deltakelseopplyser.domene.inntekt
 
-import no.nav.fpsak.tidsserie.LocalDateTimeline
 import no.nav.k9.søknad.JsonUtils
 import no.nav.k9.søknad.Søknad
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
-import no.nav.k9.søknad.ytelse.ung.v1.inntekt.OppgittInntektForPeriode
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportPeriodeinfoDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportertInntektPeriodeinfoDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDate
-import java.time.Period
 
 @Service
 class RapportertInntektService(
     private val rapportertInntektRepository: RapportertInntektRepository,
-    private val deltakerService: DeltakerService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RapportertInntektService::class.java)
-
-        fun UngdomsprogramDeltakelseDAO.rapporteringsPerioder(): List<RapportPeriodeinfoDTO> {
-            val startDato = getFom().withDayOfMonth(1)
-            val sluttDato = getTom() ?: startDato.withDayOfMonth(startDato.lengthOfMonth())
-            val tidslinje = LocalDateTimeline(getFom(), sluttDato, this)
-            val månedTidslinje = tidslinje.splitAtRegular(startDato, tidslinje.maxLocalDate, Period.ofMonths(1))
-            return månedTidslinje.toSegments().map { segment ->
-                RapportPeriodeinfoDTO(
-                    fraOgMed = segment.fom,
-                    tilOgMed = segment.tom,
-                    harRapportert = false
-                )
-            }
-        }
     }
 
-    fun hentRapporteringsperioder(deltakelse: UngdomsprogramDeltakelseDAO): List<RapportPeriodeinfoDTO> {
-        val deltakerIdenter = deltakerService.hentDeltakterIdenter(deltakelse.deltaker.deltakerIdent)
-        val rapporterteInntekter = rapportertInntektRepository
-            .findBySøkerIdentIn(deltakerIdenter)
-            .flatMap { oppgittInntekt ->
-                JsonUtils.fromString(oppgittInntekt.inntekt, Søknad::class.java)
-                    .getYtelse<Ungdomsytelse>()
-                    .inntekter.oppgittePeriodeinntekter
-            }
+    fun leggPåRapportertInntekt(oppgaveDTO: OppgaveDTO): OppgaveDTO {
+        return rapportertInntektRepository
+            .finnRapportertInntektGittOppgaveReferanse(oppgaveDTO.oppgaveReferanse.toString())
+            ?.let { ungRapportertInntektDAO ->
+                JsonUtils.fromString(ungRapportertInntektDAO.inntekt, Søknad::class.java)
+            }?.rapportertInntektPeriodeInfo()
+            ?.also { logger.info("Fant rapportert inntekt i perioden [${it.fraOgMed} - ${it.tilOgMed}] for oppgave med referanse $oppgaveDTO: $it") }
+            .let {
+                val inntektsrapporteringOppgavetypeDataDTO =
+                    oppgaveDTO.oppgavetypeData as? InntektsrapporteringOppgavetypeDataDTO ?: error("OppgavetypeDataDTO er ikke av type InntektsrapporteringOppgavetypeDataDTO")
 
-        logger.info(
-            "Fant ${rapporterteInntekter.size} rapporterte inntekter for deltakelse ${deltakelse.id}. Perioder: {}",
-            rapporterteInntekter.map { it.periode })
-
-        return deltakelse.rapporteringsPerioder()
-            .map { rapporteringsPeriode ->
-                rapporterteInntekter
-                    .find { it.periode.fraOgMed <= rapporteringsPeriode.fraOgMed && it.periode.tilOgMed >= rapporteringsPeriode.tilOgMed }
-                    ?.let { inntekt: OppgittInntektForPeriode ->
-                        RapportPeriodeinfoDTO(
-                            fraOgMed = rapporteringsPeriode.fraOgMed,
-                            tilOgMed = rapporteringsPeriode.tilOgMed,
-                            harRapportert = true,
-                            arbeidstakerOgFrilansInntekt = inntekt.arbeidstakerOgFrilansInntekt,
-                            inntektFraYtelse = inntekt.ytelse
-                        )
-                    } ?: rapporteringsPeriode
+                logger.info("Oppdaterer oppgave med rapportert inntekt for oppgaveReferanse $oppgaveDTO: $it")
+                oppgaveDTO.copy(
+                    oppgavetypeData = inntektsrapporteringOppgavetypeDataDTO.copy(rapportertInntekt = it)
+                )
             }
+    }
+
+    private fun Søknad.rapportertInntektPeriodeInfo(): RapportertInntektPeriodeinfoDTO {
+        val oppgittInntektForPeriode = getYtelse<Ungdomsytelse>()
+            .inntekter
+            .oppgittePeriodeinntekter
+            .first
+
+        return RapportertInntektPeriodeinfoDTO(
+            fraOgMed = oppgittInntektForPeriode.periode.fraOgMed,
+            tilOgMed = oppgittInntektForPeriode.periode.tilOgMed,
+            arbeidstakerOgFrilansInntekt = oppgittInntektForPeriode.arbeidstakerOgFrilansInntekt,
+            inntektFraYtelse = oppgittInntektForPeriode.ytelse
+        )
     }
 }
