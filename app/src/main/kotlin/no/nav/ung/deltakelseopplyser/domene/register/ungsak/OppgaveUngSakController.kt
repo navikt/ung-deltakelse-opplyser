@@ -24,7 +24,6 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInn
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
@@ -374,9 +373,9 @@ class OppgaveUngSakController(
         fom: LocalDate,
         tom: LocalDate,
     ): Boolean {
-        val eksisterende = oppgaveDAO.oppgavetypeDataDAO.tilDTO() as InntektsrapporteringOppgavetypeDataDTO
-        val eksisterendeFraOgMed = eksisterende.base.fraOgMed
-        val eksisterendeTilOgMed = eksisterende.base.tilOgMed
+        val eksisterende = oppgaveDAO.oppgavetypeDataDAO as InntektsrapporteringOppgavetypeDataDAO
+        val eksisterendeFraOgMed = eksisterende.fomDato
+        val eksisterendeTilOgMed = eksisterende.tomDato
 
         logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [$eksisterendeFraOgMed/$eksisterendeTilOgMed], Ny: [$fom/$tom]")
         return !eksisterendeFraOgMed.isAfter(tom) && !eksisterendeTilOgMed.isBefore(fom)
