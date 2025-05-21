@@ -24,7 +24,12 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInn
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SettTilUtløptDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
@@ -132,7 +137,11 @@ class OppgaveUngSakController(
         val uløstOppgaveISammePeriode = deltaker.oppgaver
             .filter { it.oppgavetype == settTilUtløptDTO.oppgavetype }
             .find {
-                it.oppgavetype == settTilUtløptDTO.oppgavetype && gjelderSammePeriodeForInntektsrapportering(it, settTilUtløptDTO.fomDato, settTilUtløptDTO.tomDato) && it.status == OppgaveStatus.ULØST
+                it.oppgavetype == settTilUtløptDTO.oppgavetype && gjelderSammePeriodeForInntektsrapportering(
+                    it,
+                    settTilUtløptDTO.fomDato,
+                    settTilUtløptDTO.tomDato
+                ) && it.status == OppgaveStatus.ULØST
             }
 
         if (uløstOppgaveISammePeriode != null) {
@@ -365,10 +374,12 @@ class OppgaveUngSakController(
         fom: LocalDate,
         tom: LocalDate,
     ): Boolean {
-        val eksisterende: InntektsrapporteringOppgavetypeDataDTO =
-            oppgaveDAO.oppgavetypeDataDAO.tilDTO() as InntektsrapporteringOppgavetypeDataDTO
-        logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [${eksisterende.fraOgMed}/${eksisterende.tilOgMed}], Ny: [$fom/$tom]")
-        return !eksisterende.fraOgMed.isAfter(tom) && !eksisterende.tilOgMed.isBefore(fom)
+        val eksisterende = oppgaveDAO.oppgavetypeDataDAO.tilDTO() as InntektsrapporteringOppgavetypeDataDTO
+        val eksisterendeFraOgMed = eksisterende.base.fraOgMed
+        val eksisterendeTilOgMed = eksisterende.base.tilOgMed
+
+        logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [$eksisterendeFraOgMed/$eksisterendeTilOgMed], Ny: [$fom/$tom]")
+        return !eksisterendeFraOgMed.isAfter(tom) && !eksisterendeTilOgMed.isBefore(fom)
     }
 
     private fun forsikreOppgaveIkkeErLøst(oppgave: OppgaveDAO) {

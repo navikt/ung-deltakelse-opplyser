@@ -89,7 +89,6 @@ data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("arbeidsgiver") val arbeidsgiver: String,
 )
 
-
 data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("ytelsetype") val ytelsetype: YtelseType,

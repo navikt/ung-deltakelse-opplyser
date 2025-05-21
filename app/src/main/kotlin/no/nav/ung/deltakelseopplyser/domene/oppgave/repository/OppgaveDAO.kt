@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretProgramperiodeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeData
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
@@ -115,10 +116,16 @@ class OppgaveDAO(
                 registerinntekt.tilDTO()
             )
 
-            is InntektsrapporteringOppgavetypeDataDAO -> InntektsrapporteringOppgavetypeDataDTO(
-                fraOgMed = fomDato,
-                tilOgMed = tomDato
-            )
+            is InntektsrapporteringOppgavetypeDataDAO -> {
+                val base = InntektsrapporteringOppgavetypeData(
+                    fraOgMed = this.fomDato,
+                    tilOgMed = this.tomDato
+                )
+                InntektsrapporteringOppgavetypeDataDTO(
+                    base = base,
+                    rapportertInntekt = null
+                )
+            }
         }
 
         fun RegisterinntektDAO.tilDTO() = RegisterinntektDTO(
