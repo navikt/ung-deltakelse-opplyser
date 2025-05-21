@@ -38,7 +38,7 @@ class UngdomsytelsesøknadService(
         val deltakelseDAO = deltakelseRepository.finnDeltakelseSomStarter(deltakterIder, søktFraDato)
             ?: throw IllegalStateException("Fant ingen deltakelse som starter $søktFraDato")
 
-        if (deltakelseDAO.harSøkt.not()) {
+        if (deltakelseDAO.søktTidspunkt == null) {
             logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)
             deltakelseDAO.markerSomHarSøkt()
             deltakelseRepository.save(deltakelseDAO)

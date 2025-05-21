@@ -26,8 +26,8 @@ class UngdomsprogramDeltakelseDAO(
     @Column(name = "periode", columnDefinition = "daterange")
     private var periode: Range<LocalDate>,
 
-    @Column(name = "har_sokt")
-    var harSøkt: Boolean,
+    @Column(name = "søkt_tidspunkt")
+    var søktTidspunkt: ZonedDateTime? = null,
 
     @CreatedDate
     @Column(name = "opprettet_tidspunkt")
@@ -57,8 +57,7 @@ class UngdomsprogramDeltakelseDAO(
     }
 
     fun markerSomHarSøkt() {
-        harSøkt = true
-        endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
+        søktTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
     }
 }
 

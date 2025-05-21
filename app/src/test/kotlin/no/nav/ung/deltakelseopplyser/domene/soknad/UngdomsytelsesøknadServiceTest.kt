@@ -2,9 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.just
 import io.mockk.justRun
-import io.mockk.runs
 import no.nav.k9.søknad.Søknad
 import no.nav.k9.søknad.felles.Kildesystem
 import no.nav.k9.søknad.felles.personopplysninger.Søker
@@ -101,9 +99,9 @@ class UngdomsytelsesøknadServiceTest {
             .withFailMessage("Forventet å finne deltakelse med id %s", deltakelseOpplysningDTO.id)
             .isNotEmpty
 
-        assertThat(deltakelse.get().harSøkt)
+        assertThat(deltakelse.get().søktTidspunkt)
             .withFailMessage("Forventet at deltakelse med id %s var markert som søkt", deltakelseOpplysningDTO.id)
-            .isTrue
+            .isNotNull()
     }
 
     private fun lagUngdomsytelseSøknad(
@@ -129,7 +127,6 @@ class UngdomsytelsesøknadServiceTest {
         return registerService.leggTilIProgram(
             deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
-                harSøkt = false,
                 fraOgMed = LocalDate.parse(deltakelseStart),
                 tilOgMed = null,
                 oppgaver = listOf()

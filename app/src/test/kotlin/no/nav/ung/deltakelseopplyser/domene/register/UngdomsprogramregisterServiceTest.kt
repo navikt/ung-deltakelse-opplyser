@@ -91,7 +91,6 @@ class UngdomsprogramregisterServiceTest {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
-            harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = null,
             oppgaver = listOf()
@@ -111,7 +110,6 @@ class UngdomsprogramregisterServiceTest {
         val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "02499435811")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
-            harSøkt = false,
             fraOgMed = mandag,
             tilOgMed = null,
             oppgaver = listOf()
@@ -138,7 +136,6 @@ class UngdomsprogramregisterServiceTest {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
-            harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = LocalDate.now().plusDays(10),
             oppgaver = listOf()
@@ -155,7 +152,6 @@ class UngdomsprogramregisterServiceTest {
         val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
-            harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = null,
             oppgaver = listOf()
@@ -172,7 +168,6 @@ class UngdomsprogramregisterServiceTest {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
-            harSøkt = false,
             fraOgMed = LocalDate.now(),
             tilOgMed = null,
             oppgaver = listOf()
@@ -198,7 +193,6 @@ class UngdomsprogramregisterServiceTest {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
-            harSøkt = false,
             fraOgMed = mandag,
             tilOgMed = null,
             oppgaver = listOf()
@@ -221,7 +215,6 @@ class UngdomsprogramregisterServiceTest {
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
-            harSøkt = false,
             fraOgMed = mandag,
             tilOgMed = null,
             oppgaver = listOf()
@@ -235,7 +228,6 @@ class UngdomsprogramregisterServiceTest {
 
         val oppdatertDto = DeltakelseOpplysningDTO(
             deltaker = innmelding.deltaker,
-            harSøkt = false,
             fraOgMed = mandag,
             tilOgMed = onsdag,
             oppgaver = listOf()
