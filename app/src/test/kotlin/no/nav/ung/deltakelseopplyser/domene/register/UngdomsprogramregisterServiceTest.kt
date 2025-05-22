@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
@@ -52,10 +53,13 @@ import java.util.*
 class UngdomsprogramregisterServiceTest {
 
     @Autowired
+    private lateinit var deltakerRepository: DeltakerRepository
+
+    @Autowired
     lateinit var ungdomsprogramregisterService: UngdomsprogramregisterService
 
     @Autowired
-    lateinit var repository: UngdomsprogramDeltakelseRepository
+    lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
 
     @Autowired
     lateinit var entityManager: EntityManager
@@ -77,13 +81,16 @@ class UngdomsprogramregisterServiceTest {
 
     @BeforeEach
     fun setUp() {
-        repository.deleteAll()
+        deltakelseRepository.deleteAll()
+        deltakerRepository.deleteAll()
+
         justRun { mineSiderVarselService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
     }
 
     @AfterAll
     internal fun tearDown() {
-        repository.deleteAll()
+        deltakelseRepository.deleteAll()
+        deltakerRepository.deleteAll()
     }
 
     @Test
