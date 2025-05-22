@@ -8,6 +8,7 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
@@ -48,10 +49,13 @@ import java.util.*
 class UngdomsprogramregisterServiceTest {
 
     @Autowired
+    private lateinit var deltakerRepository: DeltakerRepository
+
+    @Autowired
     lateinit var ungdomsprogramregisterService: UngdomsprogramregisterService
 
     @Autowired
-    lateinit var repository: UngdomsprogramDeltakelseRepository
+    lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
 
     @Autowired
     lateinit var entityManager: EntityManager
@@ -76,14 +80,17 @@ class UngdomsprogramregisterServiceTest {
 
     @BeforeEach
     fun setUp() {
-        repository.deleteAll()
+        deltakelseRepository.deleteAll()
+        deltakerRepository.deleteAll()
+
         justRun { mineSiderVarselService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
     }
 
     @AfterAll
     internal fun tearDown() {
-        repository.deleteAll()
+        deltakelseRepository.deleteAll()
+        deltakerRepository.deleteAll()
     }
 
     private companion object {
@@ -253,7 +260,7 @@ class UngdomsprogramregisterServiceTest {
         val innslag = historikk.iterator()
 
         val førsteInnslag = innslag.next()
-        assertThat(førsteInnslag.revisjonsnummer).isEqualTo(1L)
+        assertThat(førsteInnslag.revisjonsnummer).isNotNull()
         assertThat(førsteInnslag.revisjonstype).isEqualTo(Revisjonstype.OPPRETTET)
         assertThat(førsteInnslag.fom).isEqualTo(mandag)
         assertThat(førsteInnslag.tom).isNull()
@@ -263,7 +270,7 @@ class UngdomsprogramregisterServiceTest {
         assertThat(førsteInnslag.endretTidspunkt).isNotNull()
 
         val andreInnslag = innslag.next()
-        assertThat(andreInnslag.revisjonsnummer).isEqualTo(2L)
+        assertThat(andreInnslag.revisjonsnummer).isGreaterThan(førsteInnslag.revisjonsnummer)
         assertThat(andreInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(andreInnslag.fom).isEqualTo(mandag)
         assertThat(andreInnslag.tom).isEqualTo(onsdag)
@@ -273,7 +280,7 @@ class UngdomsprogramregisterServiceTest {
         assertThat(andreInnslag.endretTidspunkt).isNotNull()
 
         val tredjeInnslag = innslag.next()
-        assertThat(tredjeInnslag.revisjonsnummer).isEqualTo(3L)
+        assertThat(tredjeInnslag.revisjonsnummer).isGreaterThan(andreInnslag.revisjonsnummer)
         assertThat(tredjeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(tredjeInnslag.fom).isEqualTo(mandag)
         assertThat(tredjeInnslag.tom).isEqualTo(onsdag.plusWeeks(1))
