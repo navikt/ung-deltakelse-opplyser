@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.domene.inntekt.kafka
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.verify
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
@@ -15,6 +16,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -59,8 +61,13 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var oppgaveUngSakController: OppgaveUngSakController
 
+    @MockkBean
+    lateinit var tilgangskontrollService: TilgangskontrollService
+
     @Test
     fun `Forventet rapportertInntekt konsumeres og deserialiseres som forventet`() {
+        justRun { tilgangskontrollService.krevSystemtilgang() }
+
         val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
         val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
         val søkerIdent = "12834619705"

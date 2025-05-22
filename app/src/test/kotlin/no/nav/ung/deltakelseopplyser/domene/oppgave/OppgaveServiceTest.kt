@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.domene.oppgave
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.verify
 import no.nav.k9.oppgave.OppgaveBekreftelse
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
@@ -16,6 +17,7 @@ import no.nav.k9.søknad.felles.type.Periode
 import no.nav.k9.søknad.felles.type.SøknadId
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
+import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
@@ -24,6 +26,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRep
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretProgramperiodeDataDTO
@@ -37,11 +40,14 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterIn
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektYtelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -78,6 +84,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     @MockkBean
     lateinit var pdlService: PdlService
 
+    @MockkBean
+    lateinit var tilgangskontrollService: TilgangskontrollService
+
     private companion object {
         const val deltakerIdent = "12345678901"
         const val deltakerAktørId = "10987654321"
@@ -109,6 +118,17 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                 gruppe = IdentGruppe.FOLKEREGISTERIDENT
             )
         )
+
+        justRun { tilgangskontrollService.krevSystemtilgang() }
+    }
+
+
+    @AfterEach
+    fun slett(){
+        verify(atLeast = 1, verifyBlock = {tilgangskontrollService.krevSystemtilgang()})
+
+        deltakelseRepository.deleteAll()
+        deltakerRepository.deleteAll()
     }
 
     @Test
