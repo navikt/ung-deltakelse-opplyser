@@ -244,6 +244,8 @@ class UngdomsprogramregisterServiceTest {
         historikk.forEach {
             logger.info("Innslag: {}", it)
         }
+        assertThat(historikk.any { it.opprettetAv != null }).isTrue
+        assertThat(historikk.last().endretAv).isNotNull()
     }
 
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)

@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.config
+package no.nav.ung.deltakelseopplyser.historikk
 
 import org.springframework.data.domain.AuditorAware
 import org.springframework.stereotype.Component

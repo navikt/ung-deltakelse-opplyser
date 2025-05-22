@@ -9,12 +9,11 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.historikk.BaseAuditEntity
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
 import org.hibernate.envers.RelationTargetAuditMode
-import org.springframework.data.annotation.CreatedDate
-import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -39,15 +38,7 @@ class UngdomsprogramDeltakelseDAO(
 
     @Column(name = "søkt_tidspunkt")
     var søktTidspunkt: ZonedDateTime? = null,
-
-    @CreatedDate
-    @Column(name = "opprettet_tidspunkt")
-    val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-
-    @LastModifiedDate
-    @Column(name = "endret_tidspunkt")
-    var endretTidspunkt: ZonedDateTime? = null,
-) {
+) : BaseAuditEntity() {
 
     fun getFom(): LocalDate {
         return if (periode.hasMask(Range.LOWER_EXCLUSIVE)) periode.lower().plusDays(1) else periode.lower()
@@ -65,7 +56,6 @@ class UngdomsprogramDeltakelseDAO(
      */
     fun oppdaterPeriode(nyPeriode: Range<LocalDate>) {
         periode = nyPeriode
-        endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
     }
 
     fun markerSomHarSøkt() {

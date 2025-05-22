@@ -1,7 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
-import org.springframework.transaction.annotation.Transactional
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
@@ -30,8 +29,10 @@ import org.springframework.data.history.RevisionMetadata
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -70,18 +71,24 @@ class UngdomsprogramregisterService(
                 val deltakelseDAO = revision.entity
                 DeltakelseHistorikkDTO(
                     revisionType = metadata.revisionType,
+                    revisionNumber = metadata.revisionNumber,
                     id = deltakelseDAO.id,
                     fom = deltakelseDAO.getFom(),
-                    tom = deltakelseDAO.getTom()
+                    tom = deltakelseDAO.getTom(),
+                    opprettetAv = deltakelseDAO.opprettetAv,
+                    endretAv = deltakelseDAO.endretAv
                 )
             }.toList()
     }
 
     data class DeltakelseHistorikkDTO(
         val revisionType: RevisionMetadata.RevisionType,
+        val revisionNumber: Optional<Long>,
         val id: UUID,
         val fom: LocalDate,
-        val tom: LocalDate?
+        val tom: LocalDate?,
+        val opprettetAv: String?,
+        val endretAv: String?,
     )
 
     @Transactional
@@ -283,7 +290,9 @@ class UngdomsprogramregisterService(
         logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
 
         val hendelsedato =
-            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+            oppdatert.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
+                ?: oppdatert.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
+
         val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
         aktørIder.forEach {
             hendelseInfo.leggTilAktør(AktørId(it.ident))
@@ -308,7 +317,9 @@ class UngdomsprogramregisterService(
         logger.info("Sender inn hendelse til ung-sak om at programmet har endret startdato")
 
         val hendelsedato =
-            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+            oppdatert.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
+                ?: oppdatert.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
+
         val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
         aktørIder.forEach {
             hendelseInfo.leggTilAktør(AktørId(it.ident))

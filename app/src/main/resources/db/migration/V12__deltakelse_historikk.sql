@@ -1,3 +1,7 @@
+ALTER TABLE IF EXISTS ungdomsprogram_deltakelse
+    ADD COLUMN opprettet_av TEXT NULL,
+    ADD COLUMN endret_av    TEXT NULL;
+
 CREATE SEQUENCE IF NOT EXISTS revinfo_seq
     START WITH 1
     INCREMENT BY 50
@@ -20,6 +24,8 @@ CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse_historikk
     revend_tstmp        TIMESTAMP,                        -- The timestamp of the next version number after entity gets updated.
     periode             DATERANGE NOT NULL,
     søkt_tidspunkt      TIMESTAMP NULL,
-    opprettet_tidspunkt TIMESTAMP NOT NULL,
-    endret_tidspunkt    TIMESTAMP
+    opprettet_tidspunkt TIMESTAMP,
+    endret_tidspunkt    TIMESTAMP,
+    opprettet_av        TEXT,
+    endret_av           TEXT
 );
