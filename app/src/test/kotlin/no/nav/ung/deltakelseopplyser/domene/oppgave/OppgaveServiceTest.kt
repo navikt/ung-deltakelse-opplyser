@@ -297,7 +297,6 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         return deltakelseService.leggTilIProgram(
             deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
-                harSøkt = false,
                 fraOgMed = deltakelseStart,
                 tilOgMed = null,
                 oppgaver = listOf()

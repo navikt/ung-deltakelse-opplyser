@@ -52,7 +52,6 @@ class UngdomsprogramRegisterVeilederController(
         )
         val deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
-            harSøkt = false,
             fraOgMed = deltakelseInnmeldingDTO.startdato,
             oppgaver = listOf()
         )

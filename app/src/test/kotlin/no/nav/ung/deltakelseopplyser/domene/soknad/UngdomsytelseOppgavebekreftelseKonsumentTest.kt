@@ -119,7 +119,6 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
         return registerService.leggTilIProgram(
             deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
-                harSøkt = false,
                 fraOgMed = LocalDate.parse(deltakelseStart),
                 tilOgMed = null,
                 oppgaver = listOf()
