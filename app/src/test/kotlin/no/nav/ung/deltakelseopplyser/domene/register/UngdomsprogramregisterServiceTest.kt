@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
@@ -118,12 +119,10 @@ class UngdomsprogramregisterServiceTest {
         )
 
         ungdomsprogramregisterService.leggTilIProgram(dto)
-        entityManager.flush()
 
         // Skal feile fordi deltaker allerede er meldt inn i programmet uten t.o.m dato.
-        assertThrows<ConstraintViolationException> {
+        assertThrows<DataIntegrityViolationException> {
             ungdomsprogramregisterService.leggTilIProgram(dto.copy(fraOgMed = onsdag))
-            entityManager.flush()
         }
     }
 

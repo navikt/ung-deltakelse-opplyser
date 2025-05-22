@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse_historikk
     revend              INTEGER REFERENCES revinfo (rev), -- The version of the next version number after entity gets updated.
     revtype             SMALLINT,                         -- The type of the revision.
     revend_tstmp        TIMESTAMP,                        -- The timestamp of the next version number after entity gets updated.
-    periode             DATERANGE        NOT NULL,
-    har_sokt            BOOLEAN,
+    periode             DATERANGE NOT NULL,
+    søkt_tidspunkt      TIMESTAMP NULL,
     opprettet_tidspunkt TIMESTAMP NOT NULL,
     endret_tidspunkt    TIMESTAMP
 );
