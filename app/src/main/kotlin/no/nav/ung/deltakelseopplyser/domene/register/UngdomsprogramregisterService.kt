@@ -51,7 +51,7 @@ class UngdomsprogramregisterService(
             return DeltakelseOpplysningDTO(
                 id = id,
                 deltaker = deltaker.mapToDTO(),
-                harSøkt = harSøkt,
+                søktTidspunkt = søktTidspunkt,
                 fraOgMed = getFom(),
                 tilOgMed = getTom(),
                 oppgaver = deltaker.oppgaver.map { it.tilDTO() }
@@ -104,7 +104,7 @@ class UngdomsprogramregisterService(
 
         val ungdomsprogramDAO = forsikreEksistererIProgram(id)
 
-        if (ungdomsprogramDAO.harSøkt) {
+        if (ungdomsprogramDAO.søktTidspunkt != null) {
             logger.error("Klarte ikke å slette deltaker fra programmet med id $id, fordi deltakeren har søkt")
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
@@ -299,7 +299,7 @@ class UngdomsprogramregisterService(
         return UngdomsprogramDeltakelseDAO(
             deltaker = deltakerDAO,
             periode = periode,
-            harSøkt = harSøkt
+            søktTidspunkt = søktTidspunkt
         )
     }
 
@@ -341,7 +341,7 @@ class UngdomsprogramregisterService(
             id = this.id,
             fraOgMed = getFom(),
             tilOgMed = getTom(),
-            harSøkt = this.harSøkt,
+            søktTidspunkt = this.søktTidspunkt,
             oppgaver = oppgaver
         )
     }

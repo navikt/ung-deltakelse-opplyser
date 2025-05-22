@@ -69,7 +69,6 @@ class UngdomsprogramregisterRepositoryTest {
         repository.saveAndFlush(
             UngdomsprogramDeltakelseDAO(
                 deltaker = deltakerDAO,
-                harSøkt = false,
                 periode = periodeA
             )
         )
@@ -79,7 +78,6 @@ class UngdomsprogramregisterRepositoryTest {
                 repository.saveAndFlush(
                     UngdomsprogramDeltakelseDAO(
                         deltaker = deltakerDAO,
-                        harSøkt = false,
                         periode = periodeB
                     )
                 )
@@ -89,7 +87,6 @@ class UngdomsprogramregisterRepositoryTest {
                 repository.saveAndFlush(
                     UngdomsprogramDeltakelseDAO(
                         deltaker = deltakerDAO,
-                        harSøkt = false,
                         periode = periodeB
                     )
                 )
@@ -111,7 +108,6 @@ class UngdomsprogramregisterRepositoryTest {
         val førsteDeltakelseStartdato = LocalDate.of(2025, 1, 1)
         val førsteDeltakelse = UngdomsprogramDeltakelseDAO(
             deltaker = deltaker,
-            harSøkt = false,
             periode = Range.closed(førsteDeltakelseStartdato, førsteDeltakelseStartdato.plusWeeks(1))
         )
         entityManager.persist(førsteDeltakelse)
@@ -119,7 +115,6 @@ class UngdomsprogramregisterRepositoryTest {
         val andreDeltakelseStartdato = førsteDeltakelseStartdato.plusWeeks(1).plusDays(1)
         val andreDeltakelse = UngdomsprogramDeltakelseDAO(
             deltaker = deltaker,
-            harSøkt = false,
             periode = Range.closedInfinite(andreDeltakelseStartdato)
         )
         entityManager.persist(andreDeltakelse)

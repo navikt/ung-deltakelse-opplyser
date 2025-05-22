@@ -59,7 +59,6 @@ class DeltakerRepositoryTest {
 
         val deltakelse = UngdomsprogramDeltakelseDAO(
             deltaker = deltaker,
-            harSøkt = false,
             periode = Range.closed(LocalDate.now(), LocalDate.now().plusWeeks(1))
         )
         entityManager.persist(deltakelse)
@@ -104,7 +103,6 @@ class DeltakerRepositoryTest {
 
         val deltakelse = UngdomsprogramDeltakelseDAO(
             deltaker = deltaker,
-            harSøkt = false,
             periode = Range.closed(LocalDate.now(), LocalDate.now().plusWeeks(1))
         )
         entityManager.persist(deltakelse)

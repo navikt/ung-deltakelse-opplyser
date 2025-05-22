@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.*
 
 data class DeltakerOpplysningerDTO(
@@ -15,7 +16,7 @@ data class DeltakelseOpplysningDTO(
     @JsonProperty("deltaker") val deltaker: DeltakerDTO,
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate? = null,
-    @JsonProperty("harSøkt") val harSøkt: Boolean,
+    @JsonProperty("søktTidspunkt") val søktTidspunkt: ZonedDateTime? = null,
     @JsonProperty("oppgaver") val oppgaver: List<OppgaveDTO>,
 ) {
 
