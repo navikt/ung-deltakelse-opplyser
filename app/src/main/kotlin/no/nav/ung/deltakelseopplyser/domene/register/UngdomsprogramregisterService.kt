@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
-import jakarta.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
@@ -25,6 +25,8 @@ import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
 import org.slf4j.LoggerFactory
+import org.springframework.data.history.Revision
+import org.springframework.data.history.RevisionMetadata
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -58,6 +60,29 @@ class UngdomsprogramregisterService(
             )
         }
     }
+
+    fun historikk(id: UUID): List<DeltakelseHistorikkDTO> {
+        logger.info("Henter historikk for deltakelse med id $id")
+        return deltakelseRepository.findRevisions(id).stream()
+            .map { revision: Revision<Long, UngdomsprogramDeltakelseDAO> ->
+                val metadata = revision.metadata
+
+                val deltakelseDAO = revision.entity
+                DeltakelseHistorikkDTO(
+                    revisionType = metadata.revisionType,
+                    id = deltakelseDAO.id,
+                    fom = deltakelseDAO.getFom(),
+                    tom = deltakelseDAO.getTom()
+                )
+            }.toList()
+    }
+
+    data class DeltakelseHistorikkDTO(
+        val revisionType: RevisionMetadata.RevisionType,
+        val id: UUID,
+        val fom: LocalDate,
+        val tom: LocalDate?
+    )
 
     @Transactional
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
@@ -183,6 +208,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.tilDeltakelsePeriodInfo(deltakersOppgaver) }
     }
 
+    @Transactional
     fun avsluttDeltakelse(
         id: UUID,
         deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
@@ -206,6 +232,7 @@ class UngdomsprogramregisterService(
         return oppdatert.mapToDTO()
     }
 
+    @Transactional
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
@@ -227,6 +254,7 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
+    @Transactional
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
