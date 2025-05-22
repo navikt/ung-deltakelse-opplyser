@@ -6,6 +6,7 @@ import io.mockk.justRun
 import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
+import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
@@ -15,8 +16,8 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
-import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -69,10 +70,14 @@ class UngdomsprogramregisterServiceTest {
     @MockkBean
     lateinit var rapportertInntektService: RapportertInntektService
 
+    @MockkBean
+    private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
+
     @BeforeEach
     fun setUp() {
         repository.deleteAll()
         justRun { mineSiderVarselService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
+        springTokenValidationContextHolder.mockContext()
     }
 
     @AfterAll

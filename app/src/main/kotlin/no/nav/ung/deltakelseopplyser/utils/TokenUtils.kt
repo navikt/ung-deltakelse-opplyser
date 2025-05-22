@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.utils
 
+import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 
 object TokenClaims {
@@ -14,25 +15,13 @@ object TokenClaims {
 }
 
 fun SpringTokenValidationContextHolder.personIdent(): String {
-    val jwtToken = getTokenValidationContext().firstValidToken
-        ?: throw IllegalStateException("Ingen gyldige tokens i Authorization headeren")
+    val jwtToken = gyldigToken()
 
     val pid = jwtToken.jwtTokenClaims.getStringClaim(TokenClaims.CLAIM_PID)
     val sub = jwtToken.jwtTokenClaims.getStringClaim(TokenClaims.CLAIM_SUB)
 
     return when {
         !pid.isNullOrBlank() -> pid
-        !sub.isNullOrBlank() -> sub
-        else -> throw IllegalStateException("Ugyldig token. Token inneholdt verken sub eller pid claim")
-    }
-}
-
-fun SpringTokenValidationContextHolder.subject(): String {
-    val jwtToken = getTokenValidationContext().firstValidToken
-        ?: throw IllegalStateException("Ingen gyldige tokens i Authorization headeren")
-
-    val sub = jwtToken.jwtTokenClaims.getStringClaim(TokenClaims.CLAIM_SUB)
-    return when {
         !sub.isNullOrBlank() -> sub
         else -> throw IllegalStateException("Ugyldig token. Token inneholdt verken sub eller pid claim")
     }
@@ -48,5 +37,12 @@ fun SpringTokenValidationContextHolder.navIdent(): String {
         else -> throw IllegalStateException("Ugyldig token. Token inneholdt ikke ${TokenClaims.NAV_IDENT} claim")
     }
 }
+
+fun JwtToken.erTokenxIssuer(): Boolean = issuer.contains("tokenx")
+fun JwtToken.erAzureIssuer(): Boolean = issuer.contains("microsoft")
+
+fun SpringTokenValidationContextHolder.gyldigToken(): JwtToken =
+    (getTokenValidationContext().firstValidToken
+        ?: throw IllegalStateException("Ingen gyldige tokens i Authorization headeren"))
 
 
