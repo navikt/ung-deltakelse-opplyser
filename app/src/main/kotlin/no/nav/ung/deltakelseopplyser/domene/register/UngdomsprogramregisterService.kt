@@ -16,7 +16,9 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.HistorikkType
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
@@ -62,7 +64,7 @@ class UngdomsprogramregisterService(
         }
     }
 
-    fun historikk(id: UUID): List<DeltakelseHistorikkDTO> {
+    fun deltakelseHistorikk(id: UUID): List<DeltakelseHistorikkDTO> {
         logger.info("Henter historikk for deltakelse med id $id")
         return deltakelseRepository.findRevisions(id).stream()
             .map { revision: Revision<Long, UngdomsprogramDeltakelseDAO> ->
@@ -70,7 +72,7 @@ class UngdomsprogramregisterService(
 
                 val deltakelseDAO = revision.entity
                 DeltakelseHistorikkDTO(
-                    revisionType = metadata.revisionType,
+                    revisionType = metadata.revisionType.somHistorikkType(),
                     revisionNumber = metadata.revisionNumber,
                     id = deltakelseDAO.id,
                     fom = deltakelseDAO.getFom(),
@@ -79,17 +81,10 @@ class UngdomsprogramregisterService(
                     endretAv = deltakelseDAO.endretAv
                 )
             }.toList()
+            .also {
+                logger.info("Fant ${it.size} historikkoppføringer for deltakelse med id $id")
+            }
     }
-
-    data class DeltakelseHistorikkDTO(
-        val revisionType: RevisionMetadata.RevisionType,
-        val revisionNumber: Optional<Long>,
-        val id: UUID,
-        val fom: LocalDate,
-        val tom: LocalDate?,
-        val opprettetAv: String?,
-        val endretAv: String?,
-    )
 
     @Transactional
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
@@ -387,4 +382,11 @@ class UngdomsprogramregisterService(
 
     private fun OppgaveDAO.erLøstInntektsrapportering() =
         this.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT && this.status == OppgaveStatus.LØST
+
+    private fun RevisionMetadata.RevisionType.somHistorikkType() = when (this) {
+        RevisionMetadata.RevisionType.INSERT -> HistorikkType.OPPRETTET
+        RevisionMetadata.RevisionType.UPDATE -> HistorikkType.ENDRET
+        RevisionMetadata.RevisionType.DELETE -> HistorikkType.SLETTET
+        RevisionMetadata.RevisionType.UNKNOWN -> HistorikkType.UKJENT
+    }
 }

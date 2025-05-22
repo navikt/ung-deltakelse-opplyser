@@ -71,7 +71,7 @@ class UngdomsprogramregisterServiceTest {
     lateinit var rapportertInntektService: RapportertInntektService
 
     @MockkBean
-    private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
+    lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
     @BeforeEach
     fun setUp() {
@@ -244,7 +244,7 @@ class UngdomsprogramregisterServiceTest {
         assertThat(endretSluttdatoDeltakelse.fraOgMed).isEqualTo(mandag)
         assertThat(endretSluttdatoDeltakelse.tilOgMed).isEqualTo(onsdag.plusWeeks(1))
 
-        val historikk = ungdomsprogramregisterService.historikk(innmelding.id!!)
+        val historikk = ungdomsprogramregisterService.deltakelseHistorikk(innmelding.id!!)
         assertThat(historikk).isNotEmpty
         historikk.forEach {
             logger.info("Innslag: {}", it)

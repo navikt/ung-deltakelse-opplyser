@@ -10,6 +10,12 @@ import org.springframework.data.domain.AuditorAware
 import org.springframework.stereotype.Component
 import java.util.*
 
+/**
+ * Spring Data JPA krever en implementasjon av AuditorAware for å kunne sette auditor.
+ * Vi bruker dette til å sette inn hvem som har opprettet og endret en entitet.
+ *
+ * Vi bruker SpringTokenValidationContextHolder for å hente ut auditor fra token.
+ */
 @Component
 class AuditorAwareImpl(
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
@@ -21,16 +27,42 @@ class AuditorAwareImpl(
     }
 
     private fun SpringTokenValidationContextHolder.auditor(): String {
-        val jwtToken = gyldigToken()
-        val erTokenxIssuer = jwtToken.erTokenxIssuer()
-        val erAzureIssuer = jwtToken.erAzureIssuer()
-
-        return if (erTokenxIssuer) {
-            "${personIdent()} (deltaker)"
-        } else if (erAzureIssuer) {
-            "${navIdent()} (veileder)"
-        } else {
-            "system"
+        if (!finnesGyldigTokenIContext()) {
+            return systemAuditor()
         }
+
+        val jwtToken = gyldigToken()
+
+        return when {
+            jwtToken.erTokenxIssuer() -> {
+                deltakerAuditor()
+            }
+
+            jwtToken.erAzureIssuer() -> {
+                // TODO:  Skill mellom veileder og system
+                veilederAuditor()
+            }
+
+            else -> {
+                systemAuditor()
+            }
+        }
+    }
+
+    private fun systemAuditor() = "system"
+
+    private fun SpringTokenValidationContextHolder.veilederAuditor() = "${navIdent()} (veileder)"
+
+    private fun SpringTokenValidationContextHolder.deltakerAuditor() = "${personIdent()} (deltaker)"
+
+    /**
+     * Sjekker om det finnes en gyldig token i context.
+     */
+    fun finnesGyldigTokenIContext(): Boolean {
+        return runCatching { tokenValidationContextHolder.getTokenValidationContext() }
+            .fold(
+                onSuccess = { it.firstValidToken != null },
+                onFailure = { false }
+            )
     }
 }

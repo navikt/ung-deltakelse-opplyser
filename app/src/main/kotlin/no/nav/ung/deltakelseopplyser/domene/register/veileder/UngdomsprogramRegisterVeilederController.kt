@@ -12,6 +12,7 @@ import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
@@ -135,6 +136,18 @@ class UngdomsprogramRegisterVeilederController(
                     personIdenter.first()
                 )
             }
+    }
+
+    @GetMapping(
+        "/deltakelse/{deltakelseId}/historikk", produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun deltakelseHistorikk(@PathVariable deltakelseId: UUID): List<DeltakelseHistorikkDTO> {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        tilgangskontrollService.krevAnsattTilgang(
+            READ,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
+        return registerService.deltakelseHistorikk(deltakelseId)
     }
 
     @DeleteMapping("/deltakelse/{deltakelseId}/fjern")
