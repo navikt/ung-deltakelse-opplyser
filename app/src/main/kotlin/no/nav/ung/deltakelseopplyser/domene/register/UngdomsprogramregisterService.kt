@@ -18,7 +18,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.HistorikkType
+import no.nav.ung.deltakelseopplyser.kontrakt.register.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
@@ -72,15 +72,18 @@ class UngdomsprogramregisterService(
 
                 val deltakelseDAO = revision.entity
                 DeltakelseHistorikkDTO(
-                    revisionType = metadata.revisionType.somHistorikkType(),
-                    revisionNumber = metadata.revisionNumber,
+                    revisjonstype = metadata.revisionType.somHistorikkType(),
+                    revisjonsnummer = metadata.revisionNumber.get(),
                     id = deltakelseDAO.id,
                     fom = deltakelseDAO.getFom(),
                     tom = deltakelseDAO.getTom(),
                     opprettetAv = deltakelseDAO.opprettetAv,
-                    endretAv = deltakelseDAO.endretAv
+                    opprettetTidspunkt = deltakelseDAO.opprettetTidspunkt.atZone(ZoneOffset.UTC),
+                    endretAv = deltakelseDAO.endretAv!!,
+                    endretTidspunkt = deltakelseDAO.endretTidspunkt!!.atZone(ZoneOffset.UTC)
                 )
-            }.toList()
+            }
+            .toList()
             .also {
                 logger.info("Fant ${it.size} historikkoppføringer for deltakelse med id $id")
             }
@@ -384,9 +387,9 @@ class UngdomsprogramregisterService(
         this.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT && this.status == OppgaveStatus.LØST
 
     private fun RevisionMetadata.RevisionType.somHistorikkType() = when (this) {
-        RevisionMetadata.RevisionType.INSERT -> HistorikkType.OPPRETTET
-        RevisionMetadata.RevisionType.UPDATE -> HistorikkType.ENDRET
-        RevisionMetadata.RevisionType.DELETE -> HistorikkType.SLETTET
-        RevisionMetadata.RevisionType.UNKNOWN -> HistorikkType.UKJENT
+        RevisionMetadata.RevisionType.INSERT -> Revisjonstype.OPPRETTET
+        RevisionMetadata.RevisionType.UPDATE -> Revisjonstype.ENDRET
+        RevisionMetadata.RevisionType.DELETE -> Revisjonstype.SLETTET
+        RevisionMetadata.RevisionType.UNKNOWN -> Revisjonstype.UKJENT
     }
 }

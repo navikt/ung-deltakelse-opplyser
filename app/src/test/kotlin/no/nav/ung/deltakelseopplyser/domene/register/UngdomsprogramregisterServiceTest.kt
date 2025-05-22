@@ -15,6 +15,7 @@ import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
@@ -245,12 +246,41 @@ class UngdomsprogramregisterServiceTest {
         assertThat(endretSluttdatoDeltakelse.tilOgMed).isEqualTo(onsdag.plusWeeks(1))
 
         val historikk = ungdomsprogramregisterService.deltakelseHistorikk(innmelding.id!!)
-        assertThat(historikk).isNotEmpty
-        historikk.forEach {
-            logger.info("Innslag: {}", it)
+        assertThat(historikk).hasSize(3).also {
+            historikk.forEach { logger.info("Innslag: {}", it) }
         }
-        assertThat(historikk.any { it.opprettetAv != null }).isTrue
-        assertThat(historikk.last().endretAv).isNotNull()
+
+        val innslag = historikk.iterator()
+
+        val førsteInnslag = innslag.next()
+        assertThat(førsteInnslag.revisjonsnummer).isEqualTo(1L)
+        assertThat(førsteInnslag.revisjonstype).isEqualTo(Revisjonstype.OPPRETTET)
+        assertThat(førsteInnslag.fom).isEqualTo(mandag)
+        assertThat(førsteInnslag.tom).isNull()
+        assertThat(førsteInnslag.opprettetAv).isNotNull()
+        assertThat(førsteInnslag.opprettetTidspunkt).isNotNull()
+        assertThat(førsteInnslag.endretAv).isNotNull()
+        assertThat(førsteInnslag.endretTidspunkt).isNotNull()
+
+        val andreInnslag = innslag.next()
+        assertThat(andreInnslag.revisjonsnummer).isEqualTo(2L)
+        assertThat(andreInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
+        assertThat(andreInnslag.fom).isEqualTo(mandag)
+        assertThat(andreInnslag.tom).isEqualTo(onsdag)
+        assertThat(andreInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
+        assertThat(andreInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
+        assertThat(andreInnslag.endretAv).isNotNull()
+        assertThat(andreInnslag.endretTidspunkt).isNotNull()
+
+        val tredjeInnslag = innslag.next()
+        assertThat(tredjeInnslag.revisjonsnummer).isEqualTo(3L)
+        assertThat(tredjeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
+        assertThat(tredjeInnslag.fom).isEqualTo(mandag)
+        assertThat(tredjeInnslag.tom).isEqualTo(onsdag.plusWeeks(1))
+        assertThat(tredjeInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
+        assertThat(tredjeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
+        assertThat(tredjeInnslag.endretAv).isNotNull()
+        assertThat(tredjeInnslag.endretTidspunkt).isNotNull()
     }
 
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)

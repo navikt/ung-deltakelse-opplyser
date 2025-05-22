@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.register
 
-enum class HistorikkType {
+enum class Revisjonstype {
     OPPRETTET,
     ENDRET,
     SLETTET,
