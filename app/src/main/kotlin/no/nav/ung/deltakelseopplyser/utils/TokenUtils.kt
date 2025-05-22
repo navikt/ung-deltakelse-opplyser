@@ -38,9 +38,6 @@ fun SpringTokenValidationContextHolder.navIdent(): String {
     }
 }
 
-fun JwtToken.erTokenxIssuer(): Boolean = issuer.contains("tokenx")
-fun JwtToken.erAzureIssuer(): Boolean = issuer.contains("microsoft")
-
 fun SpringTokenValidationContextHolder.gyldigToken(): JwtToken =
     (getTokenValidationContext().firstValidToken
         ?: throw IllegalStateException("Ingen gyldige tokens i Authorization headeren"))

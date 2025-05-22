@@ -1,8 +1,9 @@
 package no.nav.ung.deltakelseopplyser.historikk
 
+import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
+import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
-import no.nav.ung.deltakelseopplyser.utils.erAzureIssuer
-import no.nav.ung.deltakelseopplyser.utils.erTokenxIssuer
+import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.utils.gyldigToken
 import no.nav.ung.deltakelseopplyser.utils.navIdent
 import no.nav.ung.deltakelseopplyser.utils.personIdent
@@ -19,6 +20,7 @@ import java.util.*
 @Component
 class AuditorAwareImpl(
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
+    private val multiIssuerConfiguration: MultiIssuerConfiguration,
 ) : AuditorAware<String> {
 
     override fun getCurrentAuditor(): Optional<String> {
@@ -39,8 +41,10 @@ class AuditorAwareImpl(
             }
 
             jwtToken.erAzureIssuer() -> {
-                // TODO:  Skill mellom veileder og system
-                veilederAuditor()
+                when {
+                    jwtToken.erAzureSystemToken() -> systemAuditor()
+                    else -> veilederAuditor()
+                }
             }
 
             else -> {
@@ -58,11 +62,23 @@ class AuditorAwareImpl(
     /**
      * Sjekker om det finnes en gyldig token i context.
      */
-    fun finnesGyldigTokenIContext(): Boolean {
+    private fun finnesGyldigTokenIContext(): Boolean {
         return runCatching { tokenValidationContextHolder.getTokenValidationContext() }
             .fold(
                 onSuccess = { it.firstValidToken != null },
                 onFailure = { false }
             )
+    }
+
+    private fun JwtToken.erTokenxIssuer(): Boolean {
+        return multiIssuerConfiguration.issuers[Issuers.TOKEN_X]?.metadata?.issuer?.value == issuer
+    }
+
+    private fun JwtToken.erAzureSystemToken(): Boolean {
+        return erAzureIssuer() && jwtTokenClaims.getStringClaim("idtyp") == "app"
+    }
+
+    private fun JwtToken.erAzureIssuer(): Boolean {
+        return multiIssuerConfiguration.issuers[Issuers.AZURE]?.metadata?.issuer?.value == issuer
     }
 }
