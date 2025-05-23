@@ -57,10 +57,7 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.*
 
-@EnableMockOAuth2Server
-@ExtendWith(SpringExtension::class)
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @Autowired

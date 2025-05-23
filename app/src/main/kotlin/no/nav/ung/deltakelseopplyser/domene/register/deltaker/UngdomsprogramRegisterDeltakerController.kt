@@ -6,6 +6,7 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
@@ -129,7 +130,7 @@ class UngdomsprogramRegisterDeltakerController(
     @GetMapping("/oppgave/{oppgaveReferanse}/åpnet", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Markerer en oppgave som åpnet")
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
         val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
 
