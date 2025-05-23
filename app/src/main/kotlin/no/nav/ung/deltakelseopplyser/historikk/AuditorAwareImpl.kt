@@ -4,6 +4,7 @@ import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
 import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.AUDITOR_AWARE_IMPL_BEAN_NAME
 import no.nav.ung.deltakelseopplyser.utils.gyldigToken
 import no.nav.ung.deltakelseopplyser.utils.navIdent
 import no.nav.ung.deltakelseopplyser.utils.personIdent
@@ -17,11 +18,15 @@ import java.util.*
  *
  * Vi bruker SpringTokenValidationContextHolder for å hente ut auditor fra token.
  */
-@Component
+@Component(value = AUDITOR_AWARE_IMPL_BEAN_NAME)
 class AuditorAwareImpl(
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
 ) : AuditorAware<String> {
+
+    companion object{
+        const val AUDITOR_AWARE_IMPL_BEAN_NAME = "auditorAwareImpl"
+    }
 
     override fun getCurrentAuditor(): Optional<String> {
         val auditor = tokenValidationContextHolder.auditor()
