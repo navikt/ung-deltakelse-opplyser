@@ -17,11 +17,14 @@ CREATE TABLE IF NOT EXISTS revinfo
 
 CREATE TABLE IF NOT EXISTS ungdomsprogram_deltakelse_historikk
 (
+    -- Påkrevde felt for historikk
     id                  UUID,
-    rev                 INTEGER REFERENCES revinfo (rev), -- The version number of the entity.
-    revend              INTEGER REFERENCES revinfo (rev), -- The version of the next version number after entity gets updated.
-    revtype             SMALLINT,                         -- The type of the revision.
-    revend_tstmp        TIMESTAMP,                        -- The timestamp of the next version number after entity gets updated.
+    rev                 INTEGER REFERENCES revinfo (rev), -- Versjonnummeret for entiteten.
+    revend              INTEGER REFERENCES revinfo (rev), -- Versjonnummeret for neste versjon etter at entiten blir oppdatert.
+    revtype             SMALLINT,                         -- Type endring, 1=insert, 2=update, 3=delete.
+    revend_tstmp        TIMESTAMP,                        -- Tidsspunkt for neste versjon etter at entiteten blir oppdatert.
+    -- Påkrevde felt historikk
+
     periode             DATERANGE NOT NULL,
     søkt_tidspunkt      TIMESTAMP NULL,
     opprettet_tidspunkt TIMESTAMP,
