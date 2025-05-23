@@ -14,4 +14,5 @@ data class DeltakelseHistorikkDTO(
     val opprettetTidspunkt: ZonedDateTime,
     val endretAv: String,
     val endretTidspunkt: ZonedDateTime,
+    val søktTidspunkt: ZonedDateTime?,
 )

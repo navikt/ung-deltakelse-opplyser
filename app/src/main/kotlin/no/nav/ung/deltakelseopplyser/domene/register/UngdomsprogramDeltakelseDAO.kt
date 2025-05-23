@@ -36,7 +36,7 @@ class UngdomsprogramDeltakelseDAO(
     @Column(name = "periode", columnDefinition = "daterange")
     private var periode: Range<LocalDate>,
 
-    @Column(name = "søkt_tidspunkt")
+    @Column(name = "søkt_tidspunkt", updatable = false)
     var søktTidspunkt: ZonedDateTime? = null,
 ) : BaseAuditEntity() {
 

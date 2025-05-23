@@ -80,7 +80,8 @@ class UngdomsprogramregisterService(
                     opprettetAv = deltakelseDAO.opprettetAv,
                     opprettetTidspunkt = deltakelseDAO.opprettetTidspunkt.atZone(ZoneOffset.UTC),
                     endretAv = deltakelseDAO.endretAv!!,
-                    endretTidspunkt = deltakelseDAO.endretTidspunkt!!.atZone(ZoneOffset.UTC)
+                    endretTidspunkt = deltakelseDAO.endretTidspunkt!!.atZone(ZoneOffset.UTC),
+                    søktTidspunkt = deltakelseDAO.søktTidspunkt,
                 )
             }
             .toList()

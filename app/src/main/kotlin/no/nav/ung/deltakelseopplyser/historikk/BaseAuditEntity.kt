@@ -11,6 +11,12 @@ import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
 
+/**
+ * Baseentitet for alle entiteter som skal ha historikk.
+ *
+ * @CreatedBy og @LastModifiedBy for å sette inn hvem som har opprettet og endret en entitet.
+ * @CreatedDate og @LastModifiedDate for å sette inn når en entitet ble opprettet og endret.
+ */
 @Audited
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
