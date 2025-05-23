@@ -4,6 +4,7 @@ import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
@@ -90,7 +91,7 @@ class UngdomsprogramregisterService(
             }
     }
 
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
 
@@ -214,7 +215,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.tilDeltakelsePeriodInfo(deltakersOppgaver) }
     }
 
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun avsluttDeltakelse(
         id: UUID,
         deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
@@ -238,7 +239,7 @@ class UngdomsprogramregisterService(
         return oppdatert.mapToDTO()
     }
 
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
@@ -260,7 +261,7 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
