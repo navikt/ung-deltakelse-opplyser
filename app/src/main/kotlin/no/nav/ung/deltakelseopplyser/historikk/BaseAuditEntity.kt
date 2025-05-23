@@ -13,6 +13,7 @@ import java.time.Instant
 
 /**
  * Baseentitet for alle entiteter som skal ha historikk.
+ * Må huske å annotere den klassen eller felter i den med @Audited.
  *
  * @CreatedBy og @LastModifiedBy for å sette inn hvem som har opprettet og endret en entitet.
  * @CreatedDate og @LastModifiedDate for å sette inn når en entitet ble opprettet og endret.
