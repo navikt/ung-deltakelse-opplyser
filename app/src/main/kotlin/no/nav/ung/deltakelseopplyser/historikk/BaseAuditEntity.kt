@@ -21,7 +21,7 @@ abstract class BaseAuditEntity {
     var opprettetAv: String? = null
 
     @CreatedDate
-    @Column(name = "opprettet_tidspunkt")
+    @Column(name = "opprettet_tidspunkt", updatable = false)
     var opprettetTidspunkt: Instant = Instant.now()
 
     @LastModifiedDate
