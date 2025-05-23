@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.register.veileder
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import no.nav.k9.felles.log.audit.EventClassId
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.*
@@ -11,6 +12,7 @@ import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
@@ -50,7 +52,14 @@ class UngdomsprogramRegisterVeilederController(
             oppgaver = listOf()
         )
 
-        return registerService.leggTilIProgram(deltakelseOpplysningDTO)
+        return registerService.leggTilIProgram(deltakelseOpplysningDTO).also {
+            sporingsloggService.logg(
+                "/deltaker/innmelding",
+                "Meldte inn deltaker med id ${deltakelseInnmeldingDTO.deltakerIdent}",
+                PersonIdent.fra(deltakelseInnmeldingDTO.deltakerIdent),
+                EventClassId.AUDIT_CREATE
+            )
+        }
     }
 
     @PutMapping(
@@ -70,7 +79,14 @@ class UngdomsprogramRegisterVeilederController(
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
         val utmeldtDeltakelse = eksisterendeDeltakelse.copy(tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato)
-        return registerService.avsluttDeltakelse(deltakelseId, utmeldtDeltakelse)
+        return registerService.avsluttDeltakelse(deltakelseId, utmeldtDeltakelse).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/avslutt",
+                "Avsluttet deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
     }
 
     @PutMapping(
@@ -89,7 +105,14 @@ class UngdomsprogramRegisterVeilederController(
             UPDATE,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        return registerService.endreStartdato(deltakelseId, endrePeriodeDatoDTO)
+        return registerService.endreStartdato(deltakelseId, endrePeriodeDatoDTO).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/endre/startdato",
+                "Endret startdato for deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
     }
 
     @PutMapping(
@@ -108,7 +131,14 @@ class UngdomsprogramRegisterVeilederController(
             UPDATE,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        return registerService.endreSluttdato(deltakelseId, endrePeriodeDatoDTO)
+        return registerService.endreSluttdato(deltakelseId, endrePeriodeDatoDTO).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/endre/sluttdato",
+                "Endret sluttdato for deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
     }
 
     @GetMapping(
@@ -123,12 +153,32 @@ class UngdomsprogramRegisterVeilederController(
         tilgangskontrollService.krevAnsattTilgang(READ, personIdenter)
         return deltakelser
             .also {
-                sporingsloggService.loggLesetilgang(
+                sporingsloggService.logg(
                     "/deltaker/deltakerId/deltakelser",
                     "Hent alle deltakelser for en deltaker",
-                    personIdenter.first()
+                    personIdenter.first(),
+                    EventClassId.AUDIT_ACCESS
                 )
             }
+    }
+
+    @GetMapping(
+        "/deltakelse/{deltakelseId}/historikk", produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun deltakelseHistorikk(@PathVariable deltakelseId: UUID): List<DeltakelseHistorikkDTO> {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        tilgangskontrollService.krevAnsattTilgang(
+            READ,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
+        return registerService.deltakelseHistorikk(deltakelseId).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/historikk",
+                "Hent historikk for deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_ACCESS
+            )
+        }
     }
 
     @DeleteMapping("/deltakelse/{deltakelseId}/fjern")
@@ -140,6 +190,13 @@ class UngdomsprogramRegisterVeilederController(
             UPDATE,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        registerService.fjernFraProgram(deltakelseId)
+        registerService.fjernFraProgram(deltakelseId).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/fjern",
+                "Fjernet deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
     }
 }

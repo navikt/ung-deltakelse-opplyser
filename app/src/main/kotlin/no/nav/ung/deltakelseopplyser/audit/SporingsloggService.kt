@@ -18,7 +18,7 @@ class SporingsloggService(
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
 
-    fun loggLesetilgang(url: String, beskrivelse: String, bruker: PersonIdent) {
+    fun logg(url: String, beskrivelse: String, bruker: PersonIdent, eventClassId: EventClassId) {
         auditlogger.logg(
             Auditdata(
                 AuditdataHeader.Builder()
@@ -26,7 +26,7 @@ class SporingsloggService(
                     .medProduct(auditlogger.product)
                     .medSeverity("INFO")
                     .medName(beskrivelse)
-                    .medEventClassId(EventClassId.AUDIT_ACCESS)
+                    .medEventClassId(eventClassId)
                     .build(),
                 setOf(
                     CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),

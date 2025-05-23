@@ -2,22 +2,32 @@ package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.PostgreSQLRangeType
 import io.hypersistence.utils.hibernate.type.range.Range
-import org.hibernate.annotations.Type
-import java.time.LocalDate
-import java.time.ZonedDateTime
-import java.time.ZoneOffset
-import java.util.UUID
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import org.springframework.data.annotation.CreatedDate
+import no.nav.ung.deltakelseopplyser.historikk.BaseAuditEntity
+import org.hibernate.annotations.Type
+import org.hibernate.envers.Audited
+import org.hibernate.envers.NotAudited
+import org.hibernate.envers.RelationTargetAuditMode
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.*
 
+@Audited
 @Entity(name = "ungdomsprogram_deltakelse")
 class UngdomsprogramDeltakelseDAO(
     @Id
     @Column(name = "id")
     val id: UUID = UUID.randomUUID(),
 
+    @NotAudited
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     @ManyToOne(fetch = FetchType.LAZY) // Referer til Deltaker
     @JoinColumn(name = "deltaker_id", referencedColumnName = "id", nullable = false)
     val deltaker: DeltakerDAO,
@@ -26,16 +36,9 @@ class UngdomsprogramDeltakelseDAO(
     @Column(name = "periode", columnDefinition = "daterange")
     private var periode: Range<LocalDate>,
 
-    @Column(name = "søkt_tidspunkt")
+    @Column(name = "søkt_tidspunkt", updatable = false)
     var søktTidspunkt: ZonedDateTime? = null,
-
-    @CreatedDate
-    @Column(name = "opprettet_tidspunkt")
-    val opprettetTidspunkt: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-
-    @Column(name = "endret_tidspunkt")
-    var endretTidspunkt: ZonedDateTime? = null,
-) {
+) : BaseAuditEntity() {
 
     fun getFom(): LocalDate {
         return if (periode.hasMask(Range.LOWER_EXCLUSIVE)) periode.lower().plusDays(1) else periode.lower()
@@ -53,7 +56,6 @@ class UngdomsprogramDeltakelseDAO(
      */
     fun oppdaterPeriode(nyPeriode: Range<LocalDate>) {
         periode = nyPeriode
-        endretTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
     }
 
     fun markerSomHarSøkt() {
