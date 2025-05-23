@@ -53,7 +53,7 @@ no.nav:
         registration:
           azure-ung-sak:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
-            grant-type: client_credentials
+            grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
             scope: api://dev-fss:k9saksbehandling:ung-sak/.default
             authentication:
               client-auth-method: private_key_jwt
@@ -62,7 +62,7 @@ no.nav:
 
           azure-sif-abac-pdp:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
-            grant-type: client_credentials
+            grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
             scope: api://dev-fss:k9saksbehandling:sif-abac-pdp-sak/.default
             authentication:
               client-auth-method: private_key_jwt
