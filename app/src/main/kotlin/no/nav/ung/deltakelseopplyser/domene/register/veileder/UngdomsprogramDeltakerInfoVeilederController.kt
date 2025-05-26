@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.register.veileder
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import no.nav.k9.felles.log.audit.EventClassId
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.READ
@@ -37,10 +38,11 @@ class UngdomsprogramDeltakerInfoVeilederController(
         tilgangskontrollService.krevAnsattTilgang(READ, listOf(PersonIdent.fra(deltakerDTO.deltakerIdent)))
         return deltakerService.hentDeltakerInfo(deltakerIdent = deltakerDTO.deltakerIdent)
             .also {
-                sporingsloggService.loggLesetilgang(
+                sporingsloggService.logg(
                     "/deltaker",
                     "Hent personalia for en deltaker",
-                    PersonIdent.fra(deltakerDTO.deltakerIdent)
+                    PersonIdent.fra(deltakerDTO.deltakerIdent),
+                    EventClassId.AUDIT_ACCESS
                 )
             }
     }
@@ -54,10 +56,11 @@ class UngdomsprogramDeltakerInfoVeilederController(
         tilgangskontrollService.krevAnsattTilgang(READ, listOf(personIdent))
         return deltakerInfo
             .also {
-                sporingsloggService.loggLesetilgang(
+                sporingsloggService.logg(
                     "/deltaker/{id}",
                     "Hent personalia for en deltaker gitt UUID",
-                    personIdent
+                    personIdent,
+                    EventClassId.AUDIT_ACCESS
                 )
             }
     }

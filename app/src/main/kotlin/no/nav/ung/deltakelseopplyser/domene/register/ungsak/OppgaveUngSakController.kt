@@ -2,13 +2,13 @@ package no.nav.ung.deltakelseopplyser.domene.register.ungsak
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.transaction.Transactional
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -73,7 +74,7 @@ class OppgaveUngSakController(
     @PostMapping("/avbryt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Avbryter oppgave")
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun avbrytOppgave(@RequestBody oppgaveReferanse: UUID) {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Avbryter oppgave med referanse $oppgaveReferanse")
@@ -98,7 +99,7 @@ class OppgaveUngSakController(
     @PostMapping("/utløpt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Setter oppgave til utløpt")
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun utløperOppgave(@RequestBody oppgaveReferanse: UUID) {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Utløper oppgave med referanse $oppgaveReferanse")
@@ -123,7 +124,7 @@ class OppgaveUngSakController(
     @PostMapping("/utløpt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Setter oppgave til utløpt for type og periode")
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun utløperOppgaveForTypeOgPeriode(@RequestBody settTilUtløptDTO: SettTilUtløptDTO) {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Utløper oppgave av type: ${settTilUtløptDTO.oppgavetype} med periode [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}]")
@@ -158,7 +159,7 @@ class OppgaveUngSakController(
     @PostMapping("/opprett/kontroll/registerinntekt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for kontroll av registerinntekt")
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun opprettOppgaveForKontrollAvRegisterinntekt(@RequestBody opprettOppgaveDto: RegisterInntektOppgaveDTO): OppgaveDTO {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for kontroll av registerinntekt")
@@ -213,7 +214,7 @@ class OppgaveUngSakController(
     @PostMapping("/opprett/endre/programperiode", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for endret programperiode")
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun opprettOppgaveForEndretProgramperiode(@RequestBody endretProgramperiodeOppgaveDTO: EndretProgamperiodeOppgaveDTO): OppgaveDTO {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for endret programperiode med referanse ${endretProgramperiodeOppgaveDTO.oppgaveReferanse}")
@@ -255,7 +256,7 @@ class OppgaveUngSakController(
     @PostMapping("/opprett/inntektsrapportering", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for inntektsrapportering")
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
+    @Transactional(TRANSACTION_MANAGER)
     fun opprettOppgaveForInntektsrapportering(@RequestBody opprettInntektsrapporteringOppgaveDTO: InntektsrapporteringOppgaveDTO): OppgaveDTO {
         tilgangskontrollService.krevSystemtilgang()
         logger.info("Oppretter oppgave for kontroll av registerinntekt")

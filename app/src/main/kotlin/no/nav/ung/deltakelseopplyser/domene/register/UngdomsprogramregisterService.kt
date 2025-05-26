@@ -1,10 +1,10 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
-import jakarta.transaction.Transactional
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
@@ -17,7 +17,9 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
@@ -25,11 +27,15 @@ import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
 import org.slf4j.LoggerFactory
+import org.springframework.data.history.Revision
+import org.springframework.data.history.RevisionMetadata
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -59,7 +65,33 @@ class UngdomsprogramregisterService(
         }
     }
 
-    @Transactional
+    fun deltakelseHistorikk(id: UUID): List<DeltakelseHistorikkDTO> {
+        logger.info("Henter historikk for deltakelse med id $id")
+        return deltakelseRepository.findRevisions(id).stream()
+            .map { revision: Revision<Long, UngdomsprogramDeltakelseDAO> ->
+                val metadata = revision.metadata
+
+                val deltakelseDAO = revision.entity
+                DeltakelseHistorikkDTO(
+                    revisjonstype = metadata.revisionType.somHistorikkType(),
+                    revisjonsnummer = metadata.revisionNumber.get(),
+                    id = deltakelseDAO.id,
+                    fom = deltakelseDAO.getFom(),
+                    tom = deltakelseDAO.getTom(),
+                    opprettetAv = deltakelseDAO.opprettetAv,
+                    opprettetTidspunkt = deltakelseDAO.opprettetTidspunkt.atZone(ZoneOffset.UTC),
+                    endretAv = deltakelseDAO.endretAv!!,
+                    endretTidspunkt = deltakelseDAO.endretTidspunkt!!.atZone(ZoneOffset.UTC),
+                    søktTidspunkt = deltakelseDAO.søktTidspunkt,
+                )
+            }
+            .toList()
+            .also {
+                logger.info("Fant ${it.size} historikkoppføringer for deltakelse med id $id")
+            }
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
     fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
         logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
 
@@ -183,6 +215,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.tilDeltakelsePeriodInfo(deltakersOppgaver) }
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun avsluttDeltakelse(
         id: UUID,
         deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
@@ -206,6 +239,7 @@ class UngdomsprogramregisterService(
         return oppdatert.mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
@@ -227,6 +261,7 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
@@ -255,7 +290,9 @@ class UngdomsprogramregisterService(
         logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
 
         val hendelsedato =
-            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+            oppdatert.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
+                ?: oppdatert.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
+
         val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
         aktørIder.forEach {
             hendelseInfo.leggTilAktør(AktørId(it.ident))
@@ -280,7 +317,9 @@ class UngdomsprogramregisterService(
         logger.info("Sender inn hendelse til ung-sak om at programmet har endret startdato")
 
         val hendelsedato =
-            oppdatert.endretTidspunkt?.toLocalDateTime() ?: oppdatert.opprettetTidspunkt.toLocalDateTime()
+            oppdatert.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
+                ?: oppdatert.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
+
         val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
         aktørIder.forEach {
             hendelseInfo.leggTilAktør(AktørId(it.ident))
@@ -348,4 +387,11 @@ class UngdomsprogramregisterService(
 
     private fun OppgaveDAO.erLøstInntektsrapportering() =
         this.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT && this.status == OppgaveStatus.LØST
+
+    private fun RevisionMetadata.RevisionType.somHistorikkType() = when (this) {
+        RevisionMetadata.RevisionType.INSERT -> Revisjonstype.OPPRETTET
+        RevisionMetadata.RevisionType.UPDATE -> Revisjonstype.ENDRET
+        RevisionMetadata.RevisionType.DELETE -> Revisjonstype.SLETTET
+        RevisionMetadata.RevisionType.UNKNOWN -> Revisjonstype.UKJENT
+    }
 }

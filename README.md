@@ -35,6 +35,16 @@ Denne tjenesten understøtter behovet for:
 
 # 5. Kode
 
+## Bruk av Hibernate Envers for endringshistorikk
+
+Applikasjonen bruker Hibernate Envers for å spore historikk på endringer gjort i deltakelse-tabellen. Dette er et bevisst unntak fra standard praksis i SiF-porteføljen, og bruken er basert på følgende spesifikke omstendigheter:
+
+* Ung-deltakelse-opplyser bruker allerede Spring og Hibernate som teknologistack, noe som skiller den fra andre applikasjoner i SiF-porteføljen
+* Hibernate Envers var en pragmatisk løsning gitt prosjektets tidsrammer, da det ga oss en fungerende endringshistorikk uten behov for egenutviklede løsninger
+* Løsningen er kun valgt fordi den integrerer naturlig med eksisterende teknologivalg i denne spesifikke applikasjonen
+
+Andre applikasjoner i SiF-porteføljen bør gjøre selvstendige vurderinger om Hibernate Envers er en passende løsning for deres behov. Det er viktig å opprettholde konsistente teknologivalg på tvers av applikasjoner i samme portefølje.
+
 # 6. Data
 
 # 7. Infrastrukturarkitektur
