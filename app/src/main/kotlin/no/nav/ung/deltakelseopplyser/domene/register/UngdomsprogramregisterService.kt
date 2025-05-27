@@ -11,7 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.m
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
@@ -46,7 +46,7 @@ class UngdomsprogramregisterService(
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
     private val rapportertInntektService: RapportertInntektService,
-    private val mineSiderVarselService: MineSiderVarselService,
+    private val mineSiderService: MineSiderService,
     private val deltakerappConfig: DeltakerappConfig,
 ) {
     companion object {
@@ -111,7 +111,7 @@ class UngdomsprogramregisterService(
         ungdomsprogramDAO: UngdomsprogramDeltakelseDAO,
         deltakerDAO: DeltakerDAO,
     ) {
-        mineSiderVarselService.opprettVarsel(
+        mineSiderService.opprettVarsel(
             varselId = ungdomsprogramDAO.id.toString(),
             deltakerIdent = deltakerDAO.deltakerIdent,
             tekster = listOf(

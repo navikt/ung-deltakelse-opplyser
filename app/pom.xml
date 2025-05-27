@@ -184,6 +184,11 @@
             <artifactId>kotlin-builder</artifactId>
             <version>${tms-kotlin-builder.version}</version>
         </dependency>
+        <dependency>
+            <groupId>no.nav.tms.mikrofrontend.selector</groupId>
+            <artifactId>builder</artifactId>
+            <version>3.0.0</version>
+        </dependency>
         <!-- Mine Sider (Nav.no) -->
 
         <!-- Kotlin -->

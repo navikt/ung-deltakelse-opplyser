@@ -8,7 +8,7 @@ import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTIO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -18,7 +18,7 @@ import java.util.*
 @Service
 class OppgaveService(
     private val deltakerService: DeltakerService,
-    private val mineSiderVarselService: MineSiderVarselService
+    private val mineSiderService: MineSiderService
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
@@ -51,7 +51,7 @@ class OppgaveService(
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
     private fun forsikreRiktigOppgaveBekreftelse(

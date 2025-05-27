@@ -1,11 +1,13 @@
-package no.nav.ung.deltakelseopplyser.domene.varsler
+package no.nav.ung.deltakelseopplyser.domene.minside
 
+import no.nav.tms.microfrontend.MicrofrontendMessageBuilder
 import no.nav.tms.varsel.action.EksternKanal
 import no.nav.tms.varsel.action.Produsent
 import no.nav.tms.varsel.action.Sensitivitet
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.tms.varsel.builder.VarselActionBuilder
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendId
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
@@ -13,16 +15,17 @@ import org.springframework.stereotype.Service
 import java.time.ZonedDateTime
 
 @Service
-class MineSiderVarselService(
+class MineSiderService(
     @Value("\${topic.producer.min-side-varsel.navn}") private val minSideVarselTopic: String,
+    @Value("\${topic.producer.min-side-mikrofrontend.navn}") private val minSideMikrofrontendTopic: String,
     private val kafkaTemplate: KafkaTemplate<String, String>,
     @Value("\${NAIS_CLUSTER_NAME}") private val cluster: String,
     @Value("\${NAIS_NAMESPACE}") private val namespace: String,
     @Value("\${NAIS_APP_NAME}") private val appName: String,
 
-) {
+    ) {
     private companion object {
-        private val logger = LoggerFactory.getLogger(MineSiderVarselService::class.java)
+        private val logger = LoggerFactory.getLogger(MineSiderService::class.java)
     }
 
     /**
@@ -137,6 +140,54 @@ class MineSiderVarselService(
                     throw RuntimeException(feilmelding, exception)
                 } else {
                     logger.info("Publiserte inaktivering av min-side oppgave: {}", sendResult.recordMetadata.toString())
+                }
+            }
+    }
+
+    fun aktiverMikrofrontend(
+        deltakerIdent: String,
+        mikrofrontendId: MikrofrontendId,
+        sensitivitet: no.nav.tms.microfrontend.Sensitivitet
+    ) {
+        val enable = MicrofrontendMessageBuilder.enable {
+            ident = deltakerIdent
+            initiatedBy = namespace
+            microfrontendId = mikrofrontendId.id
+            this.sensitivitet = sensitivitet
+        }.text()
+
+        kafkaTemplate.send(minSideMikrofrontendTopic, mikrofrontendId.id, enable)
+            .whenComplete { sendResult, exception ->
+                if (exception != null) {
+                    val feilmelding =
+                        "Feilet med å publisere aktivering av mikrofrontend til topic $minSideMikrofrontendTopic"
+                    logger.error(feilmelding, exception)
+                    throw RuntimeException(feilmelding, exception)
+                } else {
+                    logger.info("Publiserte aktivering av mikrofrontend: {}", sendResult.recordMetadata.toString())
+                }
+            }
+    }
+
+    fun deaktiverMikrofrontend(
+        deltakerIdent: String,
+        mikrofrontendId: MikrofrontendId,
+    ) {
+        val disable = MicrofrontendMessageBuilder.disable {
+            ident = deltakerIdent
+            initiatedBy = namespace
+            microfrontendId = mikrofrontendId.id
+        }.text()
+
+        kafkaTemplate.send(minSideMikrofrontendTopic, mikrofrontendId.id, disable)
+            .whenComplete { sendResult, exception ->
+                if (exception != null) {
+                    val feilmelding =
+                        "Feilet med å publisere deaktivering av mikrofrontend til topic $minSideMikrofrontendTopic"
+                    logger.error(feilmelding, exception)
+                    throw RuntimeException(feilmelding, exception)
+                } else {
+                    logger.info("Publiserte deaktivering av mikrofrontend: {}", sendResult.recordMetadata.toString())
                 }
             }
     }

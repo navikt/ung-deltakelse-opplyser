@@ -9,10 +9,8 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
-import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -63,7 +61,7 @@ class UngdomsprogramregisterServiceTest {
     lateinit var entityManager: EntityManager
 
     @MockkBean
-    lateinit var mineSiderVarselService: MineSiderVarselService
+    lateinit var mineSiderService: MineSiderService
 
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
@@ -85,7 +83,7 @@ class UngdomsprogramregisterServiceTest {
         deltakelseRepository.deleteAll()
         deltakerRepository.deleteAll()
 
-        justRun { mineSiderVarselService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
+        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
     }
 

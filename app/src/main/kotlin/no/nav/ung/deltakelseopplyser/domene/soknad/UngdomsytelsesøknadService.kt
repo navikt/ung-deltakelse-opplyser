@@ -3,18 +3,26 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 import no.nav.k9.søknad.JsonUtils
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendDAO
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.UngSøknadDAO
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendId
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.*
 
 @Service
 class UngdomsytelsesøknadService(
     private val søknadRepository: SøknadRepository,
     private val deltakerService: DeltakerService,
-    private val deltakelseRepository: UngdomsprogramDeltakelseRepository
+    private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val mikrofrontendService: MikrofrontendService
 ) {
 
     private companion object {
@@ -44,6 +52,19 @@ class UngdomsytelsesøknadService(
             deltakelseRepository.save(deltakelseDAO)
         } else {
             logger.info("Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.", deltakelseDAO.id)
+        }
+
+        logger.info("Aktiverer mikrofrontend for deltaker med deltakelseId: {}", deltakelseDAO.id)
+        mikrofrontendService.sendOgLagre(
+            MikrofrontendDAO(
+                id = UUID.randomUUID(),
+                deltaker = deltakelseDAO.deltaker,
+                mikrofrontendId = MikrofrontendId.UNGDOMSPROGRAMYTELSE_INNSYN.id,
+                status = MicrofrontendStatus.ENABLE,
+                opprettet = ZonedDateTime.now(ZoneOffset.UTC),
+            )
+        ).also {
+            logger.info("Mikrofrontend aktivert for deltaker med deltakelseId: {}", deltakelseDAO.id)
         }
 
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
