@@ -27,6 +27,7 @@
         <k9-felles.version>4.6.2</k9-felles.version>
         <graphql-kotlin.version>8.7.0</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
+        <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
     </properties>
     <dependencies>
 
@@ -187,7 +188,7 @@
         <dependency>
             <groupId>no.nav.tms.mikrofrontend.selector</groupId>
             <artifactId>builder</artifactId>
-            <version>3.0.0</version>
+            <version>${tms-mikrofrontend-builder.version}</version>
         </dependency>
         <!-- Mine Sider (Nav.no) -->
 
