@@ -5,6 +5,8 @@ NAIS_CLUSTER_NAME: dev-gcp
 NAIS_NAMESPACE: k9saksbehandling
 NAIS_APP_NAME: ung-deltakelse-opplyser
 
+HOSTNAME: ung-deltakelse-opplyser
+
 PROGRAM_OPPSTART_DATO: 2024-01-01
 
 spring:

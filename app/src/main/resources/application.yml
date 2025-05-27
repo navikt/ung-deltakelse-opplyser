@@ -42,6 +42,7 @@ spring:
     producer:
       client-id: ${HOSTNAME}
       retries: 3
+      transaction-id-prefix: .tx-${HOSTNAME}-
 
 topic:
   producer:
