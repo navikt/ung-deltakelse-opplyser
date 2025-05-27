@@ -78,6 +78,10 @@ spec:
     enabled: true
     path: /metrics
   observability:
+    logging:
+      destinations:
+        - id: loki
+        - id: elastic
     autoInstrumentation:
       enabled: {{observabilityEnabled}}
       runtime: java
