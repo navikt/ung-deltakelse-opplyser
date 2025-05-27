@@ -40,9 +40,8 @@ spring:
       isolation-level: read_committed
       enable-auto-commit: false
     producer:
-      client-id: ${HOSTNAME}-${random.uuid}
+      client-id: ${HOSTNAME}
       retries: 3
-      transaction-id-prefix: tx-${HOSTNAME}-${random.uuid}
 
 topic:
   producer:

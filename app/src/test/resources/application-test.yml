@@ -27,6 +27,7 @@ spring:
       auto-offset-reset: earliest
     producer:
       client-id: ung-deltakelse-opplyser
+      transaction-id-prefix: tx-
 
 topic:
   # Bryter betegner av/på funksjon for kafkalytter. True (på), False (av).
