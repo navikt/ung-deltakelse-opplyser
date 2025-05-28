@@ -19,7 +19,7 @@ class DeltakerDAO(
     @Column(name = "deltaker_ident", unique = true, nullable = false)
     val deltakerIdent: String,
 
-    @OneToMany(mappedBy = "deltaker") // Refererer til UngdomsprogramDeltakelseDAO
+    @OneToMany(mappedBy = "deltaker", cascade = [CascadeType.ALL], orphanRemoval = true) // Refererer til UngdomsprogramDeltakelseDAO
     val deltakelseList: List<UngdomsprogramDeltakelseDAO> = emptyList(),
 
     // Oppgavene eies direkte av DeltakerDAO med cascade og orphanRemoval for helhetlig håndtering.

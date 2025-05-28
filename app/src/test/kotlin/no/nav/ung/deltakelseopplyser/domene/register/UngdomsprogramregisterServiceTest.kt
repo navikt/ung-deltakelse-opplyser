@@ -158,7 +158,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
-        val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
@@ -167,7 +167,10 @@ class UngdomsprogramregisterServiceTest {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val utmelding = ungdomsprogramregisterService.fjernFraProgram(innmelding.id!!)
+        assertThat(deltakerRepository.findByDeltakerIdent(innmelding.deltaker.deltakerIdent)).isNotNull
+        assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
+
+        val utmelding = ungdomsprogramregisterService.fjernFraProgram(innmelding.deltaker.id!!)
 
         assertTrue(utmelding)
     }
