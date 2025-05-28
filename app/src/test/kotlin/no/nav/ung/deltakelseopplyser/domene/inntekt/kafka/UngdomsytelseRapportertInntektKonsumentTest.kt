@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
 
-    companion object {
+    private companion object {
         const val TOPIC = "dusseldorf.ungdomsytelse-inntektsrapportering-cleanup"
     }
 
