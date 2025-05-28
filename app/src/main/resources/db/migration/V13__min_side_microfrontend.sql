@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS mikrofrontend;
 
-CREATE TABLE min_side_microfrontend_status
+CREATE TABLE IF NOT EXISTS min_side_microfrontend_status
 (
     id          UUID PRIMARY KEY NOT NULL,
     deltaker_id UUID             NOT NULL, -- Referanse til deltaker
