@@ -54,6 +54,9 @@ class UngdomsytelsesøknadService(
             logger.info("Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.", deltakelseDAO.id)
         }
 
+        logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
+        søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
+
         logger.info("Aktiverer mikrofrontend for deltaker med deltakelseId: {}", deltakelseDAO.id)
         mikrofrontendService.sendOgLagre(
             MikrofrontendDAO(
@@ -66,9 +69,6 @@ class UngdomsytelsesøknadService(
         ).also {
             logger.info("Mikrofrontend aktivert for deltaker med deltakelseId: {}", deltakelseDAO.id)
         }
-
-        logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
-        søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
     }
 
     private fun Ungdomsytelsesøknad.somUngSøknadDAO(): UngSøknadDAO {
