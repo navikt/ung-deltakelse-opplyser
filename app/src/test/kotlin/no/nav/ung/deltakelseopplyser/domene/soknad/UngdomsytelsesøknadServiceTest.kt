@@ -17,15 +17,15 @@ import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendRepository
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendId
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import org.assertj.core.api.Assertions.assertThat
@@ -55,7 +55,7 @@ import java.time.ZonedDateTime
     UngdomsprogramregisterService::class,
     RapportertInntektService::class,
     DeltakerappConfig::class,
-    MikrofrontendService::class
+    MicrofrontendService::class
 )
 class UngdomsytelsesøknadServiceTest {
 
@@ -81,12 +81,12 @@ class UngdomsytelsesøknadServiceTest {
     lateinit var ungdomsytelsesøknadService: UngdomsytelsesøknadService
 
     @Autowired
-    lateinit var mikrofrontendRepository: MikrofrontendRepository
+    lateinit var microfrontendRepository: MicrofrontendRepository
 
     @BeforeAll
     fun setUp() {
         ungdomsprogramDeltakelseRepository.deleteAll()
-        mikrofrontendRepository.deleteAll()
+        microfrontendRepository.deleteAll()
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
     }
@@ -113,13 +113,12 @@ class UngdomsytelsesøknadServiceTest {
             .withFailMessage("Forventet at deltakelse med id %s var markert som søkt", deltakelseOpplysningDTO.id)
             .isNotNull()
 
-        assertThat(mikrofrontendRepository.findAll())
+        assertThat(microfrontendRepository.findAll())
             .withFailMessage("Forventet at mikrofrontend ble aktivert for deltakelse med id %s", deltakelseOpplysningDTO.id)
             .isNotEmpty
             .hasSize(1)
             .first()
             .matches { it.deltaker.deltakerIdent == søkerIdent }
-            .matches { it.mikrofrontendId == MikrofrontendId.UNGDOMSPROGRAMYTELSE_INNSYN.id }
             .matches { it.status == MicrofrontendStatus.ENABLE}
     }
 

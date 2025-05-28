@@ -5,17 +5,17 @@ import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import org.springframework.stereotype.Service
 
 @Service
-class MikrofrontendService(
-    private val mikrofrontendRepository: MikrofrontendRepository,
+class MicrofrontendService(
+    private val microfrontendRepository: MicrofrontendRepository,
     private val mineSiderService: MineSiderService,
 ) {
 
-    fun sendOgLagre(mikrofrontendDAO: MikrofrontendDAO) {
+    fun sendOgLagre(minSideMicrofrontendStatusDAO: MinSideMicrofrontendStatusDAO) {
         mineSiderService.aktiverMikrofrontend(
-            deltakerIdent = mikrofrontendDAO.deltaker.deltakerIdent,
-            mikrofrontendId = MikrofrontendId.fraId(mikrofrontendDAO.mikrofrontendId),
+            deltakerIdent = minSideMicrofrontendStatusDAO.deltaker.deltakerIdent,
+            microfrontendId = MicrofrontendId.UNGDOMSPROGRAMYTELSE_INNSYN,
             sensitivitet = Sensitivitet.HIGH,
         )
-        mikrofrontendRepository.save(mikrofrontendDAO)
+        microfrontendRepository.save(minSideMicrofrontendStatusDAO)
     }
 }

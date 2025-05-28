@@ -7,7 +7,7 @@ import no.nav.tms.varsel.action.Sensitivitet
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.tms.varsel.builder.VarselActionBuilder
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendId
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
@@ -146,17 +146,17 @@ class MineSiderService(
 
     fun aktiverMikrofrontend(
         deltakerIdent: String,
-        mikrofrontendId: MikrofrontendId,
+        microfrontendId: MicrofrontendId,
         sensitivitet: no.nav.tms.microfrontend.Sensitivitet
     ) {
         val enable = MicrofrontendMessageBuilder.enable {
             ident = deltakerIdent
             initiatedBy = namespace
-            microfrontendId = mikrofrontendId.id
+            this.microfrontendId = microfrontendId.id
             this.sensitivitet = sensitivitet
         }.text()
 
-        kafkaTemplate.send(minSideMikrofrontendTopic, mikrofrontendId.id, enable)
+        kafkaTemplate.send(minSideMikrofrontendTopic, microfrontendId.id, enable)
             .whenComplete { sendResult, exception ->
                 if (exception != null) {
                     val feilmelding =
@@ -171,15 +171,15 @@ class MineSiderService(
 
     fun deaktiverMikrofrontend(
         deltakerIdent: String,
-        mikrofrontendId: MikrofrontendId,
+        microfrontendId: MicrofrontendId,
     ) {
         val disable = MicrofrontendMessageBuilder.disable {
             ident = deltakerIdent
             initiatedBy = namespace
-            microfrontendId = mikrofrontendId.id
+            this.microfrontendId = microfrontendId.id
         }.text()
 
-        kafkaTemplate.send(minSideMikrofrontendTopic, mikrofrontendId.id, disable)
+        kafkaTemplate.send(minSideMikrofrontendTopic, microfrontendId.id, disable)
             .whenComplete { sendResult, exception ->
                 if (exception != null) {
                     val feilmelding =

@@ -8,7 +8,7 @@ import io.mockk.verify
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MikrofrontendService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
@@ -44,7 +44,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
 
     @MockkBean
-    lateinit var mikrofrontendService: MikrofrontendService
+    lateinit var microfrontendService: MicrofrontendService
 
     @Test
     fun `Forventer at listener forsøker på nytt ved feil`() {
@@ -70,7 +70,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         every { deltakelseRepository.save(ofType(UngdomsprogramDeltakelseDAO::class)) }
             .answers { firstArg<UngdomsprogramDeltakelseDAO>() }
 
-        every { mikrofrontendService.sendOgLagre(any()) } throws RuntimeException("Simulert feil ved publisering av mikrofrontend melding")
+        every { microfrontendService.sendOgLagre(any()) } throws RuntimeException("Simulert feil ved publisering av mikrofrontend melding")
 
         //language=JSON
         val søknad = """

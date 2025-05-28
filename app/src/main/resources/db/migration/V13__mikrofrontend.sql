@@ -1,11 +1,13 @@
-CREATE TABLE mikrofrontend
-(
-    id               UUID PRIMARY KEY NOT NULL,
-    deltaker_id      UUID             NOT NULL, -- Referanse til deltaker
-    mikrofrontend_id VARCHAR(100)     NOT NULL,
-    status           VARCHAR(10)      NOT NULL,
-    opprettet        TIMESTAMP        NOT NULL,
-    endret           TIMESTAMP,
+DROP TABLE IF EXISTS mikrofrontend;
 
-    CONSTRAINT uk_mikrofrontend_deltaker_mf UNIQUE (deltaker_id, mikrofrontend_id)
+CREATE TABLE min_side_microfrontend_status
+(
+    id          UUID PRIMARY KEY NOT NULL,
+    deltaker_id UUID             NOT NULL, -- Referanse til deltaker
+    status      VARCHAR(10)      NOT NULL,
+    opprettet   TIMESTAMP        NOT NULL,
+    endret      TIMESTAMP,
+
+    -- Sjekker at deltaker_id refererer til en eksisterende deltaker
+    CONSTRAINT fk_deltaker_id FOREIGN KEY (deltaker_id) REFERENCES deltaker (id)
 )

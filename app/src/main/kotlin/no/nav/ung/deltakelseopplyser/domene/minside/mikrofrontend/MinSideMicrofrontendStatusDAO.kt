@@ -9,7 +9,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UpdateTimestamp
@@ -20,16 +19,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
-@Table(
-    name = "mikrofrontend",
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uk_mikrofrontend_deltaker_mf",
-            columnNames = ["deltaker_id", "mikrofrontend_id"]
-        )
-    ]
-)
-class MikrofrontendDAO(
+@Table(name = "min_side_microfrontend_status")
+class MinSideMicrofrontendStatusDAO(
     @Id
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "id")
@@ -38,12 +29,6 @@ class MikrofrontendDAO(
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deltaker_id", referencedColumnName = "id", nullable = false)
     val deltaker: DeltakerDAO,
-
-    @Column(
-        name = "mikrofrontend_id",
-        nullable = false,
-        length = 100
-    ) val mikrofrontendId: String,
 
     @Column(
         name = "status",

@@ -6,6 +6,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import java.util.*
@@ -21,6 +23,10 @@ class DeltakerDAO(
 
     @OneToMany(mappedBy = "deltaker", cascade = [CascadeType.ALL], orphanRemoval = true) // Refererer til UngdomsprogramDeltakelseDAO
     val deltakelseList: List<UngdomsprogramDeltakelseDAO> = emptyList(),
+
+
+    @OneToOne(mappedBy = "deltaker", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
+    var minSideMicrofrontendStatusDAO: MinSideMicrofrontendStatusDAO? = null,
 
     // Oppgavene eies direkte av DeltakerDAO med cascade og orphanRemoval for helhetlig håndtering.
     @OneToMany(mappedBy = "deltaker", fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
