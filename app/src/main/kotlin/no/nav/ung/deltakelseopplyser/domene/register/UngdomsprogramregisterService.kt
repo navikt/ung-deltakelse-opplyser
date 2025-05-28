@@ -11,7 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.m
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
@@ -46,7 +46,7 @@ class UngdomsprogramregisterService(
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
     private val rapportertInntektService: RapportertInntektService,
-    private val mineSiderVarselService: MineSiderVarselService,
+    private val mineSiderService: MineSiderService,
     private val deltakerappConfig: DeltakerappConfig,
 ) {
     companion object {
@@ -111,7 +111,7 @@ class UngdomsprogramregisterService(
         ungdomsprogramDAO: UngdomsprogramDeltakelseDAO,
         deltakerDAO: DeltakerDAO,
     ) {
-        mineSiderVarselService.opprettVarsel(
+        mineSiderService.opprettVarsel(
             varselId = ungdomsprogramDAO.id.toString(),
             deltakerIdent = deltakerDAO.deltakerIdent,
             tekster = listOf(
@@ -127,17 +127,21 @@ class UngdomsprogramregisterService(
         )
     }
 
-    fun fjernFraProgram(id: UUID): Boolean {
-        logger.info("Fjerner deltaker fra programmet med id $id")
-        if (!deltakelseRepository.existsById(id)) {
-            logger.info("Delatker med id $id eksisterer ikke i programmet. Returnerer true")
+    @Transactional(TRANSACTION_MANAGER)
+    fun fjernFraProgram(deltakerId: UUID): Boolean {
+        logger.info("Fjerner deltaker fra programmet med id $deltakerId")
+
+        val deltaker = deltakerService.finnDeltakerGittId(deltakerId)
+        if (!deltaker.isPresent) {
+            logger.info("Deltaker med id $deltakerId eksisterer ikke. Returnerer true")
             return true
         }
 
-        val ungdomsprogramDAO = forsikreEksistererIProgram(id)
+        val deltakelser = hentAlleForDeltakerId(deltakerId)
+        val harSøkteDeltakelser = deltakelser.any { it.søktTidspunkt != null }
 
-        if (ungdomsprogramDAO.søktTidspunkt != null) {
-            logger.error("Klarte ikke å slette deltaker fra programmet med id $id, fordi deltakeren har søkt")
+        if (harSøkteDeltakelser) {
+            logger.error("Klarte ikke å slette deltaker fra programmet med id $deltakerId, fordi deltakeren har søkt")
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatus(HttpStatus.FORBIDDEN).also {
@@ -147,14 +151,25 @@ class UngdomsprogramregisterService(
             )
         }
 
-        deltakelseRepository.delete(ungdomsprogramDAO)
-
-        if (deltakelseRepository.existsById(id)) {
-            logger.error("Klarte ikke å slette deltaker fra programmet med id $id")
+        val deltakerSlettet = deltakerService.slettDeltaker(deltakerId)
+        if (!deltakerSlettet) {
+            logger.error("Klarte ikke å slette deltaker med id $deltakerId fra deltakerregisteret")
             throw ErrorResponseException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
-                    it.detail = "Klarte ikke å slette deltaker fra programmet"
+                    it.detail = "Klarte ikke å slette deltaker fra deltakerregisteret"
+                },
+                null
+            )
+        }
+
+        val detFinnesDeltakelser = deltakelseRepository.findByDeltaker_IdIn(listOf(deltakerId)).isNotEmpty()
+        if (detFinnesDeltakelser) {
+            logger.error("Klarte ikke å slette deltakelser registrert på deltaker med id $deltakerId")
+            throw ErrorResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR).also {
+                    it.detail = "Det finnes fortsatt deltakelser registrert på deltaker med id $deltakerId"
                 },
                 null
             )

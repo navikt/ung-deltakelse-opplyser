@@ -181,19 +181,19 @@ class UngdomsprogramRegisterVeilederController(
         }
     }
 
-    @DeleteMapping("/deltakelse/{deltakelseId}/fjern")
-    @Operation(summary = "Fjern en deltakelse fra ungdomsprogrammet")
+    @DeleteMapping("/deltaker/{deltakerId}/fjern")
+    @Operation(summary = "Fjern en deltaker fra ungdomsprogrammet")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun fjernFraProgram(@PathVariable deltakelseId: UUID) {
-        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+    fun fjernFraProgram(@PathVariable deltakerId: UUID) {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakerId)
         tilgangskontrollService.krevAnsattTilgang(
             UPDATE,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        registerService.fjernFraProgram(deltakelseId).also {
+        registerService.fjernFraProgram(deltakerId).also {
             sporingsloggService.logg(
-                "/deltakelse/{deltakelseId}/fjern",
-                "Fjernet deltakelse med id $deltakelseId",
+                "/deltaker/{deltakerId}/fjern",
+                "Fjernet deltaker med id $deltakerId",
                 PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
                 EventClassId.AUDIT_UPDATE
             )

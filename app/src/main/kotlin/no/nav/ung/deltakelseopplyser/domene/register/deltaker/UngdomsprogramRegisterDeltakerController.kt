@@ -12,7 +12,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
@@ -45,7 +45,7 @@ import java.util.*
 class UngdomsprogramRegisterDeltakerController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakerService: DeltakerService,
-    private val mineSiderVarselService: MineSiderVarselService,
+    private val mineSiderService: MineSiderService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
 
@@ -137,7 +137,7 @@ class UngdomsprogramRegisterDeltakerController(
         val oppdatertOppgave = oppgave.markerSomÅpnet()
         deltakerService.oppdaterDeltaker(deltaker)
 
-        mineSiderVarselService.deaktiverOppgave(oppgaveReferanse.toString())
+        mineSiderService.deaktiverOppgave(oppgaveReferanse.toString())
 
         return oppdatertOppgave.tilDTO()
     }

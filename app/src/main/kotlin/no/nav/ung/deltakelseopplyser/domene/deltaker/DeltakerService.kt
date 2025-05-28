@@ -158,4 +158,9 @@ class DeltakerService(
     fun hentKontonummer(): KontonummerDTO {
         return kontoregisterService.hentAktivKonto()
     }
+
+    fun slettDeltaker(deltakerId: UUID): Boolean {
+        deltakerRepository.deleteById(deltakerId)
+        return !deltakerRepository.existsById(deltakerId)
+    }
 }

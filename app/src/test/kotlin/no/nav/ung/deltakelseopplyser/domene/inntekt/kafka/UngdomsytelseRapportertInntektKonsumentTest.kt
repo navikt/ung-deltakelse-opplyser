@@ -15,7 +15,7 @@ import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntekt
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
 
-    companion object {
+    private companion object {
         const val TOPIC = "dusseldorf.ungdomsytelse-inntektsrapportering-cleanup"
     }
 
@@ -50,7 +50,7 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     lateinit var rapportertInntektRepository: RapportertInntektRepository
 
     @SpykBean
-    lateinit var mineSiderVarselService: MineSiderVarselService
+    lateinit var mineSiderService: MineSiderService
 
     @MockkBean
     lateinit var pdlService: PdlService
@@ -129,7 +129,7 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
             verify(exactly = 1) { rapportertInntektHåndtererService.håndterRapportertInntekt(any()) }
             verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
-            verify(exactly = 1) { mineSiderVarselService.deaktiverOppgave(any()) }
+            verify(exactly = 1) { mineSiderService.deaktiverOppgave(any()) }
             verify(exactly = 1) { rapportertInntektRepository.save(any()) }
 
             val oppgave = deltakerService.hentDeltakersOppgaver(søkerIdent).first()

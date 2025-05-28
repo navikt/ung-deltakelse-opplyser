@@ -16,13 +16,17 @@ import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
@@ -50,7 +54,8 @@ import java.time.ZonedDateTime
     UngdomsytelsesøknadService::class,
     UngdomsprogramregisterService::class,
     RapportertInntektService::class,
-    DeltakerappConfig::class
+    DeltakerappConfig::class,
+    MicrofrontendService::class
 )
 class UngdomsytelsesøknadServiceTest {
 
@@ -64,7 +69,7 @@ class UngdomsytelsesøknadServiceTest {
     lateinit var kontoregisterService: KontoregisterService
 
     @MockkBean
-    lateinit var mineSiderVarselService: MineSiderVarselService
+    lateinit var mineSiderService: MineSiderService
 
     @Autowired
     lateinit var ungdomsprogramDeltakelseRepository: UngdomsprogramDeltakelseRepository
@@ -75,10 +80,15 @@ class UngdomsytelsesøknadServiceTest {
     @Autowired
     lateinit var ungdomsytelsesøknadService: UngdomsytelsesøknadService
 
+    @Autowired
+    lateinit var microfrontendRepository: MicrofrontendRepository
+
     @BeforeAll
     fun setUp() {
         ungdomsprogramDeltakelseRepository.deleteAll()
-        justRun { mineSiderVarselService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
+        microfrontendRepository.deleteAll()
+        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
+        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
     }
 
     @Test
@@ -102,6 +112,14 @@ class UngdomsytelsesøknadServiceTest {
         assertThat(deltakelse.get().søktTidspunkt)
             .withFailMessage("Forventet at deltakelse med id %s var markert som søkt", deltakelseOpplysningDTO.id)
             .isNotNull()
+
+        assertThat(microfrontendRepository.findAll())
+            .withFailMessage("Forventet at mikrofrontend ble aktivert for deltakelse med id %s", deltakelseOpplysningDTO.id)
+            .isNotEmpty
+            .hasSize(1)
+            .first()
+            .matches { it.deltaker.deltakerIdent == søkerIdent }
+            .matches { it.status == MicrofrontendStatus.ENABLE}
     }
 
     private fun lagUngdomsytelseSøknad(

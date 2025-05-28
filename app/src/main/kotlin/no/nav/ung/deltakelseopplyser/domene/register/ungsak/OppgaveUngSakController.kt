@@ -22,7 +22,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
-import no.nav.ung.deltakelseopplyser.domene.varsler.MineSiderVarselService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
@@ -63,7 +63,7 @@ class OppgaveUngSakController(
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
-    private val mineSiderVarselService: MineSiderVarselService,
+    private val mineSiderService: MineSiderService,
     private val deltakerappConfig: DeltakerappConfig,
 ) {
 
@@ -93,7 +93,7 @@ class OppgaveUngSakController(
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
     @PostMapping("/utløpt", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -118,7 +118,7 @@ class OppgaveUngSakController(
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderVarselService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
     @PostMapping("/utløpt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -152,7 +152,7 @@ class OppgaveUngSakController(
             deltakerService.oppdaterDeltaker(deltaker)
 
             logger.info("Deaktiverer oppgave på min side")
-            mineSiderVarselService.deaktiverOppgave(uløstOppgaveISammePeriode.oppgaveReferanse.toString())
+            mineSiderService.deaktiverOppgave(uløstOppgaveISammePeriode.oppgaveReferanse.toString())
         }
     }
 
@@ -318,7 +318,7 @@ class OppgaveUngSakController(
         deltaker.leggTilOppgave(nyOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
 
-        mineSiderVarselService.opprettVarsel(
+        mineSiderService.opprettVarsel(
             varselId = nyOppgave.oppgaveReferanse.toString(),
             deltakerIdent = deltaker.deltakerIdent,
             tekster = oppgaveTypeDataDAO.minSideVarselTekster(),

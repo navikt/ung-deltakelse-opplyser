@@ -9,7 +9,7 @@ spring:
 
   kafka:
     producer:
-      transaction-id-prefix: -tx
+      transaction-id-prefix: tx-${HOSTNAME}
     security:
       protocol: SSL
     ssl:

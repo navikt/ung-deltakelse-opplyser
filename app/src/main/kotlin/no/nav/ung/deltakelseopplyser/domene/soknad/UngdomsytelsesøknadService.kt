@@ -3,18 +3,25 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 import no.nav.k9.søknad.JsonUtils
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.UngSøknadDAO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.*
 
 @Service
 class UngdomsytelsesøknadService(
     private val søknadRepository: SøknadRepository,
     private val deltakerService: DeltakerService,
-    private val deltakelseRepository: UngdomsprogramDeltakelseRepository
+    private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val microfrontendService: MicrofrontendService
 ) {
 
     private companion object {
@@ -48,6 +55,18 @@ class UngdomsytelsesøknadService(
 
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
         søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
+
+        logger.info("Aktiverer mikrofrontend for deltaker med deltakelseId: {}", deltakelseDAO.id)
+        microfrontendService.sendOgLagre(
+            MinSideMicrofrontendStatusDAO(
+                id = UUID.randomUUID(),
+                deltaker = deltakelseDAO.deltaker,
+                status = MicrofrontendStatus.ENABLE,
+                opprettet = ZonedDateTime.now(ZoneOffset.UTC),
+            )
+        ).also {
+            logger.info("Mikrofrontend aktivert for deltaker med deltakelseId: {}", deltakelseDAO.id)
+        }
     }
 
     private fun Ungdomsytelsesøknad.somUngSøknadDAO(): UngSøknadDAO {

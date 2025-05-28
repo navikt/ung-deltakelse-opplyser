@@ -48,6 +48,8 @@ topic:
     # topic.producer.min-side-varsel
     min-side-varsel:
       navn: min-side.aapen-brukervarsel-v1
+    min-side-mikrofrontend:
+      navn: min-side.aapen-microfrontend-v1
   # Bryter betegner av/på funksjon for kafkalytter. True (på), False (av).
   listener:
     # topic.listener.ung-soknad
