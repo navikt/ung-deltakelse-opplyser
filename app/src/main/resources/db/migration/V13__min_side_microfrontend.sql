@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS mikrofrontend;
-
 CREATE TABLE IF NOT EXISTS min_side_microfrontend_status
 (
     id          UUID PRIMARY KEY NOT NULL,
