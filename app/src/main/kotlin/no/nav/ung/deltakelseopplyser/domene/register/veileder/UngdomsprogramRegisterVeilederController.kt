@@ -193,7 +193,7 @@ class UngdomsprogramRegisterVeilederController(
         registerService.fjernFraProgram(deltakerId).also {
             sporingsloggService.logg(
                 "/deltaker/{deltakerId}/fjern",
-                "Fjernet deltakelse med id $deltakerId",
+                "Fjernet deltaker med id $deltakerId",
                 PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
                 EventClassId.AUDIT_UPDATE
             )
