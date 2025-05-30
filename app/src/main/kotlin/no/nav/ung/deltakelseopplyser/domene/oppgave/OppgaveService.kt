@@ -4,21 +4,35 @@ import no.nav.k9.oppgave.OppgaveBekreftelse as UngOppgaveBekreftelse
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretProgramperiodeBekreftelse
+import no.nav.tms.varsel.action.Varseltype
+import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SendSøknadOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 @Service
 class OppgaveService(
     private val deltakerService: DeltakerService,
-    private val mineSiderService: MineSiderService
+    private val mineSiderService: MineSiderService,
+    private val deltakerappConfig: DeltakerappConfig,
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
@@ -52,6 +66,48 @@ class OppgaveService(
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+    }
+
+    fun opprettOppgave(
+        deltaker: DeltakerDAO,
+        oppgaveReferanse: UUID,
+        oppgaveTypeDataDAO: OppgavetypeDataDAO,
+        aktivFremTil: ZonedDateTime? = null
+    ): OppgaveDTO {
+        val oppgavetype = when (oppgaveTypeDataDAO) {
+            is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
+            is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
+            is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
+            is SendSøknadOppgavetypeDataDAO -> Oppgavetype.SEND_SØKNAD
+        }
+
+        logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")
+
+        val nyOppgave = OppgaveDAO(
+            id = UUID.randomUUID(),
+            oppgaveReferanse = oppgaveReferanse,
+            deltaker = deltaker,
+            oppgavetype = oppgavetype,
+            oppgavetypeDataDAO = oppgaveTypeDataDAO,
+            status = OppgaveStatus.ULØST,
+            opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
+            løstDato = null
+        )
+
+        logger.info("Legger til oppgave med id ${nyOppgave.id} på deltaker med id ${deltaker.id}")
+        deltaker.leggTilOppgave(nyOppgave)
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        mineSiderService.opprettVarsel(
+            varselId = nyOppgave.oppgaveReferanse.toString(),
+            deltakerIdent = deltaker.deltakerIdent,
+            tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
+            varselLink = deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString()),
+            varseltype = Varseltype.Oppgave,
+            aktivFremTil = aktivFremTil,
+        )
+
+        return nyOppgave.tilDTO()
     }
 
     private fun forsikreRiktigOppgaveBekreftelse(

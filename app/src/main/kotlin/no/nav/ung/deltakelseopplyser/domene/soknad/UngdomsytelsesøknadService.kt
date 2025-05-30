@@ -3,13 +3,15 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 import no.nav.k9.søknad.JsonUtils
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.UngSøknadDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.ZoneOffset
@@ -21,7 +23,8 @@ class UngdomsytelsesøknadService(
     private val søknadRepository: SøknadRepository,
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
-    private val microfrontendService: MicrofrontendService
+    private val microfrontendService: MicrofrontendService,
+    private val mineSiderService: MineSiderService,
 ) {
 
     private companion object {
@@ -31,26 +34,37 @@ class UngdomsytelsesøknadService(
     fun håndterMottattSøknad(ungdomsytelsesøknad: Ungdomsytelsesøknad) {
         logger.info("Håndterer mottatt søknad.")
         val søknad = ungdomsytelsesøknad.søknad
+        val oppgaveReferanse = UUID.fromString(søknad.søknadId.id)
         val ungdomsytelse = søknad.getYtelse<Ungdomsytelse>()
         val søktFraDato = ungdomsytelse.søknadsperiode.fraOgMed
         val deltakerIdent = søknad.søker.personIdent.verdi
 
-        logger.info("Henter deltakerIder for søker oppgitt i søknaden")
         val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdent)
         if (deltakterIder.isEmpty()) {
             throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
         }
 
+        val sendSøknadOppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+            .find { it.oppgaveReferanse == oppgaveReferanse && it.oppgavetype == Oppgavetype.SEND_SØKNAD }
+            ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden som har oppgave for oppgaveReferanse=$oppgaveReferanse")
+
         logger.info("Henter deltakelse som starter $søktFraDato")
         val deltakelseDAO = deltakelseRepository.finnDeltakelseSomStarter(deltakterIder, søktFraDato)
             ?: throw IllegalStateException("Fant ingen deltakelse som starter $søktFraDato")
+
+        logger.info("Markerer oppgave som løst for deltaker.")
+        sendSøknadOppgave.markerSomLøst()
+        mineSiderService.deaktiverOppgave(sendSøknadOppgave.oppgaveReferanse.toString())
 
         if (deltakelseDAO.søktTidspunkt == null) {
             logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)
             deltakelseDAO.markerSomHarSøkt()
             deltakelseRepository.save(deltakelseDAO)
         } else {
-            logger.info("Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.", deltakelseDAO.id)
+            logger.info(
+                "Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.",
+                deltakelseDAO.id
+            )
         }
 
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)

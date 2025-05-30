@@ -14,6 +14,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.leggPåTopic
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
@@ -50,13 +51,16 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
 
     @Test
     fun `Forventet søknad konsumeres og deserialiseres som forventet`() {
-        val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
         val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
         val søkerIdent = "12345678910"
         val deltakelseStart = "2024-11-04"
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
-        meldInnIProgrammet(søkerIdent, deltakelseStart)
+        val deltakelse = meldInnIProgrammet(søkerIdent, deltakelseStart)
+        val sendSøknadOppgave = deltakelse.oppgaver.find { it.oppgavetype == Oppgavetype.SEND_SØKNAD }
+            ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
+
+        val søknadId = sendSøknadOppgave.oppgaveReferanse.toString()
 
         //language=JSON
         val søknad = """

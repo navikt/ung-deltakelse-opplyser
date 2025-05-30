@@ -29,7 +29,10 @@ import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretProgramperiodeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SendSøknadOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektArbeidOgFrilansDTO
@@ -138,9 +141,15 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).first().oppgaver
-        assertThat(oppgaver).hasSize(1)
-        val oppgaveReferanse = oppgaver.first().oppgaveReferanse
+        val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).flatMap { it.oppgaver }
+        assertThat(oppgaver)
+            .hasSize(2)
+            .anyMatch { it.oppgavetype == Oppgavetype.SEND_SØKNAD }
+            .anyMatch { it.oppgavetypeData is SendSøknadOppgavetypeDataDTO }
+            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE }
+            .anyMatch { it.oppgavetypeData is EndretProgramperiodeDataDTO }
+
+        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE }.oppgaveReferanse
 
         oppgaveService.håndterMottattOppgavebekreftelse(
             oppgaveBekreftelse(
@@ -155,7 +164,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         )
 
         val oppdatertDeltakelse = deltakelseService.hentAlleForDeltaker(deltakerIdent).first()
-        val oppgave = oppdatertDeltakelse.oppgaver.first()
+        val oppgave = oppdatertDeltakelse.oppgaver.first { it.oppgaveReferanse == oppgaveReferanse }
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretProgramperiodeDataDTO::class.java)
@@ -180,8 +189,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         )
 
         val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).first().oppgaver
-        assertThat(oppgaver).hasSize(1)
-        val oppgaveReferanse = oppgaver.first().oppgaveReferanse
+        assertThat(oppgaver).hasSize(2)
+        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT }.oppgaveReferanse
 
         oppgaveService.håndterMottattOppgavebekreftelse(
             oppgaveBekreftelse(
@@ -196,7 +205,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         )
 
         val oppdatertDeltakelse = deltakelseService.hentAlleForDeltaker(deltakerIdent).first()
-        val oppgave = oppdatertDeltakelse.oppgaver.first()
+        val oppgave = oppdatertDeltakelse.oppgaver.first { it.oppgaveReferanse == oppgaveReferanse }
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(KontrollerRegisterinntektOppgavetypeDataDTO::class.java)
@@ -226,8 +235,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         )
 
         val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).first().oppgaver
-        assertThat(oppgaver).hasSize(1)
-        val oppgaveReferanse = oppgaver.first().oppgaveReferanse
+        assertThat(oppgaver).hasSize(2)
+        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE }.oppgaveReferanse
 
         assertThrows<IllegalStateException> {
             oppgaveService.håndterMottattOppgavebekreftelse(

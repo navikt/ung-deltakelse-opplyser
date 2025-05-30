@@ -21,6 +21,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SendSøknadOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
 import org.hibernate.annotations.JdbcTypeCode
@@ -126,6 +127,10 @@ class OppgaveDAO(
                     rapportertInntekt = null
                 )
             }
+
+            is SendSøknadOppgavetypeDataDAO -> SendSøknadOppgavetypeDataDTO(
+                fomDato = fomDato
+            )
         }
 
         fun RegisterinntektDAO.tilDTO() = RegisterinntektDTO(
