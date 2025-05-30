@@ -75,7 +75,7 @@ class OppgaveService(
         deltaker: DeltakerDAO,
         oppgaveReferanse: UUID,
         oppgaveTypeDataDAO: OppgavetypeDataDAO,
-        aktivFremTil: ZonedDateTime? = null
+        aktivFremTil: ZonedDateTime? = null,
     ): OppgaveDTO {
         val oppgavetype = when (oppgaveTypeDataDAO) {
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
@@ -113,52 +113,117 @@ class OppgaveService(
         return nyOppgave.tilDTO()
     }
 
-    fun avbrytOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID) {
+    fun avbrytOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID): OppgaveDTO {
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
         val oppgave = deltaker.oppgaver
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
             .also { forsikreOppgaveIkkeErLøst(it) }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
-        oppgave.markerSomAvbrutt()
+        val oppdatertOppgave = oppgave.markerSomAvbrutt()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+
+        return oppdatertOppgave.tilDTO()
     }
 
-    fun utløperOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID) {
+    fun utløperOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID): OppgaveDTO {
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
         val oppgave = deltaker.oppgaver
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
             .also { forsikreOppgaveIkkeErLøst(it) }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
-        oppgave.markerSomUtløpt()
+        val oppdatertOppgave = oppgave.markerSomUtløpt()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+
+        return oppdatertOppgave.tilDTO()
     }
 
-    fun løsOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID?) {
+    fun løsOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID?): OppgaveDTO {
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
 
         val oppgave = deltaker.oppgaver
             .find { it.oppgaveReferanse == oppgaveReferanse }
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
-        oppgave.markerSomLøst()
+        val oppdatertOppgave = oppgave.markerSomLøst()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        return oppdatertOppgave.tilDTO()
+    }
+
+    fun løsOppgave(oppgaveReferanse: UUID): OppgaveDTO {
+        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
+        val oppdatertOppgave = oppgave.markerSomLøst()
+
+        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
+        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        return oppdatertOppgave.tilDTO()
+    }
+
+    fun lukkOppgave(oppgaveReferanse: UUID): OppgaveDTO {
+        val OPPGAVER_SOM_STØTTER_Å_LUKKES = listOf(Oppgavetype.RAPPORTER_INNTEKT)
+
+        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
+        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        if (!OPPGAVER_SOM_STØTTER_Å_LUKKES.contains(oppgave.oppgavetype)) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Oppgave med referanse $oppgaveReferanse kan kun lukkes dersom den er av type ${
+                        OPPGAVER_SOM_STØTTER_Å_LUKKES.joinToString(
+                            ","
+                        )
+                    }"
+                ),
+                null
+            )
+        }
+
+        if (oppgave.status != OppgaveStatus.ULØST) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Oppgave med referanse $oppgaveReferanse kan kun lukkes dersom den er uløst."
+                ),
+                null
+            )
+        }
+
+        val oppdatertOppgave = oppgave.markerSomLukket()
+        deltakerService.oppdaterDeltaker(deltaker)
+        mineSiderService.deaktiverOppgave(oppgaveReferanse.toString())
+        return oppdatertOppgave.tilDTO()
+    }
+
+    fun åpneOppgave(oppgaveReferanse: UUID): OppgaveDTO {
+        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        val oppdatertOppgave = oppgave.markerSomÅpnet()
+        deltakerService.oppdaterDeltaker(deltaker)
+        return oppdatertOppgave.tilDTO()
     }
 
     private fun forsikreRiktigOppgaveBekreftelse(
@@ -194,5 +259,22 @@ class OppgaveService(
                 null
             )
         }
+    }
+
+    private fun hentDeltakerOppgave(oppgaveReferanse: UUID): Pair<DeltakerDAO, OppgaveDAO> {
+        val deltaker = (deltakerService.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
+            ?: throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.NOT_FOUND,
+                    "Fant ingen deltaker med oppgave referanse $oppgaveReferanse."
+                ),
+                null
+            ))
+
+        val oppgaveDAO = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
+            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Funnet deltaker via oppgave referanse over.
+
+        return Pair(deltaker, oppgaveDAO)
     }
 }
