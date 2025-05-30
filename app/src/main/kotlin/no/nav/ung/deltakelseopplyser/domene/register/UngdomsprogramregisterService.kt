@@ -9,7 +9,7 @@ import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SendSøknadOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
@@ -102,7 +102,7 @@ class UngdomsprogramregisterService(
         oppgaveService.opprettOppgave(
             deltaker = deltakerDAO,
             oppgaveReferanse = UUID.randomUUID(),
-            oppgaveTypeDataDAO = SendSøknadOppgavetypeDataDAO(fomDato = ungdomsprogramDAO.getFom()),
+            oppgaveTypeDataDAO = SøkYtelseOppgavetypeDataDAO(fomDato = ungdomsprogramDAO.getFom()),
             aktivFremTil = ZonedDateTime.now().plusMonths(3)
         )
 

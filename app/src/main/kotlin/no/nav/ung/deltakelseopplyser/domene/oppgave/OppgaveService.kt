@@ -17,7 +17,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.Inntektsrapporter
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SendSøknadOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -78,7 +78,7 @@ class OppgaveService(
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
             is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
             is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
-            is SendSøknadOppgavetypeDataDAO -> Oppgavetype.SEND_SØKNAD
+            is SøkYtelseOppgavetypeDataDAO -> Oppgavetype.SØK_YTELSE
         }
 
         logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")

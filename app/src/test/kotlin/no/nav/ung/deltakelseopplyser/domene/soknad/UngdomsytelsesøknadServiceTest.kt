@@ -101,7 +101,7 @@ class UngdomsytelsesøknadServiceTest {
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelseOpplysningDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
-        val sendSøknadOppgave = deltakelseOpplysningDTO.oppgaver.find { it.oppgavetype == Oppgavetype.SEND_SØKNAD }
+        val sendSøknadOppgave = deltakelseOpplysningDTO.oppgaver.find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
             ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
 
         ungdomsytelsesøknadService.håndterMottattSøknad(

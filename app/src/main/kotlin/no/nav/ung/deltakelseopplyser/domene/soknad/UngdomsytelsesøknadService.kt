@@ -45,7 +45,7 @@ class UngdomsytelsesøknadService(
         }
 
         val sendSøknadOppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
-            .find { it.oppgaveReferanse == oppgaveReferanse && it.oppgavetype == Oppgavetype.SEND_SØKNAD }
+            .find { it.oppgaveReferanse == oppgaveReferanse && it.oppgavetype == Oppgavetype.SØK_YTELSE }
             ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden som har oppgave for oppgaveReferanse=$oppgaveReferanse")
 
         logger.info("Henter deltakelse som starter $søktFraDato")

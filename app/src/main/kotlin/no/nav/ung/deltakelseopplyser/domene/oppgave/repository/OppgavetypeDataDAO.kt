@@ -31,7 +31,7 @@ import java.time.LocalDate
     JsonSubTypes.Type(value = InntektsrapporteringOppgavetypeDataDAO::class, name = "RAPPORTER_INNTEKT"),
 
     // Send søknad oppgavetype data
-    JsonSubTypes.Type(value = SendSøknadOppgavetypeDataDAO::class, name = "SEND_SØKNAD")
+    JsonSubTypes.Type(value = SøkYtelseOppgavetypeDataDAO::class, name = "SØK_YTELSE")
 )
 sealed class OppgavetypeDataDAO {
 
@@ -60,7 +60,7 @@ sealed class OppgavetypeDataDAO {
             )
         )
 
-        is SendSøknadOppgavetypeDataDAO -> listOf(
+        is SøkYtelseOppgavetypeDataDAO -> listOf(
             Tekst(
                 tekst = "Du har fått en oppgave om å sende inn søknad.",
                 spraakkode = "nb",
@@ -94,7 +94,7 @@ data class KontrollerRegisterInntektOppgaveTypeDataDAO(
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
 ) : OppgavetypeDataDAO()
 
-data class SendSøknadOppgavetypeDataDAO(
+data class SøkYtelseOppgavetypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty("fomDato") val fomDato: LocalDate
 ) : OppgavetypeDataDAO()

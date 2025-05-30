@@ -57,7 +57,7 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelse = meldInnIProgrammet(søkerIdent, deltakelseStart)
-        val sendSøknadOppgave = deltakelse.oppgaver.find { it.oppgavetype == Oppgavetype.SEND_SØKNAD }
+        val sendSøknadOppgave = deltakelse.oppgaver.find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
             ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
 
         val søknadId = sendSøknadOppgave.oppgaveReferanse.toString()
