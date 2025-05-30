@@ -95,7 +95,8 @@ data class KontrollerRegisterInntektOppgaveTypeDataDAO(
 ) : OppgavetypeDataDAO()
 
 data class SendSøknadOppgavetypeDataDAO(
-    @JsonProperty("fomDato") val fomDato: LocalDate,
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("fomDato") val fomDato: LocalDate
 ) : OppgavetypeDataDAO()
 
 data class RegisterinntektDAO(
