@@ -6,7 +6,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.kafka.UngdomsytelseRapportertInntekt
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.UngRapportertInntektDAO
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -16,7 +16,7 @@ import java.util.*
 class RapportertInntektHåndtererService(
     private val rapportertInntektRepository: RapportertInntektRepository,
     private val deltakerService: DeltakerService,
-    private val mineSiderService: MineSiderService
+    private val oppgaveService: OppgaveService
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(RapportertInntektHåndtererService::class.java)
@@ -36,11 +36,10 @@ class RapportertInntektHåndtererService(
             .find { it.oppgaveReferanse == oppgaveReferanse && it.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT }
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
-        logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
-        oppgave.markerSomLøst()
-
-        logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        oppgaveService.løsOppgave(
+            deltaker = deltaker,
+            oppgaveReferanse = oppgave.oppgaveReferanse,
+        )
 
         logger.info("Lagrer rapportert inntekt med journalpostId: {}", rapportertInntektTopicEntry.journalpostId)
         rapportertInntektRepository.save(rapportertInntektTopicEntry.somRapportertInntektDAO())
