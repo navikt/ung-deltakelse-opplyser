@@ -74,20 +74,10 @@ class OppgaveUngSakController(
         logger.info("Avbryter oppgave med referanse $oppgaveReferanse")
 
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
-
-        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
-        val oppgave = deltaker.oppgaver
-            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
-            .also { forsikreOppgaveIkkeErLøst(it) }
-
-        logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
-        oppgave.markerSomAvbrutt()
-
-        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltakerService.oppdaterDeltaker(deltaker)
-
-        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        oppgaveService.avbrytOppgave(
+            deltaker = deltaker,
+            oppgaveReferanse = oppgaveReferanse
+        )
     }
 
     @PostMapping("/utløpt", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -100,19 +90,10 @@ class OppgaveUngSakController(
 
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
 
-        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
-        val oppgave = deltaker.oppgaver
-            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
-            .also { forsikreOppgaveIkkeErLøst(it) }
-
-        logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
-        oppgave.markerSomUtløpt()
-
-        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltakerService.oppdaterDeltaker(deltaker)
-
-        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        oppgaveService.utløperOppgave(
+            deltaker = deltaker,
+            oppgaveReferanse = oppgaveReferanse
+        )
     }
 
     @PostMapping("/utløpt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -139,14 +120,7 @@ class OppgaveUngSakController(
             }
 
         if (uløstOppgaveISammePeriode != null) {
-            logger.info("Markerer oppgave som utløpt")
-            uløstOppgaveISammePeriode.markerSomUtløpt()
-
-            logger.info("Lagrer oppgave på deltaker med id ${deltaker.id}")
-            deltakerService.oppdaterDeltaker(deltaker)
-
-            logger.info("Deaktiverer oppgave på min side")
-            mineSiderService.deaktiverOppgave(uløstOppgaveISammePeriode.oppgaveReferanse.toString())
+            oppgaveService.utløperOppgave(deltaker, uløstOppgaveISammePeriode.oppgaveReferanse)
         }
     }
 
@@ -335,20 +309,6 @@ class OppgaveUngSakController(
 
         logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [$eksisterendeFraOgMed/$eksisterendeTilOgMed], Ny: [$fom/$tom]")
         return !eksisterendeFraOgMed.isAfter(tom) && !eksisterendeTilOgMed.isBefore(fom)
-    }
-
-    private fun forsikreOppgaveIkkeErLøst(oppgave: OppgaveDAO) {
-        if (oppgave.status == OppgaveStatus.LØST) {
-            logger.error("Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres.")
-            throw ErrorResponseException(
-                HttpStatus.BAD_REQUEST,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST,
-                    "Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres."
-                ),
-                null
-            )
-        }
     }
 
 

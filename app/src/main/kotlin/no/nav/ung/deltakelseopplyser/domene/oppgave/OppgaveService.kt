@@ -1,6 +1,5 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
-import no.nav.k9.oppgave.OppgaveBekreftelse as UngOppgaveBekreftelse
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretProgramperiodeBekreftelse
@@ -9,12 +8,12 @@ import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
@@ -22,11 +21,15 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.ErrorResponseException
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
+import no.nav.k9.oppgave.OppgaveBekreftelse as UngOppgaveBekreftelse
 
 @Service
 class OppgaveService(
@@ -110,6 +113,38 @@ class OppgaveService(
         return nyOppgave.tilDTO()
     }
 
+    fun avbrytOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID) {
+        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
+        val oppgave = deltaker.oppgaver
+            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
+            .also { forsikreOppgaveIkkeErLøst(it) }
+
+        logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
+        oppgave.markerSomAvbrutt()
+
+        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
+        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+    }
+
+    fun utløperOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID) {
+        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
+        val oppgave = deltaker.oppgaver
+            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
+            .also { forsikreOppgaveIkkeErLøst(it) }
+
+        logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
+        oppgave.markerSomUtløpt()
+
+        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
+        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+    }
+
     private fun forsikreRiktigOppgaveBekreftelse(
         oppgave: OppgaveDAO,
         oppgaveBekreftelse: UngOppgaveBekreftelse,
@@ -129,5 +164,19 @@ class OppgaveService(
                 )
 
         else -> throw IllegalStateException("Uventet oppgavetype=${oppgave.oppgavetype}")
+    }
+
+    private fun forsikreOppgaveIkkeErLøst(oppgave: OppgaveDAO) {
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.error("Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres.")
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres."
+                ),
+                null
+            )
+        }
     }
 }
