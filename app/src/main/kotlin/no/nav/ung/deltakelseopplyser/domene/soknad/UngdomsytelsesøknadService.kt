@@ -7,6 +7,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
@@ -24,7 +25,7 @@ class UngdomsytelsesøknadService(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
     private val microfrontendService: MicrofrontendService,
-    private val mineSiderService: MineSiderService,
+    private val oppgaveService: OppgaveService,
 ) {
 
     private companion object {
@@ -52,9 +53,13 @@ class UngdomsytelsesøknadService(
         val deltakelseDAO = deltakelseRepository.finnDeltakelseSomStarter(deltakterIder, søktFraDato)
             ?: throw IllegalStateException("Fant ingen deltakelse som starter $søktFraDato")
 
-        logger.info("Markerer oppgave som løst for deltaker.")
-        sendSøknadOppgave.markerSomLøst()
-        mineSiderService.deaktiverOppgave(sendSøknadOppgave.oppgaveReferanse.toString())
+        val deltaker = deltakerService.finnDeltakerGittIdent(deltakerIdent)
+            ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
+
+        oppgaveService.løsOppgave(
+            deltaker = deltaker,
+            oppgaveReferanse = sendSøknadOppgave.oppgaveReferanse
+        )
 
         if (deltakelseDAO.søktTidspunkt == null) {
             logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)

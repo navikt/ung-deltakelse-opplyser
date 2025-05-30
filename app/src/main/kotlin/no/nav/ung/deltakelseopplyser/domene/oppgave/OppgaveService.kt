@@ -145,6 +145,22 @@ class OppgaveService(
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
+    fun løsOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID?) {
+        logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
+
+        val oppgave = deltaker.oppgaver
+            .find { it.oppgaveReferanse == oppgaveReferanse }
+            ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
+
+        oppgave.markerSomLøst()
+
+        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
+        deltakerService.oppdaterDeltaker(deltaker)
+
+        logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
+        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+    }
+
     private fun forsikreRiktigOppgaveBekreftelse(
         oppgave: OppgaveDAO,
         oppgaveBekreftelse: UngOppgaveBekreftelse,
