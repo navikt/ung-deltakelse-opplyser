@@ -40,7 +40,7 @@ data class InntektsrapporteringOppgavetypeDataDTO(
     @JsonProperty("rapportertInntekt") val rapportertInntekt: RapportertInntektPeriodeinfoDTO? = null,
 ) : OppgavetypeDataDTO
 
-data class SendSøknadOppgavetypeDataDTO(
+data class SøkYtelseOppgavetypeDataDTO(
     @JsonProperty("fomDato") val fomDato: LocalDate,
 ) : OppgavetypeDataDTO
 
