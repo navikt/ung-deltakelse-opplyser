@@ -97,7 +97,7 @@ class UngdomsprogramRegisterDeltakerController(
         return oppgaveService.lukkOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 
-    @GetMapping("/oppgave/{oppgaveReferanse}/åpnet", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/oppgave/{oppgaveReferanse}/apnet", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Markerer en oppgave som åpnet")
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
