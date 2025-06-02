@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
@@ -182,6 +183,7 @@ class OppgaveUngSakController(
         return opprettOppgave(
             deltaker = deltaker,
             oppgaveReferanse = opprettOppgaveDto.referanse,
+            frist = opprettOppgaveDto.frist,
             oppgaveTypeDataDAO = KontrollerRegisterInntektOppgaveTypeDataDAO(
                 fomDato = opprettOppgaveDto.fomDato,
                 tomDato = opprettOppgaveDto.tomDato,
@@ -232,6 +234,7 @@ class OppgaveUngSakController(
 
         return opprettOppgave(
             deltaker = deltaker,
+            frist = endretProgramperiodeOppgaveDTO.frist,
             oppgaveReferanse = endretProgramperiodeOppgaveDTO.oppgaveReferanse,
             oppgaveTypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
                 programperiode = ProgramperiodeDAO(
@@ -273,6 +276,7 @@ class OppgaveUngSakController(
             uløstOppgaveISammePeriode.tilDTO()
         } else opprettOppgave(
             deltaker = deltaker,
+            frist = opprettInntektsrapporteringOppgaveDTO.frist,
             oppgaveReferanse = opprettInntektsrapporteringOppgaveDTO.referanse,
             oppgaveTypeDataDAO = InntektsrapporteringOppgavetypeDataDAO(
                 fomDato = opprettInntektsrapporteringOppgaveDTO.fomDato,
@@ -285,6 +289,7 @@ class OppgaveUngSakController(
     private fun opprettOppgave(
         deltaker: DeltakerDAO,
         oppgaveReferanse: UUID,
+        frist: LocalDateTime? = null,
         oppgaveTypeDataDAO: OppgavetypeDataDAO,
     ): OppgaveDTO {
         val oppgavetype = when (oppgaveTypeDataDAO) {
@@ -304,7 +309,8 @@ class OppgaveUngSakController(
             oppgavetypeDataDAO = oppgaveTypeDataDAO,
             status = OppgaveStatus.ULØST,
             opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
-            løstDato = null
+            løstDato = null,
+            frist = ZonedDateTime.of(frist, ZoneOffset.UTC),
         )
 
         logger.info("Legger til oppgave med id ${nyOppgave.id} på deltaker med id ${deltaker.id}")

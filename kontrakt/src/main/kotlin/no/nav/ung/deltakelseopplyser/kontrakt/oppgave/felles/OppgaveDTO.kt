@@ -14,4 +14,6 @@ data class OppgaveDTO(
     @JsonProperty("løstDato") val løstDato: ZonedDateTime?,
     @JsonProperty("åpnetDato") val åpnetDato: ZonedDateTime?,
     @JsonProperty("lukketDato") val lukketDato: ZonedDateTime?,
-)
+    @JsonProperty("frist") val frist: ZonedDateTime?,
+
+    )
