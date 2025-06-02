@@ -13,21 +13,22 @@ import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
-import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -55,7 +56,8 @@ import java.time.ZonedDateTime
     UngdomsprogramregisterService::class,
     RapportertInntektService::class,
     DeltakerappConfig::class,
-    MicrofrontendService::class
+    MicrofrontendService::class,
+    OppgaveService::class,
 )
 class UngdomsytelsesøknadServiceTest {
 
@@ -89,19 +91,25 @@ class UngdomsytelsesøknadServiceTest {
         microfrontendRepository.deleteAll()
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
+        justRun { mineSiderService.deaktiverOppgave(any()) }
     }
 
     @Test
-    fun `Forventer at søknad markerer deltakelsen som søkt`() {
-        val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
+    fun `Forventer at søknad markerer deltakelsen som søkt og oppgaven løses`() {
         val søkerIdent = "12345678910"
         val deltakelseStart = "2024-11-04"
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelseOpplysningDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
+        val sendSøknadOppgave = deltakelseOpplysningDTO.oppgaver.find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
+            ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
 
         ungdomsytelsesøknadService.håndterMottattSøknad(
-            ungdomsytelsesøknad = lagUngdomsytelseSøknad(søknadId, søkerIdent, deltakelseStart)
+            ungdomsytelsesøknad = lagUngdomsytelseSøknad(
+                søknadId = sendSøknadOppgave.oppgaveReferanse.toString(),
+                søkerIdent = søkerIdent,
+                deltakelseStart = deltakelseStart
+            )
         )
 
         val deltakelse = ungdomsprogramDeltakelseRepository.findById(deltakelseOpplysningDTO.id!!)
@@ -114,12 +122,15 @@ class UngdomsytelsesøknadServiceTest {
             .isNotNull()
 
         assertThat(microfrontendRepository.findAll())
-            .withFailMessage("Forventet at mikrofrontend ble aktivert for deltakelse med id %s", deltakelseOpplysningDTO.id)
+            .withFailMessage(
+                "Forventet at mikrofrontend ble aktivert for deltakelse med id %s",
+                deltakelseOpplysningDTO.id
+            )
             .isNotEmpty
             .hasSize(1)
             .first()
             .matches { it.deltaker.deltakerIdent == søkerIdent }
-            .matches { it.status == MicrofrontendStatus.ENABLE}
+            .matches { it.status == MicrofrontendStatus.ENABLE }
     }
 
     private fun lagUngdomsytelseSøknad(

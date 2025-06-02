@@ -4,25 +4,22 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.tms.varsel.action.Tekst
-import no.nav.tms.varsel.action.Varseltype
-import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
@@ -32,7 +29,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SettTilUtløptDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
-import no.nav.ung.deltakelseopplyser.utils.DateUtils.måned
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -45,8 +41,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.util.*
 
 
@@ -64,7 +58,7 @@ class OppgaveUngSakController(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
     private val mineSiderService: MineSiderService,
-    private val deltakerappConfig: DeltakerappConfig,
+    private val oppgaveService: OppgaveService,
 ) {
 
     private companion object {
@@ -80,20 +74,10 @@ class OppgaveUngSakController(
         logger.info("Avbryter oppgave med referanse $oppgaveReferanse")
 
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
-
-        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
-        val oppgave = deltaker.oppgaver
-            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
-            .also { forsikreOppgaveIkkeErLøst(it) }
-
-        logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
-        oppgave.markerSomAvbrutt()
-
-        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltakerService.oppdaterDeltaker(deltaker)
-
-        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        oppgaveService.avbrytOppgave(
+            deltaker = deltaker,
+            oppgaveReferanse = oppgaveReferanse
+        )
     }
 
     @PostMapping("/utlopt", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -106,19 +90,10 @@ class OppgaveUngSakController(
 
         val deltaker = deltakerEksistererMedOppgaveReferanse(oppgaveReferanse)
 
-        logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
-        val oppgave = deltaker.oppgaver
-            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
-            .also { forsikreOppgaveIkkeErLøst(it) }
-
-        logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
-        oppgave.markerSomUtløpt()
-
-        logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
-        deltakerService.oppdaterDeltaker(deltaker)
-
-        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        oppgaveService.utløperOppgave(
+            deltaker = deltaker,
+            oppgaveReferanse = oppgaveReferanse
+        )
     }
 
     @PostMapping("/utlopt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -145,14 +120,7 @@ class OppgaveUngSakController(
             }
 
         if (uløstOppgaveISammePeriode != null) {
-            logger.info("Markerer oppgave som utløpt")
-            uløstOppgaveISammePeriode.markerSomUtløpt()
-
-            logger.info("Lagrer oppgave på deltaker med id ${deltaker.id}")
-            deltakerService.oppdaterDeltaker(deltaker)
-
-            logger.info("Deaktiverer oppgave på min side")
-            mineSiderService.deaktiverOppgave(uløstOppgaveISammePeriode.oppgaveReferanse.toString())
+            oppgaveService.utløperOppgave(deltaker, uløstOppgaveISammePeriode.oppgaveReferanse)
         }
     }
 
@@ -187,7 +155,7 @@ class OppgaveUngSakController(
                 }
             }
 
-        return opprettOppgave(
+        return oppgaveService.opprettOppgave(
             deltaker = deltaker,
             oppgaveReferanse = opprettOppgaveDto.referanse,
             oppgaveTypeDataDAO = KontrollerRegisterInntektOppgaveTypeDataDAO(
@@ -238,7 +206,7 @@ class OppgaveUngSakController(
                 }
             }
 
-        return opprettOppgave(
+        return oppgaveService.opprettOppgave(
             deltaker = deltaker,
             oppgaveReferanse = endretProgramperiodeOppgaveDTO.oppgaveReferanse,
             oppgaveTypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
@@ -279,7 +247,7 @@ class OppgaveUngSakController(
         return if (uløstOppgaveISammePeriode != null) {
             logger.warn("Det finnes allerede en uløst oppgave for inntektsrapportering i perioden [${opprettInntektsrapporteringOppgaveDTO.fomDato} - ${opprettInntektsrapporteringOppgaveDTO.tomDato}]. Returnerer oppgave med id ${uløstOppgaveISammePeriode.id}")
             uløstOppgaveISammePeriode.tilDTO()
-        } else opprettOppgave(
+        } else oppgaveService.opprettOppgave(
             deltaker = deltaker,
             oppgaveReferanse = opprettInntektsrapporteringOppgaveDTO.referanse,
             oppgaveTypeDataDAO = InntektsrapporteringOppgavetypeDataDAO(
@@ -288,45 +256,6 @@ class OppgaveUngSakController(
             )
         )
 
-    }
-
-    private fun opprettOppgave(
-        deltaker: DeltakerDAO,
-        oppgaveReferanse: UUID,
-        oppgaveTypeDataDAO: OppgavetypeDataDAO,
-    ): OppgaveDTO {
-        val oppgavetype = when (oppgaveTypeDataDAO) {
-            is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
-            is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
-            is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
-        }
-
-        logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")
-
-        val nyOppgave = OppgaveDAO(
-            id = UUID.randomUUID(),
-            oppgaveReferanse = oppgaveReferanse,
-            deltaker = deltaker,
-            oppgavetype = oppgavetype,
-            oppgavetypeDataDAO = oppgaveTypeDataDAO,
-            status = OppgaveStatus.ULØST,
-            opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
-            løstDato = null
-        )
-
-        logger.info("Legger til oppgave med id ${nyOppgave.id} på deltaker med id ${deltaker.id}")
-        deltaker.leggTilOppgave(nyOppgave)
-        deltakerService.oppdaterDeltaker(deltaker)
-
-        mineSiderService.opprettVarsel(
-            varselId = nyOppgave.oppgaveReferanse.toString(),
-            deltakerIdent = deltaker.deltakerIdent,
-            tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
-            varselLink = deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString()),
-            varseltype = Varseltype.Oppgave
-        )
-
-        return nyOppgave.tilDTO()
     }
 
     private fun forsikreEksistererIProgram(deltakerIdent: String): DeltakerDAO {
@@ -382,20 +311,6 @@ class OppgaveUngSakController(
         return !eksisterendeFraOgMed.isAfter(tom) && !eksisterendeTilOgMed.isBefore(fom)
     }
 
-    private fun forsikreOppgaveIkkeErLøst(oppgave: OppgaveDAO) {
-        if (oppgave.status == OppgaveStatus.LØST) {
-            logger.error("Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres.")
-            throw ErrorResponseException(
-                HttpStatus.BAD_REQUEST,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST,
-                    "Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres."
-                ),
-                null
-            )
-        }
-    }
-
 
     private fun deltakerEksistererMedOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO {
         logger.info("Henter deltaker med oppgaveReferanse $oppgaveReferanse")
@@ -421,32 +336,5 @@ class OppgaveUngSakController(
                 null
             )
         return deltaker
-    }
-
-    private fun OppgavetypeDataDAO.minSideVarselTekster(): List<Tekst> = when (this) {
-        is KontrollerRegisterInntektOppgaveTypeDataDAO -> listOf(
-            Tekst(
-                tekst = "Du har fått en oppgave om å bekrefte inntekten din",
-                spraakkode = "nb",
-                default = true
-            )
-        )
-
-        is EndretProgramperiodeOppgavetypeDataDAO -> listOf(
-            Tekst(
-                tekst = "Du har fått en oppgave om å bekrefte endret programperiode.",
-                spraakkode = "nb",
-                default = true
-            )
-        )
-
-        is InntektsrapporteringOppgavetypeDataDAO -> listOf(
-            Tekst(
-                tekst = "Du har fått en oppgave om å registrere inntekten din for ${fomDato.måned()} dersom du har det.",
-                spraakkode = "nb",
-                default = true
-            )
-        )
-
     }
 }
