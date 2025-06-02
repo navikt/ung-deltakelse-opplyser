@@ -32,7 +32,7 @@ import java.time.LocalDate
         name = "RAPPORTER_INNTEKT"
     ),
 
-    // Inntektsrapportering oppgavetype data
+    // Søk ytelse oppgavetype data
     JsonSubTypes.Type(
         value = SøkYtelseOppgavetypeDataDAO::class,
         name = "SØK_YTELSE"
