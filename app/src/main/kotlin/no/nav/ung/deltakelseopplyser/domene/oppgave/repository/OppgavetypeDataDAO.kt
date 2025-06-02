@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
@@ -30,14 +29,7 @@ import java.time.LocalDate
     JsonSubTypes.Type(
         value = InntektsrapporteringOppgavetypeDataDAO::class,
         name = "RAPPORTER_INNTEKT"
-    ),
-
-    // Søk ytelse oppgavetype data
-    JsonSubTypes.Type(
-        value = SøkYtelseOppgavetypeDataDAO::class,
-        name = "SØK_YTELSE"
     )
-
 )
 sealed class OppgavetypeDataDAO
 
@@ -101,11 +93,4 @@ data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("ytelsetype") val ytelsetype: YtelseType,
 )
-
-data class SøkYtelseOppgavetypeDataDAO(
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty(defaultValue = "n/a")
-    val fomDato: LocalDate,
-) : OppgavetypeDataDAO()
-
 
