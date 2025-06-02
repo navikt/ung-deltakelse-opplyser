@@ -110,14 +110,9 @@ class UngdomsprogramregisterService(
     }
 
     @Transactional(TRANSACTION_MANAGER)
-    fun fjernFraProgram(deltakerId: UUID): Boolean {
+    fun fjernFraProgram(deltaker: DeltakerDAO): Boolean {
+        val deltakerId = deltaker.id
         logger.info("Fjerner deltaker fra programmet med id $deltakerId")
-
-        val deltaker = deltakerService.finnDeltakerGittId(deltakerId)
-        if (!deltaker.isPresent) {
-            logger.info("Deltaker med id $deltakerId eksisterer ikke. Returnerer true")
-            return true
-        }
 
         val deltakelser = hentAlleForDeltakerId(deltakerId)
         val harSøkteDeltakelser = deltakelser.any { it.søktTidspunkt != null }
