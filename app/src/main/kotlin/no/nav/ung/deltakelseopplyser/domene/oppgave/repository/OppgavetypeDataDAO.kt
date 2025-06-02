@@ -103,7 +103,9 @@ data class YtelseRegisterInntektDAO(
 )
 
 data class SøkYtelseOppgavetypeDataDAO(
-    @JsonProperty("fomDato") val fomDato: LocalDate,
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty(defaultValue = "n/a")
+    val fomDato: LocalDate,
 ) : OppgavetypeDataDAO()
 
 
