@@ -7,16 +7,13 @@ import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
@@ -46,6 +43,7 @@ class UngdomsprogramRegisterDeltakerController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakerService: DeltakerService,
     private val mineSiderService: MineSiderService,
+    private val oppgaveService: OppgaveService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
 
@@ -95,36 +93,8 @@ class UngdomsprogramRegisterDeltakerController(
     @Operation(summary = "Markerer en oppgave som lukket")
     @ResponseStatus(HttpStatus.OK)
     fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        val OPPGAVER_SOM_STØTTER_Å_LUKKES = listOf(Oppgavetype.RAPPORTER_INNTEKT)
 
-        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
-
-        if(!OPPGAVER_SOM_STØTTER_Å_LUKKES.contains(oppgave.oppgavetype)) {
-            throw ErrorResponseException(
-                HttpStatus.BAD_REQUEST,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST,
-                    "Oppgave med referanse $oppgaveReferanse kan kun lukkes dersom den er av type ${OPPGAVER_SOM_STØTTER_Å_LUKKES.joinToString(",")}"
-                ),
-                null
-            )
-        }
-
-        if (oppgave.status != OppgaveStatus.ULØST) {
-            throw ErrorResponseException(
-                HttpStatus.BAD_REQUEST,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST,
-                    "Oppgave med referanse $oppgaveReferanse kan kun lukkes dersom den er uløst."
-                ),
-                null
-            )
-        }
-
-        val oppdatertOppgave = oppgave.markerSomLukket()
-        deltakerService.oppdaterDeltaker(deltaker)
-
-        return oppdatertOppgave.tilDTO()
+        return oppgaveService.lukkOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 
     @GetMapping("/oppgave/{oppgaveReferanse}/apnet", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -132,30 +102,14 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
-
-        val oppdatertOppgave = oppgave.markerSomÅpnet()
-        deltakerService.oppdaterDeltaker(deltaker)
-
-        mineSiderService.deaktiverOppgave(oppgaveReferanse.toString())
-
-        return oppdatertOppgave.tilDTO()
+        return oppgaveService.åpneOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 
-    private fun hentDeltakerOppgave(oppgaveReferanse: UUID): Pair<DeltakerDAO, OppgaveDAO> {
-        val deltaker = (deltakerService.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
-            ?: throw ErrorResponseException(
-                HttpStatus.NOT_FOUND,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.NOT_FOUND,
-                    "Fant ingen deltaker med oppgave referanse $oppgaveReferanse."
-                ),
-                null
-            ))
-
-        val oppgaveDAO = deltakerService.hentDeltakersOppgaver(deltaker.deltakerIdent)
-            .find { it.oppgaveReferanse == oppgaveReferanse }!! // Funnet deltaker via oppgave referanse over.
-
-        return Pair(deltaker, oppgaveDAO)
+    @GetMapping("/oppgave/{oppgaveReferanse}/løst", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Markerer en oppgave som åpnet")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun markerOppgaveSomLøst(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
+        return oppgaveService.løsOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 }

@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import no.nav.tms.varsel.action.Tekst
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
+import no.nav.ung.deltakelseopplyser.utils.DateUtils.måned
 import java.time.LocalDate
 
 @JsonTypeInfo(
@@ -27,26 +28,54 @@ import java.time.LocalDate
     ),
 
     // Inntektsrapportering oppgavetype data
-    JsonSubTypes.Type(
-        value = InntektsrapporteringOppgavetypeDataDAO::class,
-        name = "RAPPORTER_INNTEKT"
-    ),
+    JsonSubTypes.Type(value = InntektsrapporteringOppgavetypeDataDAO::class, name = "RAPPORTER_INNTEKT"),
 
-    // Søk ytelse oppgavetype data
-    JsonSubTypes.Type(
-        value = SøkYtelseOppgavetypeDataDAO::class,
-        name = "SØK_YTELSE"
-    )
-
+    // Send søknad oppgavetype data
+    JsonSubTypes.Type(value = SøkYtelseOppgavetypeDataDAO::class, name = "SØK_YTELSE")
 )
-sealed class OppgavetypeDataDAO
+sealed class OppgavetypeDataDAO {
+
+    fun minSideVarselTekster(): List<Tekst> = when (this) {
+        is KontrollerRegisterInntektOppgaveTypeDataDAO -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å bekrefte inntekten din",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
+        is EndretProgramperiodeOppgavetypeDataDAO -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å bekrefte endret programperiode.",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
+        is InntektsrapporteringOppgavetypeDataDAO -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å registrere inntekten din for ${fomDato.måned()} dersom du har det.",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
+        is SøkYtelseOppgavetypeDataDAO -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å sende inn søknad.",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+    }
+}
 
 data class EndretProgramperiodeOppgavetypeDataDAO(
     @JsonProperty("programperiode") val programperiode: ProgramperiodeDAO,
     @JsonProperty("forrigeProgramperiode") val forrigeProgramperiode: ProgramperiodeDAO? = null,
 ) : OppgavetypeDataDAO()
 
-data class ProgramperiodeDAO (
+data class ProgramperiodeDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty("fomDato") val fomDato: LocalDate,
 
@@ -65,6 +94,10 @@ data class KontrollerRegisterInntektOppgaveTypeDataDAO(
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
 ) : OppgavetypeDataDAO()
 
+data class SøkYtelseOppgavetypeDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("fomDato") val fomDato: LocalDate
+) : OppgavetypeDataDAO()
 
 data class RegisterinntektDAO(
     @JsonProperty("arbeidOgFrilansInntekter") val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDAO>,
@@ -90,7 +123,7 @@ data class InntektsrapporteringOppgavetypeDataDAO(
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
-): OppgavetypeDataDAO()
+) : OppgavetypeDataDAO()
 
 data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
@@ -101,11 +134,4 @@ data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("ytelsetype") val ytelsetype: YtelseType,
 )
-
-data class SøkYtelseOppgavetypeDataDAO(
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty(defaultValue = "n/a")
-    val fomDato: LocalDate,
-) : OppgavetypeDataDAO()
-
 
