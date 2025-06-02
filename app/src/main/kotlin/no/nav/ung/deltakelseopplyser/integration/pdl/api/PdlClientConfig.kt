@@ -62,7 +62,7 @@ class PdlClientConfig(
             .filter(requestLoggerInterceptor(logger))
             .filter(requestTracingInterceptor())
             .defaultRequest {
-                it.header("Tema", "OMS")
+                it.header("Tema", "UNG")
                 it.header(BEHANLINGSNUMMER, "B950")
             }
     )
