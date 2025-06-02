@@ -30,13 +30,9 @@ data class RegisterinntektDTO(
     @JsonProperty("totalInntekt") val totalInntekt: Int = totalInntektArbeidOgFrilans + totalInntektYtelse,
 )
 
-data class InntektsrapporteringOppgavetypeData(
+data class InntektsrapporteringOppgavetypeDataDTO(
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
-)
-
-data class InntektsrapporteringOppgavetypeDataDTO(
-    @JsonUnwrapped val base: InntektsrapporteringOppgavetypeData,
     @JsonProperty("rapportertInntekt") val rapportertInntekt: RapportertInntektPeriodeinfoDTO? = null,
 ) : OppgavetypeDataDTO
 
