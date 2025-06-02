@@ -213,9 +213,5 @@ class UngdomsprogramRegisterVeilederController(
                 )
             }
         }
-
-        if (deltakerOpt.isPresent) {
-
-        }
     }
 }
