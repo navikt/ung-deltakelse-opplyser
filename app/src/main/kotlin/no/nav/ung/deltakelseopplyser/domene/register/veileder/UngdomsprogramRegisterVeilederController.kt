@@ -5,10 +5,14 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.k9.felles.log.audit.EventClassId
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.*
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.CREATE
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.READ
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.UPDATE
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -19,7 +23,15 @@ import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
 
@@ -33,6 +45,7 @@ class UngdomsprogramRegisterVeilederController(
     private val sporingsloggService: SporingsloggService,
     private val tilgangskontrollService: TilgangskontrollService,
     private val registerService: UngdomsprogramregisterService,
+    private val deltakerService: DeltakerService,
 ) {
 
     @PostMapping(
@@ -185,18 +198,20 @@ class UngdomsprogramRegisterVeilederController(
     @Operation(summary = "Fjern en deltaker fra ungdomsprogrammet")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun fjernFraProgram(@PathVariable deltakerId: UUID) {
-        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakerId)
-        tilgangskontrollService.krevAnsattTilgang(
-            UPDATE,
-            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
-        )
-        registerService.fjernFraProgram(deltakerId).also {
-            sporingsloggService.logg(
-                "/deltaker/{deltakerId}/fjern",
-                "Fjernet deltaker med id $deltakerId",
-                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
-                EventClassId.AUDIT_UPDATE
+        deltakerService.finnDeltakerGittId(deltakerId).ifPresent { deltaker: DeltakerDAO ->
+            tilgangskontrollService.krevAnsattTilgang(
+                UPDATE,
+                listOf(PersonIdent.fra(deltaker.deltakerIdent))
             )
+
+            registerService.fjernFraProgram(deltaker).also {
+                sporingsloggService.logg(
+                    "/deltaker/{deltakerId}/fjern",
+                    "Fjernet deltaker med id $deltakerId",
+                    PersonIdent.fra(deltaker.deltakerIdent),
+                    EventClassId.AUDIT_UPDATE
+                )
+            }
         }
     }
 }
