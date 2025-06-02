@@ -11,18 +11,10 @@ import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
@@ -299,6 +291,7 @@ class OppgaveUngSakController(
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
             is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
             is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
+            is SøkYtelseOppgavetypeDataDAO -> Oppgavetype.SØK_YTELSE
         }
 
         logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")
@@ -443,6 +436,14 @@ class OppgaveUngSakController(
         is InntektsrapporteringOppgavetypeDataDAO -> listOf(
             Tekst(
                 tekst = "Du har fått en oppgave om å registrere inntekten din for ${fomDato.måned()} dersom du har det.",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
+        is SøkYtelseOppgavetypeDataDAO -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å sende inn søknad.",
                 spraakkode = "nb",
                 default = true
             )
