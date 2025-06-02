@@ -103,7 +103,7 @@ class UngdomsprogramregisterService(
             deltaker = deltakerDAO,
             oppgaveReferanse = UUID.randomUUID(),
             oppgaveTypeDataDAO = SøkYtelseOppgavetypeDataDAO(fomDato = ungdomsprogramDAO.getFom()),
-            aktivFremTil = ZonedDateTime.now().plusMonths(3)
+            frist = ZonedDateTime.now().plusMonths(3)
         )
 
         return ungdomsprogramDAO.mapToDTO()

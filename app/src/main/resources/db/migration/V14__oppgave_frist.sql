@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS oppgave
+    ADD COLUMN frist TIMESTAMP;

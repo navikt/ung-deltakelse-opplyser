@@ -49,6 +49,9 @@ class OppgaveDAO(
     @Column(name = "oppgavetype", nullable = false)
     val oppgavetype: Oppgavetype,
 
+    @Column(name = "frist", nullable = true)
+    val frist: ZonedDateTime? = null,
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     var status: OppgaveStatus,
@@ -90,6 +93,7 @@ class OppgaveDAO(
             løstDato = løstDato,
             åpnetDato = åpnetDato,
             lukketDato = lukketDato,
+            frist = frist
         )
 
         fun OppgaveBekreftelse.tilDTO(): BekreftelseDTO = BekreftelseDTO(
