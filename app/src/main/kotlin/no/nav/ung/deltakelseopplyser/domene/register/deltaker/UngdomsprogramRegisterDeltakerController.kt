@@ -8,7 +8,6 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
@@ -42,7 +41,6 @@ import java.util.*
 class UngdomsprogramRegisterDeltakerController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakerService: DeltakerService,
-    private val mineSiderService: MineSiderService,
     private val oppgaveService: OppgaveService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
@@ -58,6 +56,7 @@ class UngdomsprogramRegisterDeltakerController(
     @PutMapping("/{id}/marker-har-sokt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Markerer at deltakelsen er søkt om")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseOpplysningDTO {
         val alleDeltakersIdenter = deltakerService.hentDeltakterIdenter(tokenValidationContextHolder.personIdent())
         val personPåDeltakelsen = registerService.hentFraProgram(id).deltaker.deltakerIdent
@@ -92,6 +91,7 @@ class UngdomsprogramRegisterDeltakerController(
     @GetMapping("/oppgave/{oppgaveReferanse}/lukk", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Markerer en oppgave som lukket")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
 
         return oppgaveService.lukkOppgave(oppgaveReferanse = oppgaveReferanse)
