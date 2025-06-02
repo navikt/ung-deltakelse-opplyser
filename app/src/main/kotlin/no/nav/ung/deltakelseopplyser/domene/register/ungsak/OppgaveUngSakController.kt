@@ -41,6 +41,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 
@@ -158,7 +160,7 @@ class OppgaveUngSakController(
         return oppgaveService.opprettOppgave(
             deltaker = deltaker,
             oppgaveReferanse = opprettOppgaveDto.referanse,
-            frist = opprettOppgaveDto.frist,
+            frist = ZonedDateTime.of(opprettOppgaveDto.frist,ZoneOffset.UTC),
             oppgaveTypeDataDAO = KontrollerRegisterInntektOppgaveTypeDataDAO(
                 fomDato = opprettOppgaveDto.fomDato,
                 tomDato = opprettOppgaveDto.tomDato,
@@ -209,7 +211,7 @@ class OppgaveUngSakController(
 
         return oppgaveService.opprettOppgave(
             deltaker = deltaker,
-            frist = endretProgramperiodeOppgaveDTO.frist,
+            frist = ZonedDateTime.of(endretProgramperiodeOppgaveDTO.frist, ZoneOffset.UTC),
             oppgaveReferanse = endretProgramperiodeOppgaveDTO.oppgaveReferanse,
             oppgaveTypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
                 programperiode = ProgramperiodeDAO(
@@ -251,7 +253,7 @@ class OppgaveUngSakController(
             uløstOppgaveISammePeriode.tilDTO()
         } else oppgaveService.opprettOppgave(
             deltaker = deltaker,
-            frist = opprettInntektsrapporteringOppgaveDTO.frist,
+            frist = ZonedDateTime.of(opprettInntektsrapporteringOppgaveDTO.frist, ZoneOffset.UTC),
             oppgaveReferanse = opprettInntektsrapporteringOppgaveDTO.referanse,
             oppgaveTypeDataDAO = InntektsrapporteringOppgavetypeDataDAO(
                 fomDato = opprettInntektsrapporteringOppgaveDTO.fomDato,

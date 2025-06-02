@@ -75,7 +75,7 @@ class OppgaveService(
         deltaker: DeltakerDAO,
         oppgaveReferanse: UUID,
         oppgaveTypeDataDAO: OppgavetypeDataDAO,
-        aktivFremTil: ZonedDateTime? = null,
+        frist: ZonedDateTime
     ): OppgaveDTO {
         val oppgavetype = when (oppgaveTypeDataDAO) {
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
@@ -94,6 +94,7 @@ class OppgaveService(
             oppgavetypeDataDAO = oppgaveTypeDataDAO,
             status = OppgaveStatus.ULØST,
             opprettetDato = ZonedDateTime.now(ZoneOffset.UTC),
+            frist = frist,
             løstDato = null
         )
 
@@ -107,7 +108,7 @@ class OppgaveService(
             tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
             varselLink = deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString()),
             varseltype = Varseltype.Oppgave,
-            aktivFremTil = aktivFremTil,
+            aktivFremTil = frist,
         )
 
         return nyOppgave.tilDTO()
