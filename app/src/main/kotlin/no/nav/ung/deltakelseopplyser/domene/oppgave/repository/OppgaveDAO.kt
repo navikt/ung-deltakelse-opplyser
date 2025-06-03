@@ -17,7 +17,6 @@ class OppgaveDAO(
     @Column(name = "id", nullable = false)
     val id: UUID,
 
-    @Id
     @Column(name = "oppgave_referanse", nullable = false)
     val oppgaveReferanse: UUID,
 
