@@ -52,8 +52,7 @@ class RapportertInntektService(
         return RapportertInntektPeriodeinfoDTO(
             fraOgMed = oppgittInntektForPeriode.periode.fraOgMed,
             tilOgMed = oppgittInntektForPeriode.periode.tilOgMed,
-            arbeidstakerOgFrilansInntekt = oppgittInntektForPeriode.arbeidstakerOgFrilansInntekt,
-            inntektFraYtelse = oppgittInntektForPeriode.ytelse
+            arbeidstakerOgFrilansInntekt = oppgittInntektForPeriode.arbeidstakerOgFrilansInntekt
         )
     }
 }
