@@ -19,19 +19,26 @@ class RapportertInntektService(
     }
 
     fun leggPåRapportertInntekt(oppgaveDTO: OppgaveDTO): OppgaveDTO {
-        return rapportertInntektRepository
+        val inntektDAO = rapportertInntektRepository
             .finnRapportertInntektGittOppgaveReferanse(oppgaveDTO.oppgaveReferanse.toString())
-            ?.let { ungRapportertInntektDAO ->
-                JsonUtils.fromString(ungRapportertInntektDAO.inntekt, Søknad::class.java)
-            }?.rapportertInntektPeriodeInfo()
-            ?.also { logger.info("Fant rapportert inntekt i perioden [${it.fraOgMed} - ${it.tilOgMed}] for oppgave med referanse $oppgaveDTO: $it") }
-            .let {
-                val inntektsrapporteringOppgavetypeDataDTO =
-                    oppgaveDTO.oppgavetypeData as? InntektsrapporteringOppgavetypeDataDTO ?: error("OppgavetypeDataDTO er ikke av type InntektsrapporteringOppgavetypeDataDTO")
 
-                logger.info("Oppdaterer oppgave med rapportert inntekt for oppgaveReferanse $oppgaveDTO: $it")
+        if (inntektDAO == null) {
+            logger.info("Ingen rapportert inntekt funnet for oppgave med referanse ${oppgaveDTO.oppgaveReferanse}. Returnerer oppgave uten endringer.")
+            return oppgaveDTO
+        }
+
+        return inntektDAO
+            .let { ungRapportertInntektDAO -> JsonUtils.fromString(ungRapportertInntektDAO.inntekt, Søknad::class.java)}
+            .rapportertInntektPeriodeInfo()
+            .also { logger.info("Fant rapportert inntekt i perioden [${it.fraOgMed} - ${it.tilOgMed}] for oppgave med referanse $oppgaveDTO: $it") }
+            .let { rapportertInntektPeriodeinfoDTO: RapportertInntektPeriodeinfoDTO ->
+                val inntektsrapporteringOppgavetypeDataDTO =
+                    oppgaveDTO.oppgavetypeData as? InntektsrapporteringOppgavetypeDataDTO
+                        ?: error("OppgavetypeDataDTO er ikke av type InntektsrapporteringOppgavetypeDataDTO")
+
+                logger.info("Oppdaterer oppgave med rapportert inntekt for oppgaveReferanse $oppgaveDTO: $rapportertInntektPeriodeinfoDTO")
                 oppgaveDTO.copy(
-                    oppgavetypeData = inntektsrapporteringOppgavetypeDataDTO.copy(rapportertInntekt = it)
+                    oppgavetypeData = inntektsrapporteringOppgavetypeDataDTO.copy(rapportertInntekt = rapportertInntektPeriodeinfoDTO)
                 )
             }
     }

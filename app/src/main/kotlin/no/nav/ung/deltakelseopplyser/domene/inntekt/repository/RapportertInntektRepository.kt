@@ -13,7 +13,7 @@ interface RapportertInntektRepository : JpaRepository<UngRapportertInntektDAO, S
         value = """
             SELECT u.*
             FROM ung_rapportert_inntekt u
-            WHERE u.inntekt->'søknad'->>'søknadId' = :oppgaveReferanse
+            WHERE u.inntekt->>'søknadId' = :oppgaveReferanse
             LIMIT 1
         """,
         nativeQuery = true
