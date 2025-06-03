@@ -1,19 +1,21 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonUnwrapped
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportertInntektPeriodeinfoDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType
 interface OppgavetypeDataDTO
 
+data class EndretStartdatoDataDTO(
+    @JsonProperty("nyStartdato") val nyStartdato: LocalDate,
+    @JsonProperty("forrigeStartdato") val forrigeStartdato: LocalDate,
+) : OppgavetypeDataDTO
 
-data class EndretProgramperiodeDataDTO(
-    @JsonProperty("programperiode") val programperiode: ProgramperiodeDTO,
-    @JsonProperty("forrigeProgramperiode") val forrigeProgramperiode: ProgramperiodeDTO? = null,
+data class EndretSluttdatoDataDTO(
+    @JsonProperty("nySluttdato") val nySluttdato: LocalDate,
+    @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
 ) : OppgavetypeDataDTO
 
 data class KontrollerRegisterinntektOppgavetypeDataDTO(

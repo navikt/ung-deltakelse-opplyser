@@ -2,10 +2,11 @@ package no.nav.ung.deltakelseopplyser.domene.deltaker
 
 import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.assertj.core.api.Assertions.assertThat
@@ -69,12 +70,10 @@ class DeltakerRepositoryTest {
                 id = UUID.randomUUID(),
                 oppgaveReferanse = oppgaveReferanse,
                 deltaker = deltaker,
-                oppgavetype = Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE,
-                oppgavetypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
-                    programperiode = ProgramperiodeDAO(
-                        fomDato = LocalDate.now(),
-                        tomDato = null
-                    )
+                oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
+                oppgavetypeDataDAO = EndretStartdatoOppgaveDataDAO(
+                    nyStartdato = LocalDate.now(),
+                    forrigeStartdato = LocalDate.now().plusWeeks(1),
                 ),
                 status = OppgaveStatus.ULØST,
             )
@@ -113,12 +112,10 @@ class DeltakerRepositoryTest {
                 id = UUID.randomUUID(),
                 oppgaveReferanse = oppgaveReferanse,
                 deltaker = deltaker,
-                oppgavetype = Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE,
-                oppgavetypeDataDAO = EndretProgramperiodeOppgavetypeDataDAO(
-                    programperiode = ProgramperiodeDAO(
-                        fomDato = LocalDate.now(),
-                        tomDato = null
-                    )
+                oppgavetype = Oppgavetype.BEKREFT_ENDRET_STARTDATO,
+                oppgavetypeDataDAO = EndretStartdatoOppgaveDataDAO(
+                    nyStartdato = LocalDate.now(),
+                    forrigeStartdato = LocalDate.now().plusWeeks(1),
                 ),
                 status = OppgaveStatus.ULØST,
             )

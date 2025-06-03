@@ -2,7 +2,8 @@ package no.nav.ung.deltakelseopplyser.domene.oppgave
 
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
-import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretProgramperiodeBekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretSluttdatoBekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretStartdatoBekreftelse
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
@@ -10,13 +11,8 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretProgramperiodeOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -79,7 +75,8 @@ class OppgaveService(
     ): OppgaveDTO {
         val oppgavetype = when (oppgaveTypeDataDAO) {
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
-            is EndretProgramperiodeOppgavetypeDataDAO -> Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE
+            is EndretStartdatoOppgaveDataDAO -> Oppgavetype.BEKREFT_ENDRET_STARTDATO
+            is EndretSluttdatoOppgaveDataDAO -> Oppgavetype.BEKREFT_ENDRET_SLUTTDATO
             is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
             is SøkYtelseOppgavetypeDataDAO -> Oppgavetype.SØK_YTELSE
         }
@@ -238,8 +235,16 @@ class OppgaveService(
                             "men fikk ${oppgaveBekreftelse::class.simpleName}"
                 )
 
-        Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE ->
-            oppgaveBekreftelse.getBekreftelse() as? EndretProgramperiodeBekreftelse
+        Oppgavetype.BEKREFT_ENDRET_STARTDATO ->
+            oppgaveBekreftelse.getBekreftelse() as? EndretStartdatoBekreftelse
+                ?: throw IllegalStateException(
+                    "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
+                            "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
+                )
+
+
+        Oppgavetype.BEKREFT_ENDRET_SLUTTDATO ->
+            oppgaveBekreftelse.getBekreftelse() as? EndretSluttdatoBekreftelse
                 ?: throw IllegalStateException(
                     "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"

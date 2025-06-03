@@ -1,28 +1,9 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave.repository
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
+import jakarta.persistence.*
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretProgramperiodeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SøkYtelseOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.Type
 import org.hibernate.type.SqlTypes
@@ -101,17 +82,14 @@ class OppgaveDAO(
         )
 
         fun OppgavetypeDataDAO.tilDTO(): OppgavetypeDataDTO = when (this) {
-            is EndretProgramperiodeOppgavetypeDataDAO -> EndretProgramperiodeDataDTO(
-                programperiode = ProgramperiodeDTO(
-                    fomDato = programperiode.fomDato,
-                    tomDato = programperiode.tomDato
-                ),
-                forrigeProgramperiode = forrigeProgramperiode?.let {
-                    ProgramperiodeDTO(
-                        fomDato = it.fomDato,
-                        tomDato = it.tomDato
-                    )
-                }
+            is EndretStartdatoOppgaveDataDAO -> EndretStartdatoDataDTO(
+                nyStartdato = this.nyStartdato,
+                forrigeStartdato = this.forrigeStartdato,
+            )
+
+            is EndretSluttdatoOppgaveDataDAO -> EndretSluttdatoDataDTO(
+                nySluttdato = this.nySluttdato,
+                forrigeSluttdato = this.forrigeSluttdato,
             )
 
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(

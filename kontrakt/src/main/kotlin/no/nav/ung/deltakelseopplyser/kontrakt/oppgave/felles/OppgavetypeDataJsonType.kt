@@ -3,12 +3,14 @@ package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 import com.fasterxml.jackson.annotation.JacksonAnnotationsInside
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
 
 /**
  * Denne annotasjonen brukes for polymorf serialisering og deserialisering
  * av oppgavetype-data. Ved å bruke denne annotasjonen vil Jackson inkludere
  * en "type"-egenskap i JSON-representasjonen som angir hvilken konkret subtype
- * som skal benyttes (f.eks. "BEKREFT_ENDRET_PROGRAMPERIODE" eller "BEKREFT_AVVIK_REGISTERINNTEKT").
+ * som skal benyttes (f.eks. "BEKREFT_ENDRET_STARTDATO" eller "BEKREFT_AVVIK_REGISTERINNTEKT").
  *
  * Denne annotasjonen kan brukes på både entiteter og DTO-er for å unngå duplisering
  * av Jacksons @JsonTypeInfo og @JsonSubTypes-annotasjoner.
@@ -22,8 +24,17 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     property = "type"
 )
 @JsonSubTypes(
-    // Endret programperiode oppgavetype data
-    JsonSubTypes.Type(value = EndretProgramperiodeDataDTO::class, name = "BEKREFT_ENDRET_PROGRAMPERIODE"),
+    // Endret startdato oppgavetype data
+    JsonSubTypes.Type(
+        value = EndretStartdatoOppgaveDTO::class,
+        name = "BEKREFT_ENDRET_STARTDATO"
+    ),
+
+    // Endret sluttdato oppgavetype data
+    JsonSubTypes.Type(
+        value = EndretSluttdatoOppgaveDTO::class,
+        name = "BEKREFT_ENDRET_SLUTTDATO"
+    ),
 
     // Kontroller registerinntekt oppgavetype data
     JsonSubTypes.Type(
