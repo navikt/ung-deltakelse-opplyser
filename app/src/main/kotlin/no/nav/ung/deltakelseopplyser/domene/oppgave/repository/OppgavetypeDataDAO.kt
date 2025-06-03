@@ -18,8 +18,11 @@ import java.time.LocalDate
     property = "type"
 )
 @JsonSubTypes(
-    // Endret programperiode oppgavetype data
-    JsonSubTypes.Type(value = EndretProgramperiodeOppgavetypeDataDAO::class, name = "BEKREFT_ENDRET_PROGRAMPERIODE"),
+    // Endret startdato oppgavetype data
+    JsonSubTypes.Type(value = EndretStartdatoOppgaveDataDAO::class, name = "BEKREFT_ENDRET_STARTDATO"),
+
+    // Endret sluttdato oppgavetype data
+    JsonSubTypes.Type(value = EndretSluttdatoOppgaveDataDAO::class, name = "BEKREFT_ENDRET_SLUTTDATO"),
 
     // Kontroller registerinntekt oppgavetype data
     JsonSubTypes.Type(
@@ -44,9 +47,17 @@ sealed class OppgavetypeDataDAO {
             )
         )
 
-        is EndretProgramperiodeOppgavetypeDataDAO -> listOf(
+        is EndretStartdatoOppgaveDataDAO -> listOf(
             Tekst(
-                tekst = "Du har fått en oppgave om å bekrefte endret programperiode.",
+                tekst = "Du har fått en oppgave om å bekrefte endret startdato.",
+                spraakkode = "nb",
+                default = true
+            )
+        )
+
+        is EndretSluttdatoOppgaveDataDAO -> listOf(
+            Tekst(
+                tekst = "Du har fått en oppgave om å bekrefte endret sluttdato.",
                 spraakkode = "nb",
                 default = true
             )
@@ -70,10 +81,21 @@ sealed class OppgavetypeDataDAO {
     }
 }
 
-data class EndretProgramperiodeOppgavetypeDataDAO(
-    @JsonProperty("programperiode") val programperiode: ProgramperiodeDAO,
-    @JsonProperty("forrigeProgramperiode") val forrigeProgramperiode: ProgramperiodeDAO? = null,
+data class EndretStartdatoOppgaveDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("nyStartdato") val nyStartdato: LocalDate,
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("forrigeStartdato") val forrigeStartdato: LocalDate,
 ) : OppgavetypeDataDAO()
+
+data class EndretSluttdatoOppgaveDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("nySluttdato") val nySluttdato: LocalDate,
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
+): OppgavetypeDataDAO()
 
 data class ProgramperiodeDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")

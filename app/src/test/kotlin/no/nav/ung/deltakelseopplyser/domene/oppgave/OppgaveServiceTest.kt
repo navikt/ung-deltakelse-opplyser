@@ -8,12 +8,12 @@ import io.mockk.verify
 import no.nav.k9.oppgave.OppgaveBekreftelse
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
-import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretProgramperiodeBekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretSluttdatoBekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretStartdatoBekreftelse
 import no.nav.k9.søknad.felles.Kildesystem
 import no.nav.k9.søknad.felles.Versjon
 import no.nav.k9.søknad.felles.personopplysninger.Søker
 import no.nav.k9.søknad.felles.type.NorskIdentitetsnummer
-import no.nav.k9.søknad.felles.type.Periode
 import no.nav.k9.søknad.felles.type.SøknadId
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
@@ -27,18 +27,10 @@ import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakControl
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretProgramperiodeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SøkYtelseOppgavetypeDataDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.EndretProgamperiodeOppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.periodeendring.ProgramperiodeDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektArbeidOgFrilansDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektYtelseDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.*
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -124,20 +116,14 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `Gitt det mottas bekreftelse på endret periode oppgave, forvent at den lagres og hentes opp igjen`() {
+    fun `Gitt det mottas bekreftelse på endret startdato oppgave, forvent at den lagres og hentes opp igjen`() {
         val orginalStartdato: LocalDate = LocalDate.now()
         meldInnIProgrammet(deltakerIdent, orginalStartdato)
 
-        endreProgramperiode(
+        endreStartdato(
             deltakerIdent = deltakerIdent,
-            originalPeriode = ProgramperiodeDTO(
-                fomDato = orginalStartdato,
-                tomDato = null
-            ),
-            nyPeriode = ProgramperiodeDTO(
-                fomDato = orginalStartdato.plusDays(3),
-                tomDato = null
-            )
+            originalStartdato = orginalStartdato,
+            nyStartdato = orginalStartdato.plusDays(3)
         )
 
         val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).flatMap { it.oppgaver }
@@ -145,20 +131,20 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             .hasSize(2)
             .anyMatch { it.oppgavetype == Oppgavetype.SØK_YTELSE }
             .anyMatch { it.oppgavetypeData is SøkYtelseOppgavetypeDataDTO }
-            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE }
-            .anyMatch { it.oppgavetypeData is EndretProgramperiodeDataDTO }
+            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }
+            .anyMatch { it.oppgavetypeData is EndretStartdatoDataDTO }
 
-        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE }.oppgaveReferanse
+        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }.oppgaveReferanse
 
         oppgaveService.håndterMottattOppgavebekreftelse(
             oppgaveBekreftelse(
                 oppgaveReferanse,
                 deltakerIdent,
-                EndretProgramperiodeBekreftelse(
+                EndretStartdatoBekreftelse(
                     oppgaveReferanse,
-                    Periode(LocalDate.now(), LocalDate.now().plusDays(30)),
+                    LocalDate.now(),
                     false
-                ).medUttalelseFraBruker("Det er feil med datoene")
+                ).medUttalelseFraBruker("Det er feil med datoen")
             )
         )
 
@@ -166,13 +152,60 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         val oppgave = oppdatertDeltakelse.oppgaver.first { it.oppgaveReferanse == oppgaveReferanse }
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
-        assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretProgramperiodeDataDTO::class.java)
+        assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretStartdatoDataDTO::class.java)
         assertThat(oppgave.bekreftelse).isNotNull
         assertThat(oppgave.bekreftelse?.harGodtattEndringen).isFalse()
-        assertThat(oppgave.bekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoene")
+        assertThat(oppgave.bekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
 
         verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
+
+
+    @Test
+    fun `Gitt det mottas bekreftelse på endret sluttdato oppgave, forvent at den lagres og hentes opp igjen`() {
+        val startdato: LocalDate = LocalDate.now()
+        meldInnIProgrammet(deltakerIdent, startdato)
+
+        endreSluttdato(
+            deltakerIdent = deltakerIdent,
+            nySluttdato = startdato.plusDays(3),
+            originalSluttdato = null
+        )
+
+        val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).flatMap { it.oppgaver }
+        assertThat(oppgaver)
+            .hasSize(2)
+            .anyMatch { it.oppgavetype == Oppgavetype.SØK_YTELSE }
+            .anyMatch { it.oppgavetypeData is SøkYtelseOppgavetypeDataDTO }
+            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO }
+            .anyMatch { it.oppgavetypeData is EndretSluttdatoDataDTO }
+
+        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO }.oppgaveReferanse
+
+        oppgaveService.håndterMottattOppgavebekreftelse(
+            oppgaveBekreftelse(
+                oppgaveReferanse,
+                deltakerIdent,
+                EndretSluttdatoBekreftelse(
+                    oppgaveReferanse,
+                    startdato.plusDays(3),
+                    false
+                ).medUttalelseFraBruker("Det er feil med datoen")
+            )
+        )
+
+        val oppdatertDeltakelse = deltakelseService.hentAlleForDeltaker(deltakerIdent).first()
+        val oppgave = oppdatertDeltakelse.oppgaver.first { it.oppgaveReferanse == oppgaveReferanse }
+        assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
+        assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
+        assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretSluttdatoDataDTO::class.java)
+        assertThat(oppgave.bekreftelse).isNotNull
+        assertThat(oppgave.bekreftelse?.harGodtattEndringen).isFalse()
+        assertThat(oppgave.bekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
+
+        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+    }
+
 
     @Test
     fun `Gitt det mottas bekreftelse på avvik på registerinntekt oppgave, forvent at den lagres og hentes opp igjen`() {
@@ -181,10 +214,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
         kontrollerAvvikPåInntektIRegister(
             deltakerIdent = deltakerIdent,
-            periode = ProgramperiodeDTO(
-                fomDato = orginalStartdato,
-                tomDato = orginalStartdato.plusWeeks(4)
-            )
+            fom = orginalStartdato,
+            tom = orginalStartdato.plusWeeks(4)
         )
 
         val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).first().oppgaver
@@ -218,24 +249,18 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @Test
     fun `Gitt det mottas feil type bekreftelse på oppgave, forvent at kastes feil`() {
-        val orginalStartdato: LocalDate = LocalDate.now()
-        meldInnIProgrammet(deltakerIdent, orginalStartdato)
+        val originalStartdato: LocalDate = LocalDate.now()
+        meldInnIProgrammet(deltakerIdent, originalStartdato)
 
-        endreProgramperiode(
+        endreStartdato(
             deltakerIdent = deltakerIdent,
-            originalPeriode = ProgramperiodeDTO(
-                fomDato = orginalStartdato,
-                tomDato = null
-            ),
-            nyPeriode = ProgramperiodeDTO(
-                fomDato = orginalStartdato.plusDays(3),
-                tomDato = null
-            )
+            originalStartdato = originalStartdato,
+            nyStartdato = originalStartdato.plusDays(3)
         )
 
         val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).first().oppgaver
         assertThat(oppgaver).hasSize(2)
-        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_PROGRAMPERIODE }.oppgaveReferanse
+        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }.oppgaveReferanse
 
         assertThrows<IllegalStateException> {
             oppgaveService.håndterMottattOppgavebekreftelse(
@@ -254,33 +279,51 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
 
-    private fun endreProgramperiode(
+    private fun endreStartdato(
         deltakerIdent: String,
-        originalPeriode: ProgramperiodeDTO,
-        nyPeriode: ProgramperiodeDTO,
+        originalStartdato: LocalDate,
+        nyStartdato: LocalDate,
     ) {
-        oppgaveUngSakController.opprettOppgaveForEndretProgramperiode(
-            endretProgramperiodeOppgaveDTO = EndretProgamperiodeOppgaveDTO(
+        oppgaveUngSakController.opprettOppgaveForEndretStartdato(
+            endretStartdatoOppgaveDTO = EndretStartdatoOppgaveDTO(
                 deltakerIdent = deltakerIdent,
                 oppgaveReferanse = UUID.randomUUID(),
                 frist = LocalDateTime.now().plusDays(14),
-                programperiode = nyPeriode,
-                forrigeProgramperiode = originalPeriode,
+                nyStartdato = nyStartdato,
+                forrigeStartdato = originalStartdato,
             )
         )
     }
 
+    private fun endreSluttdato(
+        deltakerIdent: String,
+        nySluttdato: LocalDate,
+        originalSluttdato: LocalDate?,
+    ) {
+        oppgaveUngSakController.opprettOppgaveForEndretSluttdato(
+            endretSluttdatoOppgaveDTO = EndretSluttdatoOppgaveDTO(
+                deltakerIdent = deltakerIdent,
+                oppgaveReferanse = UUID.randomUUID(),
+                frist = LocalDateTime.now().plusDays(14),
+                nySluttdato = nySluttdato,
+                forrigeSluttdato = originalSluttdato,
+            )
+        )
+    }
+
+
     private fun kontrollerAvvikPåInntektIRegister(
         deltakerIdent: String,
-        periode: ProgramperiodeDTO,
+        fom: LocalDate,
+        tom: LocalDate,
     ) {
         oppgaveUngSakController.opprettOppgaveForKontrollAvRegisterinntekt(
             opprettOppgaveDto = RegisterInntektOppgaveDTO(
                 deltakerIdent = deltakerIdent,
                 referanse = UUID.randomUUID(),
                 frist = LocalDateTime.now().plusDays(14),
-                fomDato = periode.fomDato,
-                tomDato = periode.tomDato!!,
+                fomDato = fom,
+                tomDato = tom,
                 registerInntekter = RegisterInntektDTO(
                     registerinntekterForArbeidOgFrilans = listOf(
                         RegisterInntektArbeidOgFrilansDTO(1000, "123"),
