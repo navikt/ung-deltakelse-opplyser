@@ -2,15 +2,8 @@ package no.nav.ung.deltakelseopplyser.domene.inntekt.repository
 
 import jakarta.persistence.EntityManager
 import no.nav.k9.søknad.JsonUtils
-import no.nav.k9.søknad.Søknad
-import no.nav.k9.søknad.felles.Kildesystem
-import no.nav.k9.søknad.felles.personopplysninger.Søker
-import no.nav.k9.søknad.felles.type.NorskIdentitetsnummer
-import no.nav.k9.søknad.felles.type.Språk
-import no.nav.k9.søknad.ytelse.ung.v1.UngSøknadstype
-import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.k9.søknad.ytelse.ung.v1.inntekt.OppgittInntekt
-import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
+import no.nav.ung.deltakelseopplyser.domene.inntekt.utils.RapportertInntektUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -47,16 +40,18 @@ class RapportertInntektRepositoryTest {
     @Test
     fun `Forventer å kunne hente opp rapportert inntekt gitt oppgavereferanse`() {
         val oppgaveReferanse = UUID.randomUUID()
+        val deltakerIdent = "12345678901"
 
         val rapportertInntektDAO = UngRapportertInntektDAO(
             journalpostId = "123",
-            søkerIdent = "12345678901",
+            søkerIdent = deltakerIdent,
             opprettetDato = ZonedDateTime.now(),
             oppdatertDato = ZonedDateTime.now(),
             inntekt = JsonUtils.toString(
-                lagInntektsrapporteringsSøknad(
-                    søknadId = oppgaveReferanse,
-                    søkerIdent = "12345678901"
+                RapportertInntektUtils.lagInntektsrapporteringsSøknad(
+                    oppgaveReferanse = oppgaveReferanse,
+                    deltakerIdent = deltakerIdent,
+                    oppgittInntekt = OppgittInntekt(setOf())
                 )
             ).also { println(it) },
         )
@@ -69,22 +64,4 @@ class RapportertInntektRepositoryTest {
 
         assertThat(rapportertInntekt).isNotNull
     }
-
-    private fun lagInntektsrapporteringsSøknad(
-        søknadId: UUID,
-        søkerIdent: String,
-    ) = Ungdomsytelsesøknad(
-        journalpostId = "671161658",
-        søknad = Søknad()
-            .medSøknadId(søknadId.toString())
-            .medMottattDato(ZonedDateTime.now())
-            .medSpråk(Språk.NORSK_BOKMÅL)
-            .medKildesystem(Kildesystem.SØKNADSDIALOG)
-            .medSøker(Søker(NorskIdentitetsnummer.of(søkerIdent)))
-            .medYtelse(
-                Ungdomsytelse()
-                    .medSøknadType(UngSøknadstype.RAPPORTERING_SØKNAD)
-                    .medInntekter(OppgittInntekt(setOf()))
-            )
-    )
 }
