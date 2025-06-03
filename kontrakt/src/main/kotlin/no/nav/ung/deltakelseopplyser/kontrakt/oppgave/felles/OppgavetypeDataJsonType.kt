@@ -26,13 +26,13 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoO
 @JsonSubTypes(
     // Endret startdato oppgavetype data
     JsonSubTypes.Type(
-        value = EndretStartdatoOppgaveDTO::class,
+        value = EndretStartdatoDataDTO::class,
         name = "BEKREFT_ENDRET_STARTDATO"
     ),
 
     // Endret sluttdato oppgavetype data
     JsonSubTypes.Type(
-        value = EndretSluttdatoOppgaveDTO::class,
+        value = EndretSluttdatoDataDTO::class,
         name = "BEKREFT_ENDRET_SLUTTDATO"
     ),
 
