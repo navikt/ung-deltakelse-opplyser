@@ -15,9 +15,7 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
@@ -25,8 +23,6 @@ import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
 import org.slf4j.LoggerFactory
-import org.springframework.data.history.Revision
-import org.springframework.data.history.RevisionMetadata
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -60,32 +56,6 @@ class UngdomsprogramregisterService(
                 oppgaver = deltaker.oppgaver.map { it.tilDTO() }
             )
         }
-    }
-
-    fun deltakelseHistorikk(id: UUID): List<DeltakelseHistorikkDTO> {
-        logger.info("Henter historikk for deltakelse med id $id")
-        return deltakelseRepository.findRevisions(id).stream()
-            .map { revision: Revision<Long, UngdomsprogramDeltakelseDAO> ->
-                val metadata = revision.metadata
-
-                val deltakelseDAO = revision.entity
-                DeltakelseHistorikkDTO(
-                    revisjonstype = metadata.revisionType.somHistorikkType(),
-                    revisjonsnummer = metadata.revisionNumber.get(),
-                    id = deltakelseDAO.id,
-                    fom = deltakelseDAO.getFom(),
-                    tom = deltakelseDAO.getTom(),
-                    opprettetAv = deltakelseDAO.opprettetAv,
-                    opprettetTidspunkt = deltakelseDAO.opprettetTidspunkt.atZone(ZoneOffset.UTC),
-                    endretAv = deltakelseDAO.endretAv!!,
-                    endretTidspunkt = deltakelseDAO.endretTidspunkt!!.atZone(ZoneOffset.UTC),
-                    søktTidspunkt = deltakelseDAO.søktTidspunkt,
-                )
-            }
-            .toList()
-            .also {
-                logger.info("Fant ${it.size} historikkoppføringer for deltakelse med id $id")
-            }
     }
 
     @Transactional(TRANSACTION_MANAGER)
@@ -379,11 +349,4 @@ class UngdomsprogramregisterService(
 
     private fun OppgaveDAO.erLøstInntektsrapportering() =
         this.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT && this.status == OppgaveStatus.LØST
-
-    private fun RevisionMetadata.RevisionType.somHistorikkType() = when (this) {
-        RevisionMetadata.RevisionType.INSERT -> Revisjonstype.OPPRETTET
-        RevisionMetadata.RevisionType.UPDATE -> Revisjonstype.ENDRET
-        RevisionMetadata.RevisionType.DELETE -> Revisjonstype.SLETTET
-        RevisionMetadata.RevisionType.UNKNOWN -> Revisjonstype.UKJENT
-    }
 }

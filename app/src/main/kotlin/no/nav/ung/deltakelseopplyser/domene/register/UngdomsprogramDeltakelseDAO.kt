@@ -19,7 +19,9 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
 
-@Audited
+@Audited(
+    withModifiedFlag = true // Dette gjør at vi kan se om feltet har blitt endret i revisjonene
+)
 @Entity(name = "ungdomsprogram_deltakelse")
 class UngdomsprogramDeltakelseDAO(
     @Id

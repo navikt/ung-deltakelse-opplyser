@@ -1,5 +1,7 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.register
 
+import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
@@ -15,4 +17,5 @@ data class DeltakelseHistorikkDTO(
     val endretAv: String,
     val endretTidspunkt: ZonedDateTime,
     val søktTidspunkt: ZonedDateTime?,
+    val endringstype: Endringstype,
 )

@@ -14,6 +14,7 @@ import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
@@ -45,6 +46,7 @@ class UngdomsprogramRegisterVeilederController(
     private val sporingsloggService: SporingsloggService,
     private val tilgangskontrollService: TilgangskontrollService,
     private val registerService: UngdomsprogramregisterService,
+    private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val deltakerService: DeltakerService,
 ) {
 
@@ -184,7 +186,7 @@ class UngdomsprogramRegisterVeilederController(
             READ,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        return registerService.deltakelseHistorikk(deltakelseId).also {
+        return deltakelseHistorikkService.deltakelseHistorikk(deltakelseId).also {
             sporingsloggService.logg(
                 "/deltakelse/{deltakelseId}/historikk",
                 "Hent historikk for deltakelse med id $deltakelseId",
