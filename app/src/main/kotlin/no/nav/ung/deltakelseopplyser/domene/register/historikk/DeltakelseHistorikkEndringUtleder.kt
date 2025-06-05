@@ -5,7 +5,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import java.util.*
 
 object DeltakelseHistorikkEndringUtleder {
-    private val logger = org.slf4j.LoggerFactory.getLogger(DeltakelseHistorikkEndringUtleder::class.java)
 
     fun utledEndring(
         nåværendeDeltakelseRevisjon: DeltakelseDAO,

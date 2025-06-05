@@ -24,7 +24,9 @@ class DeltakelseHistorikkService(
         logger.info("Henter historikk for deltakelse med id $id")
 
         val alleRevisjoner: List<Revision<Long, DeltakelseDAO>> =
-            deltakelseHistorikkRepository.findRevisions(id).toList()
+            deltakelseHistorikkRepository.findRevisions(id)
+                .toList()
+                .sortedBy { it.requiredRevisionInstant }
 
         if (alleRevisjoner.isEmpty()) {
             return emptyList()
@@ -32,35 +34,35 @@ class DeltakelseHistorikkService(
 
         // Mapper over listen med indekser, slik at vi enkelt kan hente "forrige" revisjon
         return alleRevisjoner.mapIndexed { index, revision ->
-            val metadata = revision.metadata
+                val metadata = revision.metadata
 
-            val nåværendeRevisjon = revision.entity
+                val nåværendeRevisjon = revision.entity
 
-            // Henter forrige revisjon hvis den finnes
-            val forrigeRevisjon: DeltakelseDAO? =
-                alleRevisjoner.getOrNull(index - 1)?.entity
+                // Henter forrige revisjon hvis den finnes
+                val forrigeRevisjon: DeltakelseDAO? =
+                    alleRevisjoner.getOrNull(index - 1)?.entity
 
-            val historikkEndring = DeltakelseHistorikkEndringUtleder.utledEndring(
-                forrigeDeltakelseRevisjon = forrigeRevisjon,
-                nåværendeDeltakelseRevisjon = nåværendeRevisjon
-            )
+                val historikkEndring = DeltakelseHistorikkEndringUtleder.utledEndring(
+                    forrigeDeltakelseRevisjon = forrigeRevisjon,
+                    nåværendeDeltakelseRevisjon = nåværendeRevisjon
+                )
 
-            DeltakelseHistorikk(
-                revisjonstype = metadata.revisionType.somHistorikkType(),
-                endringstype = historikkEndring.endringstype,
-                revisjonsnummer = metadata.revisionNumber.get(),
-                deltakelse = nåværendeRevisjon,
-                opprettetAv = nåværendeRevisjon.opprettetAv!!,
-                opprettetTidspunkt = nåværendeRevisjon.opprettetTidspunkt.atZone(ZoneOffset.UTC),
-                endretAv = nåværendeRevisjon.endretAv,
-                endretTidspunkt = nåværendeRevisjon.endretTidspunkt!!.atZone(ZoneOffset.UTC),
-                endretStartdato = historikkEndring.endretStartdatoDataDTO,
-                endretSluttdato = historikkEndring.endretSluttdatoDataDTO,
-                søktTidspunktSatt = historikkEndring.søktTidspunktSatt
-            )
-        }.also {
-            logger.info("Fant ${it.size} historikkoppføringer for deltakelse med id $id")
-        }
+                DeltakelseHistorikk(
+                    revisjonstype = metadata.revisionType.somHistorikkType(),
+                    endringstype = historikkEndring.endringstype,
+                    revisjonsnummer = metadata.revisionNumber.get(),
+                    deltakelse = nåværendeRevisjon,
+                    opprettetAv = nåværendeRevisjon.opprettetAv!!,
+                    opprettetTidspunkt = nåværendeRevisjon.opprettetTidspunkt.atZone(ZoneOffset.UTC),
+                    endretAv = nåværendeRevisjon.endretAv,
+                    endretTidspunkt = nåværendeRevisjon.endretTidspunkt!!.atZone(ZoneOffset.UTC),
+                    endretStartdato = historikkEndring.endretStartdatoDataDTO,
+                    endretSluttdato = historikkEndring.endretSluttdatoDataDTO,
+                    søktTidspunktSatt = historikkEndring.søktTidspunktSatt
+                )
+            }.also {
+                logger.info("Fant ${it.size} historikkoppføringer for deltakelse med id $id")
+            }
     }
 
     private fun RevisionMetadata.RevisionType.somHistorikkType() = when (this) {
