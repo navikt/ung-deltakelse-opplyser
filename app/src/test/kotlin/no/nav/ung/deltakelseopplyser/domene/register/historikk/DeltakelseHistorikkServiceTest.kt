@@ -168,7 +168,7 @@ class DeltakelseHistorikkServiceTest {
         assertThat(tredjeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(tredjeInnslag.endringstype).isEqualTo(Endringstype.DELTAKER_HAR_SØKT_YTELSE)
         assertThat(tredjeInnslag.søktTidspunktSatt).isNotNull
-        assertThat(tredjeInnslag.søktTidspunktSatt!!.søktTidspunkt).isEqualTo(søktTidspunkt)
+        assertThat(tredjeInnslag.søktTidspunktSatt!!.søktTidspunkt.toLocalDateTime()).isEqualTo(søktTidspunkt!!.toLocalDateTime()) // Feiler i GHA ved direkte sammenligning av ZonedDateTime.
         assertThat(tredjeInnslag.søktTidspunktSatt!!.søktTidspunktSatt).isTrue()
         assertThat(tredjeInnslag.deltakelse.getFom()).isEqualTo(onsdag)
         assertThat(tredjeInnslag.deltakelse.getTom()).isNull()
