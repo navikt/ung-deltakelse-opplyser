@@ -4,15 +4,13 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import java.util.*
 
-data class DeltakelseHistorikkEndringUtleder(
-    val nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
-    val forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
-) {
-    private companion object {
-        val logger = org.slf4j.LoggerFactory.getLogger(DeltakelseHistorikkEndringUtleder::class.java)
-    }
+object DeltakelseHistorikkEndringUtleder {
+    private val logger = org.slf4j.LoggerFactory.getLogger(DeltakelseHistorikkEndringUtleder::class.java)
 
-    fun utledEndring(): HistorikkEndring {
+    fun utledEndring(
+        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
+        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
+    ): HistorikkEndring {
         // Sammenligner feltene for å finne ut hva som har endret seg
         val startdatoErEndret = if (forrigeDeltakelseRevisjon != null) {
             forrigeDeltakelseRevisjon.getFom() != nåværendeDeltakelseRevisjon.getFom()

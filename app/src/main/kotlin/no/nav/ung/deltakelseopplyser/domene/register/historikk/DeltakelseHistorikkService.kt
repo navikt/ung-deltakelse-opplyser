@@ -72,10 +72,10 @@ class DeltakelseHistorikkService(
         val nåværendeDeltakelseRevisjon =
             auditReader.find(UngdomsprogramDeltakelseDAO::class.java, deltakelseId, revisjonsnummer)
 
-        return DeltakelseHistorikkEndringUtleder(
+        return DeltakelseHistorikkEndringUtleder.utledEndring(
             nåværendeDeltakelseRevisjon = nåværendeDeltakelseRevisjon,
             forrigeDeltakelseRevisjon = forrigeDeltakelseRevisjon
-        ).utledEndring()
+        )
     }
 
 
