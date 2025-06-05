@@ -17,8 +17,8 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
@@ -186,14 +186,16 @@ class UngdomsprogramRegisterVeilederController(
             READ,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        return deltakelseHistorikkService.deltakelseHistorikk(deltakelseId).also {
-            sporingsloggService.logg(
-                "/deltakelse/{deltakelseId}/historikk",
-                "Hent historikk for deltakelse med id $deltakelseId",
-                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
-                EventClassId.AUDIT_ACCESS
-            )
-        }
+        return deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
+            .map { it.tilDTO() }
+            .also {
+                sporingsloggService.logg(
+                    "/deltakelse/{deltakelseId}/historikk",
+                    "Hent historikk for deltakelse med id $deltakelseId",
+                    PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                    EventClassId.AUDIT_ACCESS
+                )
+            }
     }
 
     @DeleteMapping("/deltaker/{deltakerId}/fjern")

@@ -8,13 +8,11 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
@@ -37,7 +35,6 @@ import org.springframework.kafka.listener.KafkaExceptionLogLevelAware
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
-import java.util.*
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -135,7 +132,7 @@ class DeltakelseHistorikkServiceTest {
 
         val historikk = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
         assertThat(historikk).hasSize(5).also {
-            historikk.forEach { logger.info("Innslag: {}", it) }
+            historikk.forEach { logger.info("Innslag: {}", it.utledEndringsTekst()) }
         }
 
         val innslag = historikk.iterator()
@@ -144,57 +141,72 @@ class DeltakelseHistorikkServiceTest {
         assertThat(førsteInnslag.revisjonsnummer).isNotNull()
         assertThat(førsteInnslag.revisjonstype).isEqualTo(Revisjonstype.OPPRETTET)
         assertThat(førsteInnslag.endringstype).isEqualTo(Endringstype.DELTAKER_MELDT_INN)
-        assertThat(førsteInnslag.fom).isEqualTo(mandag)
-        assertThat(førsteInnslag.tom).isNull()
+        assertThat(førsteInnslag.deltakelse.getFom()).isEqualTo(mandag)
+        assertThat(førsteInnslag.deltakelse.getTom()).isNull()
         assertThat(førsteInnslag.opprettetAv).isNotNull()
         assertThat(førsteInnslag.opprettetTidspunkt).isNotNull()
         assertThat(førsteInnslag.endretAv).isNotNull()
         assertThat(førsteInnslag.endretTidspunkt).isNotNull()
+        assertThat(førsteInnslag.utledEndringsTekst()).isEqualTo("Deltaker er meldt inn i programmet.")
 
         val andreInnslag = innslag.next() // Andre innslag er endring av startdato
         assertThat(andreInnslag.revisjonsnummer).isGreaterThan(førsteInnslag.revisjonsnummer)
         assertThat(andreInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(andreInnslag.endringstype).isEqualTo(Endringstype.ENDRET_STARTDATO)
-        assertThat(andreInnslag.fom).isEqualTo(onsdag)
-        assertThat(andreInnslag.tom).isNull()
+        assertThat(andreInnslag.endretStartdato).isNotNull
+        assertThat(andreInnslag.endretStartdato!!.nyStartdato).isEqualTo(onsdag)
+        assertThat(andreInnslag.endretStartdato!!.gammelStartdato).isEqualTo(mandag)
+        assertThat(andreInnslag.deltakelse.getTom()).isNull()
         assertThat(andreInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(andreInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(andreInnslag.endretAv).isNotNull()
         assertThat(andreInnslag.endretTidspunkt).isNotNull()
+        assertThat(andreInnslag.utledEndringsTekst()).isEqualTo("Startdato for deltakelse er endret fra $mandag til $onsdag.")
 
         val tredjeInnslag = innslag.next() // Tredje innslag er deltaker som har søkt ytelse
         assertThat(tredjeInnslag.revisjonsnummer).isGreaterThan(andreInnslag.revisjonsnummer)
         assertThat(tredjeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(tredjeInnslag.endringstype).isEqualTo(Endringstype.DELTAKER_HAR_SØKT_YTELSE)
-        assertThat(tredjeInnslag.fom).isEqualTo(onsdag)
-        assertThat(tredjeInnslag.tom).isNull()
+        assertThat(tredjeInnslag.søktTidspunktSatt).isNotNull
+        assertThat(tredjeInnslag.søktTidspunktSatt!!.søktTidspunkt).isEqualTo(søktTidspunkt)
+        assertThat(tredjeInnslag.søktTidspunktSatt!!.søktTidspunktSatt).isTrue()
+        assertThat(tredjeInnslag.deltakelse.getFom()).isEqualTo(onsdag)
+        assertThat(tredjeInnslag.deltakelse.getTom()).isNull()
         assertThat(tredjeInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(tredjeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(tredjeInnslag.endretAv).isNotNull()
         assertThat(tredjeInnslag.endretTidspunkt).isNotNull()
-        assertThat(tredjeInnslag.søktTidspunkt).isEqualTo(søktTidspunkt)
+        assertThat(tredjeInnslag.utledEndringsTekst()).isEqualTo("Deltaker har søkt om ytelse den ${DATE_TIME_FORMATTER.format(søktTidspunkt)}.")
 
         val fjerdeInnslag = innslag.next() // Fjerde innslag er avslutning av deltakelse
         assertThat(fjerdeInnslag.revisjonsnummer).isGreaterThan(tredjeInnslag.revisjonsnummer)
         assertThat(fjerdeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(fjerdeInnslag.endringstype).isEqualTo(Endringstype.ENDRET_SLUTTDATO)
-        assertThat(fjerdeInnslag.fom).isEqualTo(onsdag)
-        assertThat(fjerdeInnslag.tom).isEqualTo(onsdag)
+        assertThat(fjerdeInnslag.endretSluttdato).isNotNull
+        assertThat(fjerdeInnslag.endretSluttdato!!.nySluttdato).isEqualTo(onsdag)
+        assertThat(fjerdeInnslag.endretSluttdato!!.gammelSluttdato).isNull() // Sluttdato var ikke satt før
+        assertThat(fjerdeInnslag.deltakelse.getFom()).isEqualTo(onsdag)
+        assertThat(fjerdeInnslag.deltakelse.getTom()).isEqualTo(onsdag)
         assertThat(fjerdeInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(fjerdeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(fjerdeInnslag.endretAv).isNotNull()
         assertThat(fjerdeInnslag.endretTidspunkt).isNotNull()
+        assertThat(fjerdeInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er satt til $onsdag.")
 
         val femteInnslag = innslag.next() // Femte innslag er endring av sluttdato
         assertThat(femteInnslag.revisjonsnummer).isGreaterThan(fjerdeInnslag.revisjonsnummer)
         assertThat(femteInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(femteInnslag.endringstype).isEqualTo(Endringstype.ENDRET_SLUTTDATO)
-        assertThat(femteInnslag.fom).isEqualTo(onsdag)
-        assertThat(femteInnslag.tom).isEqualTo(onsdag.plusWeeks(1))
+        assertThat(femteInnslag.endretSluttdato).isNotNull
+        assertThat(femteInnslag.endretSluttdato!!.nySluttdato).isEqualTo(onsdag.plusWeeks(1))
+        assertThat(femteInnslag.endretSluttdato!!.gammelSluttdato).isEqualTo(onsdag)
+        assertThat(femteInnslag.deltakelse.getFom()).isEqualTo(onsdag)
+        assertThat(femteInnslag.deltakelse.getTom()).isEqualTo(onsdag.plusWeeks(1))
         assertThat(femteInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(femteInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(femteInnslag.endretAv).isNotNull()
         assertThat(femteInnslag.endretTidspunkt).isNotNull()
+        assertThat(femteInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er endret fra $onsdag til ${onsdag.plusWeeks(1)}.")
     }
 
     @Test
