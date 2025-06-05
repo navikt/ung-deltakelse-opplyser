@@ -49,7 +49,7 @@ sealed class OppgavetypeDataDAO {
 
         is EndretStartdatoOppgaveDataDAO -> listOf(
             Tekst(
-                tekst = "Du har fått en oppgave om å bekrefte endret startdato.",
+                tekst = "Se og gi tilbakemelding på ny startdato i ungdomsprogrammet",
                 spraakkode = "nb",
                 default = true
             )
@@ -57,7 +57,7 @@ sealed class OppgavetypeDataDAO {
 
         is EndretSluttdatoOppgaveDataDAO -> listOf(
             Tekst(
-                tekst = "Du har fått en oppgave om å bekrefte endret sluttdato.",
+                tekst = "Se og gi tilbakemelding på ${if (this.forrigeSluttdato == null) "" else "ny"} sluttdato i ungdomsprogrammet",
                 spraakkode = "nb",
                 default = true
             )
@@ -73,7 +73,7 @@ sealed class OppgavetypeDataDAO {
 
         is SøkYtelseOppgavetypeDataDAO -> listOf(
             Tekst(
-                tekst = "Du har fått en oppgave om å sende inn søknad.",
+                tekst = "Søk om ungdomsprogramytelsen",
                 spraakkode = "nb",
                 default = true
             )
@@ -95,7 +95,7 @@ data class EndretSluttdatoOppgaveDataDAO(
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
-): OppgavetypeDataDAO()
+) : OppgavetypeDataDAO()
 
 data class ProgramperiodeDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -118,7 +118,7 @@ data class KontrollerRegisterInntektOppgaveTypeDataDAO(
 
 data class SøkYtelseOppgavetypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty("fomDato") val fomDato: LocalDate
+    @JsonProperty("fomDato") val fomDato: LocalDate,
 ) : OppgavetypeDataDAO()
 
 data class RegisterinntektDAO(
