@@ -4,9 +4,7 @@ import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ProgramperiodeDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoDataDTO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.assertj.core.api.Assertions.assertThat
@@ -58,7 +56,7 @@ class DeltakerRepositoryTest {
         )
         entityManager.persist(deltaker)
 
-        val deltakelse = UngdomsprogramDeltakelseDAO(
+        val deltakelse = DeltakelseDAO(
             deltaker = deltaker,
             periode = Range.closed(LocalDate.now(), LocalDate.now().plusWeeks(1))
         )
@@ -100,7 +98,7 @@ class DeltakerRepositoryTest {
         )
         entityManager.persist(deltaker)
 
-        val deltakelse = UngdomsprogramDeltakelseDAO(
+        val deltakelse = DeltakelseDAO(
             deltaker = deltaker,
             periode = Range.closed(LocalDate.now(), LocalDate.now().plusWeeks(1))
         )

@@ -9,7 +9,7 @@ import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
@@ -56,7 +56,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         every { deltakerService.hentDeltakterIder(any()) } returns listOf(UUID.randomUUID())
 
         // med eksisterende deltakelse...
-        every { deltakelseRepository.finnDeltakelseSomStarter(any(), any()) } returns UngdomsprogramDeltakelseDAO(
+        every { deltakelseRepository.finnDeltakelseSomStarter(any(), any()) } returns DeltakelseDAO(
             id = UUID.randomUUID(),
             deltaker = DeltakerDAO(
                 deltakerIdent = søkerIdent,
@@ -67,8 +67,8 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         )
 
 
-        every { deltakelseRepository.save(ofType(UngdomsprogramDeltakelseDAO::class)) }
-            .answers { firstArg<UngdomsprogramDeltakelseDAO>() }
+        every { deltakelseRepository.save(ofType(DeltakelseDAO::class)) }
+            .answers { firstArg<DeltakelseDAO>() }
 
         every { microfrontendService.sendOgLagre(any()) } throws RuntimeException("Simulert feil ved publisering av mikrofrontend melding")
 

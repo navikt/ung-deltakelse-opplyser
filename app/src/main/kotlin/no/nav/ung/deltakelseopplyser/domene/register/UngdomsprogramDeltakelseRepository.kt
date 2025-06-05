@@ -6,10 +6,10 @@ import org.springframework.data.repository.query.Param
 import java.time.LocalDate
 import java.util.*
 
-interface UngdomsprogramDeltakelseRepository : JpaRepository<UngdomsprogramDeltakelseDAO, UUID> {
-    fun findByDeltaker_IdIn(deltakerIds: List<UUID>): List<UngdomsprogramDeltakelseDAO>
+interface UngdomsprogramDeltakelseRepository : JpaRepository<DeltakelseDAO, UUID> {
+    fun findByDeltaker_IdIn(deltakerIds: List<UUID>): List<DeltakelseDAO>
 
-    fun findByIdAndDeltaker_IdIn(id: UUID, deltakerIds: List<UUID>): UngdomsprogramDeltakelseDAO?
+    fun findByIdAndDeltaker_IdIn(id: UUID, deltakerIds: List<UUID>): DeltakelseDAO?
 
     @Query(
         value = """
@@ -23,5 +23,5 @@ interface UngdomsprogramDeltakelseRepository : JpaRepository<UngdomsprogramDelta
     fun finnDeltakelseSomStarter(
         @Param("deltakterIder") deltakterIder: List<UUID>,
         @Param("periodeStartdato") periodeStartdato: LocalDate
-    ): UngdomsprogramDeltakelseDAO?
+    ): DeltakelseDAO?
 }

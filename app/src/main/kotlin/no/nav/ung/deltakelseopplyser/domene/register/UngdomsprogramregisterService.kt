@@ -45,7 +45,7 @@ class UngdomsprogramregisterService(
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
 
-        fun UngdomsprogramDeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
+        fun DeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
 
             return DeltakelseOpplysningDTO(
                 id = id,
@@ -241,7 +241,7 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
-    private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: UngdomsprogramDeltakelseDAO) {
+    private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: DeltakelseDAO) {
         val opphørsdato = oppdatert.getTom()
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
 
@@ -269,7 +269,7 @@ class UngdomsprogramregisterService(
         )
     }
 
-    private fun sendEndretStartdatoHendelseTilUngSak(oppdatert: UngdomsprogramDeltakelseDAO) {
+    private fun sendEndretStartdatoHendelseTilUngSak(oppdatert: DeltakelseDAO) {
         val startdato = oppdatert.getFom()
 
         logger.info("Henter aktørIder for deltaker")
@@ -291,20 +291,20 @@ class UngdomsprogramregisterService(
         ungSakService.sendInnHendelse(hendelse = HendelseDto(hendelse, AktørId(nåværendeAktørId)))
     }
 
-    private fun DeltakelseOpplysningDTO.mapToDAO(deltakerDAO: DeltakerDAO): UngdomsprogramDeltakelseDAO {
+    private fun DeltakelseOpplysningDTO.mapToDAO(deltakerDAO: DeltakerDAO): DeltakelseDAO {
         val periode = if (tilOgMed == null) {
             Range.closedInfinite(fraOgMed)
         } else {
             Range.closed(fraOgMed, tilOgMed)
         }
-        return UngdomsprogramDeltakelseDAO(
+        return DeltakelseDAO(
             deltaker = deltakerDAO,
             periode = periode,
             søktTidspunkt = søktTidspunkt
         )
     }
 
-    private fun forsikreEksistererIProgram(id: UUID): UngdomsprogramDeltakelseDAO =
+    private fun forsikreEksistererIProgram(id: UUID): DeltakelseDAO =
         deltakelseRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
@@ -327,7 +327,7 @@ class UngdomsprogramregisterService(
         }
     }
 
-    private fun UngdomsprogramDeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelsePeriodInfo {
+    private fun DeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelsePeriodInfo {
         val oppgaver = oppgaver.map { oppgave ->
             oppgave
                 .tilDTO()

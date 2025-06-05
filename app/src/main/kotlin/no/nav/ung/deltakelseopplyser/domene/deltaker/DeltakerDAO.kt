@@ -9,7 +9,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import java.util.*
 
 @Entity(name = "deltaker")
@@ -22,7 +22,7 @@ class DeltakerDAO(
     val deltakerIdent: String,
 
     @OneToMany(mappedBy = "deltaker", cascade = [CascadeType.ALL], orphanRemoval = true) // Refererer til UngdomsprogramDeltakelseDAO
-    val deltakelseList: List<UngdomsprogramDeltakelseDAO> = emptyList(),
+    val deltakelseList: List<DeltakelseDAO> = emptyList(),
 
 
     @OneToOne(mappedBy = "deltaker", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)

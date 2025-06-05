@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.register.historikk
 
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
@@ -9,7 +9,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 data class DeltakelseHistorikk(
-    val deltakelse: UngdomsprogramDeltakelseDAO,
+    val deltakelse: DeltakelseDAO,
     val revisjonstype: Revisjonstype,
     val revisjonsnummer: Long,
     val opprettetAv: String,

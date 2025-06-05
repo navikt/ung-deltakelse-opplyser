@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.register.historikk
 
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import java.util.*
 
@@ -8,8 +8,8 @@ object DeltakelseHistorikkEndringUtleder {
     private val logger = org.slf4j.LoggerFactory.getLogger(DeltakelseHistorikkEndringUtleder::class.java)
 
     fun utledEndring(
-        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
-        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
+        nåværendeDeltakelseRevisjon: DeltakelseDAO,
+        forrigeDeltakelseRevisjon: DeltakelseDAO?,
     ): HistorikkEndring {
         // Sammenligner feltene for å finne ut hva som har endret seg
         val startdatoErEndret = if (forrigeDeltakelseRevisjon != null) {
@@ -58,7 +58,7 @@ object DeltakelseHistorikkEndringUtleder {
 
     private fun utledSøktTidspunktHistorikkDTO(
         soktTidspunktErEndret: Boolean,
-        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
+        nåværendeDeltakelseRevisjon: DeltakelseDAO,
     ) = if (soktTidspunktErEndret) {
         SøktTidspunktHistorikkDTO(
             søktTidspunktSatt = soktTidspunktErEndret,
@@ -68,8 +68,8 @@ object DeltakelseHistorikkEndringUtleder {
 
     private fun utledEndretSluttdatoHistorikkDTO(
         sluttdatoErEndret: Boolean,
-        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
-        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
+        forrigeDeltakelseRevisjon: DeltakelseDAO?,
+        nåværendeDeltakelseRevisjon: DeltakelseDAO,
     ) = if (sluttdatoErEndret) {
         EndretSluttdatoHistorikkDTO(
             gammelSluttdato = forrigeDeltakelseRevisjon?.getTom(),
@@ -79,8 +79,8 @@ object DeltakelseHistorikkEndringUtleder {
 
     private fun utledEndretStartdatoHistorikkDTO(
         startdatoErEndret: Boolean,
-        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
-        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
+        forrigeDeltakelseRevisjon: DeltakelseDAO?,
+        nåværendeDeltakelseRevisjon: DeltakelseDAO,
     ) = if (startdatoErEndret && forrigeDeltakelseRevisjon != null) {
         EndretStartdatoHistorikkDTO(
             gammelStartdato = forrigeDeltakelseRevisjon.getFom(),
@@ -89,7 +89,7 @@ object DeltakelseHistorikkEndringUtleder {
     } else null
 
     private fun utledEndringstype(
-        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
+        forrigeDeltakelseRevisjon: DeltakelseDAO?,
         startdatoErEndret: Boolean,
         sluttdatoErEndret: Boolean,
         soktTidspunktErEndret: Boolean,

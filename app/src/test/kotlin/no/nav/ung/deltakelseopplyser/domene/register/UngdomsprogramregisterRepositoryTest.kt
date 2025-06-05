@@ -67,7 +67,7 @@ class UngdomsprogramregisterRepositoryTest {
         val deltakerDAO = DeltakerDAO(deltakerIdent = "123")
         deltakerRepository.saveAndFlush(deltakerDAO)
         repository.saveAndFlush(
-            UngdomsprogramDeltakelseDAO(
+            DeltakelseDAO(
                 deltaker = deltakerDAO,
                 periode = periodeA
             )
@@ -76,7 +76,7 @@ class UngdomsprogramregisterRepositoryTest {
         if (overlapper) {
             assertThrows<DataIntegrityViolationException> {
                 repository.saveAndFlush(
-                    UngdomsprogramDeltakelseDAO(
+                    DeltakelseDAO(
                         deltaker = deltakerDAO,
                         periode = periodeB
                     )
@@ -85,7 +85,7 @@ class UngdomsprogramregisterRepositoryTest {
         } else {
             assertDoesNotThrow {
                 repository.saveAndFlush(
-                    UngdomsprogramDeltakelseDAO(
+                    DeltakelseDAO(
                         deltaker = deltakerDAO,
                         periode = periodeB
                     )
@@ -106,14 +106,14 @@ class UngdomsprogramregisterRepositoryTest {
         val deltakerIdenter = listOf(deltaker.id)
 
         val førsteDeltakelseStartdato = LocalDate.of(2025, 1, 1)
-        val førsteDeltakelse = UngdomsprogramDeltakelseDAO(
+        val førsteDeltakelse = DeltakelseDAO(
             deltaker = deltaker,
             periode = Range.closed(førsteDeltakelseStartdato, førsteDeltakelseStartdato.plusWeeks(1))
         )
         entityManager.persist(førsteDeltakelse)
 
         val andreDeltakelseStartdato = førsteDeltakelseStartdato.plusWeeks(1).plusDays(1)
-        val andreDeltakelse = UngdomsprogramDeltakelseDAO(
+        val andreDeltakelse = DeltakelseDAO(
             deltaker = deltaker,
             periode = Range.closedInfinite(andreDeltakelseStartdato)
         )

@@ -21,7 +21,7 @@ import java.util.*
 
 @Audited
 @Entity(name = "ungdomsprogram_deltakelse")
-class UngdomsprogramDeltakelseDAO(
+class DeltakelseDAO(
     @Id
     @Column(name = "id")
     val id: UUID = UUID.randomUUID(),

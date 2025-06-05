@@ -1,6 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.register.historikk
 
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
 import org.slf4j.LoggerFactory
 import org.springframework.data.history.Revision
@@ -23,7 +23,7 @@ class DeltakelseHistorikkService(
     fun deltakelseHistorikk(id: UUID): List<DeltakelseHistorikk> {
         logger.info("Henter historikk for deltakelse med id $id")
 
-        val alleRevisjoner: List<Revision<Long, UngdomsprogramDeltakelseDAO>> =
+        val alleRevisjoner: List<Revision<Long, DeltakelseDAO>> =
             deltakelseHistorikkRepository.findRevisions(id).toList()
 
         if (alleRevisjoner.isEmpty()) {
@@ -37,7 +37,7 @@ class DeltakelseHistorikkService(
             val nåværendeRevisjon = revision.entity
 
             // Henter forrige revisjon hvis den finnes
-            val forrigeRevisjon: UngdomsprogramDeltakelseDAO? =
+            val forrigeRevisjon: DeltakelseDAO? =
                 alleRevisjoner.getOrNull(index - 1)?.entity
 
             val historikkEndring = DeltakelseHistorikkEndringUtleder.utledEndring(
