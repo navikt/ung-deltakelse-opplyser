@@ -25,6 +25,7 @@ class DeltakelseHistorikkService(
 
         val alleRevisjoner: List<Revision<Long, DeltakelseDAO>> =
             deltakelseHistorikkRepository.findRevisions(id).toList()
+                .sortedBy { it.requiredRevisionInstant }
 
         if (alleRevisjoner.isEmpty()) {
             return emptyList()
@@ -32,7 +33,6 @@ class DeltakelseHistorikkService(
 
         // Mapper over listen med indekser, slik at vi enkelt kan hente "forrige" revisjon
         return alleRevisjoner
-            .sortedBy { it.requiredRevisionInstant }
             .mapIndexed { index, revision ->
             val metadata = revision.metadata
 
