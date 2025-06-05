@@ -70,11 +70,7 @@ object DeltakelseHistorikkEndringUtleder {
         if (endredeFelter.size >= 2) {
             // Bytt ut siste komma med " og " om det er to eller flere elementer
             val felterTekst = endredeFelter.joinToString(separator = " og ")
-            val feilmelding =
-                "Deltakelse med id $deltakelseId har endret $felterTekst i samme revisjon. Dette er uvanlig."
-
-            logger.error(feilmelding)
-            throw UnsupportedOperationException(feilmelding)
+            throw UnsupportedOperationException("Deltakelse med id $deltakelseId har endret $felterTekst i samme revisjon. Dette er uvanlig.")
         }
     }
 
