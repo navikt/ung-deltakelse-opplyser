@@ -14,10 +14,11 @@ import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
@@ -45,6 +46,7 @@ class UngdomsprogramRegisterVeilederController(
     private val sporingsloggService: SporingsloggService,
     private val tilgangskontrollService: TilgangskontrollService,
     private val registerService: UngdomsprogramregisterService,
+    private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val deltakerService: DeltakerService,
 ) {
 
@@ -184,14 +186,16 @@ class UngdomsprogramRegisterVeilederController(
             READ,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        return registerService.deltakelseHistorikk(deltakelseId).also {
-            sporingsloggService.logg(
-                "/deltakelse/{deltakelseId}/historikk",
-                "Hent historikk for deltakelse med id $deltakelseId",
-                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
-                EventClassId.AUDIT_ACCESS
-            )
-        }
+        return deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
+            .map { it.tilDTO() }
+            .also {
+                sporingsloggService.logg(
+                    "/deltakelse/{deltakelseId}/historikk",
+                    "Hent historikk for deltakelse med id $deltakelseId",
+                    PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                    EventClassId.AUDIT_ACCESS
+                )
+            }
     }
 
     @DeleteMapping("/deltaker/{deltakerId}/fjern")

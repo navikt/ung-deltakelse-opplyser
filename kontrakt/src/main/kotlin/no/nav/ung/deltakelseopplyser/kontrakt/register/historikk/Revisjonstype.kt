@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.kontrakt.register
+package no.nav.ung.deltakelseopplyser.kontrakt.register.historikk
 
 enum class Revisjonstype {
     OPPRETTET,

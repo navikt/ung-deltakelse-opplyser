@@ -3,7 +3,6 @@ package no.nav.ung.deltakelseopplyser.domene.register
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.justRun
-import jakarta.persistence.EntityManager
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
@@ -16,7 +15,6 @@ import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
@@ -56,9 +54,6 @@ class UngdomsprogramregisterServiceTest {
 
     @Autowired
     lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
-
-    @Autowired
-    lateinit var entityManager: EntityManager
 
     @MockkBean
     lateinit var mineSiderService: MineSiderService
@@ -222,7 +217,7 @@ class UngdomsprogramregisterServiceTest {
     }
 
     @Test
-    fun `Endring av sluttdato på deltakelse oppretter BEKREFT_ENDRET_SLUTTDATODATO oppgave`() {
+    fun `Endring av sluttdato på deltakelse oppretter BEKREFT_ENDRET_SLUTTDATO oppgave`() {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
@@ -255,43 +250,6 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
         assertThat(endretSluttdatoDeltakelse.fraOgMed).isEqualTo(mandag)
         assertThat(endretSluttdatoDeltakelse.tilOgMed).isEqualTo(onsdag.plusWeeks(1))
-
-        val historikk = ungdomsprogramregisterService.deltakelseHistorikk(innmelding.id!!)
-        assertThat(historikk).hasSize(3).also {
-            historikk.forEach { logger.info("Innslag: {}", it) }
-        }
-
-        val innslag = historikk.iterator()
-
-        val førsteInnslag = innslag.next()
-        assertThat(førsteInnslag.revisjonsnummer).isNotNull()
-        assertThat(førsteInnslag.revisjonstype).isEqualTo(Revisjonstype.OPPRETTET)
-        assertThat(førsteInnslag.fom).isEqualTo(mandag)
-        assertThat(førsteInnslag.tom).isNull()
-        assertThat(førsteInnslag.opprettetAv).isNotNull()
-        assertThat(førsteInnslag.opprettetTidspunkt).isNotNull()
-        assertThat(førsteInnslag.endretAv).isNotNull()
-        assertThat(førsteInnslag.endretTidspunkt).isNotNull()
-
-        val andreInnslag = innslag.next()
-        assertThat(andreInnslag.revisjonsnummer).isGreaterThan(førsteInnslag.revisjonsnummer)
-        assertThat(andreInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
-        assertThat(andreInnslag.fom).isEqualTo(mandag)
-        assertThat(andreInnslag.tom).isEqualTo(onsdag)
-        assertThat(andreInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
-        assertThat(andreInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
-        assertThat(andreInnslag.endretAv).isNotNull()
-        assertThat(andreInnslag.endretTidspunkt).isNotNull()
-
-        val tredjeInnslag = innslag.next()
-        assertThat(tredjeInnslag.revisjonsnummer).isGreaterThan(andreInnslag.revisjonsnummer)
-        assertThat(tredjeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
-        assertThat(tredjeInnslag.fom).isEqualTo(mandag)
-        assertThat(tredjeInnslag.tom).isEqualTo(onsdag.plusWeeks(1))
-        assertThat(tredjeInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
-        assertThat(tredjeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
-        assertThat(tredjeInnslag.endretAv).isNotNull()
-        assertThat(tredjeInnslag.endretTidspunkt).isNotNull()
     }
 
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
