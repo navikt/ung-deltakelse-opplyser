@@ -33,37 +33,74 @@ object DeltakelseHistorikkEndringUtleder {
         håndterFlereEndringerISammeRevisjon(endredeFelter, nåværendeDeltakelseRevisjon.id)
 
         return HistorikkEndring(
-            endringstype = when {
-                // Dersom vi ikke har en tidligere revisjon, betyr det at dette er den første revisjonen for deltakelsen.
-                // Vi tolker dette som at deltakelsen er opprettet og at deltakeren er meldt inn i programmet.
-                forrigeDeltakelseRevisjon == null -> Endringstype.DELTAKER_MELDT_INN
-                startdatoErEndret -> Endringstype.ENDRET_STARTDATO
-                sluttdatoErEndret -> Endringstype.ENDRET_SLUTTDATO
-                soktTidspunktErEndret -> Endringstype.DELTAKER_HAR_SØKT_YTELSE
-                else -> Endringstype.UKJENT
-            },
+            endringstype = utledEndringstype(
+                forrigeDeltakelseRevisjon,
+                startdatoErEndret,
+                sluttdatoErEndret,
+                soktTidspunktErEndret
+            ),
 
-            endretStartdatoDataDTO = if (startdatoErEndret && forrigeDeltakelseRevisjon != null) {
-                EndretStartdatoHistorikkDTO(
-                    gammelStartdato = forrigeDeltakelseRevisjon.getFom(),
-                    nyStartdato = nåværendeDeltakelseRevisjon.getFom()
-                )
-            } else null,
+            endretStartdatoDataDTO = utledEndretStartdatoHistorikkDTO(
+                startdatoErEndret,
+                forrigeDeltakelseRevisjon,
+                nåværendeDeltakelseRevisjon
+            ),
 
-            endretSluttdatoDataDTO = if (sluttdatoErEndret) {
-                EndretSluttdatoHistorikkDTO(
-                    gammelSluttdato = forrigeDeltakelseRevisjon?.getTom(),
-                    nySluttdato = nåværendeDeltakelseRevisjon.getTom()!! // Sluttdato kan ikke være null ved endring
-                )
-            } else null,
+            endretSluttdatoDataDTO = utledEndretSluttdatoHistorikkDTO(
+                sluttdatoErEndret,
+                forrigeDeltakelseRevisjon,
+                nåværendeDeltakelseRevisjon
+            ),
 
-            søktTidspunktSatt = if (soktTidspunktErEndret) {
-                SøktTidspunktHistorikkDTO(
-                    søktTidspunktSatt = soktTidspunktErEndret,
-                    søktTidspunkt = nåværendeDeltakelseRevisjon.søktTidspunkt!!
-                )
-            } else null
+            søktTidspunktSatt = utledSøktTidspunktHistorikkDTO(soktTidspunktErEndret, nåværendeDeltakelseRevisjon)
         )
+    }
+
+    private fun utledSøktTidspunktHistorikkDTO(
+        soktTidspunktErEndret: Boolean,
+        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
+    ) = if (soktTidspunktErEndret) {
+        SøktTidspunktHistorikkDTO(
+            søktTidspunktSatt = soktTidspunktErEndret,
+            søktTidspunkt = nåværendeDeltakelseRevisjon.søktTidspunkt!!
+        )
+    } else null
+
+    private fun utledEndretSluttdatoHistorikkDTO(
+        sluttdatoErEndret: Boolean,
+        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
+        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
+    ) = if (sluttdatoErEndret) {
+        EndretSluttdatoHistorikkDTO(
+            gammelSluttdato = forrigeDeltakelseRevisjon?.getTom(),
+            nySluttdato = nåværendeDeltakelseRevisjon.getTom()!! // Sluttdato kan ikke være null ved endring
+        )
+    } else null
+
+    private fun utledEndretStartdatoHistorikkDTO(
+        startdatoErEndret: Boolean,
+        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
+        nåværendeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO,
+    ) = if (startdatoErEndret && forrigeDeltakelseRevisjon != null) {
+        EndretStartdatoHistorikkDTO(
+            gammelStartdato = forrigeDeltakelseRevisjon.getFom(),
+            nyStartdato = nåværendeDeltakelseRevisjon.getFom()
+        )
+    } else null
+
+    private fun utledEndringstype(
+        forrigeDeltakelseRevisjon: UngdomsprogramDeltakelseDAO?,
+        startdatoErEndret: Boolean,
+        sluttdatoErEndret: Boolean,
+        soktTidspunktErEndret: Boolean,
+    ) = when {
+        // Dersom vi ikke har en tidligere revisjon, betyr det at dette er den første revisjonen for deltakelsen.
+        // Vi tolker dette som at deltakelsen er opprettet og at deltakeren er meldt inn i programmet.
+        forrigeDeltakelseRevisjon == null -> Endringstype.DELTAKER_MELDT_INN
+        startdatoErEndret -> Endringstype.ENDRET_STARTDATO
+        sluttdatoErEndret -> Endringstype.ENDRET_SLUTTDATO
+        soktTidspunktErEndret -> Endringstype.DELTAKER_HAR_SØKT_YTELSE
+        else -> Endringstype.UKJENT
     }
 
     private fun håndterFlereEndringerISammeRevisjon(endredeFelter: List<String>, deltakelseId: UUID) {
