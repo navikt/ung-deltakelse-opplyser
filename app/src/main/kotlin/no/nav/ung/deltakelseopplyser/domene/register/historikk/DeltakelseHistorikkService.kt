@@ -31,7 +31,9 @@ class DeltakelseHistorikkService(
         }
 
         // Mapper over listen med indekser, slik at vi enkelt kan hente "forrige" revisjon
-        return alleRevisjoner.mapIndexed { index, revision ->
+        return alleRevisjoner
+            .sortedBy { it.requiredRevisionInstant }
+            .mapIndexed { index, revision ->
             val metadata = revision.metadata
 
             val nåværendeRevisjon = revision.entity
