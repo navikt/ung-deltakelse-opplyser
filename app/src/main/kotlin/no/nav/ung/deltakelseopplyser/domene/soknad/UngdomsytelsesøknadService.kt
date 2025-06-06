@@ -51,7 +51,7 @@ class UngdomsytelsesøknadService(
 
         logger.info("Henter deltakelse som starter $søktFraDato")
         val deltakelseDAO = deltakelseRepository.finnDeltakelseSomStarter(deltakterIder, søktFraDato)
-            ?: throw IllegalStateException("Fant ingen deltakelse som starter $søktFraDato")
+            ?: throw IllegalStateException("Fant ingen deltakelse som starter $søktFraDato for deltaker med id=$deltakterIder")
 
         val deltaker = deltakerService.finnDeltakerGittIdent(deltakerIdent)
             ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
