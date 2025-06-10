@@ -3,7 +3,6 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 import no.nav.k9.søknad.JsonUtils
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
@@ -36,9 +35,9 @@ class UngdomsytelsesøknadService(
         logger.info("Håndterer mottatt søknad.")
         val søknad = ungdomsytelsesøknad.søknad
         val oppgaveReferanse = UUID.fromString(søknad.søknadId.id)
-        val ungdomsytelse = søknad.getYtelse<Ungdomsytelse>()
-        val søktFraDato = ungdomsytelse.søknadsperiode.fraOgMed
         val deltakerIdent = søknad.søker.personIdent.verdi
+        val ungdomsytelse = søknad.getYtelse<Ungdomsytelse>()
+        val deltakelseId = ungdomsytelse.deltakelseId
 
         val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdent)
         if (deltakterIder.isEmpty()) {
@@ -49,10 +48,6 @@ class UngdomsytelsesøknadService(
             .find { it.oppgaveReferanse == oppgaveReferanse && it.oppgavetype == Oppgavetype.SØK_YTELSE }
             ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden som har oppgave for oppgaveReferanse=$oppgaveReferanse")
 
-        logger.info("Henter deltakelse som starter $søktFraDato")
-        val deltakelseDAO = deltakelseRepository.finnDeltakelseSomStarter(deltakterIder, søktFraDato)
-            ?: throw IllegalStateException("Fant ingen deltakelse som starter $søktFraDato for deltaker med id=$deltakterIder")
-
         val deltaker = deltakerService.finnDeltakerGittIdent(deltakerIdent)
             ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
 
@@ -61,30 +56,38 @@ class UngdomsytelsesøknadService(
             oppgaveReferanse = sendSøknadOppgave.oppgaveReferanse
         )
 
-        if (deltakelseDAO.søktTidspunkt == null) {
-            logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)
-            deltakelseDAO.markerSomHarSøkt()
-            deltakelseRepository.save(deltakelseDAO)
-        } else {
-            logger.info(
-                "Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.",
-                deltakelseDAO.id
-            )
+        // TODO: Fjern denne når vi har fått inn søknader med deltakelseId i Q.
+        // Dette er en midlertidig løsning for å håndtere søknader som ikke har deltakelseId satt.
+        kotlin.runCatching {
+            logger.info("Henter deltakelse med id $deltakelseId")
+            val deltakelseDAO = deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakterIder)
+                ?: throw IllegalStateException("Fant ingen deltakelse med id=$deltakelseId for deltaker med id=$deltakterIder")
+
+            if (deltakelseDAO.søktTidspunkt == null) {
+                logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)
+                deltakelseDAO.markerSomHarSøkt()
+                deltakelseRepository.save(deltakelseDAO)
+            } else {
+                logger.info(
+                    "Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.",
+                    deltakelseDAO.id
+                )
+            }
         }
 
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
         søknadRepository.save(ungdomsytelsesøknad.somUngSøknadDAO())
 
-        logger.info("Aktiverer mikrofrontend for deltaker med deltakelseId: {}", deltakelseDAO.id)
+        logger.info("Aktiverer mikrofrontend for deltaker med id: {}", deltaker.id)
         microfrontendService.sendOgLagre(
             MinSideMicrofrontendStatusDAO(
                 id = UUID.randomUUID(),
-                deltaker = deltakelseDAO.deltaker,
+                deltaker = deltaker,
                 status = MicrofrontendStatus.ENABLE,
                 opprettet = ZonedDateTime.now(ZoneOffset.UTC),
             )
         ).also {
-            logger.info("Mikrofrontend aktivert for deltaker med deltakelseId: {}", deltakelseDAO.id)
+            logger.info("Mikrofrontend aktivert for deltaker med id: {}", deltaker.id)
         }
     }
 

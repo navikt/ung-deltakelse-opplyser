@@ -80,6 +80,7 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
                     "ytelse": {
                       "type": "UNGDOMSYTELSE",
                       "søknadType": "DELTAKELSE_SØKNAD",
+                      "deltakelseId": "${deltakelse.id}",
                       "søktFraDatoer": ["$deltakelseStart"],
                       "inntekter": null
                     },
@@ -104,7 +105,7 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
             verify(exactly = 1) { ungdomsytelsesøknadService.håndterMottattSøknad(any()) }
             verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
-            verify(exactly = 1) { ungdomsprogramDeltakelseRepository.finnDeltakelseSomStarter(any(), any()) }
+            verify(exactly = 1) { ungdomsprogramDeltakelseRepository.findByIdAndDeltaker_IdIn(any(), any()) }
             verify(exactly = 1) { søknadRepository.save(any()) }
         }
     }
