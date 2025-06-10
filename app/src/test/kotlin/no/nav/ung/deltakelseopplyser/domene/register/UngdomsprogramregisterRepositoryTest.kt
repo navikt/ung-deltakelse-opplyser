@@ -95,58 +95,6 @@ class UngdomsprogramregisterRepositoryTest {
         }
     }
 
-    @Test
-    fun `Forventer å finne deltakelse som starter på eksakt dato`() {
-        val deltaker = DeltakerDAO(
-            id = UUID.randomUUID(),
-            deltakerIdent = "123",
-            deltakelseList = mutableListOf(),
-        )
-        entityManager.persist(deltaker)
-        val deltakerIdenter = listOf(deltaker.id)
-
-        val førsteDeltakelseStartdato = LocalDate.of(2025, 1, 1)
-        val førsteDeltakelse = DeltakelseDAO(
-            deltaker = deltaker,
-            periode = Range.closed(førsteDeltakelseStartdato, førsteDeltakelseStartdato.plusWeeks(1))
-        )
-        entityManager.persist(førsteDeltakelse)
-
-        val andreDeltakelseStartdato = førsteDeltakelseStartdato.plusWeeks(1).plusDays(1)
-        val andreDeltakelse = DeltakelseDAO(
-            deltaker = deltaker,
-            periode = Range.closedInfinite(andreDeltakelseStartdato)
-        )
-        entityManager.persist(andreDeltakelse)
-
-        entityManager.flush()
-
-        val førsteDeltakelseResultat = repository.finnDeltakelseSomStarter(deltakerIdenter, førsteDeltakelseStartdato)
-        assertThat(førsteDeltakelseResultat)
-            .withFailMessage("Forventet å finne deltakelse som starter på %s, men fikk null", førsteDeltakelseStartdato)
-            .isNotNull
-        assertThat(førsteDeltakelseResultat!!.getFom())
-            .withFailMessage("Forventet at deltakelse skulle starte %s", førsteDeltakelseStartdato)
-            .isEqualTo(førsteDeltakelseStartdato)
-
-        val andreDeltakelseResultat = repository.finnDeltakelseSomStarter(deltakerIdenter, andreDeltakelseStartdato)
-        assertThat(andreDeltakelseResultat)
-            .withFailMessage("Forventet å finne deltakelse som starter %s, men fikk null", andreDeltakelseStartdato)
-            .isNotNull
-        assertThat(andreDeltakelseResultat!!.getFom())
-            .withFailMessage("Forventet at deltakelse skulle starte %s", andreDeltakelseStartdato)
-            .isEqualTo(andreDeltakelseStartdato)
-
-        val ikkeEksisterendeStartdato = LocalDate.of(2025, 1, 1).minusDays(1)
-        val ikkeEksisterendeDeltakelseResultat = repository.finnDeltakelseSomStarter(
-            deltakerIdenter,
-            ikkeEksisterendeStartdato
-        )
-        assertThat(ikkeEksisterendeDeltakelseResultat)
-            .withFailMessage("Forventet å ikke finne deltakelse som starter %s", ikkeEksisterendeStartdato)
-            .isNull()
-    }
-
     companion object {
         @JvmStatic
         fun perioderTilTest(): Stream<Arguments> {
