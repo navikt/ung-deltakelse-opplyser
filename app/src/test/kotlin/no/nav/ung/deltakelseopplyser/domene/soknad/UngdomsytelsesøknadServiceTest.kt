@@ -42,6 +42,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.util.*
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -107,6 +108,7 @@ class UngdomsytelsesøknadServiceTest {
         ungdomsytelsesøknadService.håndterMottattSøknad(
             ungdomsytelsesøknad = lagUngdomsytelseSøknad(
                 søknadId = sendSøknadOppgave.oppgaveReferanse.toString(),
+                deltakelseId = deltakelseOpplysningDTO.id!!,
                 søkerIdent = søkerIdent,
                 deltakelseStart = deltakelseStart
             )
@@ -135,6 +137,7 @@ class UngdomsytelsesøknadServiceTest {
 
     private fun lagUngdomsytelseSøknad(
         søknadId: String,
+        deltakelseId: UUID,
         søkerIdent: String,
         deltakelseStart: String,
     ) = Ungdomsytelsesøknad(
@@ -149,6 +152,7 @@ class UngdomsytelsesøknadServiceTest {
                 Ungdomsytelse()
                     .medSøknadType(UngSøknadstype.DELTAKELSE_SØKNAD)
                     .medStartdato(LocalDate.parse(deltakelseStart))
+                    .medDeltakelseId(deltakelseId)
             )
     )
 

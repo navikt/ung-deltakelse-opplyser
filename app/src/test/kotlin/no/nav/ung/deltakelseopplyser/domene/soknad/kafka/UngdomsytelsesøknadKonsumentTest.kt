@@ -56,7 +56,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         every { deltakerService.hentDeltakterIder(any()) } returns listOf(UUID.randomUUID())
 
         // med eksisterende deltakelse...
-        every { deltakelseRepository.finnDeltakelseSomStarter(any(), any()) } returns DeltakelseDAO(
+        every { deltakelseRepository.findByIdAndDeltaker_IdIn(any(), any()) } returns DeltakelseDAO(
             id = UUID.randomUUID(),
             deltaker = DeltakerDAO(
                 deltakerIdent = søkerIdent,

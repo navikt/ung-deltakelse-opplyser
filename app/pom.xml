@@ -23,7 +23,7 @@
         <awaitility.version>4.3.0</awaitility.version>
         <ung-sak.version>1.6.0</ung-sak.version>
         <fp-sak.version>2.7.3</fp-sak.version>
-        <k9-format.version>12.2.2</k9-format.version>
+        <k9-format.version>12.3.0</k9-format.version>
         <k9-felles.version>4.6.5</k9-felles.version>
         <graphql-kotlin.version>8.8.0</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
