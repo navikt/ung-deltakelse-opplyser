@@ -56,23 +56,19 @@ class UngdomsytelsesøknadService(
             oppgaveReferanse = sendSøknadOppgave.oppgaveReferanse
         )
 
-        // TODO: Fjern denne når vi har fått inn søknader med deltakelseId i Q.
-        // Dette er en midlertidig løsning for å håndtere søknader som ikke har deltakelseId satt.
-        kotlin.runCatching {
-            logger.info("Henter deltakelse med id $deltakelseId")
-            val deltakelseDAO = deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakterIder)
-                ?: throw IllegalStateException("Fant ingen deltakelse med id=$deltakelseId for deltaker med id=$deltakterIder")
+        logger.info("Henter deltakelse med id $deltakelseId")
+        val deltakelseDAO = deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakterIder)
+            ?: throw IllegalStateException("Fant ingen deltakelse med id=$deltakelseId for deltaker med id=$deltakterIder")
 
-            if (deltakelseDAO.søktTidspunkt == null) {
-                logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)
-                deltakelseDAO.markerSomHarSøkt()
-                deltakelseRepository.save(deltakelseDAO)
-            } else {
-                logger.info(
-                    "Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.",
-                    deltakelseDAO.id
-                )
-            }
+        if (deltakelseDAO.søktTidspunkt == null) {
+            logger.info("Markerer deltakelse med id={} som søkt for.", deltakelseDAO.id)
+            deltakelseDAO.markerSomHarSøkt()
+            deltakelseRepository.save(deltakelseDAO)
+        } else {
+            logger.info(
+                "Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.",
+                deltakelseDAO.id
+            )
         }
 
         logger.info("Lagrer søknad med journalpostId: {}", ungdomsytelsesøknad.journalpostId)
