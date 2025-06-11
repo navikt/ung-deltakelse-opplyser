@@ -197,6 +197,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     fun `Gitt det mottas bekreftelse på avvik på registerinntekt oppgave, forvent at den lagres og hentes opp igjen`() {
         val orginalStartdato: LocalDate = LocalDate.now()
         val deltakerIdent = FødselsnummerGenerator.neste()
+        mockPDL(deltakerIdent)
         meldInnIProgrammet(deltakerIdent, orginalStartdato)
 
         kontrollerAvvikPåInntektIRegister(
