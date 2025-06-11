@@ -57,7 +57,7 @@ class UngdomsprogramRegisterDeltakerController(
     @Operation(summary = "Markerer at deltakelsen er søkt om")
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
-    fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseDTO {
+    fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseKomposittDTO {
         val alleDeltakersIdenter = deltakerService.hentDeltakterIdenter(tokenValidationContextHolder.personIdent())
         val personPåDeltakelsen = registerService.hentFraProgram(id).deltaker.deltakerIdent
         if (!alleDeltakersIdenter.contains(personPåDeltakelsen)) {
@@ -68,7 +68,11 @@ class UngdomsprogramRegisterDeltakerController(
             )
         }
 
-        return registerService.markerSomHarSøkt(id)
+        val deltakelseDTO = registerService.markerSomHarSøkt(id)
+        return DeltakelseKomposittDTO(
+            deltakelse = deltakelseDTO,
+            oppgaver = deltakerService.hentDeltakersOppgaver(personPåDeltakelsen).map { it.tilDTO() }
+        )
     }
 
     @GetMapping("/oppgave/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
