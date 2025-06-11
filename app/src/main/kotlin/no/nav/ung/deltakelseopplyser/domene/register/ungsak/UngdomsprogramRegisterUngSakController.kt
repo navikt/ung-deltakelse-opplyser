@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.ung.deltakelseopplyser.config.Issuers
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakerOpplysningerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.ungsak.DeltakelseOpplysningerDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.sak.kontrakt.person.AktørIdDto
@@ -31,10 +31,10 @@ class UngdomsprogramRegisterUngSakController(
     @PostMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleDeltakelserGittDeltakerAktør(@RequestBody aktørIdDto: AktørIdDto): DeltakerOpplysningerDTO {
+    fun hentAlleDeltakelserGittDeltakerAktør(@RequestBody aktørIdDto: AktørIdDto): DeltakelseOpplysningerDTO {
         tilgangskontrollService.krevSystemtilgang()
         val opplysninger = registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
-        return DeltakerOpplysningerDTO(opplysninger)
+        return DeltakelseOpplysningerDTO(opplysninger)
     }
 
 }
