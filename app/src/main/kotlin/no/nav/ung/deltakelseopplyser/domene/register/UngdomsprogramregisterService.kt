@@ -145,13 +145,13 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAO.mapToDTO()
     }
 
-    fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseKomposittDTO> {
+    fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
         val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIder)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
-        return ungdomsprogramDAOs.map { it.mapToKomposittDTO() }
+        return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
     fun hentAlleForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
