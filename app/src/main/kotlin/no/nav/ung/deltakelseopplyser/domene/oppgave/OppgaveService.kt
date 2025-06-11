@@ -115,7 +115,11 @@ class OppgaveService(
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
         val oppgave = deltaker.oppgaver
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
-            .also { forsikreOppgaveIkkeErLøst(it) }
+
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.error("Oppgave med oppgaveReferanse $oppgaveReferanse er løst og kan ikke avbrytes.")
+            return oppgave.tilDTO();
+        }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
         val oppdatertOppgave = oppgave.markerSomAvbrutt()
@@ -133,7 +137,11 @@ class OppgaveService(
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
         val oppgave = deltaker.oppgaver
             .find { it.oppgaveReferanse == oppgaveReferanse }!! // Deltaker ble funnet med samme oppgaveReferanse.
-            .also { forsikreOppgaveIkkeErLøst(it) }
+
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.error("Oppgave med oppgaveReferanse $oppgaveReferanse er løst og kan ikke utløpes.")
+            return oppgave.tilDTO();
+        }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
         val oppdatertOppgave = oppgave.markerSomUtløpt()
@@ -251,20 +259,6 @@ class OppgaveService(
                 )
 
         else -> throw IllegalStateException("Uventet oppgavetype=${oppgave.oppgavetype}")
-    }
-
-    private fun forsikreOppgaveIkkeErLøst(oppgave: OppgaveDAO) {
-        if (oppgave.status == OppgaveStatus.LØST) {
-            logger.error("Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres.")
-            throw ErrorResponseException(
-                HttpStatus.BAD_REQUEST,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST,
-                    "Oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} er løst og kan ikke endres."
-                ),
-                null
-            )
-        }
     }
 
     private fun hentDeltakerOppgave(oppgaveReferanse: UUID): Pair<DeltakerDAO, OppgaveDAO> {
