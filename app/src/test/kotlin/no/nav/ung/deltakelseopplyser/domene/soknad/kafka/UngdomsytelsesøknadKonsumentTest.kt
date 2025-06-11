@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.leggPåTopic
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -50,7 +51,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     fun `Forventer at listener forsøker på nytt ved feil`() {
         val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
         val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
-        val søkerIdent = "12834619705"
+        val søkerIdent = FødselsnummerGenerator.neste()
 
         // Gitt deltaker...
         every { deltakerService.hentDeltakterIder(any()) } returns listOf(UUID.randomUUID())

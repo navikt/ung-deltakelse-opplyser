@@ -7,6 +7,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
@@ -37,21 +38,11 @@ class DeltakerRepositoryTest {
     @Autowired
     lateinit var entityManager: EntityManager
 
-    @BeforeEach
-    fun setUp() {
-        deltakerRepository.deleteAll()
-    }
-
-    @AfterAll
-    internal fun tearDown() {
-        deltakerRepository.deleteAll()
-    }
-
     @Test
     fun `Forventer å finne deltakelse gitt oppgaveReferanse`() {
         val deltaker = DeltakerDAO(
             id = UUID.randomUUID(),
-            deltakerIdent = "123",
+            deltakerIdent = FødselsnummerGenerator.neste(),
             deltakelseList = mutableListOf(),
         )
         entityManager.persist(deltaker)
@@ -93,7 +84,7 @@ class DeltakerRepositoryTest {
     fun `Tester at oppgave blir oppdatert`() {
         val deltaker = DeltakerDAO(
             id = UUID.randomUUID(),
-            deltakerIdent = "123",
+            deltakerIdent = FødselsnummerGenerator.neste(),
             deltakelseList = mutableListOf(),
         )
         entityManager.persist(deltaker)

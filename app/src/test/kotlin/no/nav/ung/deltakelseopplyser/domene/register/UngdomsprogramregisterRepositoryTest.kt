@@ -4,6 +4,7 @@ import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
@@ -47,8 +48,6 @@ class UngdomsprogramregisterRepositoryTest {
 
     @BeforeEach
     fun setUp() {
-        repository.deleteAll()
-
         // Forsikre oss om at btree_gist er installert
         val resultList = entityManager.createNativeQuery(
             "SELECT * FROM pg_extension WHERE extname = 'btree_gist'"
@@ -56,15 +55,10 @@ class UngdomsprogramregisterRepositoryTest {
         assertTrue(resultList.isNotEmpty())
     }
 
-    @AfterAll
-    internal fun tearDown() {
-        repository.deleteAll()
-    }
-
     @ParameterizedTest(name = "{index} => periodeA={0}, periodeB={1}, overlapper={2}")
     @MethodSource("perioderTilTest")
     fun testPeriodOverlaps(periodeA: Range<LocalDate>, periodeB: Range<LocalDate>, overlapper: Boolean) {
-        val deltakerDAO = DeltakerDAO(deltakerIdent = "123")
+        val deltakerDAO = DeltakerDAO(deltakerIdent = FødselsnummerGenerator.neste())
         deltakerRepository.saveAndFlush(deltakerDAO)
         repository.saveAndFlush(
             DeltakelseDAO(

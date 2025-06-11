@@ -29,6 +29,7 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -88,8 +89,6 @@ class UngdomsytelsesøknadServiceTest {
 
     @BeforeAll
     fun setUp() {
-        ungdomsprogramDeltakelseRepository.deleteAll()
-        microfrontendRepository.deleteAll()
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
         justRun { mineSiderService.deaktiverOppgave(any()) }
@@ -97,7 +96,7 @@ class UngdomsytelsesøknadServiceTest {
 
     @Test
     fun `Forventer at søknad markerer deltakelsen som søkt og oppgaven løses`() {
-        val søkerIdent = "12345678910"
+        val søkerIdent = FødselsnummerGenerator.neste()
         val deltakelseStart = "2024-11-04"
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)

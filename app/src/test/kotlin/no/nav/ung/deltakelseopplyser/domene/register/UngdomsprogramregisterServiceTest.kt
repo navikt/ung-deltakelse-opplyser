@@ -16,6 +16,7 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -75,17 +76,8 @@ class UngdomsprogramregisterServiceTest {
 
     @BeforeEach
     fun setUp() {
-        deltakelseRepository.deleteAll()
-        deltakerRepository.deleteAll()
-
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
-    }
-
-    @AfterAll
-    internal fun tearDown() {
-        deltakelseRepository.deleteAll()
-        deltakerRepository.deleteAll()
     }
 
     private companion object {
@@ -94,7 +86,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
@@ -137,7 +129,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
@@ -153,7 +145,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
@@ -173,7 +165,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Henter deltaker fra programmet`() {
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
@@ -198,7 +190,7 @@ class UngdomsprogramregisterServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
@@ -221,7 +213,7 @@ class UngdomsprogramregisterServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
