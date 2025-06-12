@@ -15,7 +15,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
@@ -90,11 +90,10 @@ class DeltakelseHistorikkServiceTest {
         val onsdag = LocalDate.parse("2024-10-09")
 
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull
@@ -109,11 +108,10 @@ class DeltakelseHistorikkServiceTest {
             ungdomsprogramregisterService.markerSomHarSøkt(deltakelseId).søktTidspunkt // Fører til tredje historikkinnslag
 
         ungdomsprogramregisterService.avsluttDeltakelse(
-            deltakelseId, DeltakelseOpplysningDTO(
+            deltakelseId, DeltakelseDTO(
                 deltaker = innmelding.deltaker,
                 fraOgMed = onsdag,
-                tilOgMed = onsdag,
-                oppgaver = listOf()
+                tilOgMed = onsdag
             )
         ) // Fører til fjerde historikkinnslag
 
@@ -212,11 +210,10 @@ class DeltakelseHistorikkServiceTest {
         val onsdag = LocalDate.parse("2024-10-09")
 
         val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull

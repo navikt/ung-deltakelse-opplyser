@@ -7,7 +7,7 @@ import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterServ
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.KontonummerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -72,8 +72,8 @@ class DeltakerService(
         return deltakerRepository.findById(id)
     }
 
-    fun lagreDeltaker(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakerDAO {
-        return deltakerRepository.saveAndFlush(deltakelseOpplysningDTO.deltaker.mapToDAO())
+    fun lagreDeltaker(deltakelseDTO: DeltakelseDTO): DeltakerDAO {
+        return deltakerRepository.saveAndFlush(deltakelseDTO.deltaker.mapToDAO())
     }
 
     fun oppdaterDeltaker(deltaker: DeltakerDAO): DeltakerDAO {

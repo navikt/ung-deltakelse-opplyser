@@ -14,7 +14,7 @@ import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterServ
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
@@ -87,11 +87,10 @@ class UngdomsprogramregisterServiceTest {
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -106,11 +105,10 @@ class UngdomsprogramregisterServiceTest {
         val onsdag = LocalDate.parse("2024-10-09")
 
         val deltakerDTO = DeltakerDTO(UUID.randomUUID(), "02499435811")
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -130,11 +128,10 @@ class UngdomsprogramregisterServiceTest {
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
-            tilOgMed = LocalDate.now().plusDays(10),
-            oppgaver = listOf()
+            tilOgMed = LocalDate.now().plusDays(10)
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -146,11 +143,10 @@ class UngdomsprogramregisterServiceTest {
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -166,11 +162,10 @@ class UngdomsprogramregisterServiceTest {
     @Test
     fun `Henter deltaker fra programmet`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = LocalDate.now(),
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -191,11 +186,10 @@ class UngdomsprogramregisterServiceTest {
         val onsdag = LocalDate.parse("2024-10-09")
 
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -214,11 +208,10 @@ class UngdomsprogramregisterServiceTest {
         val onsdag = LocalDate.parse("2024-10-09")
 
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseOpplysningDTO(
+        val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null,
-            oppgaver = listOf()
+            tilOgMed = null
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -227,11 +220,10 @@ class UngdomsprogramregisterServiceTest {
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )
 
-        val oppdatertDto = DeltakelseOpplysningDTO(
+        val oppdatertDto = DeltakelseDTO(
             deltaker = innmelding.deltaker,
             fraOgMed = mandag,
-            tilOgMed = onsdag,
-            oppgaver = listOf()
+            tilOgMed = onsdag
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
 

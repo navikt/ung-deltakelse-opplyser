@@ -17,7 +17,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
@@ -56,18 +56,17 @@ class UngdomsprogramRegisterVeilederController(
         consumes = [MediaType.APPLICATION_JSON_VALUE]
     )
     @Operation(summary = "Meld inn en deltaker i ungdomsprogrammet.")
-    fun meldInnDeltaker(@RequestBody deltakelseInnmeldingDTO: DeltakelseInnmeldingDTO): DeltakelseOpplysningDTO {
+    fun meldInnDeltaker(@RequestBody deltakelseInnmeldingDTO: DeltakelseInnmeldingDTO): DeltakelseDTO {
         tilgangskontrollService.krevAnsattTilgang(
             CREATE,
             listOf(PersonIdent.fra(deltakelseInnmeldingDTO.deltakerIdent))
         )
-        val deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
+        val deltakelseDTO = DeltakelseDTO(
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
-            fraOgMed = deltakelseInnmeldingDTO.startdato,
-            oppgaver = listOf()
+            fraOgMed = deltakelseInnmeldingDTO.startdato
         )
 
-        return registerService.leggTilIProgram(deltakelseOpplysningDTO).also {
+        return registerService.leggTilIProgram(deltakelseDTO).also {
             sporingsloggService.logg(
                 "/deltaker/innmelding",
                 "Meldte inn deltaker med id ${deltakelseInnmeldingDTO.deltakerIdent}",
@@ -87,7 +86,7 @@ class UngdomsprogramRegisterVeilederController(
     fun meldUtDeltaker(
         @PathVariable deltakelseId: UUID,
         @RequestBody deltakelseUtmeldingDTO: DeltakelseUtmeldingDTO,
-    ): DeltakelseOpplysningDTO {
+    ): DeltakelseDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
         tilgangskontrollService.krevAnsattTilgang(
             UPDATE,
@@ -114,7 +113,7 @@ class UngdomsprogramRegisterVeilederController(
     fun endreStartdato(
         @PathVariable deltakelseId: UUID,
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
-    ): DeltakelseOpplysningDTO {
+    ): DeltakelseDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
         tilgangskontrollService.krevAnsattTilgang(
             UPDATE,
@@ -140,7 +139,7 @@ class UngdomsprogramRegisterVeilederController(
     fun endreSluttdato(
         @PathVariable deltakelseId: UUID,
         @RequestBody endrePeriodeDatoDTO: EndrePeriodeDatoDTO,
-    ): DeltakelseOpplysningDTO {
+    ): DeltakelseDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
         tilgangskontrollService.krevAnsattTilgang(
             UPDATE,
@@ -162,7 +161,7 @@ class UngdomsprogramRegisterVeilederController(
     )
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleDeltakelserGittDeltakerId(@PathVariable deltakerId: UUID): List<DeltakelseOpplysningDTO> {
+    fun hentAlleDeltakelserGittDeltakerId(@PathVariable deltakerId: UUID): List<DeltakelseDTO> {
         val deltakelser = registerService.hentAlleForDeltakerId(deltakerId)
         val personIdenter = deltakelser.map { it.deltaker.deltakerIdent }.distinct().map { PersonIdent.fra(it) }
         tilgangskontrollService.krevAnsattTilgang(READ, personIdenter)

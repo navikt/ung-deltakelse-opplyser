@@ -12,10 +12,10 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Compan
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
@@ -45,29 +45,36 @@ class UngdomsprogramregisterService(
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
 
-        fun DeltakelseDAO.mapToDTO(): DeltakelseOpplysningDTO {
+        fun DeltakelseDAO.mapToDTO(): DeltakelseDTO {
 
-            return DeltakelseOpplysningDTO(
+            return DeltakelseDTO(
                 id = id,
                 deltaker = deltaker.mapToDTO(),
                 søktTidspunkt = søktTidspunkt,
                 fraOgMed = getFom(),
-                tilOgMed = getTom(),
+                tilOgMed = getTom()
+            )
+        }
+
+        fun DeltakelseDAO.mapToKomposittDTO(): DeltakelseKomposittDTO {
+
+            return DeltakelseKomposittDTO(
+                deltakelse = mapToDTO(),
                 oppgaver = deltaker.oppgaver.map { it.tilDTO() }
             )
         }
     }
 
     @Transactional(TRANSACTION_MANAGER)
-    fun leggTilIProgram(deltakelseOpplysningDTO: DeltakelseOpplysningDTO): DeltakelseOpplysningDTO {
-        logger.info("Legger til deltaker i programmet: $deltakelseOpplysningDTO")
+    fun leggTilIProgram(deltakelseDTO: DeltakelseDTO): DeltakelseDTO {
+        logger.info("Legger til deltaker i programmet: $deltakelseDTO")
 
-        val deltakerDAO = deltakerService.finnDeltakerGittIdent(deltakelseOpplysningDTO.deltaker.deltakerIdent) ?: run {
+        val deltakerDAO = deltakerService.finnDeltakerGittIdent(deltakelseDTO.deltaker.deltakerIdent) ?: run {
             logger.info("Deltaker eksisterer ikke. Oppretter ny deltaker.")
-            deltakerService.lagreDeltaker(deltakelseOpplysningDTO)
+            deltakerService.lagreDeltaker(deltakelseDTO)
         }
 
-        val ungdomsprogramDAO = deltakelseRepository.save(deltakelseOpplysningDTO.mapToDAO(deltakerDAO))
+        val ungdomsprogramDAO = deltakelseRepository.save(deltakelseDTO.mapToDAO(deltakerDAO))
 
         oppgaveService.opprettOppgave(
             deltaker = deltakerDAO,
@@ -125,20 +132,20 @@ class UngdomsprogramregisterService(
         return true
     }
 
-    fun markerSomHarSøkt(id: UUID): DeltakelseOpplysningDTO {
+    fun markerSomHarSøkt(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererIProgram(id)
         eksisterende.markerSomHarSøkt()
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
-    fun hentFraProgram(id: UUID): DeltakelseOpplysningDTO {
+    fun hentFraProgram(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreEksistererIProgram(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
-    fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseOpplysningDTO> {
+    fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
         val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakerIder)
@@ -147,7 +154,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
-    fun hentAlleForDeltakerId(deltakerId: UUID): List<DeltakelseOpplysningDTO> {
+    fun hentAlleForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
             ErrorResponseException(
@@ -166,7 +173,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
-    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelsePeriodInfo> {
+    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseKomposittDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
 
         val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
@@ -180,15 +187,15 @@ class UngdomsprogramregisterService(
     @Transactional(TRANSACTION_MANAGER)
     fun avsluttDeltakelse(
         id: UUID,
-        deltakelseOpplysningDTO: DeltakelseOpplysningDTO,
-    ): DeltakelseOpplysningDTO {
-        logger.info("Avsluttr deltakelse i program for deltaker med $deltakelseOpplysningDTO")
+        deltakelseDTO: DeltakelseDTO,
+    ): DeltakelseDTO {
+        logger.info("Avsluttr deltakelse i program for deltaker med $deltakelseDTO")
         val eksiterende = forsikreEksistererIProgram(id)
 
-        val periode = if (deltakelseOpplysningDTO.tilOgMed == null) {
-            Range.closedInfinite(deltakelseOpplysningDTO.fraOgMed)
+        val periode = if (deltakelseDTO.tilOgMed == null) {
+            Range.closedInfinite(deltakelseDTO.fraOgMed)
         } else {
-            Range.closed(deltakelseOpplysningDTO.fraOgMed, deltakelseOpplysningDTO.tilOgMed)
+            Range.closed(deltakelseDTO.fraOgMed, deltakelseDTO.tilOgMed)
         }
 
         eksiterende.oppdaterPeriode(periode)
@@ -202,7 +209,7 @@ class UngdomsprogramregisterService(
     }
 
     @Transactional(TRANSACTION_MANAGER)
-    fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
+    fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
 
@@ -224,7 +231,7 @@ class UngdomsprogramregisterService(
     }
 
     @Transactional(TRANSACTION_MANAGER)
-    fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseOpplysningDTO {
+    fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterende = forsikreEksistererIProgram(deltakelseId)
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
 
@@ -291,7 +298,7 @@ class UngdomsprogramregisterService(
         ungSakService.sendInnHendelse(hendelse = HendelseDto(hendelse, AktørId(nåværendeAktørId)))
     }
 
-    private fun DeltakelseOpplysningDTO.mapToDAO(deltakerDAO: DeltakerDAO): DeltakelseDAO {
+    private fun DeltakelseDTO.mapToDAO(deltakerDAO: DeltakerDAO): DeltakelseDAO {
         val periode = if (tilOgMed == null) {
             Range.closedInfinite(fraOgMed)
         } else {
@@ -327,7 +334,7 @@ class UngdomsprogramregisterService(
         }
     }
 
-    private fun DeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelsePeriodInfo {
+    private fun DeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelseKomposittDTO {
         val oppgaver = oppgaver.map { oppgave ->
             oppgave
                 .tilDTO()
@@ -338,11 +345,8 @@ class UngdomsprogramregisterService(
                 }
         }
 
-        return DeltakelsePeriodInfo(
-            id = this.id,
-            fraOgMed = getFom(),
-            tilOgMed = getTom(),
-            søktTidspunkt = this.søktTidspunkt,
+        return DeltakelseKomposittDTO(
+            deltakelse = mapToDTO(),
             oppgaver = oppgaver
         )
     }

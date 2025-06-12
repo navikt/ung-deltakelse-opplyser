@@ -12,7 +12,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektHåndtererService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
@@ -162,13 +162,12 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
     }
 
-    private fun meldInnIProgrammet(søkerIdent: String, deltakelseStart: String): DeltakelseOpplysningDTO {
+    private fun meldInnIProgrammet(søkerIdent: String, deltakelseStart: String): DeltakelseDTO {
         return registerService.leggTilIProgram(
-            deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
+            deltakelseDTO = DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
                 fraOgMed = LocalDate.parse(deltakelseStart),
-                tilOgMed = null,
-                oppgaver = listOf()
+                tilOgMed = null
             )
         )
     }

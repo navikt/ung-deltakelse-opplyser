@@ -11,9 +11,9 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelsePeriodInfo
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -48,7 +48,7 @@ class UngdomsprogramRegisterDeltakerController(
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
-    fun hentAlleMineDeltakelser(): List<DeltakelsePeriodInfo> {
+    fun hentAlleMineDeltakelser(): List<DeltakelseKomposittDTO> {
         val personIdent = tokenValidationContextHolder.personIdent()
         return registerService.hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId = personIdent)
     }
@@ -57,7 +57,7 @@ class UngdomsprogramRegisterDeltakerController(
     @Operation(summary = "Markerer at deltakelsen er søkt om")
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
-    fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseOpplysningDTO {
+    fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseKomposittDTO {
         val alleDeltakersIdenter = deltakerService.hentDeltakterIdenter(tokenValidationContextHolder.personIdent())
         val personPåDeltakelsen = registerService.hentFraProgram(id).deltaker.deltakerIdent
         if (!alleDeltakersIdenter.contains(personPåDeltakelsen)) {
@@ -68,7 +68,11 @@ class UngdomsprogramRegisterDeltakerController(
             )
         }
 
-        return registerService.markerSomHarSøkt(id)
+        val deltakelseDTO = registerService.markerSomHarSøkt(id)
+        return DeltakelseKomposittDTO(
+            deltakelse = deltakelseDTO,
+            oppgaver = deltakerService.hentDeltakersOppgaver(personPåDeltakelsen).map { it.tilDTO() }
+        )
     }
 
     @GetMapping("/oppgave/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])

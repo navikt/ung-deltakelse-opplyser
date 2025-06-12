@@ -19,19 +19,30 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.*
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SøkYtelseOppgavetypeDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektArbeidOgFrilansDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektYtelseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -62,6 +73,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var oppgaveUngSakController: OppgaveUngSakController
+
+    @Autowired
+    lateinit var deltakerService: DeltakerService
 
     @SpykBean
     lateinit var mineSiderService: MineSiderService
@@ -115,7 +129,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             nyStartdato = orginalStartdato.plusDays(3)
         )
 
-        val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).flatMap { it.oppgaver }
+        val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent).map { it.tilDTO() }
         assertThat(oppgaver)
             .hasSize(2)
             .anyMatch { it.oppgavetype == Oppgavetype.SØK_YTELSE }
@@ -123,7 +137,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }
             .anyMatch { it.oppgavetypeData is EndretStartdatoDataDTO }
 
-        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }.oppgaveReferanse
+        val oppgaveReferanse =
+            oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }.oppgaveReferanse
 
         oppgaveService.håndterMottattOppgavebekreftelse(
             oppgaveBekreftelse(
@@ -137,8 +152,10 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        val oppdatertDeltakelse = deltakelseService.hentAlleForDeltaker(deltakerIdent).first()
-        val oppgave = oppdatertDeltakelse.oppgaver.first { it.oppgaveReferanse == oppgaveReferanse }
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+            .map { it.tilDTO() }
+            .first { it.oppgaveReferanse == oppgaveReferanse }
+
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretStartdatoDataDTO::class.java)
@@ -164,7 +181,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             originalSluttdato = null
         )
 
-        val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).flatMap { it.oppgaver }
+        val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent).map { it.tilDTO() }
         assertThat(oppgaver)
             .hasSize(2)
             .anyMatch { it.oppgavetype == Oppgavetype.SØK_YTELSE }
@@ -172,7 +189,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO }
             .anyMatch { it.oppgavetypeData is EndretSluttdatoDataDTO }
 
-        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO }.oppgaveReferanse
+        val oppgaveReferanse =
+            oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO }.oppgaveReferanse
 
         oppgaveService.håndterMottattOppgavebekreftelse(
             oppgaveBekreftelse(
@@ -186,8 +204,11 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        val oppdatertDeltakelse = deltakelseService.hentAlleForDeltaker(deltakerIdent).first()
-        val oppgave = oppdatertDeltakelse.oppgaver.first { it.oppgaveReferanse == oppgaveReferanse }
+
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+            .map { it.tilDTO() }
+            .first { it.oppgaveReferanse == oppgaveReferanse }
+
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretSluttdatoDataDTO::class.java)
@@ -211,9 +232,10 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             tom = orginalStartdato.plusWeeks(4)
         )
 
-        val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).first().oppgaver
+        val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent).map { it.tilDTO() }
         assertThat(oppgaver).hasSize(2)
-        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT }.oppgaveReferanse
+        val oppgaveReferanse =
+            oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT }.oppgaveReferanse
 
         oppgaveService.håndterMottattOppgavebekreftelse(
             oppgaveBekreftelse(
@@ -227,8 +249,10 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        val oppdatertDeltakelse = deltakelseService.hentAlleForDeltaker(deltakerIdent).first()
-        val oppgave = oppdatertDeltakelse.oppgaver.first { it.oppgaveReferanse == oppgaveReferanse }
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+            .map { it.tilDTO() }
+            .first { it.oppgaveReferanse == oppgaveReferanse }
+
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(KontrollerRegisterinntektOppgavetypeDataDTO::class.java)
@@ -254,9 +278,10 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             nyStartdato = originalStartdato.plusDays(3)
         )
 
-        val oppgaver = deltakelseService.hentAlleForDeltaker(deltakerIdent).first().oppgaver
+        val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent).map { it.tilDTO() }
         assertThat(oppgaver).hasSize(2)
-        val oppgaveReferanse = oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }.oppgaveReferanse
+        val oppgaveReferanse =
+            oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO }.oppgaveReferanse
 
         assertThrows<IllegalStateException> {
             oppgaveService.håndterMottattOppgavebekreftelse(
@@ -360,13 +385,12 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     )
 
 
-    private fun meldInnIProgrammet(søkerIdent: String, deltakelseStart: LocalDate): DeltakelseOpplysningDTO {
+    private fun meldInnIProgrammet(søkerIdent: String, deltakelseStart: LocalDate): DeltakelseDTO {
         return deltakelseService.leggTilIProgram(
-            deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
+            deltakelseDTO = DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
                 fraOgMed = deltakelseStart,
-                tilOgMed = null,
-                oppgaver = listOf()
+                tilOgMed = null
             )
         )
     }

@@ -28,7 +28,7 @@ import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
@@ -87,6 +87,9 @@ class UngdomsytelsesøknadServiceTest {
     @Autowired
     lateinit var microfrontendRepository: MicrofrontendRepository
 
+    @Autowired
+    lateinit var deltakerService: DeltakerService
+
     @BeforeAll
     fun setUp() {
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
@@ -100,26 +103,26 @@ class UngdomsytelsesøknadServiceTest {
         val deltakelseStart = "2024-11-04"
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
-        val deltakelseOpplysningDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
-        val sendSøknadOppgave = deltakelseOpplysningDTO.oppgaver.find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
+        val deltakelseDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
+        val sendSøknadOppgave = deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
             ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
 
         ungdomsytelsesøknadService.håndterMottattSøknad(
             ungdomsytelsesøknad = lagUngdomsytelseSøknad(
                 søknadId = sendSøknadOppgave.oppgaveReferanse.toString(),
-                deltakelseId = deltakelseOpplysningDTO.id!!,
+                deltakelseId = deltakelseDTO.id!!,
                 søkerIdent = søkerIdent,
                 deltakelseStart = deltakelseStart
             )
         )
 
-        val deltakelse = ungdomsprogramDeltakelseRepository.findById(deltakelseOpplysningDTO.id!!)
+        val deltakelse = ungdomsprogramDeltakelseRepository.findById(deltakelseDTO.id!!)
         assertThat(deltakelse)
-            .withFailMessage("Forventet å finne deltakelse med id %s", deltakelseOpplysningDTO.id)
+            .withFailMessage("Forventet å finne deltakelse med id %s", deltakelseDTO.id)
             .isNotEmpty
 
         assertThat(deltakelse.get().søktTidspunkt)
-            .withFailMessage("Forventet at deltakelse med id %s var markert som søkt", deltakelseOpplysningDTO.id)
+            .withFailMessage("Forventet at deltakelse med id %s var markert som søkt", deltakelseDTO.id)
             .isNotNull()
 
 
@@ -157,13 +160,12 @@ class UngdomsytelsesøknadServiceTest {
             )
     )
 
-    private fun meldInnIProgrammet(søkerIdent: String, deltakelseStart: String): DeltakelseOpplysningDTO {
+    private fun meldInnIProgrammet(søkerIdent: String, deltakelseStart: String): DeltakelseDTO {
         return registerService.leggTilIProgram(
-            deltakelseOpplysningDTO = DeltakelseOpplysningDTO(
+            deltakelseDTO = DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
                 fraOgMed = LocalDate.parse(deltakelseStart),
-                tilOgMed = null,
-                oppgaver = listOf()
+                tilOgMed = null
             )
         )
     }
