@@ -43,6 +43,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -86,7 +87,6 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     lateinit var tilgangskontrollService: TilgangskontrollService
 
     private companion object {
-        const val deltakerIdent = "12345678901"
         const val deltakerAktørId = "10987654321"
 
     }
@@ -98,9 +98,6 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @BeforeEach
     fun setUpEach() {
-        deltakelseRepository.deleteAll()
-        deltakerRepository.deleteAll()
-
         every { pdlService.hentAktørIder(any(), any()) } returns listOf(
             IdentInformasjon(
                 ident = deltakerAktørId,
@@ -109,29 +106,21 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
-            IdentInformasjon(
-                ident = deltakerIdent,
-                historisk = false,
-                gruppe = IdentGruppe.FOLKEREGISTERIDENT
-            )
-        )
 
         justRun { tilgangskontrollService.krevSystemtilgang() }
     }
 
-
     @AfterEach
-    fun slett() {
-        verify(atLeast = 1, verifyBlock = { tilgangskontrollService.krevSystemtilgang() })
-
-        deltakelseRepository.deleteAll()
-        deltakerRepository.deleteAll()
+    fun verifiser() {
+        verify(atLeast = 1, verifyBlock = {tilgangskontrollService.krevSystemtilgang()})
     }
 
     @Test
     fun `Gitt det mottas bekreftelse på endret startdato oppgave, forvent at den lagres og hentes opp igjen`() {
         val orginalStartdato: LocalDate = LocalDate.now()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockHentFolkeregisteridenter(deltakerIdent)
+
         meldInnIProgrammet(deltakerIdent, orginalStartdato)
 
         endreStartdato(
@@ -181,6 +170,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     @Test
     fun `Gitt det mottas bekreftelse på endret sluttdato oppgave, forvent at den lagres og hentes opp igjen`() {
         val startdato: LocalDate = LocalDate.now()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockHentFolkeregisteridenter(deltakerIdent)
+
         meldInnIProgrammet(deltakerIdent, startdato)
 
         endreSluttdato(
@@ -227,10 +219,11 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
 
-
     @Test
     fun `Gitt det mottas bekreftelse på avvik på registerinntekt oppgave, forvent at den lagres og hentes opp igjen`() {
         val orginalStartdato: LocalDate = LocalDate.now()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockHentFolkeregisteridenter(deltakerIdent)
         meldInnIProgrammet(deltakerIdent, orginalStartdato)
 
         kontrollerAvvikPåInntektIRegister(
@@ -271,9 +264,12 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     }
 
+
     @Test
     fun `Gitt det mottas feil type bekreftelse på oppgave, forvent at kastes feil`() {
         val originalStartdato: LocalDate = LocalDate.now()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockHentFolkeregisteridenter(deltakerIdent)
         meldInnIProgrammet(deltakerIdent, originalStartdato)
 
         endreStartdato(
@@ -302,6 +298,16 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         }
 
         verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+    }
+
+    private fun mockHentFolkeregisteridenter(deltakerIdent: String) {
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(
+                ident = deltakerIdent,
+                historisk = false,
+                gruppe = IdentGruppe.FOLKEREGISTERIDENT
+            )
+        )
     }
 
     private fun endreStartdato(

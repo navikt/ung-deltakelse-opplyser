@@ -70,7 +70,7 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
 
         val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
         val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
-        val søkerIdent = "12834619705"
+        val søkerIdent = no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator.neste()
         val deltakelseStart = "2024-11-04"
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)

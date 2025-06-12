@@ -12,6 +12,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Inntektsrapporterin
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -45,7 +46,7 @@ class RapportertInntektServiceTest {
 
     @Test
     fun `Gitt det eksisterer rapportert inntekt, forvent at oppgaven populeres med det`() {
-        val deltakerIdent = "12345678901"
+        val deltakerIdent = FødselsnummerGenerator.neste()
         val oppgaveReferanse = UUID.randomUUID()
         val fraOgMed = LocalDate.parse("2025-01-01")
         val tilOgMed = LocalDate.parse("2025-01-31")

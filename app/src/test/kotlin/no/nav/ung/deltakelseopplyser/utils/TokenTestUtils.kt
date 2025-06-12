@@ -12,7 +12,7 @@ object TokenTestUtils {
     const val MOCK_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaXNzIjoidG9rZW54IiwiaWF0IjoxNTE2MjM5MDIyfQ.LVLy4KvnogeEqfc3V0AYHoNDATNkqqUSzQS43zhgYeo"
 
     fun MockOAuth2Server.hentToken(
-        subject: String = "12345678910",
+        subject: String = FødselsnummerGenerator.neste(),
         issuerId: String = TOKEN_X,
         claims: Map<String, String> = mapOf("acr" to "Level4"),
         audience: String = "aud-localhost",
@@ -21,6 +21,6 @@ object TokenTestUtils {
         issueToken(issuerId = issuerId, subject = subject, claims = claims, audience = audience, expiry = expiry)
 
     fun SpringTokenValidationContextHolder.mockContext(encodedToken: String = MOCK_TOKEN) {
-        every { getTokenValidationContext() } returns TokenValidationContext(mapOf("1234567890" to JwtToken(encodedToken)))
+        every { getTokenValidationContext() } returns TokenValidationContext(mapOf(FødselsnummerGenerator.neste() to JwtToken(encodedToken)))
     }
 }
