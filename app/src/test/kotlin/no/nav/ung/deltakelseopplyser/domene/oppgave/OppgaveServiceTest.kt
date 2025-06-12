@@ -105,7 +105,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     fun `Gitt det mottas bekreftelse på endret startdato oppgave, forvent at den lagres og hentes opp igjen`() {
         val orginalStartdato: LocalDate = LocalDate.now()
         val deltakerIdent = FødselsnummerGenerator.neste()
-        mockPDL(deltakerIdent)
+        mockHentFolkeregisteridenter(deltakerIdent)
 
         meldInnIProgrammet(deltakerIdent, orginalStartdato)
 
@@ -154,7 +154,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     fun `Gitt det mottas bekreftelse på endret sluttdato oppgave, forvent at den lagres og hentes opp igjen`() {
         val startdato: LocalDate = LocalDate.now()
         val deltakerIdent = FødselsnummerGenerator.neste()
-        mockPDL(deltakerIdent)
+        mockHentFolkeregisteridenter(deltakerIdent)
 
         meldInnIProgrammet(deltakerIdent, startdato)
 
@@ -202,7 +202,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     fun `Gitt det mottas bekreftelse på avvik på registerinntekt oppgave, forvent at den lagres og hentes opp igjen`() {
         val orginalStartdato: LocalDate = LocalDate.now()
         val deltakerIdent = FødselsnummerGenerator.neste()
-        mockPDL(deltakerIdent)
+        mockHentFolkeregisteridenter(deltakerIdent)
         meldInnIProgrammet(deltakerIdent, orginalStartdato)
 
         kontrollerAvvikPåInntektIRegister(
@@ -245,7 +245,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     fun `Gitt det mottas feil type bekreftelse på oppgave, forvent at kastes feil`() {
         val originalStartdato: LocalDate = LocalDate.now()
         val deltakerIdent = FødselsnummerGenerator.neste()
-        mockPDL(deltakerIdent)
+        mockHentFolkeregisteridenter(deltakerIdent)
         meldInnIProgrammet(deltakerIdent, originalStartdato)
 
         endreStartdato(
@@ -275,7 +275,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
 
-    private fun mockPDL(deltakerIdent: String) {
+    private fun mockHentFolkeregisteridenter(deltakerIdent: String) {
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
             IdentInformasjon(
                 ident = deltakerIdent,
