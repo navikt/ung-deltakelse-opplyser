@@ -97,7 +97,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     }
 
     @AfterEach
-    override fun tearDown() {
+    fun verifiser() {
         verify(atLeast = 1, verifyBlock = {tilgangskontrollService.krevSystemtilgang()})
     }
 
