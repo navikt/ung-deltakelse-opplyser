@@ -122,15 +122,17 @@ class UngdomsytelsesøknadServiceTest {
             .withFailMessage("Forventet at deltakelse med id %s var markert som søkt", deltakelseOpplysningDTO.id)
             .isNotNull()
 
-        assertThat(microfrontendRepository.findAll())
+
+        val deltakerDAO = deltakelse.get().deltaker
+        val microfrontendStatusDAO = microfrontendRepository.findByDeltaker(deltakerDAO)
+        assertThat(microfrontendStatusDAO).isNotNull
+            .withFailMessage("Forventet å finne mikrofrontend for deltaker med id %s", deltakerDAO.id)
+
+        assertThat(microfrontendStatusDAO!!)
             .withFailMessage(
-                "Forventet at mikrofrontend ble aktivert for deltakelse med id %s",
-                deltakelseOpplysningDTO.id
+                "Forventet at mikrofrontend ble aktivert for deltaker med id %s",
+                deltakerDAO.id
             )
-            .isNotEmpty
-            .hasSize(1)
-            .first()
-            .matches { it.deltaker.deltakerIdent == søkerIdent }
             .matches { it.status == MicrofrontendStatus.ENABLE }
     }
 
