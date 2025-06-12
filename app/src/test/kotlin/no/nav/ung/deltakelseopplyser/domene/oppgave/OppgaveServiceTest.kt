@@ -96,6 +96,11 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         justRun { tilgangskontrollService.krevSystemtilgang() }
     }
 
+    @AfterEach
+    override fun tearDown() {
+        verify(atLeast = 1, verifyBlock = {tilgangskontrollService.krevSystemtilgang()})
+    }
+
     @Test
     fun `Gitt det mottas bekreftelse på endret startdato oppgave, forvent at den lagres og hentes opp igjen`() {
         val orginalStartdato: LocalDate = LocalDate.now()
