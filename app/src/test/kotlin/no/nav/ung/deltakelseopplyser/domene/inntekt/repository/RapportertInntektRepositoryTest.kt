@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager
 import no.nav.k9.søknad.JsonUtils
 import no.nav.k9.søknad.ytelse.ung.v1.inntekt.OppgittInntekt
 import no.nav.ung.deltakelseopplyser.domene.inntekt.utils.RapportertInntektUtils
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,15 +33,10 @@ class RapportertInntektRepositoryTest {
     @Autowired
     lateinit var entityManager: EntityManager
 
-    @BeforeEach
-    fun setUp() {
-        rapportertInntektRepository.deleteAll()
-    }
-
     @Test
     fun `Forventer å kunne hente opp rapportert inntekt gitt oppgavereferanse`() {
         val oppgaveReferanse = UUID.randomUUID()
-        val deltakerIdent = "12345678901"
+        val deltakerIdent = FødselsnummerGenerator.neste()
 
         val rapportertInntektDAO = UngRapportertInntektDAO(
             journalpostId = "123",

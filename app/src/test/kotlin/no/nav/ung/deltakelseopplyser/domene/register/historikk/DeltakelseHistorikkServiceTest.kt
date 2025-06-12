@@ -19,6 +19,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -70,17 +71,8 @@ class DeltakelseHistorikkServiceTest {
 
     @BeforeEach
     fun setUp() {
-        deltakelseRepository.deleteAll()
-        deltakerRepository.deleteAll()
-
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
-    }
-
-    @AfterAll
-    fun tearDown() {
-        deltakelseRepository.deleteAll()
-        deltakerRepository.deleteAll()
     }
 
     private companion object {
@@ -97,7 +89,7 @@ class DeltakelseHistorikkServiceTest {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
-        val deltakerDTO = DeltakerDTO(deltakerIdent = "123")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
         val dto = DeltakelseOpplysningDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,

@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.deltaker
 
 import no.nav.pdl.generated.hentperson.Navn
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -10,7 +11,7 @@ internal class DeltakerPersonaliaTest {
 
     private fun lagDeltakerPersonalia(fødselsdato: LocalDate, programOppstartdato: LocalDate?) = DeltakerPersonalia(
         id = UUID.randomUUID(),
-        deltakerIdent = "12345678901",
+        deltakerIdent = FødselsnummerGenerator.neste(),
         navn = Navn("Ola", null, "Nordmann"),
         fødselsdato = fødselsdato,
         programOppstartdato = programOppstartdato

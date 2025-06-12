@@ -29,6 +29,7 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseOpplysningDTO
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -88,8 +89,6 @@ class UngdomsytelsesøknadServiceTest {
 
     @BeforeAll
     fun setUp() {
-        ungdomsprogramDeltakelseRepository.deleteAll()
-        microfrontendRepository.deleteAll()
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
         justRun { mineSiderService.deaktiverOppgave(any()) }
@@ -97,7 +96,7 @@ class UngdomsytelsesøknadServiceTest {
 
     @Test
     fun `Forventer at søknad markerer deltakelsen som søkt og oppgaven løses`() {
-        val søkerIdent = "12345678910"
+        val søkerIdent = FødselsnummerGenerator.neste()
         val deltakelseStart = "2024-11-04"
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
@@ -123,15 +122,17 @@ class UngdomsytelsesøknadServiceTest {
             .withFailMessage("Forventet at deltakelse med id %s var markert som søkt", deltakelseOpplysningDTO.id)
             .isNotNull()
 
-        assertThat(microfrontendRepository.findAll())
+
+        val deltakerDAO = deltakelse.get().deltaker
+        val microfrontendStatusDAO = microfrontendRepository.findByDeltaker(deltakerDAO)
+        assertThat(microfrontendStatusDAO).isNotNull
+            .withFailMessage("Forventet å finne mikrofrontend for deltaker med id %s", deltakerDAO.id)
+
+        assertThat(microfrontendStatusDAO!!)
             .withFailMessage(
-                "Forventet at mikrofrontend ble aktivert for deltakelse med id %s",
-                deltakelseOpplysningDTO.id
+                "Forventet at mikrofrontend ble aktivert for deltaker med id %s",
+                deltakerDAO.id
             )
-            .isNotEmpty
-            .hasSize(1)
-            .first()
-            .matches { it.deltaker.deltakerIdent == søkerIdent }
             .matches { it.status == MicrofrontendStatus.ENABLE }
     }
 
