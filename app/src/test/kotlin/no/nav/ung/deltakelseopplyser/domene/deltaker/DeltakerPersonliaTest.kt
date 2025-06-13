@@ -14,7 +14,8 @@ internal class DeltakerPersonaliaTest {
         deltakerIdent = FødselsnummerGenerator.neste(),
         navn = Navn("Ola", null, "Nordmann"),
         fødselsdato = fødselsdato,
-        programOppstartdato = programOppstartdato
+        programOppstartdato = programOppstartdato,
+        diskresjonskoder = emptySet()
     )
 
     @Test
