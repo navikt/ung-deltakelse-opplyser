@@ -7,6 +7,8 @@ import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
 import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
+import no.nav.sif.abac.kontrakt.abac.resultat.IkkeTilgangÅrsak
+import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,7 +24,7 @@ class TilgangskontrollService(
     private val sifAbacPdpService: SifAbacPdpService,
     private val tokenResolver: JwtBearerTokenResolver,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
-    @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String
+    @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String,
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
@@ -33,16 +35,23 @@ class TilgangskontrollService(
     }
 
     fun krevAnsattTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>) {
-        if (!ansattHarTilgang(action, personIdenter)) {
+        val tilgangsbeslutning = ansattHarTilgang(action, personIdenter)
+        if (!tilgangsbeslutning.harTilgang) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Har ikke tilgang"),
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    tilgangsbeslutning.årsakerForIkkeTilgang.somTekst()
+                ),
                 null
             )
         }
     }
 
-    fun ansattHarTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>): Boolean {
+    fun ansattHarTilgang(
+        action: BeskyttetRessursActionAttributt,
+        personIdenter: List<PersonIdent>,
+    ): Tilgangsbeslutning {
         return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
     }
 
@@ -53,7 +62,13 @@ class TilgangskontrollService(
         val azp = jwt.jwtTokenClaims.getStringClaim("azp")
         val godkjenteClidentIds = godkjenteApplikasjoner.map { clientIdForApplikasjon(it) }
         val erGodkjentApplikasjon = godkjenteClidentIds.contains(azp)
-        logger.info("Azp i token '{}' azpname '{}' godkjente applikasjoner '{}' godkjente clientID '{}'", azp, jwt.jwtTokenClaims.getStringClaim("azp_name"), godkjenteApplikasjoner, godkjenteClidentIds)
+        logger.info(
+            "Azp i token '{}' azpname '{}' godkjente applikasjoner '{}' godkjente clientID '{}'",
+            azp,
+            jwt.jwtTokenClaims.getStringClaim("azp_name"),
+            godkjenteApplikasjoner,
+            godkjenteClidentIds
+        )
         val tilgang = erAzureToken && erClientCredentials && erGodkjentApplikasjon
         if (!tilgang) {
             throw ErrorResponseException(
@@ -92,5 +107,25 @@ class TilgangskontrollService(
     }
 
     data class PreauthorizedApp(val name: String, val clientId: String)
+
+    private fun MutableSet<IkkeTilgangÅrsak>.somTekst(): String {
+        val årsaker = map {
+            when (it) {
+                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_KODE6_PERSON -> "Ikke tilgang til kode6 person"
+                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_KODE7_PERSON -> "Ikke tilgang til kode7 person"
+                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_EGEN_ANSATT -> "Ikke tilgang til egen ansatt"
+                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_APPLIKASJONEN -> "Ikke tilgang til applikasjonen"
+                IkkeTilgangÅrsak.ER_IKKE_VEILEDER_ELLER_SAKSBEHANDLER -> "Ikke veileder eller saksbehandler"
+                IkkeTilgangÅrsak.ER_IKKE_SAKSBEHANDLER -> "Ikke saksbehandler"
+                IkkeTilgangÅrsak.ER_IKKE_BESLUTTER -> "Ikke beslutter"
+                IkkeTilgangÅrsak.ER_IKKE_OVERSTYRER -> "Ikke overstyrer"
+                IkkeTilgangÅrsak.ER_IKKE_DRIFTER -> "Ikke drifter"
+                IkkeTilgangÅrsak.ER_IKKE_UNGDSOMSPROGRAMVEILEDER -> "Ikke ungdomsprogramveileder"
+                else -> "Ikke tilgang"
+            }
+        }
+
+        return årsaker.joinToString(separator = "\n")
+    }
 }
 

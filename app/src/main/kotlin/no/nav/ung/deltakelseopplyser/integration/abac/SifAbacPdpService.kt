@@ -42,7 +42,7 @@ class SifAbacPdpService(
         private val diskresjonsKoderUrl = "/diskresjonskoder"
     }
 
-    fun ansattHarTilgang(input: UngdomsprogramTilgangskontrollInputDto): Boolean {
+    fun ansattHarTilgang(input: UngdomsprogramTilgangskontrollInputDto): Tilgangsbeslutning {
         val httpEntity = HttpEntity(input)
         val response = sifAbacPdpKlient.exchange(
             hendelseInnsendingUrl,
@@ -50,7 +50,7 @@ class SifAbacPdpService(
             httpEntity,
             Tilgangsbeslutning::class.java
         )
-        return response.body!!.harTilgang()
+        return response.body!!
     }
 
     fun hentDiskresjonskoder(personIdent: PersonIdent): Set<Diskresjonskode> {
