@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.integration.abac
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -37,7 +38,7 @@ class SifAbacPdpService(
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(SifAbacPdpService::class.java)
 
-        private val hendelseInnsendingUrl = "/tilgangskontroll/ung/ungdomsprogramveiledning"
+        private val hendelseInnsendingUrl = "/tilgangskontroll/v2/ung/ungdomsprogramveiledning"
         private val diskresjonsKoderUrl = "/diskresjonskoder"
     }
 
@@ -47,9 +48,9 @@ class SifAbacPdpService(
             hendelseInnsendingUrl,
             HttpMethod.POST,
             httpEntity,
-            Decision::class.java
+            Tilgangsbeslutning::class.java
         )
-        return response.body!! == Decision.Permit
+        return response.body!!.harTilgang()
     }
 
     fun hentDiskresjonskoder(personIdent: PersonIdent): Set<Diskresjonskode> {
@@ -77,11 +78,5 @@ class SifAbacPdpService(
             }
         )
     }
-
-    enum class Decision {
-        Permit,
-        Deny
-    }
-
 }
 
