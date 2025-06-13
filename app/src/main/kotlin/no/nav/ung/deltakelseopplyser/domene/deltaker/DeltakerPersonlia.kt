@@ -13,7 +13,7 @@ data class DeltakerPersonalia(
     val navn: Navn,
     val fødselsdato: LocalDate,
 
-    @Schema(description = "Diskresjonskoder som gjelder for deltakeren. Vl være tom hvis deltaker ikke har diskresjonskoder satt.")
+    @Schema(description = "Diskresjonskoder som gjelder for deltakeren. Vil være tom hvis deltaker ikke har diskresjonskoder satt.")
     val diskresjonskoder: Set<Diskresjonskode>,
 
     @Schema(hidden = true)
