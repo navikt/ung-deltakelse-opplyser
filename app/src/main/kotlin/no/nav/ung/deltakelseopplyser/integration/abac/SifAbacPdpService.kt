@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.integration.abac
 
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
+import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -40,14 +41,9 @@ class SifAbacPdpService(
             hendelseInnsendingUrl,
             HttpMethod.POST,
             httpEntity,
-            Decision::class.java
+            Tilgangsbeslutning::class.java
         )
-        return response.body!! == Decision.Permit
-    }
-
-    enum class Decision {
-        Permit,
-        Deny
+        return response.body!!.harTilgang()
     }
 
 }
