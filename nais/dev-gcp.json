@@ -73,7 +73,7 @@
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.dev.nav.no/ung/sak",
     "UNG_SAK_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.ung-sak/.default",
 
-    "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api/tilgangskontroll/ung",
+    "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api/",
     "SIF_ABAC_PDP_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.sif-abac-pdp/.default",
 
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.dev-fss-pub.nais.io",

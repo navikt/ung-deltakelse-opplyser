@@ -37,7 +37,7 @@ class SifAbacPdpService(
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(SifAbacPdpService::class.java)
 
-        private val hendelseInnsendingUrl = "/ungdomsprogramveiledning"
+        private val hendelseInnsendingUrl = "/tilgangskontroll/ung/ungdomsprogramveiledning"
         private val diskresjonsKoderUrl = "/diskresjonskoder"
     }
 
