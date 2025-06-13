@@ -23,6 +23,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
+import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -59,9 +60,12 @@ import java.util.*
     RapportertInntektService::class,
     DeltakerappConfig::class,
     MicrofrontendService::class,
-    OppgaveService::class,
+    OppgaveService::class
 )
 class UngdomsytelsesøknadServiceTest {
+
+    @MockkBean
+    lateinit var sifAbacPdpService: SifAbacPdpService
 
     @MockkBean
     lateinit var pdlService: PdlService

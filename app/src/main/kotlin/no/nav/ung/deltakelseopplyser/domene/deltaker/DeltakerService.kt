@@ -2,7 +2,10 @@ package no.nav.ung.deltakelseopplyser.domene.deltaker
 
 import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Person
+import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
+import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -16,12 +19,14 @@ import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
 import java.util.*
+import kotlin.collections.Set
 
 @Service
 class DeltakerService(
     private val deltakerRepository: DeltakerRepository,
     private val pdlService: PdlService,
     private val kontoregisterService: KontoregisterService,
+    private val sifAbacPdpService: SifAbacPdpService,
     @Value("\${PROGRAM_OPPSTART_DATO}") private val programOppstartdato: String? = null,
 ) {
 
@@ -104,13 +109,14 @@ class DeltakerService(
         }
 
         val pdlPerson = hentPdlPerson(deltakerDAO.deltakerIdent)
-
+        val diskresjonskoder: Set<Diskresjonskode> = sifAbacPdpService.hentDiskresjonskoder(PersonIdent.fra(deltakerDAO.deltakerIdent))
         return DeltakerPersonalia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerDAO.deltakerIdent,
             navn = pdlPerson.navn.first(),
             fødselsdato = pdlPerson.foedselsdato.first().toLocalDate(),
-            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) }
+            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) },
+            diskresjonskoder = diskresjonskoder
         )
     }
 
@@ -141,13 +147,15 @@ class DeltakerService(
         val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
 
         val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)
+        val diskresjonskoder: Set<Diskresjonskode> = sifAbacPdpService.hentDiskresjonskoder(PersonIdent.fra(deltakerIdent))
 
         return DeltakerPersonalia(
             id = deltakerDAO?.id,
             deltakerIdent = deltakerIdent,
             navn = PdlPerson.navn.first(),
             fødselsdato = PdlPerson.foedselsdato.first().toLocalDate(),
-            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) }
+            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) },
+            diskresjonskoder = diskresjonskoder
         )
     }
 

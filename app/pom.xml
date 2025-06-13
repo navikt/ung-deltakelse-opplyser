@@ -28,6 +28,7 @@
         <graphql-kotlin.version>8.8.0</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
+        <sif-abac-kontrakt.version>1.4.1</sif-abac-kontrakt.version>
     </properties>
     <dependencies>
 
@@ -122,7 +123,7 @@
         <dependency>
             <groupId>no.nav.sif.abac</groupId>
             <artifactId>kontrakt</artifactId>
-            <version>1.4.0</version>
+            <version>${sif-abac-kontrakt.version}</version>
         </dependency>
         <!-- K9 Kontrakter -->
 
