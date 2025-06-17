@@ -103,13 +103,19 @@ class OppgaveService(
             varselId = nyOppgave.oppgaveReferanse.toString(),
             deltakerIdent = deltaker.deltakerIdent,
             tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
-            varselLink = deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString()),
+            varselLink = utledVarselLink(nyOppgave),
             varseltype = Varseltype.Oppgave,
             aktivFremTil = frist,
         )
 
         return nyOppgave.tilDTO()
     }
+
+    private fun utledVarselLink(nyOppgave: OppgaveDAO) =
+        when (nyOppgave.oppgavetype) {
+            Oppgavetype.SØK_YTELSE -> deltakerappConfig.getSøknadUrl()
+            else -> deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString())
+        }
 
     fun avbrytOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID): OppgaveDTO {
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
