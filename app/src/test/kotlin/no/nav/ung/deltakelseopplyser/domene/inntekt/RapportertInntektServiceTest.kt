@@ -78,7 +78,7 @@ class RapportertInntektServiceTest {
                     rapportertInntekt = null // Forventes oppdatert av tjenesten
                 ),
                 bekreftelse = BekreftelseDTO(
-                    harGodtattEndringen = true,
+                    harUttalelse = true,
                     uttalelseFraBruker = null
                 ),
                 status = OppgaveStatus.LØST,
@@ -113,7 +113,7 @@ class RapportertInntektServiceTest {
                 rapportertInntekt = null // Forventes oppdatert av tjenesten
             ),
             bekreftelse = BekreftelseDTO(
-                harGodtattEndringen = true,
+                harUttalelse = true,
                 uttalelseFraBruker = null
             ),
             status = OppgaveStatus.LØST,

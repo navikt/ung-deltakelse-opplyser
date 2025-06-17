@@ -76,7 +76,7 @@ class OppgaveDAO(
         )
 
         fun OppgaveBekreftelse.tilDTO(): BekreftelseDTO = BekreftelseDTO(
-            harGodtattEndringen = harGodtattEndringen,
+            harUttalelse = harUttalelse,
             uttalelseFraBruker = uttalelseFraBruker,
         )
 
