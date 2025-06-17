@@ -56,8 +56,8 @@ class OppgaveService(
 
         forsikreRiktigOppgaveBekreftelse(oppgave, oppgaveBekreftelse)
         val bekreftelse = oppgaveBekreftelse.getBekreftelse<Bekreftelse>()
-        oppgave.oppgaveBekreftelse = no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveBekreftelse(
-            harGodtattEndringen = bekreftelse.harBrukerGodtattEndringen(),
+        oppgave.oppgaveBekreftelse = OppgaveBekreftelse(
+            harUttalelse = bekreftelse.harUttalelse(),
             uttalelseFraBruker = bekreftelse.uttalelseFraBruker
         )
 

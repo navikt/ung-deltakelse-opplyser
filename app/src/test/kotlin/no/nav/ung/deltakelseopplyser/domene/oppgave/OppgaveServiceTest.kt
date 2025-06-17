@@ -147,7 +147,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                 EndretStartdatoBekreftelse(
                     oppgaveReferanse,
                     LocalDate.now(),
-                    false
+                    true
                 ).medUttalelseFraBruker("Det er feil med datoen")
             )
         )
@@ -160,7 +160,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretStartdatoDataDTO::class.java)
         assertThat(oppgave.bekreftelse).isNotNull
-        assertThat(oppgave.bekreftelse?.harGodtattEndringen).isFalse()
+        assertThat(oppgave.bekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.bekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
 
         verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
@@ -199,7 +199,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                 EndretSluttdatoBekreftelse(
                     oppgaveReferanse,
                     startdato.plusDays(3),
-                    false
+                    true
                 ).medUttalelseFraBruker("Det er feil med datoen")
             )
         )
@@ -213,7 +213,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(EndretSluttdatoDataDTO::class.java)
         assertThat(oppgave.bekreftelse).isNotNull
-        assertThat(oppgave.bekreftelse?.harGodtattEndringen).isFalse()
+        assertThat(oppgave.bekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.bekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
 
         verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
@@ -243,7 +243,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                 deltakerIdent,
                 InntektBekreftelse(
                     oppgaveReferanse,
-                    false,
+                    true,
                     "Det er feil inntekt i registeret"
                 )
             )
@@ -257,7 +257,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.oppgavetypeData).isInstanceOf(KontrollerRegisterinntektOppgavetypeDataDTO::class.java)
         assertThat(oppgave.bekreftelse).isNotNull
-        assertThat(oppgave.bekreftelse?.harGodtattEndringen).isFalse()
+        assertThat(oppgave.bekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.bekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil inntekt i registeret")
 
         verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
@@ -290,7 +290,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                     deltakerIdent,
                     InntektBekreftelse(
                         oppgaveReferanse,
-                        false,
+                        true,
                         "Det er feil inntekt"
                     )
                 )
