@@ -13,6 +13,6 @@ class DeltakerappConfig(
     }
 
     fun getSøknadUrl(): String {
-        return "$deltakerAppBaseUrl/ungdomsytelse-deltaker"
+        return "$deltakerAppBaseUrl"
     }
 }
