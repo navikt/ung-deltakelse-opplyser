@@ -85,6 +85,6 @@
     "UNGDOMSYTELSE_DELTAKER_BASE_URL": "https://ungdomsytelse-deltaker.intern.dev.nav.no/ungdomsytelse-deltaker",
 
     "SWAGGER_ENABLED": "true",
-    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0"
   }
 }

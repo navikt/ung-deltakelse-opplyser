@@ -72,7 +72,7 @@
     "SOKOS_KONTOREGISTER_PERSON_BASE_URL": "http://sokos-kontoregister-person.okonomi",
     "SOKOS_KONTOREGISTER_PERSON_AUDIENCE": "prod-gcp:okonomi:sokos-kontoregister-person",
 
-    "UNGDOMSYTELSE_DELTAKER_BASE_URL": "https://www.nav.no/ungdomsytelse-deltaker",
+    "UNGDOMSYTELSE_DELTAKER_BASE_URL": "https://www.nav.no/ungdomsprogrammet/ytelsen",
 
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0",
