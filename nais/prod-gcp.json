@@ -48,8 +48,8 @@
     "name": "ung-deltakelse-opplyser-db",
     "envVarPrefix": "DB",
     "type": "POSTGRES_16",
-    "tier": "db-custom-2-7680",
-    "diskSize": "100",
+    "tier": "db-custom-2-5120",
+    "diskSize": "50",
     "diskAutoresize": "true",
     "highAvailability": "true"
   },
