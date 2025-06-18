@@ -65,8 +65,8 @@
   },
   "resources": {
     "memory": {
-      "limits": "1.28Gi",
-      "requests": "1.22Gi"
+      "limits": "1280Mi",
+      "requests": "1220Mi"
     },
     "cpu": {
       "requests": "320m"
