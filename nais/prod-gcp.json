@@ -54,12 +54,13 @@
     "highAvailability": "true"
   },
   "resources": {
-    "limits": {
-      "memory": "2000m"
+    "memory": {
+      "limits": "2000m",
+      "requests": "1536Mi"
     },
-    "requests": {
-      "cpu": "320m",
-      "memory": "1536Mi"
+    "cpu": {
+      "requests": "320m"
+
     }
   },
   "kafkaPool": "nav-prod",

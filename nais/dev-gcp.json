@@ -64,12 +64,12 @@
     "highAvailability": "false"
   },
   "resources": {
-    "limits": {
-      "memory": "1.28Gi"
+    "memory": {
+      "limits": "1.28Gi",
+      "requests": "1.22Gi"
     },
-    "requests": {
-      "cpu": "320m",
-      "memory": "1.22Gi"
+    "cpu": {
+      "requests": "320m"
     }
   },
   "kafkaPool": "nav-dev",
