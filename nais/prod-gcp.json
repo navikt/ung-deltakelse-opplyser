@@ -69,7 +69,7 @@
     "NO_NAV_GATEWAYS_PDL_API_BASE_URL": "https://pdl-api.prod-fss-pub.nais.io",
     "PDL_API_AZURE_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
 
-    "SOKOS_KONTOREGISTER_PERSON_BASE_URL": "http://sokos-kontoregister-person.okonomi",
+    "NO_NAV_GATEWAYS_SOKOS_KONTOREGISTER_PERSON_BASE_URL": "http://sokos-kontoregister-person.okonomi",
     "SOKOS_KONTOREGISTER_PERSON_AUDIENCE": "prod-gcp:okonomi:sokos-kontoregister-person",
 
     "UNGDOMSYTELSE_DELTAKER_BASE_URL": "https://www.nav.no/ungdomsprogrammet/ytelsen",
