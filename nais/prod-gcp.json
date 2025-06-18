@@ -3,7 +3,7 @@
   "cluster": "prod-gcp",
   "namespace": "k9saksbehandling",
   "team": "k9saksbehandling",
-  "minReplicas": "1",
+  "minReplicas": "2",
   "maxReplicas": "2",
   "externalHosts": [
     "pdl-api.prod-fss-pub.nais.io"
@@ -52,6 +52,15 @@
     "diskSize": "50",
     "diskAutoresize": "true",
     "highAvailability": "true"
+  },
+  "resources": {
+    "limits": {
+      "memory": "2000m"
+    },
+    "requests": {
+      "cpu": "320m",
+      "memory": "1536Mi"
+    }
   },
   "kafkaPool": "nav-prod",
   "observabilityEnabled": "true",

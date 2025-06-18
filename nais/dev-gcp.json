@@ -63,6 +63,15 @@
     "diskAutoresize": "false",
     "highAvailability": "false"
   },
+  "resources": {
+    "limits": {
+      "memory": "1.28Gi"
+    },
+    "requests": {
+      "cpu": "320m",
+      "memory": "1.22Gi"
+    }
+  },
   "kafkaPool": "nav-dev",
   "observabilityEnabled": "true",
   "env": {
