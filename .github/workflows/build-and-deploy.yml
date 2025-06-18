@@ -60,18 +60,18 @@ jobs:
       input_vars_file: nais/dev-gcp.json
     secrets: inherit
 
-#  deploy-prod:
-#    name: Deploy prod
-#    permissions:
-#      id-token: write
-#      contents: write
-#    if: github.ref_name == 'main'
-#    needs: [ build-app, deploy-dev ]
-#    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
-#    with:
-#      gar: true
-#      image: ${{ needs.build-app.outputs.build-version }}
-#      cluster: prod-gcp
-#      naiserator_file: nais/naiserator.yaml
-#      input_vars_file: nais/prod-gcp.json
-#    secrets: inherit
+  deploy-prod:
+    name: Deploy prod
+    permissions:
+      id-token: write
+      contents: write
+    if: github.ref_name == 'main'
+    needs: [ build-app, deploy-dev, verdikjede-tester ]
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
+    with:
+      gar: true
+      image: ${{ needs.build-app.outputs.build-version }}
+      cluster: prod-gcp
+      naiserator_file: nais/naiserator.yaml
+      input_vars_file: nais/prod-gcp.json
+    secrets: inherit
