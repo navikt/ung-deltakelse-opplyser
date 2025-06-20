@@ -74,7 +74,7 @@ class UngdomsprogramregisterService(
             deltakerService.lagreDeltaker(deltakelseDTO)
         }
 
-        val ungdomsprogramDAO = deltakelseRepository.save(deltakelseDTO.mapToDAO(deltakerDAO))
+        val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDTO.mapToDAO(deltakerDAO))
 
         oppgaveService.opprettOppgave(
             deltaker = deltakerDAO,

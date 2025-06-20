@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.domene.register
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.justRun
+import io.mockk.verify
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
@@ -234,6 +235,19 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
         assertThat(endretSluttdatoDeltakelse.fraOgMed).isEqualTo(mandag)
         assertThat(endretSluttdatoDeltakelse.tilOgMed).isEqualTo(onsdag.plusWeeks(1))
+    }
+
+    @Test
+    fun `Deltaker blir meldt inn to ganger ved feil skal ikke produsere to oppgaver`() {
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = LocalDate.now(),
+            tilOgMed = null
+        )
+        ungdomsprogramregisterService.leggTilIProgram(dto)
+        assertThrows<DataIntegrityViolationException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
+        verify(exactly = 1) { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
     }
 
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
