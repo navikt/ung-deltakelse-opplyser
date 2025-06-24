@@ -5,15 +5,12 @@ import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTIO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
-import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
@@ -39,8 +36,8 @@ class UngdomsprogramregisterService(
     private val deltakerService: DeltakerService,
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
-    private val rapportertInntektService: RapportertInntektService,
     private val oppgaveService: OppgaveService,
+    private val oppgaveMapperService: OppgaveMapperService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -53,14 +50,6 @@ class UngdomsprogramregisterService(
                 søktTidspunkt = søktTidspunkt,
                 fraOgMed = getFom(),
                 tilOgMed = getTom()
-            )
-        }
-
-        fun DeltakelseDAO.mapToKomposittDTO(): DeltakelseKomposittDTO {
-
-            return DeltakelseKomposittDTO(
-                deltakelse = mapToDTO(),
-                oppgaver = deltaker.oppgaver.map { it.tilDTO() }
             )
         }
     }
@@ -335,22 +324,11 @@ class UngdomsprogramregisterService(
     }
 
     private fun DeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelseKomposittDTO {
-        val oppgaver = oppgaver.map { oppgave ->
-            oppgave
-                .tilDTO()
-                .let { oppgaveDTO ->
-                    if (oppgave.erLøstInntektsrapportering()) {
-                        rapportertInntektService.leggPåRapportertInntekt(oppgaveDTO)
-                    } else oppgaveDTO
-                }
-        }
+        val oppgaver = oppgaver.map { oppgaveMapperService.mapOppgaveTilDTO(it) }
 
         return DeltakelseKomposittDTO(
             deltakelse = mapToDTO(),
             oppgaver = oppgaver
         )
     }
-
-    private fun OppgaveDAO.erLøstInntektsrapportering() =
-        this.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT && this.status == OppgaveStatus.LØST
 }

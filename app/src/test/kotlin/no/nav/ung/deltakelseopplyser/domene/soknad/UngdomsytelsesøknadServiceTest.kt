@@ -19,11 +19,13 @@ import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
+import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -60,7 +62,8 @@ import java.util.*
     RapportertInntektService::class,
     DeltakerappConfig::class,
     MicrofrontendService::class,
-    OppgaveService::class
+    OppgaveService::class,
+    OppgaveMapperService::class
 )
 class UngdomsytelsesøknadServiceTest {
 
@@ -78,6 +81,9 @@ class UngdomsytelsesøknadServiceTest {
 
     @MockkBean
     lateinit var mineSiderService: MineSiderService
+
+    @MockkBean
+    lateinit var enhetsregisterService: EnhetsregisterService
 
     @Autowired
     lateinit var ungdomsprogramDeltakelseRepository: UngdomsprogramDeltakelseRepository

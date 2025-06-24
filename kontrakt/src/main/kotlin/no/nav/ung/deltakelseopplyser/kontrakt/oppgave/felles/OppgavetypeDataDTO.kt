@@ -45,6 +45,7 @@ data class SøkYtelseOppgavetypeDataDTO(
 data class ArbeidOgFrilansRegisterInntektDTO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("arbeidsgiver") val arbeidsgiver: String,
+    @JsonProperty("navn") val navn: String?,
 )
 
 

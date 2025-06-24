@@ -8,13 +8,18 @@ import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -53,7 +58,7 @@ class OppgaveUngSakController(
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
-    private val mineSiderService: MineSiderService,
+    private val oppgaveMapperService: OppgaveMapperService,
     private val oppgaveService: OppgaveService,
 ) {
 
@@ -278,7 +283,7 @@ class OppgaveUngSakController(
 
         return if (uløstOppgaveISammePeriode != null) {
             logger.warn("Det finnes allerede en uløst oppgave for inntektsrapportering i perioden [${opprettInntektsrapporteringOppgaveDTO.fomDato} - ${opprettInntektsrapporteringOppgaveDTO.tomDato}]. Returnerer oppgave med id ${uløstOppgaveISammePeriode.id}")
-            uløstOppgaveISammePeriode.tilDTO()
+            oppgaveMapperService.mapOppgaveTilDTO(uløstOppgaveISammePeriode)
         } else oppgaveService.opprettOppgave(
             deltaker = deltaker,
             frist = ZonedDateTime.of(opprettInntektsrapporteringOppgaveDTO.frist, ZoneOffset.UTC),
@@ -325,10 +330,10 @@ class OppgaveUngSakController(
         fom: LocalDate,
         tom: LocalDate,
     ): Boolean {
-        val eksisterende: KontrollerRegisterinntektOppgavetypeDataDTO =
-            oppgaveDAO.oppgavetypeDataDAO.tilDTO() as KontrollerRegisterinntektOppgavetypeDataDTO
-        logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [${eksisterende.fraOgMed}/${eksisterende.tilOgMed}], Ny: [$fom/$tom]")
-        return !eksisterende.fraOgMed.isAfter(tom) && !eksisterende.tilOgMed.isBefore(fom)
+        val eksisterende: KontrollerRegisterInntektOppgaveTypeDataDAO =
+            oppgaveDAO.oppgavetypeDataDAO as KontrollerRegisterInntektOppgaveTypeDataDAO
+        logger.info("Sjekker om oppgave med oppgaveReferanse ${oppgaveDAO.oppgaveReferanse} gjelder samme periode som ny oppgave. Eksisterende: [${eksisterende.fomDato}/${eksisterende.tomDato}], Ny: [$fom/$tom]")
+        return !eksisterende.fomDato.isAfter(tom) && !eksisterende.tomDato.isBefore(fom)
     }
 
     private fun gjelderSammePeriodeForInntektsrapportering(
