@@ -95,11 +95,13 @@ class OppgaveMapperService(
             ArbeidOgFrilansRegisterInntektDTO(
                 it.inntekt,
                 it.arbeidsgiver,
-                hentArbeidsgiverNavn(it.arbeidsgiver)
+                if (it.arbeidsgiver.erOrganisasjonsnummer()) hentArbeidsgiverNavn(it.arbeidsgiver) else null
             )
         },
         ytelseInntekter = ytelseInntekter.map { YtelseRegisterInntektDTO(it.inntekt, it.ytelsetype) }
     )
+
+    private fun String.erOrganisasjonsnummer() = length == 9 && all { it.isDigit() }
 
     private fun hentArbeidsgiverNavn(organisasjonsnummer: String): String? {
         return kotlin.runCatching { enhetsregisterService.hentOrganisasjonsinfo(organisasjonsnummer) }
