@@ -95,7 +95,7 @@ class OppgaveMapperService(
             ArbeidOgFrilansRegisterInntektDTO(
                 it.inntekt,
                 it.arbeidsgiver,
-                if (it.arbeidsgiver.erOrganisasjonsnummer()) hentArbeidsgiverNavn(it.arbeidsgiver) else null
+                hentArbeidsgiverNavn(it.arbeidsgiver)
             )
         },
         ytelseInntekter = ytelseInntekter.map { YtelseRegisterInntektDTO(it.inntekt, it.ytelsetype) }
@@ -103,22 +103,27 @@ class OppgaveMapperService(
 
     private fun String.erOrganisasjonsnummer() = length == 9 && all { it.isDigit() }
 
-    private fun hentArbeidsgiverNavn(organisasjonsnummer: String): String? {
-        return kotlin.runCatching { enhetsregisterService.hentOrganisasjonsinfo(organisasjonsnummer) }
-            .fold(
-                onSuccess = {
-                    val sammensattnavn = it.navn?.sammensattnavn
-                    if (sammensattnavn.isNullOrBlank()) {
-                        logger.warn("Organisasjonsnummer $organisasjonsnummer hadde ikke navn i Enhetsregisteret. Returnerer null.")
+    private fun hentArbeidsgiverNavn(arbeidsgiver: String): String? {
+        return if (!arbeidsgiver.erOrganisasjonsnummer()) {
+            logger.info("Arbeidsgiver er ikke organisasjonsnummer. Returnerer null.")
+            null
+        } else {
+            kotlin.runCatching { enhetsregisterService.hentOrganisasjonsinfo(arbeidsgiver) }
+                .fold(
+                    onSuccess = {
+                        val sammensattnavn = it.navn?.sammensattnavn
+                        if (sammensattnavn.isNullOrBlank()) {
+                            logger.warn("Organisasjonsnummer $arbeidsgiver hadde ikke navn i Enhetsregisteret. Returnerer null.")
+                            null
+                        } else
+                            sammensattnavn
+                    },
+                    onFailure = {
+                        logger.warn("Kunne ikke hente organisasjonsnavn for $arbeidsgiver. Returnerer null. ${it.message}.")
                         null
-                    } else
-                        sammensattnavn
-                },
-                onFailure = {
-                    logger.warn("Kunne ikke hente organisasjonsnavn for $organisasjonsnummer. Returnerer null. ${it.message}.")
-                    null
-                }
-            )
+                    }
+                )
+        }
     }
 
     private fun OppgaveDAO.erLøstInntektsrapportering() =
