@@ -74,7 +74,7 @@ class EnhetsregisterService(
     @Recover
     open fun hentOrganisasjonsinfo(ex: HttpClientErrorException): OrganisasjonRespons {
         val feilmelding = parseFeilmelding(ex.responseBodyAsString)
-        logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
+        logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding", ex)
 
         throw EnhetsregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))
     }
@@ -82,13 +82,13 @@ class EnhetsregisterService(
     @Recover
     open fun recoverServerError(ex: HttpServerErrorException): OrganisasjonRespons {
         val feilmelding = parseFeilmelding(ex.responseBodyAsString)
-        logger.error("Serverfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding")
+        logger.error("Serverfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding", ex)
         throw EnhetsregisterException("Annen feil: $feilmelding", HttpStatus.valueOf(ex.statusCode.value()))
     }
 
     @Recover
     open fun recoverResourceAccess(ex: ResourceAccessException): OrganisasjonRespons {
-        logger.error("Tilgangsfeil mot $TJENESTE_NAVN: ${ex.message}")
+        logger.error("Tilgangsfeil mot $TJENESTE_NAVN: ${ex.message}", ex)
         throw EnhetsregisterException(
             "Kunne ikke nå enhetsregisteret: ${ex.message}",
             HttpStatus.SERVICE_UNAVAILABLE
