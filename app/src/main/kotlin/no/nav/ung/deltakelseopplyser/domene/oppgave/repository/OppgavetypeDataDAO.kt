@@ -124,19 +124,7 @@ data class SøkYtelseOppgavetypeDataDAO(
 data class RegisterinntektDAO(
     @JsonProperty("arbeidOgFrilansInntekter") val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDAO>,
     @JsonProperty("ytelseInntekter") val ytelseInntekter: List<YtelseRegisterInntektDAO>,
-) {
-    companion object {
-        fun RegisterinntektDAO.tilDTO() = RegisterinntektDTO(
-            arbeidOgFrilansInntekter = arbeidOgFrilansInntekter.map {
-                ArbeidOgFrilansRegisterInntektDTO(
-                    it.inntekt,
-                    it.arbeidsgiver
-                )
-            },
-            ytelseInntekter = ytelseInntekter.map { YtelseRegisterInntektDTO(it.inntekt, it.ytelsetype) }
-        )
-    }
-}
+)
 
 data class InntektsrapporteringOppgavetypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")

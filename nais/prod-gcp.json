@@ -6,7 +6,8 @@
   "minReplicas": "2",
   "maxReplicas": "2",
   "externalHosts": [
-    "pdl-api.prod-fss-pub.nais.io"
+    "pdl-api.prod-fss-pub.nais.io",
+    "ereg-services.prod-fss-pub.nais.io"
   ],
   "ingresses": [
     "https://ung-deltakelse-opplyser.intern.nav.no"
@@ -83,6 +84,8 @@
     "SOKOS_KONTOREGISTER_PERSON_AUDIENCE": "prod-gcp:okonomi:sokos-kontoregister-person",
 
     "UNGDOMSYTELSE_DELTAKER_BASE_URL": "https://www.nav.no/ungdomsprogrammet/ytelsen",
+
+    "NO_NAV_GATEWAYS_ENHETSREGISTER_BASE_URL": "https://ereg-services.prod-fss-pub.nais.io",
 
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0"

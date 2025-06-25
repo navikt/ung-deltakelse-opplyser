@@ -8,11 +8,10 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
@@ -42,6 +41,7 @@ class UngdomsprogramRegisterDeltakerController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakerService: DeltakerService,
     private val oppgaveService: OppgaveService,
+    private val oppgaveMapperService: OppgaveMapperService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
 
@@ -71,7 +71,8 @@ class UngdomsprogramRegisterDeltakerController(
         val deltakelseDTO = registerService.markerSomHarSøkt(id)
         return DeltakelseKomposittDTO(
             deltakelse = deltakelseDTO,
-            oppgaver = deltakerService.hentDeltakersOppgaver(personPåDeltakelsen).map { it.tilDTO() }
+            oppgaver = deltakerService.hentDeltakersOppgaver(personPåDeltakelsen)
+                .map { oppgaveMapperService.mapOppgaveTilDTO(it) }
         )
     }
 
@@ -80,16 +81,17 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakersOppgave(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
         val personIdent = tokenValidationContextHolder.personIdent()
-        return deltakerService.hentDeltakersOppgaver(personIdent)
-            .find { it.oppgaveReferanse == oppgaveReferanse }?.tilDTO()
-            ?: throw ErrorResponseException(
+        val oppgaveDAO = deltakerService.hentDeltakersOppgaver(personIdent)
+            .find { it.oppgaveReferanse == oppgaveReferanse } ?: throw ErrorResponseException(
+            HttpStatus.NOT_FOUND,
+            ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.NOT_FOUND,
-                    "Fant ingen oppgave med referanse $oppgaveReferanse for deltaker."
-                ),
-                null
-            )
+                "Fant ingen oppgave med referanse $oppgaveReferanse for deltaker."
+            ),
+            null
+        )
+
+        return oppgaveMapperService.mapOppgaveTilDTO(oppgaveDAO)
     }
 
     @GetMapping("/oppgave/{oppgaveReferanse}/lukk", produces = [MediaType.APPLICATION_JSON_VALUE])

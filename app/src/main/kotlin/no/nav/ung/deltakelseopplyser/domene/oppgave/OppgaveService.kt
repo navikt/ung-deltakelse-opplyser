@@ -12,7 +12,6 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO.Companion.tilDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -32,6 +31,7 @@ class OppgaveService(
     private val deltakerService: DeltakerService,
     private val mineSiderService: MineSiderService,
     private val deltakerappConfig: DeltakerappConfig,
+    private val oppgaveMapperService: OppgaveMapperService
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
@@ -108,7 +108,7 @@ class OppgaveService(
             aktivFremTil = frist,
         )
 
-        return nyOppgave.tilDTO()
+        return oppgaveMapperService.mapOppgaveTilDTO(nyOppgave)
     }
 
     private fun utledVarselLink(nyOppgave: OppgaveDAO) =
@@ -124,7 +124,7 @@ class OppgaveService(
 
         if (oppgave.status == OppgaveStatus.LØST) {
             logger.error("Oppgave med oppgaveReferanse $oppgaveReferanse er løst og kan ikke avbrytes.")
-            return oppgave.tilDTO();
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
         }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
@@ -136,7 +136,7 @@ class OppgaveService(
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
 
-        return oppdatertOppgave.tilDTO()
+        return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
     fun utløperOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID): OppgaveDTO {
@@ -146,7 +146,7 @@ class OppgaveService(
 
         if (oppgave.status == OppgaveStatus.LØST) {
             logger.error("Oppgave med oppgaveReferanse $oppgaveReferanse er løst og kan ikke utløpes.")
-            return oppgave.tilDTO();
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
         }
 
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
@@ -158,7 +158,7 @@ class OppgaveService(
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
 
-        return oppdatertOppgave.tilDTO()
+        return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
     fun løsOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID?): OppgaveDTO {
@@ -175,7 +175,7 @@ class OppgaveService(
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
-        return oppdatertOppgave.tilDTO()
+        return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
     fun løsOppgave(oppgaveReferanse: UUID): OppgaveDTO {
@@ -189,7 +189,7 @@ class OppgaveService(
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
         mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
-        return oppdatertOppgave.tilDTO()
+        return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
     fun lukkOppgave(oppgaveReferanse: UUID): OppgaveDTO {
@@ -227,7 +227,7 @@ class OppgaveService(
         val oppdatertOppgave = oppgave.markerSomLukket()
         deltakerService.oppdaterDeltaker(deltaker)
         mineSiderService.deaktiverOppgave(oppgaveReferanse.toString())
-        return oppdatertOppgave.tilDTO()
+        return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
     fun åpneOppgave(oppgaveReferanse: UUID): OppgaveDTO {
@@ -235,7 +235,7 @@ class OppgaveService(
 
         val oppdatertOppgave = oppgave.markerSomÅpnet()
         deltakerService.oppdaterDeltaker(deltaker)
-        return oppdatertOppgave.tilDTO()
+        return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
     private fun forsikreRiktigOppgaveBekreftelse(
