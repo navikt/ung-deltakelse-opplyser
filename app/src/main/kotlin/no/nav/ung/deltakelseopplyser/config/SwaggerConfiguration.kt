@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.security.OAuthFlows
 import io.swagger.v3.oas.models.security.Scopes
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
+import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,6 +22,36 @@ class SwaggerConfiguration(
     @Value("\${springdoc.oAuthFlow.tokenUrl}") val tokenUrl: String,
     @Value("\${springdoc.oAuthFlow.apiScope}") val apiScope: String
 ) {
+
+    @Bean
+    fun deltakerOpenApi(): GroupedOpenApi {
+        val packagesToscan = arrayOf(
+            "no.nav.ung.deltakelseopplyser.domene.register.deltaker",
+        )
+        return GroupedOpenApi.builder()
+            .group("deltaker").packagesToScan(*packagesToscan)
+            .build()
+    }
+
+    @Bean
+    fun veilederOpenApi(): GroupedOpenApi {
+        val packagesToscan = arrayOf(
+            "no.nav.ung.deltakelseopplyser.domene.register.veileder"
+        )
+        return GroupedOpenApi.builder()
+            .group("veileder").packagesToScan(*packagesToscan)
+            .build()
+    }
+
+    @Bean
+    fun ungSakOpenApi(): GroupedOpenApi {
+        val packagesToscan = arrayOf(
+            "no.nav.ung.deltakelseopplyser.domene.register.ungsak",
+        )
+        return GroupedOpenApi.builder()
+            .group("ung-sak").packagesToScan(*packagesToscan)
+            .build()
+    }
 
     @Bean
     fun openAPI(): OpenAPI {
