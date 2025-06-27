@@ -45,6 +45,7 @@ spec:
       {{/each}}
     outbound:
       rules:
+        - application: ung-sak
         - application: k9-selvbetjening-oppslag
         - application: sif-abac-pdp
         - application: sokos-kontoregister-person
