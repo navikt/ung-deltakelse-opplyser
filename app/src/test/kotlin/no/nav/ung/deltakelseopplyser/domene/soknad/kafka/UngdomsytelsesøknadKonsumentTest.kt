@@ -2,17 +2,24 @@ package no.nav.ung.deltakelseopplyser.domene.soknad.kafka
 
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
-import io.hypersistence.utils.hibernate.type.range.Range
+import io.mockk.andThenJust
 import io.mockk.every
+import io.mockk.runs
 import io.mockk.verify
+import no.nav.pdl.generated.enums.IdentGruppe
+import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
-import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.leggPåTopic
 import org.assertj.core.api.Assertions.assertThat
@@ -21,7 +28,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.Duration
 import java.time.LocalDate
-import java.util.*
 
 class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
 
@@ -35,43 +41,46 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var søknadRepository: SøknadRepository
 
+    @Autowired
+    lateinit var ungdomsprogramregisterService: UngdomsprogramregisterService
+
+    @Autowired
+    lateinit var deltakerService: DeltakerService
+
+    @Autowired
+    lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
+
     @SpykBean
     lateinit var ungdomsytelsesøknadService: UngdomsytelsesøknadService
 
     @MockkBean
-    lateinit var deltakerService: DeltakerService
-
-    @MockkBean
-    lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
-
-    @MockkBean
     lateinit var microfrontendService: MicrofrontendService
+
+    @MockkBean
+    lateinit var pdlService: PdlService
 
     @Test
     fun `Forventer at listener forsøker på nytt ved feil`() {
-        val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
-        val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
-        val søkerIdent = FødselsnummerGenerator.neste()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockPdlIdent(deltakerIdent, IdentGruppe.FOLKEREGISTERIDENT)
 
-        // Gitt deltaker...
-        every { deltakerService.hentDeltakterIder(any()) } returns listOf(UUID.randomUUID())
+        val journalpostId = "671161658"
 
-        // med eksisterende deltakelse...
-        every { deltakelseRepository.findByIdAndDeltaker_IdIn(any(), any()) } returns DeltakelseDAO(
-            id = UUID.randomUUID(),
-            deltaker = DeltakerDAO(
-                deltakerIdent = søkerIdent,
-                id = UUID.randomUUID()
-            ),
-            periode = Range.openInfinite(LocalDate.now()),
-            søktTidspunkt = null
+        val deltakelseDTO = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+                fraOgMed = LocalDate.now(),
+                tilOgMed = null
+            )
         )
 
+        val oppgaveReferanse = deltakerService.hentDeltakersOppgaver(deltakerIdent).first { it.oppgavetype == Oppgavetype.SØK_YTELSE }.oppgaveReferanse
 
-        every { deltakelseRepository.save(ofType(DeltakelseDAO::class)) }
-            .answers { firstArg<DeltakelseDAO>() }
-
-        every { microfrontendService.sendOgLagre(any()) } throws RuntimeException("Simulert feil ved publisering av mikrofrontend melding")
+        every { microfrontendService.sendOgLagre(any()) } throwsMany listOf(
+                RuntimeException("Simulert feil 1"),
+                RuntimeException("Simulert feil 2"),
+                RuntimeException("Simulert feil 3")
+            ) andThenJust runs
 
         //language=JSON
         val søknad = """
@@ -79,17 +88,18 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
               "data": {
                 "journalførtMelding": {
                   "type": "JournalfortSøknad",
-                  "journalpostId": "671161658",
+                  "journalpostId": "$journalpostId",
                   "søknad": {
                     "mottattDato": "2024-11-04T10:57:18.634Z",
                     "språk": "nb",
                     "søker": {
-                      "norskIdentitetsnummer": "$søkerIdent"
+                      "norskIdentitetsnummer": "$deltakerIdent"
                     },
-                    "søknadId": "$søknadId",
+                    "søknadId": "$oppgaveReferanse",
                     "versjon": "1.0.0",
                     "ytelse": {
                       "type": "UNGDOMSYTELSE",
+                      "deltakelseId": "${deltakelseDTO.id}",
                       "søknadType": "DELTAKELSE_SØKNAD",
                       "søktFraDatoer": ["2025-01-01"],
                       "inntekter": {
@@ -112,23 +122,41 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
                 }
               },
               "metadata": {
-                "correlationId": "$correlationId",
+                "correlationId": "cd9b224f-b344-480c-8513-f68a19cb7b3a",
                 "soknadDialogCommitSha": "2024.11.04-09.27-1d1c461",
                 "version": 1
               }
             }
         """.trimIndent()
 
-        producer.leggPåTopic(søknadId, søknad, TOPIC)
+        producer.leggPåTopic(oppgaveReferanse.toString(), søknad, TOPIC)
 
         // Vent til at alle forsøkene er gjort
-        await.atMost(Duration.ofSeconds(20)).untilAsserted {
+        await.atMost(Duration.ofSeconds(60)).untilAsserted {
             // 3 feil + 1 suksess = 4 kall totalt
             verify(atLeast = 4) {
                 ungdomsytelsesøknadService.håndterMottattSøknad(any())
             }
 
-            assertThat(søknadRepository.findAll()).isNotEmpty
+            deltakerService.hentDeltakersOppgaver(deltakerIdent).first { it.oppgaveReferanse == oppgaveReferanse }.let { oppgave ->
+                assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
+            }
+
+            deltakelseRepository.findById(deltakelseDTO.id!!).get().let { deltakelse ->
+                assertThat(deltakelse.søktTidspunkt).isNotNull
+            }
+
+            assertThat(søknadRepository.findById(journalpostId)). isPresent
         }
+    }
+
+    private fun mockPdlIdent(deltakerIdent: String, identGruppe: IdentGruppe) {
+        val pdlPerson = IdentInformasjon(
+            ident = deltakerIdent,
+            historisk = false,
+            gruppe = identGruppe
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
     }
 }
