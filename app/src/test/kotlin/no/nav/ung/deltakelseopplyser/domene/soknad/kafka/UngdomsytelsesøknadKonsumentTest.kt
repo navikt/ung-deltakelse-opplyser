@@ -128,7 +128,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
                 ungdomsytelsesøknadService.håndterMottattSøknad(any())
             }
 
-            assertThat(søknadRepository.findAll()).isEmpty()
+            assertThat(søknadRepository.findAll()).isNotEmpty
         }
     }
 }
