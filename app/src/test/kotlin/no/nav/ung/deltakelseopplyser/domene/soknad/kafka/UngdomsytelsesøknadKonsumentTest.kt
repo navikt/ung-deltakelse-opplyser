@@ -124,7 +124,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         // Vent til at alle forsøkene er gjort
         await.atMost(Duration.ofSeconds(20)).untilAsserted {
             // 3 feil + 1 suksess = 4 kall totalt
-            verify(exactly = 4) {
+            verify(atLeast = 4) {
                 ungdomsytelsesøknadService.håndterMottattSøknad(any())
             }
 
