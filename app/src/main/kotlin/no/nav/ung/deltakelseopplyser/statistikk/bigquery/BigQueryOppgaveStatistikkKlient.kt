@@ -15,8 +15,11 @@ interface BigQueryClient {
 
 @Service
 class BigQueryOppgaveStatistikkKlient(private val bigQuery: BigQuery): BigQueryClient {
-    final val BIG_QUERY_DATASET: String = "ung_sak_statistikk_dataset"
-    private val logger: Logger = LoggerFactory.getLogger(BigQueryOppgaveStatistikkKlient::class.java)
+
+    companion object {
+        private val BIG_QUERY_DATASET: String = "ung_sak_statistikk_dataset"
+        private val logger: Logger = LoggerFactory.getLogger(BigQueryOppgaveStatistikkKlient::class.java)
+    }
 
     init {
         this.forsikreDatasetEksisterer(BIG_QUERY_DATASET)
