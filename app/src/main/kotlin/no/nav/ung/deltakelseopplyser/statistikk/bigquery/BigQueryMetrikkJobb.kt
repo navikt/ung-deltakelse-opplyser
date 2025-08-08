@@ -14,7 +14,7 @@ class BigQueryMetrikkJobb(
 ) {
 
     @Scheduled(cron = "0 0 12 * * *")
-    open fun publiserOppgaveSvartidStatistikk() {
+    fun publiserOppgaveSvartidStatistikk() {
         val oppgaverMedSvarEllerEldreEnn14Dager =
             oppgaveStatistikkService.oppgaverMedSvarEllerEldreEnn14Dager()
         bigQueryClient.publish(OppgaveSvartidTabell, oppgaverMedSvarEllerEldreEnn14Dager)
