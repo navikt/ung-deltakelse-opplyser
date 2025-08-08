@@ -99,11 +99,6 @@ class BigQueryOppgaveStatistikkKlient(private val bigQuery: BigQuery): BigQueryC
 
 }
 
-
-enum class BigQueryDataset(val datasetNavn: String) {
-    UNG_SAK_STATISTIKK_DATASET("ung_sak_statistikk_dataset")
-}
-
 interface BigQueryRecord {
 }
 
