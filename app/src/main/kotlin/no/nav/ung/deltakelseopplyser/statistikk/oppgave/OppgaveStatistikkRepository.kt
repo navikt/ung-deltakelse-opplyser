@@ -12,7 +12,7 @@ interface OppgaveStatistikkRepository : JpaRepository<OppgaveDAO, UUID> {
         SELECT o.* from oppgave o
         WHERE o.løst_dato is not null 
 or o.lukket_dato is not null 
-or o.opprettet_dato < (CURRENT_DATE - INTERVAL '14 days') and o.status in ('LØST', 'ULØST', 'LUKKET')
+or o.opprettet_dato < (CURRENT_DATE - INTERVAL '14 days') and o.status in ('LØST', 'ULØST', 'LUKKET', 'UTLØPT')
     """,
         nativeQuery = true
     )
