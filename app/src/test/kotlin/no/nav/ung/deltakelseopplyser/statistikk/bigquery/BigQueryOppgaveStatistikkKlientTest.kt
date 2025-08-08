@@ -11,9 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -27,26 +25,22 @@ import java.time.ZonedDateTime
 class BigQueryOppgaveStatistikkKlientTest {
 
     @Autowired
-    private lateinit var bigQueryTestConfiguration: BigQueryTestConfiguration
+    lateinit var bigQueryOppgaveStatistikkKlient: BigQueryOppgaveStatistikkKlient
 
     @MockkBean
     private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
-    private lateinit var bigQueryKlient: BigQueryOppgaveStatistikkKlient
 
     @BeforeEach
     fun setUp() {
         springTokenValidationContextHolder.mockContext()
-        val bigQuery = bigQueryTestConfiguration.bigQuery()
-        bigQueryKlient = BigQueryOppgaveStatistikkKlient(bigQuery)
-
     }
 
 
     @Test
     fun `Skal kunne publisere svartidstatistikk`() {
         val record = OppgaveSvartidRecord(1L, true, false, false, Oppgavetype.SØK_YTELSE, 100, ZonedDateTime.now())
-        bigQueryKlient.publish(OppgaveSvartidTabell, listOf(record))
+        bigQueryOppgaveStatistikkKlient.publish(OppgaveSvartidTabell, listOf(record))
 
     }
 
