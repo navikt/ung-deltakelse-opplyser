@@ -54,6 +54,11 @@
     "diskAutoresize": "true",
     "highAvailability": "true"
   },
+  "bigQueryDatasets": [{
+    "name": "ung_sak_statistikk_dataset",
+    "description": "Inneholder tabeller for ung-sak ment for statistikk",
+    "permission": "READWRITE"
+  }],
   "resources": {
     "memory": {
       "limits": "2000Mi",
