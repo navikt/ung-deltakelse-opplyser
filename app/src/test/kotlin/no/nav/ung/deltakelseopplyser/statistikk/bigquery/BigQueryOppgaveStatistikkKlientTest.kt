@@ -1,9 +1,5 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
-import com.google.cloud.NoCredentials
-import com.google.cloud.bigquery.BigQuery
-import com.google.cloud.bigquery.BigQueryOptions
-import com.google.cloud.bigquery.DatasetInfo
 import com.ninjasquad.springmockk.MockkBean
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
@@ -11,7 +7,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidRecord
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -22,9 +17,6 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.testcontainers.containers.BigQueryEmulatorContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 import java.time.ZonedDateTime
 
 @ActiveProfiles("test")
