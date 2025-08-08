@@ -8,7 +8,6 @@ import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryRecord
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTabell
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Map
 
 data class OppgaveSvartidRecord(
     val svartidAntallDager: Long?,
@@ -19,7 +18,7 @@ data class OppgaveSvartidRecord(
     val antall: Int,
     val opprettetTidspunkt: ZonedDateTime,
 
-) : BigQueryRecord
+    ) : BigQueryRecord
 
 
 val OppgaveSvartidTabell: BigQueryTabell<OppgaveSvartidRecord> =
@@ -35,21 +34,14 @@ val OppgaveSvartidTabell: BigQueryTabell<OppgaveSvartidRecord> =
             Field.of("opprettetTidspunkt", StandardSQLTypeName.DATETIME)
         ),
     ) { rec ->
-        Map.of(
-            "antall",
-            rec.antall,
-            "svartidAntallDager",
-            rec.svartidAntallDager,
-            "opprettetTidspunkt",
-            rec.opprettetTidspunkt
+        mapOf(
+            "antall" to rec.antall,
+            "svartidAntallDager" to rec.svartidAntallDager,
+            "opprettetTidspunkt" to rec.opprettetTidspunkt
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")),
-            "erLøst",
-            rec.erLøst,
-            "erLukket",
-            rec.erLukket,
-            "ikkeMottattOgEldreEnn14Dager",
-            rec.ikkeMottattOgEldreEnn14Dager,
-            "oppgaveType",
-            rec.oppgaveType.name
+            "erLøst" to rec.erLøst,
+            "erLukket" to rec.erLukket,
+            "ikkeMottattOgEldreEnn14Dager" to rec.ikkeMottattOgEldreEnn14Dager,
+            "oppgaveType" to rec.oppgaveType.name
         )
     }
