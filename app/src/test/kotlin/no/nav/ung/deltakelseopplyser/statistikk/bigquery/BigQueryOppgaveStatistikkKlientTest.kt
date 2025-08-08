@@ -21,18 +21,13 @@ import java.time.ZonedDateTime
 
 @ActiveProfiles("test")
 @EnableMockOAuth2Server
-@AutoConfigureWireMock
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ExtendWith(SpringExtension::class)
-@AutoConfigureTestDatabase(
-    replace = AutoConfigureTestDatabase.Replace.NONE
-)
 @Import(BigQueryTestConfiguration::class)
 class BigQueryOppgaveStatistikkKlientTest {
 
     @Autowired
     private lateinit var bigQueryTestConfiguration: BigQueryTestConfiguration
-
 
     @MockkBean
     private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
