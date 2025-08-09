@@ -11,6 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -40,6 +41,11 @@ class OppgaveStatistikkServiceTest {
 
     @Autowired
     private lateinit var oppgaveStatistikkService: OppgaveStatistikkService
+
+    @BeforeEach
+    fun setUp() {
+        entityManager.createNativeQuery("DELETE FROM Oppgave").executeUpdate()
+    }
 
     @Test
     fun `Skal ikke finne oppgave som er uløst og 13 dager gammel`() {
