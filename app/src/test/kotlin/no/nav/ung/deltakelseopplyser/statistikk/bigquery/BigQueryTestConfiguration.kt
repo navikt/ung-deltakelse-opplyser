@@ -12,6 +12,10 @@ import org.testcontainers.junit.jupiter.Container
 @TestConfiguration
 class BigQueryTestConfiguration {
 
+    companion object {
+        const val BIG_QUERY_DATASET = "ung_sak_statistikk_dataset"
+    }
+
     @Container
     val BIG_QUERY_EMULATOR_CONTAINER: BigQueryEmulatorContainer =
         BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator:0.4.3")
@@ -25,7 +29,7 @@ class BigQueryTestConfiguration {
             .setCredentials(NoCredentials.getInstance())
             .build()
             .service
-        bigQuery.create(DatasetInfo.newBuilder("ung_sak_statistikk_dataset").build())
+        bigQuery.create(DatasetInfo.newBuilder(BIG_QUERY_DATASET).build())
         return bigQuery;
     }
 }

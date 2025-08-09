@@ -22,10 +22,10 @@ import java.time.ZonedDateTime
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ExtendWith(SpringExtension::class)
 @Import(BigQueryTestConfiguration::class)
-class BigQueryOppgaveStatistikkKlientTest {
+class BigQueryKlientTest {
 
     @Autowired
-    lateinit var bigQueryOppgaveStatistikkKlient: BigQueryOppgaveStatistikkKlient
+    lateinit var bigQueryKlient: BigQueryKlient
 
     @MockkBean
     private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
@@ -40,7 +40,7 @@ class BigQueryOppgaveStatistikkKlientTest {
     @Test
     fun `Skal kunne publisere svartidstatistikk`() {
         val record = OppgaveSvartidRecord(1L, true, false, false, Oppgavetype.SØK_YTELSE, 100, ZonedDateTime.now())
-        bigQueryOppgaveStatistikkKlient.publish(OppgaveSvartidTabell, listOf(record))
+        bigQueryKlient.publish(BigQueryTestConfiguration.BIG_QUERY_DATASET, OppgaveSvartidTabell, listOf(record))
 
     }
 

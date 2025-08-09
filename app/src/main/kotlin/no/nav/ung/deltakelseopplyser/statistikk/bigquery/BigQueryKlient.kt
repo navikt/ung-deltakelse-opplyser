@@ -8,46 +8,46 @@ import org.springframework.stereotype.Service
 
 interface BigQueryClient {
     fun <T> publish(
+        dataset: String,
         tableDef: BigQueryTabell<T>,
         records: Collection<T>
     )
 }
 
 @Service
-class BigQueryOppgaveStatistikkKlient(private val bigQuery: BigQuery): BigQueryClient {
+class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
 
     companion object {
-        private val BIG_QUERY_DATASET: String = "ung_sak_statistikk_dataset"
-        private val logger: Logger = LoggerFactory.getLogger(BigQueryOppgaveStatistikkKlient::class.java)
+        private val logger: Logger = LoggerFactory.getLogger(BigQueryKlient::class.java)
     }
 
-    init {
-        this.forsikreDatasetEksisterer(BIG_QUERY_DATASET)
-    }
+
 
     override fun <T> publish(
+        dataset: String,
         tableDef: BigQueryTabell<T>,
         records: Collection<T>
     ) {
-        val tableId = finnTabell(tableDef)
+        this.forsikreDatasetEksisterer(dataset)
+        val tableId = finnTabell(tableDef, dataset)
         val rader = records.stream().map { tableDef.tilRowInsert(it) }.toList()
         val request = InsertAllRequest.newBuilder(tableId)
             .setRows(rader)
             .build()
         val insertAllResponse = bigQuery.insertAll(request)
-        håndterResponse(insertAllResponse, request, tableDef, BIG_QUERY_DATASET)
+        håndterResponse(insertAllResponse, request, tableDef, dataset)
     }
 
 
-    private fun <T> finnTabell(tableDef: BigQueryTabell<T>): TableId {
-        val table = bigQuery.getTable(TableId.of(BIG_QUERY_DATASET, tableDef.tabellNavn))
+    private fun <T> finnTabell(tableDef: BigQueryTabell<T>, dataset: String): TableId {
+        val table = bigQuery.getTable(TableId.of(dataset, tableDef.tabellNavn))
 
         if (table != null) {
-            logger.info("Bruker eksisterende tabell: ${tableDef.tabellNavn} i dataset: $BIG_QUERY_DATASET")
+            logger.info("Bruker eksisterende tabell: ${tableDef.tabellNavn} i dataset: $dataset")
             return table.tableId
         }
 
-        val tableId = TableId.of(BIG_QUERY_DATASET, tableDef.tabellNavn)
+        val tableId = TableId.of(dataset, tableDef.tabellNavn)
         val tableDefinition = StandardTableDefinition.newBuilder().setSchema(tableDef.skjema).build()
 
         val tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
