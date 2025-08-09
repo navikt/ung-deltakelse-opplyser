@@ -16,7 +16,6 @@ interface BigQueryClient {
 }
 
 @Service
-@Profile(value = ["prod-gcp", "dev-gcp"])
 class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
 
     companion object {
