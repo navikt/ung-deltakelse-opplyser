@@ -1,0 +1,48 @@
+package no.nav.ung.deltakelseopplyser.statistikk.bigquery
+
+import com.ninjasquad.springmockk.MockkBean
+import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
+import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidRecord
+import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
+import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.time.ZonedDateTime
+
+@ActiveProfiles("test")
+@EnableMockOAuth2Server
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@ExtendWith(SpringExtension::class)
+@Import(BigQueryTestConfiguration::class)
+class BigQueryKlientTest {
+
+    @Autowired
+    lateinit var bigQueryKlient: BigQueryKlient
+
+    @MockkBean
+    private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
+
+
+    @BeforeEach
+    fun setUp() {
+        springTokenValidationContextHolder.mockContext()
+    }
+
+
+    @Test
+    fun `Skal kunne publisere svartidstatistikk`() {
+        val record = OppgaveSvartidRecord(1L, true, false, false, Oppgavetype.SØK_YTELSE, 100, ZonedDateTime.now())
+        bigQueryKlient.publish(BigQueryTestConfiguration.BIG_QUERY_DATASET, OppgaveSvartidTabell, listOf(record))
+
+    }
+
+
+}

@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.opprettKafkaConsumer
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.opprettKafkaProducer
 import org.apache.kafka.clients.consumer.Consumer
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.context.EmbeddedKafka
 import org.springframework.test.annotation.DirtiesContext
@@ -62,6 +64,7 @@ import org.springframework.test.web.servlet.MockMvc
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @AutoConfigureMockMvc
+@Import(BigQueryTestConfiguration::class)
 abstract class AbstractIntegrationTest {
 
     @Autowired
