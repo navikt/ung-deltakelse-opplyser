@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 import com.google.cloud.bigquery.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 
@@ -15,6 +16,7 @@ interface BigQueryClient {
 }
 
 @Service
+@Profile(value = ["prod-gcp", "dev-gcp"])
 class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
 
     companion object {
