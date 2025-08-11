@@ -92,6 +92,27 @@ class TilgangskontrollService(
         }
     }
 
+    fun krevDriftsTilgang(action: BeskyttetRessursActionAttributt) {
+        val tilgangsbeslutning = harDriftstilgang(action)
+        if (!tilgangsbeslutning.harTilgang) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    tilgangsbeslutning.årsakerForIkkeTilgang.somTekst()
+                ),
+                null
+            )
+        }
+    }
+
+    fun harDriftstilgang(
+        action: BeskyttetRessursActionAttributt,
+    ): Tilgangsbeslutning {
+        return sifAbacPdpService.harDriftstilgang(action)
+    }
+
+
     private fun hentTokenForInnloggetBruker(): JwtToken {
         val jwtAsString: String = tokenResolver.token() ?: throw ErrorResponseException(
             HttpStatus.UNAUTHORIZED,

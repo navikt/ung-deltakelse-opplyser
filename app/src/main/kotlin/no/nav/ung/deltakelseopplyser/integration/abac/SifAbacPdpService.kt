@@ -1,9 +1,12 @@
 package no.nav.ung.deltakelseopplyser.integration.abac
 
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
+import no.nav.sif.abac.kontrakt.abac.ResourceType
+import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
-import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
+import no.nav.sif.abac.kontrakt.person.PersonIdent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -19,6 +22,7 @@ import org.springframework.web.ErrorResponseException
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
+import java.net.URI
 
 @Service
 @Retryable(
@@ -40,6 +44,8 @@ class SifAbacPdpService(
 
         private val hendelseInnsendingUrl = "/tilgangskontroll/v2/ung/ungdomsprogramveiledning"
         private val diskresjonsKoderUrl = "/diskresjonskoder"
+        private val tilgangTilOperasjonUrl = "/tilgangskontroll/v2/ung/operasjon"
+
     }
 
     fun ansattHarTilgang(input: UngdomsprogramTilgangskontrollInputDto): Tilgangsbeslutning {
@@ -52,6 +58,18 @@ class SifAbacPdpService(
         )
         return response.body!!
     }
+
+    fun harDriftstilgang(operasjon: BeskyttetRessursActionAttributt): Tilgangsbeslutning {
+        val httpEntity = HttpEntity(OperasjonDto(ResourceType.DRIFT, operasjon, emptySet()))
+        val response = sifAbacPdpKlient.exchange(
+            tilgangTilOperasjonUrl,
+            HttpMethod.POST,
+            httpEntity,
+            Tilgangsbeslutning::class.java
+        )
+        return response.body!!
+    }
+
 
     fun hentDiskresjonskoder(personIdent: PersonIdent): Set<Diskresjonskode> {
         return kotlin.runCatching {
