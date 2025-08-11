@@ -17,6 +17,10 @@ class BigQueryMetrikkJobb(
         const val BIG_QUERY_DATASET = "ung_deltakelse_opplyser_statistikk_dataset"
     }
 
+    /**
+     * Publiserer statistikk for oppgaver som har fått svar eller er eldre enn 14 dager.
+     * Denne jobben kjører hver dag kl. 12:00.
+     */
     @Scheduled(cron = "0 0 12 * * *")
     fun publiserOppgaveSvartidStatistikk() {
         val oppgaverMedSvarEllerEldreEnn14Dager =
