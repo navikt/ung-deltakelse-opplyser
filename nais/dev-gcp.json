@@ -65,7 +65,7 @@
     "highAvailability": "false"
   },
   "bigQueryDatasets": [{
-    "name": "ung_sak_statistikk_dataset",
+    "name": "ung_deltakelse_opplyser_statistikk_dataset",
     "description": "Inneholder tabeller for ung-sak ment for statistikk",
     "permission": "READWRITE"
   }],

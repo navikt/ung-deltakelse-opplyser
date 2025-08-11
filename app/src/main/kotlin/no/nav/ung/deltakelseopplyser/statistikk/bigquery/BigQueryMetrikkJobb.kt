@@ -14,7 +14,7 @@ class BigQueryMetrikkJobb(
 ) {
 
     companion object {
-        const val BIG_QUERY_DATASET = "ung_sak_statistikk_dataset"
+        const val BIG_QUERY_DATASET = "ung_deltakelse_opplyser_statistikk_dataset"
     }
 
     @Scheduled(cron = "0 0 12 * * *")

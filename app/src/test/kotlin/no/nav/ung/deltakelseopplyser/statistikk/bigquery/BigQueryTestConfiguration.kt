@@ -13,7 +13,7 @@ import org.testcontainers.junit.jupiter.Container
 class BigQueryTestConfiguration {
 
     companion object {
-        const val BIG_QUERY_DATASET = "ung_sak_statistikk_dataset"
+        const val BIG_QUERY_DATASET = "ung_deltakelse_opplyser_statistikk_dataset"
     }
 
     @Container
