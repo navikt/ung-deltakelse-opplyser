@@ -26,4 +26,5 @@ class BigQueryKonfig {
             .build()
             .service
     }
+
 }
