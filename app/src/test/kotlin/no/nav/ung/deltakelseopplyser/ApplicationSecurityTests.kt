@@ -4,6 +4,7 @@ import com.nimbusds.jwt.SignedJWT
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -28,6 +29,7 @@ import org.springframework.web.method.HandlerMethod
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
+import org.springframework.context.annotation.Import
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -35,6 +37,7 @@ import java.util.*
 @ActiveProfiles("test")
 @EnableMockOAuth2Server
 @AutoConfigureWireMock
+@Import(BigQueryTestConfiguration::class)
 class ApplicationSecurityTests {
 
     @Autowired

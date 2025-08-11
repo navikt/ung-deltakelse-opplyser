@@ -96,6 +96,12 @@ spec:
         databases:
           - name: {{ database.name }}
             envVarPrefix: {{ database.envVarPrefix }}
+    bigQueryDatasets:
+      {{#each bigQueryDatasets}}
+      - name: {{ name }}
+        description: {{ description }}
+        permission: {{ permission }}
+      {{/each}}
   env:
   {{#each env}}
    - name: {{@key}}
