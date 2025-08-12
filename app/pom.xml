@@ -21,10 +21,10 @@
         <logback.logstash.version>8.1</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>4.1.0</ung-sak.version>
+        <ung-sak.version>4.3.0</ung-sak.version>
         <fp-sak.version>2.7.3</fp-sak.version>
         <k9-format.version>12.3.2</k9-format.version>
-        <k9-felles.version>5.1.5</k9-felles.version>
+        <k9-felles.version>5.1.7</k9-felles.version>
         <graphql-kotlin.version>8.8.1</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
