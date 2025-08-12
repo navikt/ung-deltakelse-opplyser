@@ -46,7 +46,7 @@ class BigQueryMetrikkJobb(
     /**
      * Publiserer statistikk for deltakere.
      */
-    @Scheduled(cron = CRON_JOBB_HVER_5_MINUTTER) // TODO: Endre til daglig før prodsetting
+    @Scheduled(cron = CRON_JOBB_DAGLIG)
     fun publiserDeltakerStatistikk() {
         val antallDeltakereRecord: AntallDeltakereRecord = deltakerStatistikkService.antallDeltakere()
         bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(antallDeltakereRecord)).also {
