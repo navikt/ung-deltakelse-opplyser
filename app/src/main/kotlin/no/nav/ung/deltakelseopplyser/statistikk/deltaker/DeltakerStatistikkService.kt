@@ -40,6 +40,7 @@ class DeltakerStatistikkService(
         return deltakerStatistikkRepository.antallDeltakerePerOppgavetype().map {
             AntallDeltakerePerOppgavetypeRecord(
                 oppgavetype = it.getOppgavetype(),
+                oppgavestatus = it.getStatus(),
                 antallDeltakere = it.getAntallDeltakere(),
                 opprettetTidspunkt = ZonedDateTime.now()
             )

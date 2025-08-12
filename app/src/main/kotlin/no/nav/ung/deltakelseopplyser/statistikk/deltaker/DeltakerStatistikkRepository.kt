@@ -42,10 +42,11 @@ interface DeltakerStatistikkRepository : JpaRepository<DeltakerDAO, UUID> {
         """
         SELECT 
           o.oppgavetype           AS oppgavetype,
+          o.status                AS status,
           COUNT(DISTINCT o.deltaker_id) AS antallDeltakere
         FROM oppgave o
-        GROUP BY o.oppgavetype
-        ORDER BY antallDeltakere DESC, oppgavetype
+        GROUP BY o.oppgavetype, o.status
+        ORDER BY antallDeltakere DESC, oppgavetype, status
         """,
         nativeQuery = true
     )

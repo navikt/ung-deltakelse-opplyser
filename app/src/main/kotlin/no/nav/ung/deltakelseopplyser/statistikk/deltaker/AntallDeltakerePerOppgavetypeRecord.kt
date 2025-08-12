@@ -10,22 +10,25 @@ import java.time.format.DateTimeFormatter
 
 data class AntallDeltakerePerOppgavetypeRecord(
     val oppgavetype: String,
+    val oppgavestatus: String,
     val antallDeltakere: Long,
     val opprettetTidspunkt: ZonedDateTime,
 ): BigQueryRecord
 
 val AntallDeltakerePerOppgavetypeTabell: BigQueryTabell<AntallDeltakerePerOppgavetypeRecord> =
     BigQueryTabell(
-        "antall_deltakere_per_oppgavetype_fordeling",
+        "antall_deltakere_per_oppgavetype_status_fordeling",
         Schema.of(
             Field.of("antall_deltakere", StandardSQLTypeName.BIGNUMERIC),
             Field.of("oppgavetype", StandardSQLTypeName.STRING),
+            Field.of("oppgavestatus", StandardSQLTypeName.STRING),
             Field.of("opprettetTidspunkt", StandardSQLTypeName.DATETIME)
         ),
     ) { rec ->
         mapOf(
             "antall_deltakere" to rec.antallDeltakere,
             "oppgavetype" to rec.oppgavetype,
+            "oppgavestatus" to rec.oppgavestatus,
             "opprettetTidspunkt" to rec.opprettetTidspunkt
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"))
         )
