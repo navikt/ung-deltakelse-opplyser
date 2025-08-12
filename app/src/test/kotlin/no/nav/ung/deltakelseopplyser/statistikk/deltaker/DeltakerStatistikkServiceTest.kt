@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.statistikk.deltaker
 
+import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.EntityManager
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
@@ -9,6 +10,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
@@ -54,18 +56,24 @@ class DeltakerStatistikkServiceTest {
     }
 
     @Test
-    fun `Forventer korrekt antall deltakere`() {
-        // Oppretter 5 deltakere uten oppgaver
+    fun `Forventer korrekt antall deltakere i programmet`() {
+        // Oppretter 5 deltakere i programmet
         repeat(5) {
-            lagDeltaker()
+            lagDeltakerIProgrammet()
+        }
+
+        // Oppretter 3 deltakere ferdig i programmet
+        repeat(3) {
+            lagDeltakerFerdigIProgrammet()
         }
 
         // Henter antall deltakere
-        deltakerStatistikkService.antallDeltakere().also { antallDeltakereRecord ->
+        deltakerStatistikkService.antallDeltakereIUngdomsprogrammet().also { antallDeltakereRecord ->
             // Verifiserer at antall deltakere er 5
             assertThat(antallDeltakereRecord.antallDeltakere).isEqualTo(5L)
         }
     }
+
 
     @Test
     fun `antallDeltakereEtterAntallOppgaverFordeling skal returnere korrekt fordeling av deltakere per oppgaveantall`() {
@@ -73,7 +81,7 @@ class DeltakerStatistikkServiceTest {
 
         // 2 deltakere med ingen oppgaver
         repeat(2) {
-            lagDeltaker()
+            lagDeltakerIProgrammet()
         }
 
         // 4 deltakere med 1 oppgave
@@ -146,8 +154,8 @@ class DeltakerStatistikkServiceTest {
     @Test
     fun `antallDeltakerePerOppgavetype skal returnere tom liste når ingen oppgaver finnes`() {
         // Oppretter deltakere uten oppgaver
-        lagDeltaker()
-        lagDeltaker()
+        lagDeltakerIProgrammet()
+        lagDeltakerIProgrammet()
 
         // Utfører søket
         val fordeling = deltakerStatistikkService.antallDeltakerePerOppgavetype()
@@ -221,7 +229,7 @@ class DeltakerStatistikkServiceTest {
     /**
      * Hjelpemetode for å opprette en deltaker uten oppgaver
      */
-    private fun lagDeltaker(): DeltakerDAO {
+    private fun lagDeltakerIProgrammet(fom: LocalDate? = null, tom: LocalDate? = null): DeltakerDAO {
         val deltaker = DeltakerDAO(
             id = UUID.randomUUID(),
             deltakerIdent = FødselsnummerGenerator.neste(),
@@ -229,7 +237,37 @@ class DeltakerStatistikkServiceTest {
         )
         entityManager.persist(deltaker)
         entityManager.flush()
+
+        lagDeltakelse(
+            deltaker,
+            fom ?: LocalDate.now().minusMonths(1),
+            tom ?: LocalDate.now().plusMonths(1)
+        )
+
         return deltaker
+    }
+
+    /**
+     * Hjelpemetode for å opprette en deltaker som er ferdig i programmet
+     * (dvs. har en deltakelse som er avsluttet)
+     */
+    private fun lagDeltakerFerdigIProgrammet(): DeltakerDAO {
+        return lagDeltakerIProgrammet(LocalDate.now().minusMonths(2), LocalDate.now().minusDays(1))
+    }
+
+    private fun lagDeltakelse(
+        deltaker: DeltakerDAO,
+        fom: LocalDate,
+        tom: LocalDate,
+    ): DeltakelseDAO {
+        val deltakelseDAO = DeltakelseDAO(
+            id = UUID.randomUUID(),
+            deltaker = deltaker,
+            periode = Range.closed(fom, tom)
+        )
+        entityManager.persist(deltakelseDAO)
+        entityManager.flush()
+        return deltakelseDAO
     }
 
 
@@ -238,7 +276,7 @@ class DeltakerStatistikkServiceTest {
      * @param oppgavePair Varargs-parameter med par av oppgavetype og oppgavetypedata
      */
     private fun lagDeltakerMedOppgaver(vararg oppgavePair: Pair<Oppgavetype, OppgavetypeDataDAO>): DeltakerDAO {
-        val deltaker = lagDeltaker()
+        val deltaker = lagDeltakerIProgrammet()
 
         oppgavePair.forEach { (oppgavetype, oppgavetypeData) ->
             deltaker.leggTilOppgave(opprettOppgave(deltaker, oppgavetype, oppgavetypeData))

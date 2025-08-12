@@ -8,15 +8,15 @@ import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTabell
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-data class AntallDeltakereRecord(
+data class AntallDeltakereIUngdomsprogrammetRecord(
     val antallDeltakere: Long,
     val opprettetTidspunkt: ZonedDateTime,
 ) : BigQueryRecord
 
 
-val AntallDeltakereTabell: BigQueryTabell<AntallDeltakereRecord> =
+val AntallDeltakereTabell: BigQueryTabell<AntallDeltakereIUngdomsprogrammetRecord> =
     BigQueryTabell(
-        "antall_deltakere",
+        "antall_deltakere_i_ungdomsprogrammet",
         Schema.of(
             Field.of("antall_deltakere", StandardSQLTypeName.BIGNUMERIC),
             Field.of("opprettetTidspunkt", StandardSQLTypeName.DATETIME)

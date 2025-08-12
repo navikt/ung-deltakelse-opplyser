@@ -7,9 +7,9 @@ import java.time.ZonedDateTime
 class DeltakerStatistikkService(
     private val deltakerStatistikkRepository: DeltakerStatistikkRepository
 ) {
-    fun antallDeltakere(): AntallDeltakereRecord {
-        val antallDeltakere = deltakerStatistikkRepository.count()
-        return AntallDeltakereRecord(
+    fun antallDeltakereIUngdomsprogrammet(): AntallDeltakereIUngdomsprogrammetRecord {
+        val antallDeltakere = deltakerStatistikkRepository.antallDeltakereIUngdomsprogrammet()
+        return AntallDeltakereIUngdomsprogrammetRecord(
             antallDeltakere = antallDeltakere,
             opprettetTidspunkt = ZonedDateTime.now()
         )

@@ -9,7 +9,7 @@ import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOp
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOppgaverFordelingTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereRecord
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidRecord
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
@@ -51,8 +51,8 @@ class BigQueryKlientTest {
     }
 
     @Test
-    fun `Skal kunne publisere antall deltakere statistikk`() {
-        val record = AntallDeltakereRecord(10L, ZonedDateTime.now())
+    fun `Skal kunne publisere antall deltakere i programmet statistikk`() {
+        val record = AntallDeltakereIUngdomsprogrammetRecord(10L, ZonedDateTime.now())
         bigQueryKlient.publish(BigQueryTestConfiguration.BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(record))
     }
 

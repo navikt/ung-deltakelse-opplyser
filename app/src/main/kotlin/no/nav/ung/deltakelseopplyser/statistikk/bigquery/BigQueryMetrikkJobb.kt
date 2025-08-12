@@ -3,7 +3,7 @@ package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOppgaverFordelingRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOppgaverFordelingTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereRecord
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.DeltakerStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveStatistikkService
@@ -48,8 +48,8 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_DAGLIG)
     fun publiserDeltakerStatistikk() {
-        val antallDeltakereRecord: AntallDeltakereRecord = deltakerStatistikkService.antallDeltakere()
-        bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(antallDeltakereRecord)).also {
+        val antallDeltakereIUngdomsprogrammetRecord: AntallDeltakereIUngdomsprogrammetRecord = deltakerStatistikkService.antallDeltakereIUngdomsprogrammet()
+        bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(antallDeltakereIUngdomsprogrammetRecord)).also {
             loggPublisering(
                 AntallDeltakereTabell.tabellNavn,
                 1 // Vi publiserer kun én rad for antall deltakere

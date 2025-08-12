@@ -7,6 +7,20 @@ import java.util.*
 
 interface DeltakerStatistikkRepository : JpaRepository<DeltakerDAO, UUID> {
 
+    /**
+     * Alle deltakere i ungdomsprogrammet.
+     * Dagens dato skal være innafor deltakelsesperioden.
+     */
+    @Query(
+        """
+        SELECT COUNT(DISTINCT d.deltaker_ident) 
+        FROM deltaker d 
+        INNER JOIN ungdomsprogram_deltakelse deltakelse on d.id = deltakelse.deltaker_id
+        WHERE deltakelse.periode @> CURRENT_DATE
+          """,
+        nativeQuery = true
+    )
+    fun antallDeltakereIUngdomsprogrammet(): Long
 
     /**
      * Henter aggregeringen av oppgaveantall og antall deltakere.
