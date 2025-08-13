@@ -3,7 +3,12 @@ package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 import com.ninjasquad.springmockk.MockkBean
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeRecord
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidRecord
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
@@ -41,8 +46,40 @@ class BigQueryKlientTest {
     fun `Skal kunne publisere svartidstatistikk`() {
         val record = OppgaveSvartidRecord(1L, true, false, false, Oppgavetype.SØK_YTELSE, 100, ZonedDateTime.now())
         bigQueryKlient.publish(BigQueryTestConfiguration.BIG_QUERY_DATASET, OppgaveSvartidTabell, listOf(record))
-
     }
 
+    @Test
+    fun `Skal kunne publisere antall deltakere i programmet statistikk`() {
+        val record = AntallDeltakereIUngdomsprogrammetRecord(10L, ZonedDateTime.now())
+        bigQueryKlient.publish(BigQueryTestConfiguration.BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(record))
+    }
+
+    @Test
+    fun `Skal kunne publisere antall deltakere per oppgavetype fordeling statistikk`() {
+        val records = listOf(
+            AntallDeltakerePerOppgavetypeRecord(
+                Oppgavetype.SØK_YTELSE.name,
+                OppgaveStatus.ULØST.name,
+                8,
+                ZonedDateTime.now()
+            ),
+            AntallDeltakerePerOppgavetypeRecord(
+                Oppgavetype.RAPPORTER_INNTEKT.name,
+                OppgaveStatus.ULØST.name,
+                3,
+                ZonedDateTime.now(),
+            ),
+            AntallDeltakerePerOppgavetypeRecord(
+                Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT.name,
+                OppgaveStatus.ULØST.name,
+                1,
+                ZonedDateTime.now(),
+            ),
+        )
+        bigQueryKlient.publish(
+            BigQueryTestConfiguration.BIG_QUERY_DATASET,
+            AntallDeltakerePerOppgavetypeTabell, records
+        )
+    }
 
 }
