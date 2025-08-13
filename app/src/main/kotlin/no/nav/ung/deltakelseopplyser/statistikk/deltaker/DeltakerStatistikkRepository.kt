@@ -9,14 +9,14 @@ interface DeltakerStatistikkRepository : JpaRepository<DeltakerDAO, UUID> {
 
     /**
      * Alle deltakere i ungdomsprogrammet.
-     * Dagens dato skal være innafor deltakelsesperioden.
+     * Inkluderer deltakere som har en periode som slutter i fremtiden eller som ikke har en sluttidspunkt
      */
     @Query(
         """
         SELECT COUNT(DISTINCT d.deltaker_ident) 
         FROM deltaker d 
         INNER JOIN ungdomsprogram_deltakelse deltakelse on d.id = deltakelse.deltaker_id
-        WHERE deltakelse.periode @> CURRENT_DATE
+        WHERE upper_inf(deltakelse.periode) OR upper(deltakelse.periode) > CURRENT_DATE
           """,
         nativeQuery = true
     )

@@ -74,6 +74,28 @@ class DeltakerStatistikkServiceTest {
         }
     }
 
+    @Test
+    fun `Forventer korrekt antall deltakere i programmet som starter i fremtiden med åpen periode`() {
+        // Oppretter 5 deltakere i programmet med åpen periode
+        repeat(5) {
+            lagDeltakerIProgrammet(
+                fom = LocalDate.now().plusWeeks(1),
+                tom = null // Ingen sluttdato, dvs. åpen periode
+            )
+        }
+
+        // Oppretter 3 deltakere ferdig i programmet
+        repeat(3) {
+            lagDeltakerFerdigIProgrammet()
+        }
+
+        // Henter antall deltakere
+        deltakerStatistikkService.antallDeltakereIUngdomsprogrammet().also { antallDeltakereRecord ->
+            // Verifiserer at antall deltakere er 5
+            assertThat(antallDeltakereRecord.antallDeltakere).isEqualTo(5L)
+        }
+    }
+
 
     @Test
     fun `antallDeltakerePerOppgavetype skal returnere tom liste når ingen oppgaver finnes`() {
@@ -182,12 +204,17 @@ class DeltakerStatistikkServiceTest {
     private fun lagDeltakelse(
         deltaker: DeltakerDAO,
         fom: LocalDate,
-        tom: LocalDate,
+        tom: LocalDate? = null,
     ): DeltakelseDAO {
+        val periode = if (tom == null) {
+            Range.closedInfinite(fom)
+        } else {
+            Range.closed(fom, tom)
+        }
         val deltakelseDAO = DeltakelseDAO(
             id = UUID.randomUUID(),
             deltaker = deltaker,
-            periode = Range.closed(fom, tom)
+            periode = periode
         )
         entityManager.persist(deltakelseDAO)
         entityManager.flush()
