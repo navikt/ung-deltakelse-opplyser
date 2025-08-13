@@ -22,30 +22,6 @@ interface DeltakerStatistikkRepository : JpaRepository<DeltakerDAO, UUID> {
     )
     fun antallDeltakereIUngdomsprogrammet(): Long
 
-    /**
-     * Henter aggregeringen av oppgaveantall og antall deltakere.
-     * Grupperer deltakere etter antall oppgaver.
-     *
-     * @return En liste av AntallOppgaverAntallDeltakereFordeling som inneholder aggregeringen.
-     */
-    @Query(
-        """
-    SELECT 
-        t.oppgave_count AS antallOppgaver,
-        COUNT(*)        AS antallDeltakere
-    FROM (
-        SELECT d.id, COUNT(o.id) AS oppgave_count
-        FROM deltaker d
-        LEFT JOIN oppgave o ON o.deltaker_id = d.id
-        GROUP BY d.id
-    ) t
-    GROUP BY t.oppgave_count
-    ORDER BY t.oppgave_count DESC
-    """,
-        nativeQuery = true
-    )
-    fun antallDeltakereEtterAntallOppgaverFordeling(): List<AntallOppgaverAntallDeltakereFordeling>
-
 
     /**
      * Henter antall deltakere per oppgavetype.

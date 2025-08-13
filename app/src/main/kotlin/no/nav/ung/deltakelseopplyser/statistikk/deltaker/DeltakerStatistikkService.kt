@@ -16,22 +16,6 @@ class DeltakerStatistikkService(
     }
 
     /**
-     * Henter aggregeringen av oppgaveantall og antall deltakere.
-     * Grupperer deltakere etter antall oppgaver.
-     *
-     * @return En liste av AntallOppgaverAntallDeltakereFordeling som inneholder aggregeringen.
-     */
-    fun antallDeltakereEtterAntallOppgaverFordeling(): List<AntallDeltakereAntallOppgaverFordelingRecord> {
-        return deltakerStatistikkRepository.antallDeltakereEtterAntallOppgaverFordeling().map {
-            AntallDeltakereAntallOppgaverFordelingRecord(
-                antallDeltakere = it.getAntallDeltakere(),
-                antallOppgaver = it.getAntallOppgaver(),
-                opprettetTidspunkt = ZonedDateTime.now()
-            )
-        }
-    }
-
-    /**
      * Henter antall deltakere per oppgavetype.
      *
      * @return En liste over antall deltakere per oppgavetype.

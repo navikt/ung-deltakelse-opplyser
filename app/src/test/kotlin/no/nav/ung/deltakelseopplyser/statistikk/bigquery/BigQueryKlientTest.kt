@@ -5,8 +5,6 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOppgaverFordelingRecord
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOppgaverFordelingTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
@@ -54,19 +52,6 @@ class BigQueryKlientTest {
     fun `Skal kunne publisere antall deltakere i programmet statistikk`() {
         val record = AntallDeltakereIUngdomsprogrammetRecord(10L, ZonedDateTime.now())
         bigQueryKlient.publish(BigQueryTestConfiguration.BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(record))
-    }
-
-    @Test
-    fun `Skal kunne publisere antall deltakere, antall oppgaver fordeling statistikk`() {
-        val records = listOf(
-            AntallDeltakereAntallOppgaverFordelingRecord(10, 8, ZonedDateTime.now()),
-            AntallDeltakereAntallOppgaverFordelingRecord(7, 10, ZonedDateTime.now()),
-            AntallDeltakereAntallOppgaverFordelingRecord(4, 2, ZonedDateTime.now())
-        )
-        bigQueryKlient.publish(
-            BigQueryTestConfiguration.BIG_QUERY_DATASET,
-            AntallDeltakereAntallOppgaverFordelingTabell, records
-        )
     }
 
     @Test

@@ -1,7 +1,5 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOppgaverFordelingRecord
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereAntallOppgaverFordelingTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
@@ -53,20 +51,6 @@ class BigQueryMetrikkJobb(
             loggPublisering(
                 AntallDeltakereTabell.tabellNavn,
                 1 // Vi publiserer kun én rad for antall deltakere
-            )
-        }
-
-        val antallOppgaverAntallDeltakereFordelingRecord: List<AntallDeltakereAntallOppgaverFordelingRecord> =
-            deltakerStatistikkService.antallDeltakereEtterAntallOppgaverFordeling()
-
-        bigQueryClient.publish(
-            BIG_QUERY_DATASET,
-            AntallDeltakereAntallOppgaverFordelingTabell,
-            antallOppgaverAntallDeltakereFordelingRecord
-        ).also {
-            loggPublisering(
-                AntallDeltakereAntallOppgaverFordelingTabell.tabellNavn,
-                antallOppgaverAntallDeltakereFordelingRecord.size
             )
         }
 
