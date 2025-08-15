@@ -46,20 +46,20 @@ class SwaggerConfiguration(
     @Bean
     fun ungSakOpenApi(): GroupedOpenApi {
         val packagesToscan = arrayOf(
-            "no.nav.ung.deltakelseopplyser.diagnostikk",
+            "no.nav.ung.deltakelseopplyser.domene.register.ungsak"
         )
         return GroupedOpenApi.builder()
-            .group("diagnostikk").packagesToScan(*packagesToscan)
+            .group("ung-sak").packagesToScan(*packagesToscan)
             .build()
     }
 
     @Bean
     fun diagnostikkOpenApi(): GroupedOpenApi {
         val packagesToscan = arrayOf(
-            "no.nav.ung.deltakelseopplyser.domene.register.deltaker",
+            "no.nav.ung.deltakelseopplyser.diagnostikk",
         )
         return GroupedOpenApi.builder()
-            .group("deltaker").packagesToScan(*packagesToscan)
+            .group("diagnostikk").packagesToScan(*packagesToscan)
             .build()
     }
 
