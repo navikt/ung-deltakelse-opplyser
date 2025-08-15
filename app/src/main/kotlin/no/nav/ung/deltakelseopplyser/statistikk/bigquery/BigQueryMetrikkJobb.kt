@@ -22,15 +22,14 @@ class BigQueryMetrikkJobb(
     companion object {
         private val log = LoggerFactory.getLogger(BigQueryMetrikkJobb::class.java)
         const val BIG_QUERY_DATASET = "ung_deltakelse_opplyser_statistikk_dataset"
-        // Kjør hver 5. minutt
-        private const val CRON_JOBB_HVER_5_MINUTTER = "0 0/5 * * * *" // Hver 5. minutt
-        private const val CRON_JOBB_DAGLIG = "0 0 12 * * *" // Hver dag kl. 12:00
+
+        private const val CRON_JOBB_HVER_TIME = "0 0 * * * *" // Hver time
     }
 
     /**
      * Publiserer statistikk for oppgaver som har fått svar eller er eldre enn 14 dager.
      */
-    @Scheduled(cron = CRON_JOBB_DAGLIG)
+    @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserOppgaveSvartidStatistikk() {
         val oppgaverMedSvarEllerEldreEnn14Dager = oppgaveStatistikkService.oppgaverMedSvarEllerEldreEnn14Dager()
         bigQueryClient.publish(BIG_QUERY_DATASET, OppgaveSvartidTabell, oppgaverMedSvarEllerEldreEnn14Dager).also {
@@ -44,7 +43,7 @@ class BigQueryMetrikkJobb(
     /**
      * Publiserer statistikk for deltakere.
      */
-    @Scheduled(cron = CRON_JOBB_DAGLIG)
+    @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserDeltakerStatistikk() {
         val antallDeltakereIUngdomsprogrammetRecord: AntallDeltakereIUngdomsprogrammetRecord = deltakerStatistikkService.antallDeltakereIUngdomsprogrammet()
         bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(antallDeltakereIUngdomsprogrammetRecord)).also {
