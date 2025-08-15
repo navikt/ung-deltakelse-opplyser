@@ -4,6 +4,7 @@ import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.ResourceType
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
@@ -41,10 +42,13 @@ class SifAbacPdpService(
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(SifAbacPdpService::class.java)
+        val tilgangskontrollUngRestTjenesteBasePath = "/tilgangskontroll/v2/ung"
 
-        private val hendelseInnsendingUrl = "/tilgangskontroll/v2/ung/ungdomsprogramveiledning"
+        private val hendelseInnsendingUrl = "$tilgangskontrollUngRestTjenesteBasePath/ungdomsprogramveiledning"
+        private val tilgangTilOperasjonUrl = "$tilgangskontrollUngRestTjenesteBasePath/operasjon"
+        private val tilgangTilPersonerUrl = "$tilgangskontrollUngRestTjenesteBasePath/personer"
+
         private val diskresjonsKoderUrl = "/diskresjonskoder"
-        private val tilgangTilOperasjonUrl = "/tilgangskontroll/v2/ung/operasjon"
 
     }
 
@@ -95,6 +99,17 @@ class SifAbacPdpService(
                 )
             }
         )
+    }
+
+    fun sjekkTilgangTilPersonerForInnloggetBruker(personerOperasjonDto: PersonerOperasjonDto): Tilgangsbeslutning {
+        val httpEntity = HttpEntity(personerOperasjonDto)
+        val response = sifAbacPdpKlient.exchange(
+            tilgangTilPersonerUrl,
+            HttpMethod.POST,
+            httpEntity,
+            Tilgangsbeslutning::class.java
+        )
+        return response.body!!
     }
 }
 

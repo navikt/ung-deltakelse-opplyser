@@ -4,7 +4,12 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
+import no.nav.sif.abac.kontrakt.abac.ResourceType
+import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
+import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
@@ -41,11 +46,17 @@ class DiagnostikkDriftController(
     @Operation(summary = "Hent deltakelse gitt id")
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakelse(@PathVariable deltakelseId: UUID): DeltakelseDiagnostikkDto {
-        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
         val deltakelse: Optional<DeltakelseDAO> = deltakelseRepository.findById(deltakelseId)
-        val deltakelseHistorikk: List<DeltakelseHistorikk> = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
         val deltakelseDTO: DeltakelseDTO =
             deltakelse.map { it.mapToDTO() }.orElseThrow { IllegalArgumentException("Fant ikke deltakelse: $deltakelseId") }
+
+        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(PersonerOperasjonDto(
+            null,
+            listOf(PersonIdent(deltakelseDTO.deltaker.deltakerIdent)),
+            OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.READ, setOf<AksjonspunktType>())
+        ))
+
+        val deltakelseHistorikk: List<DeltakelseHistorikk> = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
 
         return DeltakelseDiagnostikkDto(
             deltakelse = deltakelseDTO,

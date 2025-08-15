@@ -6,6 +6,7 @@ import no.nav.security.token.support.client.core.context.JwtBearerTokenResolver
 import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
 import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
 import no.nav.sif.abac.kontrakt.abac.resultat.IkkeTilgangÅrsak
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
@@ -94,6 +95,22 @@ class TilgangskontrollService(
 
     fun krevDriftsTilgang(action: BeskyttetRessursActionAttributt) {
         val tilgangsbeslutning = harDriftstilgang(action)
+        if (!tilgangsbeslutning.harTilgang) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    tilgangsbeslutning.årsakerForIkkeTilgang.somTekst()
+                ),
+                null
+            )
+        }
+    }
+
+    fun krevTilgangTilPersonerForInnloggetBruker(personerOperasjonDto: PersonerOperasjonDto) {
+        val tilgangsbeslutning =
+            sifAbacPdpService.sjekkTilgangTilPersonerForInnloggetBruker(personerOperasjonDto)
+
         if (!tilgangsbeslutning.harTilgang) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
