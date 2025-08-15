@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.diagnostikk
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import no.nav.k9.felles.log.audit.EventClassId
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
@@ -10,6 +11,7 @@ import no.nav.sif.abac.kontrakt.abac.ResourceType
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
@@ -22,6 +24,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
@@ -40,21 +44,32 @@ class DiagnostikkDriftController(
     private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
+    private val sporingsloggService: SporingsloggService,
 ) {
 
-    @GetMapping("/hent/deltakelse", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/hent/deltakelse", consumes = [MediaType.TEXT_PLAIN_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent deltakelse gitt id")
     @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakelse(@PathVariable deltakelseId: UUID): DeltakelseDiagnostikkDto {
+    fun hentDeltakelse(
+        @PathVariable deltakelseId: UUID,
+        @RequestBody begrunnelse: String): DeltakelseDiagnostikkDto {
         val deltakelse: Optional<DeltakelseDAO> = deltakelseRepository.findById(deltakelseId)
         val deltakelseDTO: DeltakelseDTO =
             deltakelse.map { it.mapToDTO() }.orElseThrow { IllegalArgumentException("Fant ikke deltakelse: $deltakelseId") }
 
+        val deltakerPersonIdent = PersonIdent(deltakelseDTO.deltaker.deltakerIdent)
         tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(PersonerOperasjonDto(
             null,
-            listOf(PersonIdent(deltakelseDTO.deltaker.deltakerIdent)),
+            listOf(deltakerPersonIdent),
             OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.READ, setOf<AksjonspunktType>())
-        ))
+        )).also {
+            sporingsloggService.logg(
+                url = "/diagnostikk/hent/deltakelse/$deltakelseId",
+                beskrivelse = begrunnelse,
+                bruker = deltakerPersonIdent,
+                eventClassId = EventClassId.AUDIT_ACCESS
+            )
+        }
 
         val deltakelseHistorikk: List<DeltakelseHistorikk> = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
 
