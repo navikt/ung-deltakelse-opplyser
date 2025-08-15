@@ -10,4 +10,5 @@ interface UngdomsprogramDeltakelseRepository : JpaRepository<DeltakelseDAO, UUID
     fun findByDeltaker_IdIn(deltakerIds: List<UUID>): List<DeltakelseDAO>
 
     fun findByIdAndDeltaker_IdIn(id: UUID, deltakerIds: List<UUID>): DeltakelseDAO?
+
 }
