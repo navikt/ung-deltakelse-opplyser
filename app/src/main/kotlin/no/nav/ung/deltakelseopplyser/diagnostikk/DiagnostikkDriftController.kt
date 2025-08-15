@@ -47,7 +47,7 @@ class DiagnostikkDriftController(
     private val sporingsloggService: SporingsloggService,
 ) {
 
-    @PostMapping("/hent/deltakelse", consumes = [MediaType.TEXT_PLAIN_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/hent/deltakelse/{deltakelseId}", consumes = [MediaType.TEXT_PLAIN_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent deltakelse gitt id")
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakelse(
