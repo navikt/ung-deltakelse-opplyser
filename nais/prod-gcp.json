@@ -52,7 +52,8 @@
     "tier": "db-custom-2-5120",
     "diskSize": "50",
     "diskAutoresize": "true",
-    "highAvailability": "true"
+    "highAvailability": "true",
+    "enableDBAudit": true
   },
   "bigQueryDatasets": [{
     "name": "ung_deltakelse_opplyser_statistikk_dataset",
