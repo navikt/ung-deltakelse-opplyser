@@ -373,7 +373,7 @@
                 <version>${graphql-kotlin.version}</version>
                 <executions>
                     <execution>
-                        <id>generate-graphql-client</id>
+                        <id>generate-pdl-api-graphql-client</id>
                         <goals>
                             <goal>generate-client</goal>
                         </goals>
@@ -381,6 +381,17 @@
                             <packageName>no.nav.pdl.generated</packageName>
                             <schemaFile>${project.basedir}/src/main/resources/pdl/pdl-api-schema.graphql</schemaFile>
                             <queryFileDirectory>${project.basedir}/src/main/resources/pdl</queryFileDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-nom-api-graphql-client</id>
+                        <goals>
+                            <goal>generate-client</goal>
+                        </goals>
+                        <configuration>
+                            <packageName>no.nav.nom.generated</packageName>
+                            <schemaFile>${project.basedir}/src/main/resources/nom/nom-api-schema.graphql</schemaFile>
+                            <queryFileDirectory>${project.basedir}/src/main/resources/nom</queryFileDirectory>
                         </configuration>
                     </execution>
                 </executions>
