@@ -25,6 +25,7 @@ data class DeltakelseHistorikk(
 
     companion object {
         val DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.of("Europe/Oslo"))
+        val DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     }
 
     fun tilDTO(): DeltakelseHistorikkDTO {
@@ -43,18 +44,22 @@ data class DeltakelseHistorikk(
 
             Endringstype.DELTAKER_MELDT_UT -> {
                 requireNotNull(deltakerMeldtUt)
-                val utmeldingDato = deltakerMeldtUt.utmeldingDato
+                val utmeldingDato = DATE_FORMATTER.format(deltakerMeldtUt.utmeldingDato)
                 "Deltaker meldt ut med sluttdato $utmeldingDato."
             }
 
             Endringstype.ENDRET_STARTDATO -> {
                 requireNotNull(endretStartdato)
-                "Startdato for deltakelse er endret fra ${endretStartdato.gammelStartdato} til ${endretStartdato.nyStartdato}."
+                val gammelStartdato = DATE_FORMATTER.format(endretStartdato.gammelStartdato)
+                val nyStartdato = DATE_FORMATTER.format(endretStartdato.nyStartdato)
+                "Startdato for deltakelse er endret fra $gammelStartdato til $nyStartdato."
             }
 
             Endringstype.ENDRET_SLUTTDATO -> {
                 requireNotNull(endretSluttdato)
-                return "Sluttdato for deltakelse er endret fra ${endretSluttdato.gammelSluttdato} til ${endretSluttdato.nySluttdato}."
+                val gammelSluttdato = DATE_FORMATTER.format(endretSluttdato.gammelSluttdato)
+                val nySluttdato = DATE_FORMATTER.format(endretSluttdato.nySluttdato)
+                return "Sluttdato for deltakelse er endret fra $gammelSluttdato til $nySluttdato."
             }
 
             Endringstype.DELTAKER_HAR_SØKT_YTELSE -> {
