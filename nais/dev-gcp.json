@@ -102,6 +102,9 @@
 
     "NO_NAV_GATEWAYS_ENHETSREGISTER_BASE_URL": "https://ereg-services-q2.dev-fss-pub.nais.io",
 
+    "NO_NAV_GATEWAYS_NOM_API_BASE_URL": "https://nom-api.intern.dev.nav.no",
+    "NOM_API_AZURE_SCOPE": "api://dev-gcp.nom.nom-api/.default",
+
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0"
   }

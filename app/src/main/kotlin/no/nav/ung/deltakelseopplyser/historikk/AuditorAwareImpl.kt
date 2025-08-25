@@ -26,6 +26,8 @@ class AuditorAwareImpl(
 
     companion object{
         const val AUDITOR_AWARE_IMPL_BEAN_NAME = "auditorAwareImpl"
+        const val VEILEDER_SUFFIX = " (veileder)"
+        const val DELTAKER_SUFFIX = " (deltaker)"
     }
 
     override fun getCurrentAuditor(): Optional<String> {
@@ -60,9 +62,9 @@ class AuditorAwareImpl(
 
     private fun systemAuditor() = "system"
 
-    private fun SpringTokenValidationContextHolder.veilederAuditor() = "${navIdent()} (veileder)"
+    private fun SpringTokenValidationContextHolder.veilederAuditor() = "${navIdent()}$VEILEDER_SUFFIX"
 
-    private fun SpringTokenValidationContextHolder.deltakerAuditor() = "${personIdent()} (deltaker)"
+    private fun SpringTokenValidationContextHolder.deltakerAuditor() = "${personIdent()}$DELTAKER_SUFFIX"
 
     /**
      * Sjekker om det finnes en gyldig token i context.
