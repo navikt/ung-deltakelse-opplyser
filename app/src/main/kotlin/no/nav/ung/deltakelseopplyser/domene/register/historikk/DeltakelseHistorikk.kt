@@ -17,9 +17,10 @@ data class DeltakelseHistorikk(
     val endretAv: String?,
     val endretTidspunkt: ZonedDateTime,
     val endringstype: Endringstype,
-    val endretStartdato: EndretStartdatoHistorikkDTO?,
-    val endretSluttdato: EndretSluttdatoHistorikkDTO?,
-    val søktTidspunktSatt: SøktTidspunktHistorikkDTO?,
+    val deltakerMeldtUt: DeltakerMeldtUtHistorikk?,
+    val endretStartdato: EndretStartdatoHistorikk?,
+    val endretSluttdato: EndretSluttdatoHistorikk?,
+    val søktTidspunktSatt: SøktTidspunktHistorikk?,
 ) {
 
     companion object {
@@ -39,6 +40,12 @@ data class DeltakelseHistorikk(
     fun utledEndringsTekst(): String {
         return when (endringstype) {
             Endringstype.DELTAKER_MELDT_INN -> "Deltaker er meldt inn i programmet."
+
+            Endringstype.DELTAKER_MELDT_UT -> {
+                requireNotNull(deltakerMeldtUt)
+                val utmeldingDato = deltakerMeldtUt.utmeldingDato
+                "Deltaker meldt ut med sluttdato $utmeldingDato."
+            }
 
             Endringstype.ENDRET_STARTDATO -> {
                 requireNotNull(endretStartdato)

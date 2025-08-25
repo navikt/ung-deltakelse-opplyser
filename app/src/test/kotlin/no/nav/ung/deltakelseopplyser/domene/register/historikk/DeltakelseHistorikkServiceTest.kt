@@ -174,17 +174,16 @@ class DeltakelseHistorikkServiceTest {
         val fjerdeInnslag = innslag.next() // Fjerde innslag er avslutning av deltakelse
         assertThat(fjerdeInnslag.revisjonsnummer).isGreaterThan(tredjeInnslag.revisjonsnummer)
         assertThat(fjerdeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
-        assertThat(fjerdeInnslag.endringstype).isEqualTo(Endringstype.ENDRET_SLUTTDATO)
-        assertThat(fjerdeInnslag.endretSluttdato).isNotNull
-        assertThat(fjerdeInnslag.endretSluttdato!!.nySluttdato).isEqualTo(onsdag)
-        assertThat(fjerdeInnslag.endretSluttdato!!.gammelSluttdato).isNull() // Sluttdato var ikke satt før
+        assertThat(fjerdeInnslag.endringstype).isEqualTo(Endringstype.DELTAKER_MELDT_UT)
+        assertThat(fjerdeInnslag.deltakerMeldtUt).isNotNull
+        assertThat(fjerdeInnslag.deltakerMeldtUt!!.utmeldingDato).isEqualTo(onsdag)
         assertThat(fjerdeInnslag.deltakelse.getFom()).isEqualTo(onsdag)
         assertThat(fjerdeInnslag.deltakelse.getTom()).isEqualTo(onsdag)
         assertThat(fjerdeInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(fjerdeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(fjerdeInnslag.endretAv).isNotNull()
         assertThat(fjerdeInnslag.endretTidspunkt).isNotNull()
-        assertThat(fjerdeInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er satt til $onsdag.")
+        assertThat(fjerdeInnslag.utledEndringsTekst()).isEqualTo("Deltaker meldt ut med sluttdato $onsdag.")
 
         val femteInnslag = innslag.next() // Femte innslag er endring av sluttdato
         assertThat(femteInnslag.revisjonsnummer).isGreaterThan(fjerdeInnslag.revisjonsnummer)
@@ -232,6 +231,6 @@ class DeltakelseHistorikkServiceTest {
         val unsupportedOperationException =
             assertThrows<UnsupportedOperationException> { deltakelseHistorikkService.deltakelseHistorikk(deltakelseId) }
         assertThat(unsupportedOperationException.message)
-            .isEqualTo("Deltakelse med id $deltakelseId har endret sluttdato og søktTidspunkt i samme revisjon. Dette er uvanlig.")
+            .isEqualTo("Deltakelse med id $deltakelseId har endret sluttdatoSatt og søktTidspunkt i samme revisjon. Dette er uvanlig.")
     }
 }
