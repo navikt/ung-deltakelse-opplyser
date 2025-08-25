@@ -12,6 +12,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_FORMATTER
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -23,7 +24,6 @@ import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfigurati
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -38,6 +38,7 @@ import org.springframework.kafka.listener.KafkaExceptionLogLevelAware
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
+import java.time.ZonedDateTime
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -148,13 +149,19 @@ class DeltakelseHistorikkServiceTest {
         assertThat(andreInnslag.endringstype).isEqualTo(Endringstype.ENDRET_STARTDATO)
         assertThat(andreInnslag.endretStartdato).isNotNull
         assertThat(andreInnslag.endretStartdato!!.nyStartdato).isEqualTo(onsdag)
-        assertThat(andreInnslag.endretStartdato!!.gammelStartdato).isEqualTo(mandag)
+        assertThat(andreInnslag.endretStartdato.gammelStartdato).isEqualTo(mandag)
         assertThat(andreInnslag.deltakelse.getTom()).isNull()
         assertThat(andreInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(andreInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(andreInnslag.endretAv).isNotNull()
         assertThat(andreInnslag.endretTidspunkt).isNotNull()
-        assertThat(andreInnslag.utledEndringsTekst()).isEqualTo("Startdato for deltakelse er endret fra $mandag til $onsdag.")
+        assertThat(andreInnslag.utledEndringsTekst()).isEqualTo(
+            "Startdato for deltakelse er endret fra ${formater(mandag)} til ${
+                formater(
+                    onsdag
+                )
+            }."
+        )
 
         val tredjeInnslag = innslag.next() // Tredje innslag er deltaker som har søkt ytelse
         assertThat(tredjeInnslag.revisjonsnummer).isGreaterThan(andreInnslag.revisjonsnummer)
@@ -162,29 +169,28 @@ class DeltakelseHistorikkServiceTest {
         assertThat(tredjeInnslag.endringstype).isEqualTo(Endringstype.DELTAKER_HAR_SØKT_YTELSE)
         assertThat(tredjeInnslag.søktTidspunktSatt).isNotNull
         assertThat(tredjeInnslag.søktTidspunktSatt!!.søktTidspunkt).isNotNull()
-        assertThat(tredjeInnslag.søktTidspunktSatt!!.søktTidspunktSatt).isTrue()
+        assertThat(tredjeInnslag.søktTidspunktSatt.søktTidspunktSatt).isTrue()
         assertThat(tredjeInnslag.deltakelse.getFom()).isEqualTo(onsdag)
         assertThat(tredjeInnslag.deltakelse.getTom()).isNull()
         assertThat(tredjeInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(tredjeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(tredjeInnslag.endretAv).isNotNull()
         assertThat(tredjeInnslag.endretTidspunkt).isNotNull()
-        assertThat(tredjeInnslag.utledEndringsTekst()).isEqualTo("Deltaker har søkt om ytelse den ${DATE_TIME_FORMATTER.format(søktTidspunkt)}.")
+        assertThat(tredjeInnslag.utledEndringsTekst()).isEqualTo("Deltaker har søkt om ytelse den ${formater(søktTidspunkt)}.")
 
         val fjerdeInnslag = innslag.next() // Fjerde innslag er avslutning av deltakelse
         assertThat(fjerdeInnslag.revisjonsnummer).isGreaterThan(tredjeInnslag.revisjonsnummer)
         assertThat(fjerdeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
-        assertThat(fjerdeInnslag.endringstype).isEqualTo(Endringstype.ENDRET_SLUTTDATO)
-        assertThat(fjerdeInnslag.endretSluttdato).isNotNull
-        assertThat(fjerdeInnslag.endretSluttdato!!.nySluttdato).isEqualTo(onsdag)
-        assertThat(fjerdeInnslag.endretSluttdato!!.gammelSluttdato).isNull() // Sluttdato var ikke satt før
+        assertThat(fjerdeInnslag.endringstype).isEqualTo(Endringstype.DELTAKER_MELDT_UT)
+        assertThat(fjerdeInnslag.deltakerMeldtUt).isNotNull
+        assertThat(fjerdeInnslag.deltakerMeldtUt!!.utmeldingDato).isEqualTo(onsdag)
         assertThat(fjerdeInnslag.deltakelse.getFom()).isEqualTo(onsdag)
         assertThat(fjerdeInnslag.deltakelse.getTom()).isEqualTo(onsdag)
         assertThat(fjerdeInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(fjerdeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(fjerdeInnslag.endretAv).isNotNull()
         assertThat(fjerdeInnslag.endretTidspunkt).isNotNull()
-        assertThat(fjerdeInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er satt til $onsdag.")
+        assertThat(fjerdeInnslag.utledEndringsTekst()).isEqualTo("Deltaker meldt ut med sluttdato ${formater(onsdag)}.")
 
         val femteInnslag = innslag.next() // Femte innslag er endring av sluttdato
         assertThat(femteInnslag.revisjonsnummer).isGreaterThan(fjerdeInnslag.revisjonsnummer)
@@ -192,14 +198,14 @@ class DeltakelseHistorikkServiceTest {
         assertThat(femteInnslag.endringstype).isEqualTo(Endringstype.ENDRET_SLUTTDATO)
         assertThat(femteInnslag.endretSluttdato).isNotNull
         assertThat(femteInnslag.endretSluttdato!!.nySluttdato).isEqualTo(onsdag.plusWeeks(1))
-        assertThat(femteInnslag.endretSluttdato!!.gammelSluttdato).isEqualTo(onsdag)
+        assertThat(femteInnslag.endretSluttdato.gammelSluttdato).isEqualTo(onsdag)
         assertThat(femteInnslag.deltakelse.getFom()).isEqualTo(onsdag)
         assertThat(femteInnslag.deltakelse.getTom()).isEqualTo(onsdag.plusWeeks(1))
         assertThat(femteInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
         assertThat(femteInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(femteInnslag.endretAv).isNotNull()
         assertThat(femteInnslag.endretTidspunkt).isNotNull()
-        assertThat(femteInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er endret fra $onsdag til ${onsdag.plusWeeks(1)}.")
+        assertThat(femteInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er endret fra ${formater(onsdag)} til ${formater(onsdag.plusWeeks(1))}.")
     }
 
     @Test
@@ -232,6 +238,13 @@ class DeltakelseHistorikkServiceTest {
         val unsupportedOperationException =
             assertThrows<UnsupportedOperationException> { deltakelseHistorikkService.deltakelseHistorikk(deltakelseId) }
         assertThat(unsupportedOperationException.message)
-            .isEqualTo("Deltakelse med id $deltakelseId har endret sluttdato og søktTidspunkt i samme revisjon. Dette er uvanlig.")
+            .isEqualTo("Deltakelse med id $deltakelseId har endret sluttdatoSatt og søktTidspunkt i samme revisjon. Dette er uvanlig.")
     }
+
+    private fun formater(tidspunkt: ZonedDateTime?): String? = DATE_TIME_FORMATTER.format(
+        tidspunkt
+    )
+
+    private fun formater(dato: LocalDate): String? = DATE_FORMATTER.format(dato)
+
 }

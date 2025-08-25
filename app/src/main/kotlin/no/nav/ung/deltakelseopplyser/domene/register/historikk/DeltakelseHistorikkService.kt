@@ -56,8 +56,9 @@ class DeltakelseHistorikkService(
                     opprettetTidspunkt = nåværendeRevisjon.opprettetTidspunkt.atZone(ZoneOffset.UTC),
                     endretAv = nåværendeRevisjon.endretAv,
                     endretTidspunkt = nåværendeRevisjon.endretTidspunkt!!.atZone(ZoneOffset.UTC),
-                    endretStartdato = historikkEndring.endretStartdatoDataDTO,
-                    endretSluttdato = historikkEndring.endretSluttdatoDataDTO,
+                    endretStartdato = historikkEndring.endretStartdatoData,
+                    deltakerMeldtUt = historikkEndring.deltakerMeldtUtData,
+                    endretSluttdato = historikkEndring.endretSluttdatoData,
                     søktTidspunktSatt = historikkEndring.søktTidspunktSatt
                 )
             }.also {
