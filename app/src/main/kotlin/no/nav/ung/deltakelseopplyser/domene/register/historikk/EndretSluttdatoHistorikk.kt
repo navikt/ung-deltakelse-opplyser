@@ -4,5 +4,5 @@ import java.time.LocalDate
 
 data class EndretSluttdatoHistorikk(
     val nySluttdato: LocalDate,
-    val gammelSluttdato: LocalDate?
+    val gammelSluttdato: LocalDate
 )

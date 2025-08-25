@@ -67,10 +67,15 @@ object DeltakelseHistorikkEndringUtleder {
         )
     }
 
-    private fun utledDeltakerMeldtUtHistorikk(deltakerMeldtUt: Boolean, nåværendeDeltakelseRevisjon: DeltakelseDAO): DeltakerMeldtUtHistorikk? {
+    private fun utledDeltakerMeldtUtHistorikk(
+        deltakerMeldtUt: Boolean,
+        nåværendeDeltakelseRevisjon: DeltakelseDAO,
+    ): DeltakerMeldtUtHistorikk? {
         return if (deltakerMeldtUt) {
             DeltakerMeldtUtHistorikk(
-                utmeldingDato = nåværendeDeltakelseRevisjon.getTom()!! // Sluttdato kan ikke være null ved utmelding
+                utmeldingDato = requireNotNull(nåværendeDeltakelseRevisjon.getTom()) {
+                    "Sluttdato kan ikke være null ved utmelding"
+                }
             )
         } else null
     }
@@ -81,7 +86,9 @@ object DeltakelseHistorikkEndringUtleder {
     ) = if (soktTidspunktErEndret) {
         SøktTidspunktHistorikk(
             søktTidspunktSatt = soktTidspunktErEndret,
-            søktTidspunkt = nåværendeDeltakelseRevisjon.søktTidspunkt!!
+            søktTidspunkt = requireNotNull(nåværendeDeltakelseRevisjon.søktTidspunkt) {
+                "Søkt tidspunkt kan ikke være null ved endring av søkt tidspunkt"
+            }
         )
     } else null
 
@@ -91,8 +98,12 @@ object DeltakelseHistorikkEndringUtleder {
         nåværendeDeltakelseRevisjon: DeltakelseDAO,
     ) = if (sluttdatoErEndret) {
         EndretSluttdatoHistorikk(
-            gammelSluttdato = forrigeDeltakelseRevisjon?.getTom(),
-            nySluttdato = nåværendeDeltakelseRevisjon.getTom()!! // Sluttdato kan ikke være null ved endring
+            gammelSluttdato = requireNotNull(forrigeDeltakelseRevisjon!!.getTom()) {
+                "Forrige sluttdato kan ikke være null ved endring av sluttdato"
+            },
+            nySluttdato = requireNotNull(nåværendeDeltakelseRevisjon.getTom()) {
+                "Ny sluttdato kan ikke være null ved endring av sluttdato"
+            }
         )
     } else null
 

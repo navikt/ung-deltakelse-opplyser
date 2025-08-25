@@ -54,10 +54,7 @@ data class DeltakelseHistorikk(
 
             Endringstype.ENDRET_SLUTTDATO -> {
                 requireNotNull(endretSluttdato)
-                val gammelSluttdato = endretSluttdato.gammelSluttdato
-                    ?: return "Sluttdato for deltakelse er satt til ${endretSluttdato.nySluttdato}."
-
-                return "Sluttdato for deltakelse er endret fra $gammelSluttdato til ${endretSluttdato.nySluttdato}."
+                return "Sluttdato for deltakelse er endret fra ${endretSluttdato.gammelSluttdato} til ${endretSluttdato.nySluttdato}."
             }
 
             Endringstype.DELTAKER_HAR_SØKT_YTELSE -> {
