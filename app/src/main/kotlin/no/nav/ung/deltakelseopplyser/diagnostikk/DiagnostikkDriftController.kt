@@ -23,6 +23,7 @@ import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILED
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
@@ -50,6 +51,9 @@ class DiagnostikkDriftController(
     private val sporingsloggService: SporingsloggService,
     private val nomApiService: NomApiService,
 ) {
+    private companion object {
+        private val logger = LoggerFactory.getLogger(DiagnostikkDriftController::class.java)
+    }
 
     @PostMapping(
         "/hent/deltakelse/{deltakelseId}",
@@ -98,16 +102,27 @@ class DiagnostikkDriftController(
     fun hentEnheterKnyttetNavIdenter(): List<OrgEnhet> {
         val unikeNavIdenter: Set<String> = deltakelseRepository.findAll()
             .map { it.id }
+            .also { logger.info("Henter hoistorikk for {} deltakelser", it.size) }
             .flatMap { deltakelseId: UUID ->
                 deltakelseHistorikkService.deltakelseHistorikk(id = deltakelseId)
+                    .also { logger.info("Fant totalt {} historikkinnslag", it.size) }
                     .distinctBy { historikk: DeltakelseHistorikk -> historikk.endretAv }
+                    .also { logger.info("Redusert til ${it.size} unike (endretAv) historikkinnslag") }
+            }
+            .also { historikk ->
+                logger.info(
+                    "Filtrerer ut {} historikkinnslag med endretAv=null",
+                    historikk.filter { it.endretAv == null }.size)
             }
             .mapNotNull { it.endretAv }
             .filter { it.contains(VEILEDER_SUFFIX) }
+            .also { logger.info("Redusert til {} historikkinnslag endret av veileder", it.size) }
             .map { it.replace(VEILEDER_SUFFIX, "").trim() }
             .toSet()
 
-        return nomApiService.hentEnheter(unikeNavIdenter)
+        val enheter = nomApiService.hentEnheter(unikeNavIdenter)
+        logger.info("Fant totalt {} unike enheter knyttet til {} unike nav-identer", enheter.size, unikeNavIdenter.size)
+        return enheter
     }
 
 
