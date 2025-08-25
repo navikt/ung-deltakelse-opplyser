@@ -107,7 +107,6 @@ class DiagnostikkDriftController(
                 deltakelseHistorikkService.deltakelseHistorikk(id = deltakelseId)
                     .also { logger.info("Fant totalt {} historikkinnslag", it.size) }
                     .distinctBy { historikk: DeltakelseHistorikk -> historikk.endretAv }
-                    .also { logger.info("Redusert til ${it.size} unike (endretAv) historikkinnslag") }
             }
             .also { historikk ->
                 logger.info(
@@ -121,7 +120,6 @@ class DiagnostikkDriftController(
             .toSet()
 
         val enheter = nomApiService.hentEnheter(unikeNavIdenter)
-        logger.info("Fant totalt {} unike enheter knyttet til {} unike nav-identer", enheter.size, unikeNavIdenter.size)
         return enheter
     }
 
