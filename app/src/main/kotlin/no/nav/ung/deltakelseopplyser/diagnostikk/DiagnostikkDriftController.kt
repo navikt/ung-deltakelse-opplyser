@@ -100,27 +100,21 @@ class DiagnostikkDriftController(
     @Operation(summary = "Hent enheter knyttet til alle nav-identer")
     @ResponseStatus(HttpStatus.OK)
     fun hentEnheterKnyttetNavIdenter(): List<OrgEnhet> {
-        val unikeNavIdenter: Set<String> = deltakelseRepository.findAll()
-            .map { it.id }
-            .also { logger.info("Henter hoistorikk for {} deltakelser", it.size) }
-            .flatMap { deltakelseId: UUID ->
-                deltakelseHistorikkService.deltakelseHistorikk(id = deltakelseId)
-                    .also { logger.info("Fant totalt {} historikkinnslag", it.size) }
-                    .distinctBy { historikk: DeltakelseHistorikk -> historikk.endretAv }
-            }
-            .also { historikk ->
-                logger.info(
-                    "Filtrerer ut {} historikkinnslag med endretAv=null",
-                    historikk.filter { it.endretAv == null }.size)
-            }
-            .mapNotNull { it.endretAv }
-            .filter { it.contains(VEILEDER_SUFFIX) }
-            .also { logger.info("Redusert til {} historikkinnslag endret av veileder", it.size) }
-            .map { it.replace(VEILEDER_SUFFIX, "").trim() }
+        val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
+        logger.info("Henter enheter for {} deltakelser", alleDeltakelser.size)
+
+        val unikeNavIdenterFraDeltakelser: Set<String> = alleDeltakelser
+            .map { deltakelse -> deltakelse.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
+            .distinctBy { navIdent -> navIdent }
             .toSet()
 
-        val enheter = nomApiService.hentEnheter(unikeNavIdenter)
-        return enheter
+        logger.info(
+            "Fant {} unike NAV-identer fra {} deltakelser",
+            unikeNavIdenterFraDeltakelser.size,
+            alleDeltakelser.size
+        )
+
+        return nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser).flatMap { it.enheter }
     }
 
 

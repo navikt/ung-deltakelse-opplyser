@@ -44,13 +44,13 @@ class NomApiService(
         ressurser
     }
 
-    fun hentEnheter(navIdenter: Set<String>): List<OrgEnhet> {
-        val enheter = hentRessurser(navIdenter)
-            .flatMap { it.orgTilknytning }
-            .map { it.orgEnhet }
-            .distinctBy { it.remedyEnhetId }
+    fun hentResursserMedEnheter(navIdenter: Set<String>): List<RessursMedEnheter> {
+        val ressursMedEnheter = hentRessurser(navIdenter)
+            .map { RessursMedEnheter(it.navident, it.orgTilknytning.map { orgTilknytning -> orgTilknytning.orgEnhet }) }
 
-        logger.info("Fant {} unike enheter for {} forespurte navIdenter", enheter.size, navIdenter.size)
-        return enheter
+        logger.info("Fant {} unike enheter for {} forespurte navIdenter", ressursMedEnheter.size, navIdenter.size)
+        return ressursMedEnheter
     }
+
+    data class RessursMedEnheter(val navIdent: String, val enheter: List<OrgEnhet>)
 }
