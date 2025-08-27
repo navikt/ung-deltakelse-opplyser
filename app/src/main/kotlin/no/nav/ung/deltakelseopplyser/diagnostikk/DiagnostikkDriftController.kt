@@ -117,6 +117,12 @@ class DiagnostikkDriftController(
         )
 
         val resursserMedEnheter = nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser)
+        // Tell antall enheter per navident
+        resursserMedEnheter.forEach {
+            if (it.enheter.size > 1) {
+                logger.info("NavIdent er knyttet til {} enheter. Enheter: {}", it.enheter.size, it.enheter.map { enhet -> enhet.navn })
+            }
+        }
 
         // Tell antall deltakelser per enhet
         // Opprett en map fra navIdent til deltakelser
