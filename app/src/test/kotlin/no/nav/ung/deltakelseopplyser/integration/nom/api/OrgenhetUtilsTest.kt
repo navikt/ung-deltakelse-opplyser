@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
-class OrgEnhetTest {
+class OrgEnhetUtilTest {
     private companion object {
         private fun mockEnhet(
             gyldigFom: String,

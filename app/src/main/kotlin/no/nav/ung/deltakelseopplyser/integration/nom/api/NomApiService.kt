@@ -7,6 +7,7 @@ import no.nav.nom.generated.HentRessurser
 import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.Ressurs
 import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.harRelevantPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.harRelevantPeriode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -49,6 +50,7 @@ class NomApiService(
         val ressursMedEnheter = hentRessurser(navIdenter)
             .map { ressurs ->
                 val relevanteEnheter = ressurs.orgTilknytning
+                    .filter { it.harRelevantPeriode() }
                     .map { orgTilknytning -> orgTilknytning.orgEnhet }
                     .filter { orgEnhet -> orgEnhet.harRelevantPeriode() }
 

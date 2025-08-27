@@ -3,6 +3,8 @@ query HentRessurser($navIdenter: [String!]) {
         ressurs {
             navident
             orgTilknytning {
+                gyldigFom
+                gyldigTom
                 orgEnhet {
                     id
                     remedyEnhetId
