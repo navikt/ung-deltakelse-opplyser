@@ -52,7 +52,7 @@ class DeltakelseHistorikkService(
                     endringstype = historikkEndring.endringstype,
                     revisjonsnummer = metadata.revisionNumber.get(),
                     deltakelse = nåværendeRevisjon,
-                    opprettetAv = nåværendeRevisjon.opprettetAv!!,
+                    opprettetAv = nåværendeRevisjon.opprettetAv,
                     opprettetTidspunkt = nåværendeRevisjon.opprettetTidspunkt.atZone(ZoneOffset.UTC),
                     endretAv = nåværendeRevisjon.endretAv,
                     endretTidspunkt = nåværendeRevisjon.endretTidspunkt!!.atZone(ZoneOffset.UTC),

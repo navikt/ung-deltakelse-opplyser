@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.diagnostikk
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.k9.felles.log.audit.EventClassId
+import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
 import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
@@ -18,8 +19,11 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRep
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
+import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
+import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
@@ -45,24 +49,36 @@ class DiagnostikkDriftController(
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val sporingsloggService: SporingsloggService,
+    private val nomApiService: NomApiService,
 ) {
+    private companion object {
+        private val logger = LoggerFactory.getLogger(DiagnostikkDriftController::class.java)
+    }
 
-    @PostMapping("/hent/deltakelse/{deltakelseId}", consumes = [MediaType.TEXT_PLAIN_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping(
+        "/hent/deltakelse/{deltakelseId}",
+        consumes = [MediaType.TEXT_PLAIN_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
     @Operation(summary = "Hent deltakelse gitt id")
     @ResponseStatus(HttpStatus.OK)
     fun hentDeltakelse(
         @PathVariable deltakelseId: UUID,
-        @RequestBody begrunnelse: String): DeltakelseDiagnostikkDto {
+        @RequestBody begrunnelse: String,
+    ): DeltakelseDiagnostikkDto {
         val deltakelse: Optional<DeltakelseDAO> = deltakelseRepository.findById(deltakelseId)
         val deltakelseDTO: DeltakelseDTO =
-            deltakelse.map { it.mapToDTO() }.orElseThrow { IllegalArgumentException("Fant ikke deltakelse: $deltakelseId") }
+            deltakelse.map { it.mapToDTO() }
+                .orElseThrow { IllegalArgumentException("Fant ikke deltakelse: $deltakelseId") }
 
         val deltakerPersonIdent = PersonIdent(deltakelseDTO.deltaker.deltakerIdent)
-        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(PersonerOperasjonDto(
-            null,
-            listOf(deltakerPersonIdent),
-            OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.READ, setOf<AksjonspunktType>())
-        )).also {
+        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+            PersonerOperasjonDto(
+                null,
+                listOf(deltakerPersonIdent),
+                OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.READ, setOf<AksjonspunktType>())
+            )
+        ).also {
             sporingsloggService.logg(
                 url = "/diagnostikk/hent/deltakelse/$deltakelseId",
                 beskrivelse = begrunnelse,
@@ -71,13 +87,38 @@ class DiagnostikkDriftController(
             )
         }
 
-        val deltakelseHistorikk: List<DeltakelseHistorikk> = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
+        val deltakelseHistorikk: List<DeltakelseHistorikk> =
+            deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
 
         return DeltakelseDiagnostikkDto(
             deltakelse = deltakelseDTO,
             historikk = deltakelseHistorikk
         )
     }
+
+    @GetMapping("/hent/enheter-knyttet-nav-identer", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Hent enheter knyttet til alle nav-identer")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentEnheterKnyttetNavIdenter(): List<OrgEnhet> {
+        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
+
+        val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
+        logger.info("Henter enheter for {} deltakelser", alleDeltakelser.size)
+
+        val unikeNavIdenterFraDeltakelser: Set<String> = alleDeltakelser
+            .map { deltakelse -> deltakelse.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
+            .distinctBy { navIdent -> navIdent }
+            .toSet()
+
+        logger.info(
+            "Fant {} unike NAV-identer fra {} deltakelser",
+            unikeNavIdenterFraDeltakelser.size,
+            alleDeltakelser.size
+        )
+
+        return nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser).flatMap { it.enheter }
+    }
+
 
     data class DeltakelseDiagnostikkDto(
         val deltakelse: DeltakelseDTO,

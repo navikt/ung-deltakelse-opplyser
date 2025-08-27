@@ -25,7 +25,7 @@ abstract class BaseAuditEntity {
 
     @CreatedBy
     @Column(name = "opprettet_av", updatable = false)
-    var opprettetAv: String? = null
+    lateinit var opprettetAv: String
 
     @CreatedDate
     @Column(name = "opprettet_tidspunkt", updatable = false)

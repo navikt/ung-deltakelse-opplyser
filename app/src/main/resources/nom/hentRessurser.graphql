@@ -1,0 +1,18 @@
+query HentRessurser($navIdenter: [String!]) {
+    ressurser(where: {navidenter: $navIdenter}) {
+        ressurs {
+            navident
+            orgTilknytning {
+                orgEnhet {
+                    id
+                    remedyEnhetId
+                    navn
+                    gyldigFom
+                    gyldigTom
+                    orgEnhetsType
+                    agressoOrgenhetType
+                }
+            }
+        }
+    }
+}
