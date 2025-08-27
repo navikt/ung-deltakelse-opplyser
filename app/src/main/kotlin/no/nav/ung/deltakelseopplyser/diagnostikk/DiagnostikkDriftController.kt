@@ -159,6 +159,9 @@ class DiagnostikkDriftController(
         return DeltakelsePerEnhetResponse(
             deltakelserPerEnhet,
             alleDeltakelser.size,
+            veiledereMedFlereEnheter = resursserMedEnheter
+                .filter { it.enheter.size > 1 }
+                .associate { it.navIdent to it.enheter },
             resursserMedEnheter
                 .flatMap { it.enheter }
                 .distinctBy { it.id }
@@ -169,6 +172,7 @@ class DiagnostikkDriftController(
     data class DeltakelsePerEnhetResponse(
         val deltakelserPerEnhet: MutableMap<String, Int>,
         val antallDeltakelser: Int,
+        val veiledereMedFlereEnheter: Map<String, List<OrgEnhet>> = mapOf(),
         val unikeEnheter: Set<OrgEnhet>,
     )
 
