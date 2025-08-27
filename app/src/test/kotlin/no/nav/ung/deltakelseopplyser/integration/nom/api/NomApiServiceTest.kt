@@ -28,7 +28,7 @@ class OrgEnhetTest {
     }
 
     @Test
-    fun `Forventer at enhet med relevant periode når start er `() {
+    fun `skal returnere enhet med relevant periode når gyldigTom er null`() {
         val orgEnhet = mockEnhet(gyldigFom = "2020-01-01", gyldigTom = null)
         assertThat(orgEnhet.ikkeErHistorisk()).isTrue
         assertThat(orgEnhet.ikkeErFremtidig()).isTrue
@@ -36,7 +36,7 @@ class OrgEnhetTest {
     }
 
     @Test
-    fun `harGyldigPeriode should return true when gyldigTom is in the future`() {
+    fun `skal returnere gyldig periode når gyldigTom er i fremtiden`() {
         val tomorrow = LocalDate.now().plusDays(1).toString()
         val orgEnhet = mockEnhet(gyldigFom = "2020-01-01", gyldigTom = tomorrow)
         assertThat(orgEnhet.ikkeErFremtidig()).isTrue
@@ -45,7 +45,7 @@ class OrgEnhetTest {
     }
 
     @Test
-    fun `harGyldigPeriode should return false when gyldigTom is in the past`() {
+    fun `skal returnere ugyldig periode når gyldigTom er i fortiden`() {
         val yesterday = LocalDate.now().minusDays(1).toString()
         val orgEnhet = mockEnhet(gyldigFom = "2020-01-01", gyldigTom = yesterday)
         assertThat(orgEnhet.ikkeErFremtidig()).isFalse
@@ -54,7 +54,7 @@ class OrgEnhetTest {
     }
 
     @Test
-    fun `ikkeErHistorisk should return true when gyldigFom is not blank and gyldigFom is before or equal to today`() {
+    fun `ikkeErHistorisk skal returnere true når gyldigFom ikke er tom og gyldigFom er før eller lik dagens dato`() {
         val today = LocalDate.now().toString()
         val orgEnhet = mockEnhet(gyldigFom = today, gyldigTom = null)
         assertThat(orgEnhet.ikkeErHistorisk()).isTrue
@@ -63,7 +63,7 @@ class OrgEnhetTest {
     }
 
     @Test
-    fun `ikkeErFremtidig should return true when gyldigTom is not null and gyldigTom is after or equal to today`() {
+    fun `ikkeErFremtidig skal returnere true når gyldigTom ikke er null og gyldigTom er etter eller lik dagens dato`() {
         val tomorrow = LocalDate.now().plusDays(1).toString()
         val orgEnhet = mockEnhet(gyldigFom = "2020-01-01", gyldigTom = tomorrow)
         assertThat(orgEnhet.ikkeErFremtidig()).isTrue
@@ -72,7 +72,7 @@ class OrgEnhetTest {
     }
 
     @Test
-    fun `erPågående should return true when period is currently active`() {
+    fun `skal returnere true når periode er aktiv akkurat nå`() {
         val yesterday = LocalDate.now().minusDays(1).toString()
         val tomorrow = LocalDate.now().plusDays(1).toString()
         val orgEnhet = mockEnhet(gyldigFom = yesterday, gyldigTom = tomorrow)
