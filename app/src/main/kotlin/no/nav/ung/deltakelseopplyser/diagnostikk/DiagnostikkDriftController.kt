@@ -134,6 +134,14 @@ class DiagnostikkDriftController(
             // Filtrer på enhets-id for å kun ta med relevante enheter
             .map { it.copy(enheter = it.enheter.filter { enhet -> ENHETER_WHITE_LIST.contains(enhet.id) }) }
 
+        // logg ressurser med flere enheter enn 1
+        resursserMedEnheter.forEach {
+            if (it.enheter.size > 1) {
+                logger.warn("NAV-ident er knyttet til flere enn 1 enhet: ${it.enheter.map { enhet -> enhet.id + " " + enhet.navn }}"
+                )
+            }
+        }
+
         // Tell antall deltakelser per enhet
         // Opprett en map fra navIdent til deltakelser
         val deltakelserPerNavIdent = alleDeltakelser
@@ -144,8 +152,10 @@ class DiagnostikkDriftController(
 
         resursserMedEnheter.forEach { ressursMedEnheter ->
             val antallDeltakelserForNavIdent = deltakelserPerNavIdent[ressursMedEnheter.navIdent]?.size ?: 0
-            ressursMedEnheter.enheter.forEach { enhet ->
-                deltakelserPerEnhet[enhet.navn] = (deltakelserPerEnhet[enhet.navn] ?: 0) + antallDeltakelserForNavIdent
+            // Kun tell deltakelser for den første enheten til hver person for å unngå dobbeltelling
+            if (ressursMedEnheter.enheter.isNotEmpty() && antallDeltakelserForNavIdent > 0) {
+                val primærenhet = ressursMedEnheter.enheter.first()
+                deltakelserPerEnhet[primærenhet.navn] = (deltakelserPerEnhet[primærenhet.navn] ?: 0) + antallDeltakelserForNavIdent
             }
         }
 
