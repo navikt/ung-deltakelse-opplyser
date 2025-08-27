@@ -99,7 +99,7 @@ class DiagnostikkDriftController(
     @GetMapping("/hent/enheter-knyttet-nav-identer", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent enheter knyttet til alle nav-identer")
     @ResponseStatus(HttpStatus.OK)
-    fun hentEnheterKnyttetNavIdenter(): List<OrgEnhet> {
+    fun hentEnheterKnyttetNavIdenter(): DeltakelsePerEnhetResponse {
         tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
 
         val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
@@ -116,11 +116,42 @@ class DiagnostikkDriftController(
             alleDeltakelser.size
         )
 
-        return nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser)
-            .flatMap { it.enheter }
-            .distinctBy { it.id }
+        val resursserMedEnheter = nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser)
+
+        // Tell antall deltakelser per enhet
+        // Opprett en map fra navIdent til deltakelser
+        val deltakelserPerNavIdent = alleDeltakelser
+            .groupBy { deltakelse -> deltakelse.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
+
+        // Tell antall deltakelser per enhet
+        val deltakelserPerEnhet = mutableMapOf<String, Int>()
+
+        resursserMedEnheter.forEach { ressursMedEnheter ->
+            val antallDeltakelserForNavIdent = deltakelserPerNavIdent[ressursMedEnheter.navIdent]?.size ?: 0
+            ressursMedEnheter.enheter.forEach { enhet ->
+                deltakelserPerEnhet[enhet.id] = (deltakelserPerEnhet[enhet.id] ?: 0) + antallDeltakelserForNavIdent
+            }
+        }
+
+        deltakelserPerEnhet.forEach { (enhetId, antall) ->
+            logger.info("Enhet {}: {} deltakelser", enhetId, antall)
+        }
+
+        return DeltakelsePerEnhetResponse(
+            deltakelserPerEnhet,
+            alleDeltakelser.size,
+            resursserMedEnheter
+                .flatMap { it.enheter }
+                .distinctBy { it.id }
+                .toSet()
+        )
     }
 
+    data class DeltakelsePerEnhetResponse(
+        val deltakelserPerEnhet: MutableMap<String, Int>,
+        val antallDeltakelser: Int,
+        val unikeEnheter: Set<OrgEnhet>,
+    )
 
     data class DeltakelseDiagnostikkDto(
         val deltakelse: DeltakelseDTO,
