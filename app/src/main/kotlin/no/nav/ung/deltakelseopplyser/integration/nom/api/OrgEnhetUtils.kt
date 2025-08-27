@@ -5,7 +5,22 @@ import java.time.LocalDate
 
 object OrgEnhetUtils {
     fun OrgEnhet.ikkeErHistorisk(): Boolean {
-        return gyldigFom.isNotBlank() && LocalDate.parse(gyldigFom).isBefore(LocalDate.now().plusDays(1))
+        val gyldigFra = if (gyldigFom.isNotBlank()) LocalDate.parse(gyldigFom) else null
+        val gyldigTil = if (!gyldigTom.isNullOrBlank()) LocalDate.parse(gyldigTom) else null
+        val idag = LocalDate.now()
+
+        // Hvis gyldigFra dato eksisterer og er etter idag, er den fremtidig
+        if (gyldigFra != null && gyldigFra.isAfter(idag)) {
+            return true
+        }
+
+        // Hvis gyldigTil dato eksisterer og er før idag, er den historisk
+        if (gyldigTil != null && gyldigTil.isBefore(idag)) {
+            return false
+        }
+
+        // Hvis gyldigTil er null eller etter idag, og gyldigFra er før eller lik idag, er den gyldig nå
+        return gyldigFra != null
     }
 
     fun OrgEnhet.ikkeErFremtidig(): Boolean {
