@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.nom.generated.HentRessurser
 import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.Ressurs
+import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.harRelevantPeriode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -46,7 +47,16 @@ class NomApiService(
 
     fun hentResursserMedEnheter(navIdenter: Set<String>): List<RessursMedEnheter> {
         val ressursMedEnheter = hentRessurser(navIdenter)
-            .map { RessursMedEnheter(it.navident, it.orgTilknytning.map { orgTilknytning -> orgTilknytning.orgEnhet }) }
+            .map { ressurs ->
+                val relevanteEnheter = ressurs.orgTilknytning
+                    .map { orgTilknytning -> orgTilknytning.orgEnhet }
+                    .filter { orgEnhet -> orgEnhet.harRelevantPeriode() }
+
+                RessursMedEnheter(
+                    navIdent = ressurs.navident,
+                    enheter = relevanteEnheter
+                )
+            }
 
         logger.info("Fant {} unike enheter for {} forespurte navIdenter", ressursMedEnheter.size, navIdenter.size)
         return ressursMedEnheter
