@@ -53,6 +53,20 @@ class DiagnostikkDriftController(
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(DiagnostikkDriftController::class.java)
+
+        private val ENHETER_WHITE_LIST = listOf<String>(
+            "sy433h",
+            "ry911x",
+            "ty596s",
+            "ke137x",
+            "ge443j",
+            "gu821v",
+            "ha577m",
+            "me316v",
+            "ra244a",
+            "me959m",
+            "da858y",
+        )
     }
 
     @PostMapping(
@@ -117,12 +131,8 @@ class DiagnostikkDriftController(
         )
 
         val resursserMedEnheter = nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser)
-        // Tell antall enheter per navident
-        resursserMedEnheter.forEach {
-            if (it.enheter.size > 1) {
-                logger.info("NavIdent er knyttet til {} enheter. Enheter: {}", it.enheter.size, it.enheter.map { enhet -> enhet.navn })
-            }
-        }
+            // Filtrer på enhets-id for å kun ta med relevante enheter
+            .map { it.copy(enheter = it.enheter.filter { enhet -> ENHETER_WHITE_LIST.contains(enhet.id) }) }
 
         // Tell antall deltakelser per enhet
         // Opprett en map fra navIdent til deltakelser
@@ -135,12 +145,8 @@ class DiagnostikkDriftController(
         resursserMedEnheter.forEach { ressursMedEnheter ->
             val antallDeltakelserForNavIdent = deltakelserPerNavIdent[ressursMedEnheter.navIdent]?.size ?: 0
             ressursMedEnheter.enheter.forEach { enhet ->
-                deltakelserPerEnhet[enhet.id] = (deltakelserPerEnhet[enhet.id] ?: 0) + antallDeltakelserForNavIdent
+                deltakelserPerEnhet[enhet.navn] = (deltakelserPerEnhet[enhet.navn] ?: 0) + antallDeltakelserForNavIdent
             }
-        }
-
-        deltakelserPerEnhet.forEach { (enhetId, antall) ->
-            logger.info("Enhet {}: {} deltakelser", enhetId, antall)
         }
 
         return DeltakelsePerEnhetResponse(
