@@ -116,7 +116,9 @@ class DiagnostikkDriftController(
             alleDeltakelser.size
         )
 
-        return nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser).flatMap { it.enheter }
+        return nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser)
+            .flatMap { it.enheter }
+            .distinctBy { it.id }
     }
 
 
