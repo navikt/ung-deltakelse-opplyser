@@ -131,8 +131,6 @@ class DiagnostikkDriftController(
         )
 
         val resursserMedEnheter = nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser)
-            // Filtrer på enhets-id for å kun ta med relevante enheter
-            .map { it.copy(enheter = it.enheter.filter { enhet -> ENHETER_WHITE_LIST.contains(enhet.id) }) }
 
         // Tell antall deltakelser per enhet
         // Opprett en map fra navIdent til deltakelser
