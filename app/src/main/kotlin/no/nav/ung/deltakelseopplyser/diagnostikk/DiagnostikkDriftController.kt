@@ -53,20 +53,6 @@ class DiagnostikkDriftController(
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(DiagnostikkDriftController::class.java)
-
-        private val ENHETER_WHITE_LIST = listOf<String>(
-            "sy433h",
-            "ry911x",
-            "ty596s",
-            "ke137x",
-            "ge443j",
-            "gu821v",
-            "ha577m",
-            "me316v",
-            "ra244a",
-            "me959m",
-            "da858y",
-        )
     }
 
     @PostMapping(
