@@ -96,7 +96,7 @@ class DiagnostikkDriftController(
         )
     }
 
-    @GetMapping("/hent/enheter-knyttet-nav-identer", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent enheter knyttet til alle nav-identer")
     @ResponseStatus(HttpStatus.OK)
     fun hentEnheterKnyttetNavIdenter(): List<AntallDeltakelsePerEnhetStatistikkRecord> {
