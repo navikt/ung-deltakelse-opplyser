@@ -10,7 +10,7 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_FORMATTER
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
@@ -56,7 +56,7 @@ class DeltakelseHistorikkServiceTest {
     private lateinit var deltakerRepository: DeltakerRepository
 
     @Autowired
-    private lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
+    private lateinit var deltakelseRepository: DeltakelseRepository
 
     @Autowired
     private lateinit var deltakelseHistorikkService: DeltakelseHistorikkService

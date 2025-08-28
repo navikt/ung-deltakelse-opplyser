@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.DeltakerStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveStatistikkService

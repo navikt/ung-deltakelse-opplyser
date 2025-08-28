@@ -7,7 +7,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendS
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.UngSøknadDAO
@@ -22,7 +22,7 @@ import java.util.*
 class UngdomsytelsesøknadService(
     private val søknadRepository: SøknadRepository,
     private val deltakerService: DeltakerService,
-    private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val deltakelseRepository: DeltakelseRepository,
     private val microfrontendService: MicrofrontendService,
     private val oppgaveService: OppgaveService,
 ) {

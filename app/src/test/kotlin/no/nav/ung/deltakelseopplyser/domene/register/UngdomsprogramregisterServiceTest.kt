@@ -21,7 +21,6 @@ import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfigurati
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -58,7 +57,7 @@ class UngdomsprogramregisterServiceTest {
     lateinit var ungdomsprogramregisterService: UngdomsprogramregisterService
 
     @Autowired
-    lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
+    lateinit var deltakelseRepository: DeltakelseRepository
 
     @MockkBean
     lateinit var mineSiderService: MineSiderService

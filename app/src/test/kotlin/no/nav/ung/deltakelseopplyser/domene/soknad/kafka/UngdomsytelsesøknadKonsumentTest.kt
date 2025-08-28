@@ -11,7 +11,7 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
@@ -48,7 +48,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     lateinit var deltakerService: DeltakerService
 
     @Autowired
-    lateinit var deltakelseRepository: UngdomsprogramDeltakelseRepository
+    lateinit var deltakelseRepository: DeltakelseRepository
 
     @SpykBean
     lateinit var ungdomsytelsesøknadService: UngdomsytelsesøknadService

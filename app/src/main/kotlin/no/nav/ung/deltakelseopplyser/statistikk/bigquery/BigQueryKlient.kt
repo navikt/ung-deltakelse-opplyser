@@ -1,9 +1,16 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
-import com.google.cloud.bigquery.*
+import com.google.cloud.bigquery.BigQuery
+import com.google.cloud.bigquery.BigQueryException
+import com.google.cloud.bigquery.DatasetId
+import com.google.cloud.bigquery.InsertAllRequest
+import com.google.cloud.bigquery.InsertAllResponse
+import com.google.cloud.bigquery.Schema
+import com.google.cloud.bigquery.StandardTableDefinition
+import com.google.cloud.bigquery.TableId
+import com.google.cloud.bigquery.TableInfo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 

@@ -32,7 +32,7 @@ import java.util.*
 
 @Service
 class UngdomsprogramregisterService(
-    private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val deltakelseRepository: DeltakelseRepository,
     private val deltakerService: DeltakerService,
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
