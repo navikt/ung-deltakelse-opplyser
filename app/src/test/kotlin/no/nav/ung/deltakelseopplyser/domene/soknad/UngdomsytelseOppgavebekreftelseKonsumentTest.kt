@@ -11,7 +11,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -39,7 +39,7 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
     lateinit var deltakerService: DeltakerService
 
     @SpykBean
-    lateinit var ungdomsprogramDeltakelseRepository: UngdomsprogramDeltakelseRepository
+    lateinit var deltakelseRepository: DeltakelseRepository
 
     @SpykBean
     lateinit var søknadRepository: SøknadRepository
@@ -106,7 +106,7 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
             verify(exactly = 1) { ungdomsytelsesøknadService.håndterMottattSøknad(any()) }
             verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
-            verify(exactly = 1) { ungdomsprogramDeltakelseRepository.findByIdAndDeltaker_IdIn(any(), any()) }
+            verify(exactly = 1) { deltakelseRepository.findByIdAndDeltaker_IdIn(any(), any()) }
             verify(exactly = 1) { søknadRepository.save(any()) }
         }
     }

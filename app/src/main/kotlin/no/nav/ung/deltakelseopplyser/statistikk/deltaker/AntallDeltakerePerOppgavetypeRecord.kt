@@ -5,8 +5,8 @@ import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardSQLTypeName
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryRecord
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTabell
+import no.nav.ung.deltakelseopplyser.utils.DateUtils
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 data class AntallDeltakerePerOppgavetypeRecord(
     val oppgavetype: String,
@@ -29,7 +29,6 @@ val AntallDeltakerePerOppgavetypeTabell: BigQueryTabell<AntallDeltakerePerOppgav
             "antall_deltakere" to rec.antallDeltakere,
             "oppgavetype" to rec.oppgavetype,
             "oppgavestatus" to rec.oppgavestatus,
-            "opprettetTidspunkt" to rec.opprettetTidspunkt
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"))
+            "opprettetTidspunkt" to rec.opprettetTidspunkt.format(DateUtils.DATE_TIME_FORMATTER)
         )
     }

@@ -18,7 +18,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegiste
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
@@ -57,7 +57,7 @@ import java.util.*
 class OppgaveUngSakController(
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakerService: DeltakerService,
-    private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val deltakelseRepository: DeltakelseRepository,
     private val oppgaveMapperService: OppgaveMapperService,
     private val oppgaveService: OppgaveService,
 ) {

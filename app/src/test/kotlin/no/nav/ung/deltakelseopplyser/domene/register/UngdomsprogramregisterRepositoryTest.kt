@@ -5,12 +5,9 @@ import jakarta.persistence.EntityManager
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -24,7 +21,6 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
-import java.util.*
 import java.util.stream.Stream
 
 
@@ -38,7 +34,7 @@ import java.util.stream.Stream
 class UngdomsprogramregisterRepositoryTest {
 
     @Autowired
-    lateinit var repository: UngdomsprogramDeltakelseRepository
+    lateinit var repository: DeltakelseRepository
 
     @Autowired
     lateinit var deltakerRepository: DeltakerRepository
