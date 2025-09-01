@@ -13,7 +13,7 @@ import java.time.ZonedDateTime
 class DeltakelseStatistikkService(
     private val deltakelseRepository: DeltakelseRepository,
     private val nomApiService: NomApiService,
-    private val deltakelseStatistikkBeregner: DeltakelseStatistikkBeregner = DeltakelseStatistikkBeregner()
+    private val deltakelsePerEnhetStatistikkTeller: DeltakelsePerEnhetStatistikkTeller = DeltakelsePerEnhetStatistikkTeller()
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(DeltakelseStatistikkService::class.java)
@@ -25,7 +25,7 @@ class DeltakelseStatistikkService(
         val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
         logger.info("Henter enheter for {} deltakelser", alleDeltakelser.size)
 
-        // Konverter til input-format
+        // Konverter til input-format for beregner
         val deltakelseInputs = alleDeltakelser.map { deltakelse ->
             DeltakelseInput(
                 id = deltakelse.id,
@@ -34,36 +34,20 @@ class DeltakelseStatistikkService(
             )
         }
 
-        // Hent alle unike (navIdent, opprettetDato) kombinasjoner
-        val navIdenterMedTidspunkt = deltakelseInputs
-            .map { deltakelse ->
-                val navIdent = deltakelse.opprettetAv.replace(VEILEDER_SUFFIX, "").trim()
-                NomApiService.NavIdentOgTidspunkt(navIdent, deltakelse.opprettetDato)
-            }
+        // Hent alle unike navIdenter fra deltakelsene
+        val navIdenter = deltakelseInputs
+            .map { it.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
             .toSet()
 
-        logger.info("Fant {} unike (navIdent, dato) kombinasjoner", navIdenterMedTidspunkt.size)
+        logger.info("Fant {} unike NAV-identer", navIdenter.size)
 
-        // Hent enhetsinfo fra NOM API
-        val ressurserMedEnheter = nomApiService.hentResursserMedEnheterForTidspunkter(navIdenterMedTidspunkt)
+        // Hent alle tilknytninger fra NOM API (ufiltrert med periodeinformasjon)
+        // Vi henter ufiltrerte data slik at periodefiltrering kan skje i beregner og testes
+        val ressurserMedAlleTilknytninger: List<NomApiService.RessursMedAlleTilknytninger> = nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
 
-        // Konverter til input-format for beregner
-        val ressurserMedEnheterInput = ressurserMedEnheter.map { ressurs ->
-            RessursMedEnheterInput(
-                navIdent = ressurs.navIdent,
-                enheter = ressurs.enheter.map { enhet ->
-                    OrgEnhetInput(
-                        id = enhet.id,
-                        navn = enhet.navn
-                    )
-                }
-            )
-        }
-
-        // Tell deltakelser per enhet
-        val deltakelsePerEnhetResultat = deltakelseStatistikkBeregner.beregnAntallDeltakelserPerEnhet(
+        val deltakelsePerEnhetResultat = deltakelsePerEnhetStatistikkTeller.tellAntallDeltakelserPerEnhet(
             deltakelser = deltakelseInputs,
-            ressurserMedEnheter = ressurserMedEnheterInput
+            ressurserMedTilknytninger = ressurserMedAlleTilknytninger
         )
 
         // Konverter til statistikk-records

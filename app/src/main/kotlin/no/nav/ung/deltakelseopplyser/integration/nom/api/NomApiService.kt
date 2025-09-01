@@ -6,9 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.nom.generated.HentRessurser
 import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.Ressurs
-import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.erGyldigPåTidspunkt
 import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.harRelevantPeriode
-import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.erGyldigPåTidspunkt
 import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.harRelevantPeriode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -67,44 +65,66 @@ class NomApiService(
         return ressursMedEnheter
     }
 
-    /**
-     * Hent ressurser med enheter som var gyldige på spesifikke tidspunkter.
-     * For hver (navIdent, tidspunkt) kombinasjon, returner ressursen med enheter som var gyldige på det tidspunktet.
-     * Hvis en ressurs ikke finnes for en navIdent, eller ingen enheter var gyldige på det tidspunktet, ekskluderes den fra resultatet.
-     *
-     * @param navIdenterMedTidspunkt Set av NavIdentOgTidspunkt, hvor hver inneholder en navIdent og et tidspunkt (LocalDate).
-     * @return Liste av RessursMedEnheter, hvor hver ressurs inneholder navIdent og en liste av OrgEnhet som var gyldige på det spesifikke tidspunktet.
-     */
-    fun hentResursserMedEnheterForTidspunkter(navIdenterMedTidspunkt: Set<NavIdentOgTidspunkt>): List<RessursMedEnheter> {
-        val alleNavIdenter = navIdenterMedTidspunkt.map { it.navIdent }.toSet()
+    fun hentResursserMedAlleTilknytninger(navIdenter: Set<String>): List<RessursMedAlleTilknytninger> {
+        val ressurser = hentRessurser(navIdenter)
 
-        val ressurser = hentRessurser(alleNavIdenter)
-        val ressursLookup = ressurser.associateBy { it.navident }
-
-        return navIdenterMedTidspunkt.mapNotNull { navIdentOgTidspunkt ->
-            val navIdent = navIdentOgTidspunkt.navIdent
-            val tidspunkt = navIdentOgTidspunkt.dato
-
-            val ressurs = ressursLookup[navIdent]
-            if (ressurs != null) {
-                val relevanteEnheter = ressurs.orgTilknytning
-                    .filter { it.erGyldigPåTidspunkt(tidspunkt) }
-                    .map { orgTilknytning -> orgTilknytning.orgEnhet }
-                    .filter { orgEnhet -> orgEnhet.erGyldigPåTidspunkt(tidspunkt) }
-
-                val ressursMedEnheter = RessursMedEnheter(
-                    navIdent = ressurs.navident,
-                    enheter = relevanteEnheter.distinctBy { it.id }
-                )
-
-                ressursMedEnheter
-            } else {
-                null
-            }
+        return ressurser.map { ressurs ->
+            RessursMedAlleTilknytninger(
+                navIdent = ressurs.navident,
+                orgTilknytninger = ressurs.orgTilknytning.map { tilknytning ->
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = tilknytning.gyldigFom.let { LocalDate.parse(it) },
+                        gyldigTom = tilknytning.gyldigTom?.let { LocalDate.parse(it) },
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = tilknytning.orgEnhet.id,
+                            navn = tilknytning.orgEnhet.navn,
+                            gyldigFom = tilknytning.orgEnhet.gyldigFom.let { LocalDate.parse(it) },
+                            gyldigTom = tilknytning.orgEnhet.gyldigTom?.let { LocalDate.parse(it) }
+                        )
+                    )
+                }
+            )
         }
     }
 
-    data class NavIdentOgTidspunkt(val navIdent: String, val dato: LocalDate)
-
     data class RessursMedEnheter(val navIdent: String, val enheter: List<OrgEnhet>)
+
+    data class RessursMedAlleTilknytninger(
+        val navIdent: String,
+        val orgTilknytninger: List<RessursOrgTilknytningMedPeriode>
+    )
+
+    data class RessursOrgTilknytningMedPeriode(
+        val gyldigFom: LocalDate,
+        val gyldigTom: LocalDate?,
+        val orgEnhet: OrgEnhetMedPeriode
+    ) {
+        /**
+         * Sjekker om organisasjonstilknytningen var gyldig på et spesifikt tidspunkt.
+         */
+        fun erGyldigPåTidspunkt(tidspunkt: LocalDate): Boolean {
+
+            val startetFørEllerPå = !gyldigFom.isAfter(tidspunkt)
+            val ikkeSlutetFør = gyldigTom == null || !gyldigTom.isBefore(tidspunkt)
+
+            return startetFørEllerPå && ikkeSlutetFør
+        }
+    }
+
+    data class OrgEnhetMedPeriode(
+        val id: String,
+        val navn: String,
+        val gyldigFom: LocalDate,
+        val gyldigTom: LocalDate?
+    ) {
+        /**
+         * Sjekker om enheten var gyldig på et spesifikt tidspunkt.
+         */
+        fun erGyldigPåTidspunkt(tidspunkt: LocalDate): Boolean {
+            val startetFørEllerPå = !gyldigFom.isAfter(tidspunkt)
+            val ikkeSlutetFør = gyldigTom == null || !gyldigTom.isBefore(tidspunkt)
+
+            return startetFørEllerPå && ikkeSlutetFør
+        }
+    }
 }
