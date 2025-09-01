@@ -103,6 +103,8 @@ class DiagnostikkDriftController(
     @Operation(summary = "Hent enheter knyttet til alle nav-identer")
     @ResponseStatus(HttpStatus.OK)
     fun hentEnheterKnyttetNavIdenter(): DeltakelsePerEnhetResponse {
+        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
+
         val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
         logger.info("Henter enheter for {} deltakelser", alleDeltakelser.size)
 
