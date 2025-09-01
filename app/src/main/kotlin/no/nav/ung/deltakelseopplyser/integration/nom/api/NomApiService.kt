@@ -83,7 +83,7 @@ class NomApiService(
 
         return navIdenterMedTidspunkt.mapNotNull { navIdentOgTidspunkt ->
             val navIdent = navIdentOgTidspunkt.navIdent
-            val tidspunkt = navIdentOgTidspunkt.tidspunkt
+            val tidspunkt = navIdentOgTidspunkt.dato
 
             val ressurs = ressursLookup[navIdent]
             if (ressurs != null) {
@@ -104,7 +104,7 @@ class NomApiService(
         }
     }
 
-    data class NavIdentOgTidspunkt(val navIdent: String, val tidspunkt: LocalDate)
+    data class NavIdentOgTidspunkt(val navIdent: String, val dato: LocalDate)
 
     data class RessursMedEnheter(val navIdent: String, val enheter: List<OrgEnhet>)
 }
