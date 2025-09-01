@@ -4,7 +4,6 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import no.nav.nom.generated.HentRessurser
-import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.Ressurs
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPeriode
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetUtils.harRelevantPeriode
@@ -70,9 +69,7 @@ class NomApiService(
     }
 
     fun hentResursserMedAlleTilknytninger(navIdenter: Set<String>): List<RessursMedAlleTilknytninger> {
-        val ressurser = hentRessurser(navIdenter)
-
-        return ressurser.map { ressurs ->
+        return hentRessurser(navIdenter).map { ressurs ->
             RessursMedAlleTilknytninger(
                 navIdent = ressurs.navident,
                 orgTilknytninger = ressurs.orgTilknytning.map { tilknytning ->
