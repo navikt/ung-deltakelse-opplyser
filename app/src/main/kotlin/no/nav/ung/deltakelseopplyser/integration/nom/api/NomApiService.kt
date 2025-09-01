@@ -6,10 +6,13 @@ import kotlinx.coroutines.runBlocking
 import no.nav.nom.generated.HentRessurser
 import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.Ressurs
+import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.erGyldigPåTidspunkt
 import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.harRelevantPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.erGyldigPåTidspunkt
 import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.harRelevantPeriode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Service
 class NomApiService(
@@ -63,6 +66,40 @@ class NomApiService(
         logger.info("Fant {} unike enheter for {} forespurte navIdenter", ressursMedEnheter.size, navIdenter.size)
         return ressursMedEnheter
     }
+
+    /**
+     * Henter ressurser med enheter for flere (navIdent, tidspunkt) kombinasjoner i ett kall.
+     */
+    fun hentResursserMedEnheterForTidspunkter(navIdenterMedTidspunkt: Set<NavIdentOgTidspunkt>): List<RessursMedEnheter> {
+        val alleNavIdenter = navIdenterMedTidspunkt.map { it.navIdent }.toSet()
+
+        val ressurser = hentRessurser(alleNavIdenter)
+        val ressursLookup = ressurser.associateBy { it.navident }
+
+        return navIdenterMedTidspunkt.mapNotNull { navIdentOgTidspunkt ->
+            val navIdent = navIdentOgTidspunkt.navIdent
+            val tidspunkt = navIdentOgTidspunkt.tidspunkt
+
+            val ressurs = ressursLookup[navIdent]
+            if (ressurs != null) {
+                val relevanteEnheter = ressurs.orgTilknytning
+                    .filter { it.erGyldigPåTidspunkt(tidspunkt) }
+                    .map { orgTilknytning -> orgTilknytning.orgEnhet }
+                    .filter { orgEnhet -> orgEnhet.erGyldigPåTidspunkt(tidspunkt) }
+
+                val ressursMedEnheter = RessursMedEnheter(
+                    navIdent = ressurs.navident,
+                    enheter = relevanteEnheter.distinctBy { it.id }
+                )
+
+                ressursMedEnheter
+            } else {
+                null
+            }
+        }
+    }
+
+    data class NavIdentOgTidspunkt(val navIdent: String, val tidspunkt: LocalDate)
 
     data class RessursMedEnheter(val navIdent: String, val enheter: List<OrgEnhet>)
 }

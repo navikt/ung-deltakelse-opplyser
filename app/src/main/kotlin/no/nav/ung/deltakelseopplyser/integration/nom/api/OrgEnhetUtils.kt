@@ -30,4 +30,20 @@ object OrgEnhetUtils {
     fun OrgEnhet.harRelevantPeriode(): Boolean {
         return ikkeErHistorisk() && ikkeErFremtidig()
     }
+
+    /**
+     * Sjekker om enheten var gyldig på et spesifikt tidspunkt.
+     */
+    fun OrgEnhet.erGyldigPåTidspunkt(tidspunkt: LocalDate): Boolean {
+        val gyldigFra =  LocalDate.parse(gyldigFom)
+        val gyldigTil = if (!gyldigTom.isNullOrBlank()) LocalDate.parse(gyldigTom) else null
+
+        // Enheten må ha startet før eller på tidspunktet
+        val startetFørEllerPå = !gyldigFra.isAfter(tidspunkt)
+
+        // Enheten må ikke ha sluttet før tidspunktet
+        val ikkeSlutetFør = gyldigTil == null || !gyldigTil.isBefore(tidspunkt)
+
+        return startetFørEllerPå && ikkeSlutetFør
+    }
 }

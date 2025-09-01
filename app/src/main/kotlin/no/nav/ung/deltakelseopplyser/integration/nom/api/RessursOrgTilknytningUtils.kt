@@ -30,4 +30,20 @@ object RessursOrgTilknytningUtils {
     fun RessursOrgTilknytning.harRelevantPeriode(): Boolean {
         return ikkeErHistorisk() && ikkeErFremtidig()
     }
+
+    /**
+     * Sjekker om organisasjonstilknytningen var gyldig på et spesifikt tidspunkt.
+     */
+    fun RessursOrgTilknytning.erGyldigPåTidspunkt(tidspunkt: LocalDate): Boolean {
+        val gyldigFra = LocalDate.parse(gyldigFom)
+        val gyldigTil = if (!gyldigTom.isNullOrBlank()) LocalDate.parse(gyldigTom) else null
+
+        // Tilknytningen må ha startet før eller på tidspunktet
+        val startetFørEllerPå = !gyldigFra.isAfter(tidspunkt)
+
+        // Tilknytningen må ikke ha sluttet før tidspunktet
+        val ikkeSlutetFør = gyldigTil == null || !gyldigTil.isBefore(tidspunkt)
+
+        return startetFørEllerPå && ikkeSlutetFør
+    }
 }

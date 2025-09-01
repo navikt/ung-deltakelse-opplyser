@@ -19,6 +19,8 @@ import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
+import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
+import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelsePerEnhetStatistikkRecord
@@ -49,7 +51,8 @@ class DiagnostikkDriftController(
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val sporingsloggService: SporingsloggService,
-    private val deltakelseStatistikkService: DeltakelseStatistikkService
+    private val deltakelseStatistikkService: DeltakelseStatistikkService,
+    private val nomApiService: NomApiService
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(DiagnostikkDriftController::class.java)
@@ -99,10 +102,65 @@ class DiagnostikkDriftController(
     @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent enheter knyttet til alle nav-identer")
     @ResponseStatus(HttpStatus.OK)
-    fun hentEnheterKnyttetNavIdenter(): List<AntallDeltakelsePerEnhetStatistikkRecord> {
+    fun hentEnheterKnyttetNavIdenter(): DeltakelsePerEnhetResponse {
+        val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
+        logger.info("Henter enheter for {} deltakelser", alleDeltakelser.size)
+
+        val unikeNavIdenterFraDeltakelser: Set<String> = alleDeltakelser
+            .map { deltakelse -> deltakelse.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
+            .distinctBy { navIdent -> navIdent }
+            .toSet()
+
+        logger.info(
+            "Fant {} unike NAV-identer fra {} deltakelser",
+            unikeNavIdenterFraDeltakelser.size,
+            alleDeltakelser.size
+        )
+
+        val resursserMedEnheter = nomApiService.hentResursserMedEnheter(unikeNavIdenterFraDeltakelser)
+
+        // Tell antall deltakelser per enhet
+        // Opprett en map fra navIdent til deltakelser
+        val deltakelserPerNavIdent = alleDeltakelser
+            .groupBy { deltakelse -> deltakelse.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
+
+        // Tell antall deltakelser per enhet
+        val deltakelserPerEnhet = mutableMapOf<String, Int>()
+
+        resursserMedEnheter.forEach { ressursMedEnheter ->
+            val antallDeltakelserForNavIdent = deltakelserPerNavIdent[ressursMedEnheter.navIdent]?.size ?: 0
+            // Kun tell deltakelser for den første enheten til hver person for å unngå dobbeltelling
+            val enheter = ressursMedEnheter.enheter
+            if (enheter.isNotEmpty() && antallDeltakelserForNavIdent > 0) {
+                val primærenhet = enheter.first()
+                if (enheter.size > 1) {
+                    logger.warn("NAV-ident har ${enheter.size} enheter [${enheter.map { it.navn }}], teller kun på primærenhet ${enheter.first().id} ${enheter.first().navn}")
+                }
+                deltakelserPerEnhet[primærenhet.navn] =
+                    (deltakelserPerEnhet[primærenhet.navn] ?: 0) + antallDeltakelserForNavIdent
+            }
+        }
+
+        return DeltakelsePerEnhetResponse(
+            deltakelserPerEnhet,
+            alleDeltakelser.size,
+            veiledereMedFlereEnheter = resursserMedEnheter
+                .filter { it.enheter.size > 1 }
+                .associate { it.navIdent to it.enheter },
+            resursserMedEnheter
+                .flatMap { it.enheter }
+                .distinctBy { it.id }
+                .toSet()
+        )
+    }
+
+    @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk-v2", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Hent enheter knyttet til alle nav-identer")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentEnheterKnyttetNavIdenterV2(): List<AntallDeltakelsePerEnhetStatistikkRecord> {
         tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
 
-        return deltakelseStatistikkService.antallDeltakelserPerKontorStatistikk()
+        return deltakelseStatistikkService.antallDeltakelserPerKontorStatistikkV2()
     }
 
     data class DeltakelsePerEnhetResponse(
