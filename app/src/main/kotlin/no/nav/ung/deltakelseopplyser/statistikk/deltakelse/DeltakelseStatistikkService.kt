@@ -40,6 +40,14 @@ class DeltakelseStatistikkService(
         val ressurserMedEnheter =
             nomApiService.hentResursserMedEnheterForTidspunkter(navIdenterMedDeltakelseOpprettetTidspunkt)
 
+        // Beregn vektlegging av enheter basert på hvor ofte de forekommer blant alle veiledere
+        val enhetPopularitet = ressurserMedEnheter
+            .flatMap { it.enheter }
+            .groupingBy { "${it.id}-${it.navn}" }
+            .eachCount()
+
+        logger.info("Beregnet popularitet for {} enheter", enhetPopularitet.size)
+
         // For diagnostikk - hent antall veiledere med flere enheter for det tidspunktet deltakelsen ble opprettet
         val antallVeiledereMedFlereEnheter = mutableMapOf<String, List<OrgEnhet>>()
 
@@ -51,16 +59,29 @@ class DeltakelseStatistikkService(
                 val ressursMedEnheter = ressurserMedEnheter.find { it.navIdent == navIdent }
 
                 if (ressursMedEnheter?.enheter?.isNotEmpty() == true) {
-                    val enhet = ressursMedEnheter.enheter.first()
+                    val enheter = ressursMedEnheter.enheter
 
-                    // Logg warning for personer med flere enheter på opprettelsestidspunktet
-                    if (ressursMedEnheter.enheter.size > 1) {
-                        logger.warn("NAV-ident hadde ${ressursMedEnheter.enheter.size} enheter på tidspunkt $opprettetDato [${ressursMedEnheter.enheter.map { "${it.id} - ${it.navn}" }}], teller kun på enhet ${enhet.id} - ${enhet.navn}")
+                    val valgtEnhet = if (enheter.size == 1) {
+                        enheter.first()
+                    } else {
+                        // Velg enheten med høyest popularitet (flest forekomster)
+                        val populæresteEnhet = enheter
+                            .maxByOrNull { enhet ->
+                                enhetPopularitet["${enhet.id}-${enhet.navn}"] ?: 0
+                            }
+                            ?: enheter.first()
+
+                        logger.warn(
+                            "NAV-ident hadde ${enheter.size} enheter på tidspunkt $opprettetDato [${enheter.map { "${it.id}-${it.navn} (popularitet: ${enhetPopularitet["${it.id}-${it.navn}"] ?: 0})" }}], valgte den mest populære: ${populæresteEnhet.id}-${populæresteEnhet.navn}"
+                        )
+
                         // Legg til i diagnostikk-data
-                        antallVeiledereMedFlereEnheter[navIdent] = ressursMedEnheter.enheter
+                        antallVeiledereMedFlereEnheter[navIdent] = enheter
+
+                        populæresteEnhet
                     }
 
-                    enhet.navn
+                    valgtEnhet.navn
                 } else {
                     logger.warn("Fant ingen gyldig enhet for NAV-ident $navIdent på tidspunkt $opprettetDato")
                     null
@@ -98,7 +119,8 @@ class DeltakelseStatistikkService(
                     "totalAntallDeltakelser" to alleDeltakelser.size,
                     "antallUnikeNavIdenter" to unikeNavIdenter.size,
                     "antallVeiledereMedFlereEnheter" to antallVeiledereMedFlereEnheter,
-                    "antallUnikeEnheter" to antallUnikeEnheter
+                    "antallUnikeEnheter" to antallUnikeEnheter,
+                    "enhetPopularitet" to enhetPopularitet
                 )
             )
         }.also {
