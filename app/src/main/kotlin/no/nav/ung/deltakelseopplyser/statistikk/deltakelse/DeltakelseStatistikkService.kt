@@ -13,7 +13,7 @@ import java.time.ZonedDateTime
 class DeltakelseStatistikkService(
     private val deltakelseRepository: DeltakelseRepository,
     private val nomApiService: NomApiService,
-    private val statistikkBeregner: DeltakelseStatistikkBeregner = DeltakelseStatistikkBeregner()
+    private val deltakelseStatistikkBeregner: DeltakelseStatistikkBeregner = DeltakelseStatistikkBeregner()
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(DeltakelseStatistikkService::class.java)
@@ -60,17 +60,21 @@ class DeltakelseStatistikkService(
             )
         }
 
-        // Utfør beregning med den isolerte beregneren
-        val beregningResultat = statistikkBeregner.beregnAntallDeltakelserPerEnhet(
+        // Tell deltakelser per enhet
+        val deltakelsePerEnhetResultat = deltakelseStatistikkBeregner.beregnAntallDeltakelserPerEnhet(
             deltakelser = deltakelseInputs,
             ressurserMedEnheter = ressurserMedEnheterInput
         )
 
         // Konverter til statistikk-records
-        val statistikkRecords = statistikkBeregner.konverterTilStatistikkRecords(
-            deltakelsePerEnhetResultat = beregningResultat,
-            kjoringstidspunkt = kjøringstidspunkt
-        )
+        val statistikkRecords = deltakelsePerEnhetResultat.deltakelserPerEnhet.map { (enhetsNavn, antallDeltakelser) ->
+            AntallDeltakelsePerEnhetStatistikkRecord(
+                kontor = enhetsNavn,
+                antallDeltakelser = antallDeltakelser,
+                opprettetTidspunkt = kjøringstidspunkt,
+                diagnostikk = deltakelsePerEnhetResultat.diagnostikk
+            )
+        }
 
         return statistikkRecords.also {
             verifiserKonekventTelling(it, alleDeltakelser)

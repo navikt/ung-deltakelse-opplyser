@@ -4,8 +4,6 @@ import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILED
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.util.*
 
 class DeltakelseStatistikkBeregnerTest {
@@ -20,7 +18,11 @@ class DeltakelseStatistikkBeregnerTest {
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.of(2024, 1, 15)),
             DeltakelseInput(UUID.randomUUID(), "DEF456$VEILEDER_SUFFIX", LocalDate.of(2024, 1, 16)),
-            DeltakelseInput(UUID.randomUUID(), "GHI789$VEILEDER_SUFFIX", LocalDate.of(2024, 1, 17)) // Denne har flere enheter
+            DeltakelseInput(
+                UUID.randomUUID(),
+                "GHI789$VEILEDER_SUFFIX",
+                LocalDate.of(2024, 1, 17)
+            ) // Denne har flere enheter
         )
 
         val ressurserMedEnheter = listOf(
@@ -68,23 +70,6 @@ class DeltakelseStatistikkBeregnerTest {
         val resultat = beregner.beregnAntallDeltakelserPerEnhet(deltakelser, ressurserMedEnheter)
 
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
-    }
-
-    @Test
-    fun `skal konvertere til statistikk records korrekt`() {
-        // Gitt følgende deltakelser og ressursdata
-        val deltakelsePerEnhetResultat = DeltakelsePerEnhetResultat(
-            deltakelserPerEnhet = mapOf("NAV Oslo" to 5, "NAV Bergen" to 3)
-        )
-        val kjøringstidspunkt = ZonedDateTime.now()
-
-        // beregn antall deltakelser per enhet
-        val records = beregner.konverterTilStatistikkRecords(deltakelsePerEnhetResultat, kjøringstidspunkt)
-
-        assertThat(records).hasSize(2)
-        assertThat(records.map { it.kontor }).containsExactlyInAnyOrder("NAV Oslo", "NAV Bergen")
-        assertThat(records.find { it.kontor == "NAV Oslo" }?.antallDeltakelser).isEqualTo(5)
-        assertThat(records.find { it.kontor == "NAV Bergen" }?.antallDeltakelser).isEqualTo(3)
     }
 
     @Test

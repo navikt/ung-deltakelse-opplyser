@@ -3,7 +3,6 @@ package no.nav.ung.deltakelseopplyser.statistikk.deltakelse
 import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.time.ZonedDateTime
 import java.util.UUID
 
 data class DeltakelseInput(
@@ -107,19 +106,5 @@ class DeltakelseStatistikkBeregner {
                 "antallUnikeNavIdenter" to antallUnikeNavIdenter
             )
         )
-    }
-
-    fun konverterTilStatistikkRecords(
-        deltakelsePerEnhetResultat: DeltakelsePerEnhetResultat,
-        kjoringstidspunkt: ZonedDateTime,
-    ): List<AntallDeltakelsePerEnhetStatistikkRecord> {
-        return deltakelsePerEnhetResultat.deltakelserPerEnhet.map { (enhetsNavn, antallDeltakelser) ->
-            AntallDeltakelsePerEnhetStatistikkRecord(
-                kontor = enhetsNavn,
-                antallDeltakelser = antallDeltakelser,
-                opprettetTidspunkt = kjoringstidspunkt,
-                diagnostikk = deltakelsePerEnhetResultat.diagnostikk
-            )
-        }
     }
 }
