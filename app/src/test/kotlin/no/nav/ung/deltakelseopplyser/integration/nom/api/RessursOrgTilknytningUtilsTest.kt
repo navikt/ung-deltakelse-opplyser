@@ -3,9 +3,9 @@ package no.nav.ung.deltakelseopplyser.integration.nom.api
 import no.nav.nom.generated.enums.OrgEnhetsType
 import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.RessursOrgTilknytning
-import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.harRelevantPeriode
-import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.ikkeErFremtidig
-import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.ikkeErHistorisk
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningUtils.harRelevantPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningUtils.ikkeErFremtidig
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningUtils.ikkeErHistorisk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

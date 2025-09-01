@@ -1,9 +1,9 @@
 package no.nav.ung.deltakelseopplyser.statistikk.deltakelse
 
 import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
-import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService.OrgEnhetMedPeriode
-import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService.RessursMedAlleTilknytninger
-import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService.RessursOrgTilknytningMedPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningMedPeriode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

@@ -6,8 +6,12 @@ import kotlinx.coroutines.runBlocking
 import no.nav.nom.generated.HentRessurser
 import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.Ressurs
-import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.harRelevantPeriode
-import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.harRelevantPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetUtils.harRelevantPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedEnheter
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningMedPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningUtils.harRelevantPeriode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDate
@@ -84,47 +88,6 @@ class NomApiService(
                     )
                 }
             )
-        }
-    }
-
-    data class RessursMedEnheter(val navIdent: String, val enheter: List<OrgEnhet>)
-
-    data class RessursMedAlleTilknytninger(
-        val navIdent: String,
-        val orgTilknytninger: List<RessursOrgTilknytningMedPeriode>
-    )
-
-    data class RessursOrgTilknytningMedPeriode(
-        val gyldigFom: LocalDate,
-        val gyldigTom: LocalDate?,
-        val orgEnhet: OrgEnhetMedPeriode
-    ) {
-        /**
-         * Sjekker om organisasjonstilknytningen var gyldig på et spesifikt tidspunkt.
-         */
-        fun erGyldigPåTidspunkt(tidspunkt: LocalDate): Boolean {
-
-            val startetFørEllerPå = !gyldigFom.isAfter(tidspunkt)
-            val ikkeSlutetFør = gyldigTom == null || !gyldigTom.isBefore(tidspunkt)
-
-            return startetFørEllerPå && ikkeSlutetFør
-        }
-    }
-
-    data class OrgEnhetMedPeriode(
-        val id: String,
-        val navn: String,
-        val gyldigFom: LocalDate,
-        val gyldigTom: LocalDate?
-    ) {
-        /**
-         * Sjekker om enheten var gyldig på et spesifikt tidspunkt.
-         */
-        fun erGyldigPåTidspunkt(tidspunkt: LocalDate): Boolean {
-            val startetFørEllerPå = !gyldigFom.isAfter(tidspunkt)
-            val ikkeSlutetFør = gyldigTom == null || !gyldigTom.isBefore(tidspunkt)
-
-            return startetFørEllerPå && ikkeSlutetFør
         }
     }
 }

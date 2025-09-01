@@ -1,7 +1,8 @@
 package no.nav.ung.deltakelseopplyser.statistikk.deltakelse
 
 import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
-import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.*
@@ -26,10 +27,10 @@ class DeltakelsePerEnhetStatistikkTeller {
 
     fun tellAntallDeltakelserPerEnhet(
         deltakelser: List<DeltakelseInput>,
-        ressurserMedTilknytninger: List<NomApiService.RessursMedAlleTilknytninger>,
+        ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>,
     ): DeltakelsePerEnhetResultat {
         val ressursLookup = ressurserMedTilknytninger.associateBy { it.navIdent }
-        val veiledereMedFlereEnheter = mutableMapOf<String, List<NomApiService.OrgEnhetMedPeriode>>()
+        val veiledereMedFlereEnheter = mutableMapOf<String, List<OrgEnhetMedPeriode>>()
 
         val deltakelserPerEnhet = deltakelser
             .mapNotNull { deltakelse ->
@@ -43,9 +44,9 @@ class DeltakelsePerEnhetStatistikkTeller {
 
     private fun finnEnhetForDeltakelse(
         deltakelse: DeltakelseInput,
-        ressursLookup: Map<String, NomApiService.RessursMedAlleTilknytninger>,
-        alleRessurser: List<NomApiService.RessursMedAlleTilknytninger>,
-        veiledereMedFlereEnheter: MutableMap<String, List<NomApiService.OrgEnhetMedPeriode>>
+        ressursLookup: Map<String, RessursMedAlleTilknytninger>,
+        alleRessurser: List<RessursMedAlleTilknytninger>,
+        veiledereMedFlereEnheter: MutableMap<String, List<OrgEnhetMedPeriode>>,
     ): String? {
         val navIdent = deltakelse.navIdent()
 
@@ -57,9 +58,16 @@ class DeltakelsePerEnhetStatistikkTeller {
                     logger.warn("Fant ingen gyldig enhet for NAV-ident $navIdent på tidspunkt ${deltakelse.opprettetDato}")
                     null
                 }
+
                 gyldigeEnheter.size == 1 -> gyldigeEnheter.first().navn
                 else -> {
-                    val valgtEnhet = velgMestPopulæreEnhet(gyldigeEnheter, alleRessurser, navIdent, deltakelse.opprettetDato, veiledereMedFlereEnheter)
+                    val valgtEnhet = velgMestPopulæreEnhet(
+                        gyldigeEnheter,
+                        alleRessurser,
+                        navIdent,
+                        deltakelse.opprettetDato,
+                        veiledereMedFlereEnheter
+                    )
                     valgtEnhet.navn
                 }
             }
@@ -70,9 +78,9 @@ class DeltakelsePerEnhetStatistikkTeller {
     }
 
     private fun finnGyldigeEnheter(
-        ressurs: NomApiService.RessursMedAlleTilknytninger,
-        opprettetDato: LocalDate
-    ): List<NomApiService.OrgEnhetMedPeriode> {
+        ressurs: RessursMedAlleTilknytninger,
+        opprettetDato: LocalDate,
+    ): List<OrgEnhetMedPeriode> {
         return ressurs.orgTilknytninger
             .filter { it.erGyldigPåTidspunkt(opprettetDato) }
             .map { it.orgEnhet }
@@ -81,12 +89,12 @@ class DeltakelsePerEnhetStatistikkTeller {
     }
 
     private fun velgMestPopulæreEnhet(
-        gyldigeEnheter: List<NomApiService.OrgEnhetMedPeriode>,
-        alleRessurser: List<NomApiService.RessursMedAlleTilknytninger>,
+        gyldigeEnheter: List<OrgEnhetMedPeriode>,
+        alleRessurser: List<RessursMedAlleTilknytninger>,
         navIdent: String,
         opprettetDato: LocalDate,
-        veiledereMedFlereEnheter: MutableMap<String, List<NomApiService.OrgEnhetMedPeriode>>
-    ): NomApiService.OrgEnhetMedPeriode {
+        veiledereMedFlereEnheter: MutableMap<String, List<OrgEnhetMedPeriode>>,
+    ): OrgEnhetMedPeriode {
         val enhetPopularitet = beregnEnhetPopularitet(alleRessurser)
         val mestPopulæreEnhet = gyldigeEnheter.maxByOrNull {
             enhetPopularitet["${it.id}-${it.navn}"] ?: 0
@@ -98,7 +106,7 @@ class DeltakelsePerEnhetStatistikkTeller {
         return mestPopulæreEnhet
     }
 
-    private fun beregnEnhetPopularitet(ressurserMedTilknytninger: List<NomApiService.RessursMedAlleTilknytninger>): Map<String, Int> =
+    private fun beregnEnhetPopularitet(ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>): Map<String, Int> =
         ressurserMedTilknytninger
             .flatMap { it.orgTilknytninger }
             .map { it.orgEnhet }
@@ -106,10 +114,10 @@ class DeltakelsePerEnhetStatistikkTeller {
             .eachCount()
 
     private fun loggFlereEnheterValg(
-        gyldigeEnheter: List<NomApiService.OrgEnhetMedPeriode>,
+        gyldigeEnheter: List<OrgEnhetMedPeriode>,
         enhetPopularitet: Map<String, Int>,
-        valgtEnhet: NomApiService.OrgEnhetMedPeriode,
-        opprettetDato: LocalDate
+        valgtEnhet: OrgEnhetMedPeriode,
+        opprettetDato: LocalDate,
     ) {
         val enhetInfo = gyldigeEnheter.joinToString { enhet ->
             val popularitet = enhetPopularitet["${enhet.id}-${enhet.navn}"] ?: 0
@@ -118,15 +126,15 @@ class DeltakelsePerEnhetStatistikkTeller {
 
         logger.warn(
             "NAV-ident hadde ${gyldigeEnheter.size} enheter på tidspunkt $opprettetDato [$enhetInfo], " +
-            "valgte den mest populære: ${valgtEnhet.id}-${valgtEnhet.navn}"
+                    "valgte den mest populære: ${valgtEnhet.id}-${valgtEnhet.navn}"
         )
     }
 
     private fun opprettResultat(
         deltakelser: List<DeltakelseInput>,
         deltakelserPerEnhet: Map<String, Int>,
-        veiledereMedFlereEnheter: Map<String, List<NomApiService.OrgEnhetMedPeriode>>,
-        ressurserMedTilknytninger: List<NomApiService.RessursMedAlleTilknytninger>
+        veiledereMedFlereEnheter: Map<String, List<OrgEnhetMedPeriode>>,
+        ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>,
     ): DeltakelsePerEnhetResultat {
         val antallUnikeNavIdenter = deltakelser
             .map { it.navIdent() }

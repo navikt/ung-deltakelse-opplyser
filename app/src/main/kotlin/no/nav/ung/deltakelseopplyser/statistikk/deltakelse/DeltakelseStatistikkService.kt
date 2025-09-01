@@ -4,6 +4,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
 import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.ZoneOffset
@@ -43,7 +44,7 @@ class DeltakelseStatistikkService(
 
         // Hent alle tilknytninger fra NOM API (ufiltrert med periodeinformasjon)
         // Vi henter ufiltrerte data slik at periodefiltrering kan skje i beregner og testes
-        val ressurserMedAlleTilknytninger: List<NomApiService.RessursMedAlleTilknytninger> = nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
+        val ressurserMedAlleTilknytninger: List<RessursMedAlleTilknytninger> = nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
 
         val deltakelsePerEnhetResultat = deltakelsePerEnhetStatistikkTeller.tellAntallDeltakelserPerEnhet(
             deltakelser = deltakelseInputs,
