@@ -68,7 +68,12 @@ class NomApiService(
     }
 
     /**
-     * Henter ressurser med enheter for flere (navIdent, tidspunkt) kombinasjoner i ett kall.
+     * Hent ressurser med enheter som var gyldige på spesifikke tidspunkter.
+     * For hver (navIdent, tidspunkt) kombinasjon, returner ressursen med enheter som var gyldige på det tidspunktet.
+     * Hvis en ressurs ikke finnes for en navIdent, eller ingen enheter var gyldige på det tidspunktet, ekskluderes den fra resultatet.
+     *
+     * @param navIdenterMedTidspunkt Set av NavIdentOgTidspunkt, hvor hver inneholder en navIdent og et tidspunkt (LocalDate).
+     * @return Liste av RessursMedEnheter, hvor hver ressurs inneholder navIdent og en liste av OrgEnhet som var gyldige på det spesifikke tidspunktet.
      */
     fun hentResursserMedEnheterForTidspunkter(navIdenterMedTidspunkt: Set<NavIdentOgTidspunkt>): List<RessursMedEnheter> {
         val alleNavIdenter = navIdenterMedTidspunkt.map { it.navIdent }.toSet()
