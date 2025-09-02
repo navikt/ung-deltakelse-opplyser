@@ -21,7 +21,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendS
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
@@ -86,7 +86,7 @@ class UngdomsytelsesøknadServiceTest {
     lateinit var enhetsregisterService: EnhetsregisterService
 
     @Autowired
-    lateinit var ungdomsprogramDeltakelseRepository: UngdomsprogramDeltakelseRepository
+    lateinit var deltakelseRepository: DeltakelseRepository
 
     @Autowired
     lateinit var registerService: UngdomsprogramregisterService
@@ -126,7 +126,7 @@ class UngdomsytelsesøknadServiceTest {
             )
         )
 
-        val deltakelse = ungdomsprogramDeltakelseRepository.findById(deltakelseDTO.id!!)
+        val deltakelse = deltakelseRepository.findById(deltakelseDTO.id!!)
         assertThat(deltakelse)
             .withFailMessage("Forventet å finne deltakelse med id %s", deltakelseDTO.id)
             .isNotEmpty

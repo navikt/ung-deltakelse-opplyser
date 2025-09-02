@@ -1,10 +1,10 @@
-package no.nav.ung.deltakelseopplyser.integration.nom.api
+package no.nav.ung.deltakelseopplyser.integration.nom.api.domene
 
-import no.nav.nom.generated.hentressurser.RessursOrgTilknytning
+import no.nav.nom.generated.hentressurser.OrgEnhet
 import java.time.LocalDate
 
-object RessursOrgTilknytningUtils {
-    fun RessursOrgTilknytning.ikkeErHistorisk(): Boolean {
+object OrgEnhetUtils {
+    fun OrgEnhet.ikkeErHistorisk(): Boolean {
         val gyldigFra = if (gyldigFom.isNotBlank()) LocalDate.parse(gyldigFom) else null
         val gyldigTil = if (!gyldigTom.isNullOrBlank()) LocalDate.parse(gyldigTom) else null
         val idag = LocalDate.now()
@@ -23,11 +23,27 @@ object RessursOrgTilknytningUtils {
         return gyldigFra != null
     }
 
-    fun RessursOrgTilknytning.ikkeErFremtidig(): Boolean {
+    fun OrgEnhet.ikkeErFremtidig(): Boolean {
         return gyldigTom.isNullOrBlank() || LocalDate.parse(gyldigTom).isAfter(LocalDate.now().minusDays(1))
     }
 
-    fun RessursOrgTilknytning.harRelevantPeriode(): Boolean {
+    fun OrgEnhet.harRelevantPeriode(): Boolean {
         return ikkeErHistorisk() && ikkeErFremtidig()
+    }
+
+    /**
+     * Sjekker om enheten var gyldig på et spesifikt tidspunkt.
+     */
+    fun OrgEnhet.erGyldigPåTidspunkt(tidspunkt: LocalDate): Boolean {
+        val gyldigFra =  LocalDate.parse(gyldigFom)
+        val gyldigTil = if (!gyldigTom.isNullOrBlank()) LocalDate.parse(gyldigTom) else null
+
+        // Enheten må ha startet før eller på tidspunktet
+        val startetFørEllerPå = !gyldigFra.isAfter(tidspunkt)
+
+        // Enheten må ikke ha sluttet før tidspunktet
+        val ikkeSlutetFør = gyldigTil == null || !gyldigTil.isBefore(tidspunkt)
+
+        return startetFørEllerPå && ikkeSlutetFør
     }
 }

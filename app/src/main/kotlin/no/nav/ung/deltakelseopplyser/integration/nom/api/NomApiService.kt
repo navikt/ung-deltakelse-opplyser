@@ -4,12 +4,16 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import no.nav.nom.generated.HentRessurser
-import no.nav.nom.generated.hentressurser.OrgEnhet
 import no.nav.nom.generated.hentressurser.Ressurs
-import no.nav.ung.deltakelseopplyser.integration.nom.api.OrgEnhetUtils.harRelevantPeriode
-import no.nav.ung.deltakelseopplyser.integration.nom.api.RessursOrgTilknytningUtils.harRelevantPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetUtils.harRelevantPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedEnheter
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningMedPeriode
+import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningUtils.harRelevantPeriode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Service
 class NomApiService(
@@ -64,5 +68,23 @@ class NomApiService(
         return ressursMedEnheter
     }
 
-    data class RessursMedEnheter(val navIdent: String, val enheter: List<OrgEnhet>)
+    fun hentResursserMedAlleTilknytninger(navIdenter: Set<String>): List<RessursMedAlleTilknytninger> {
+        return hentRessurser(navIdenter).map { ressurs ->
+            RessursMedAlleTilknytninger(
+                navIdent = ressurs.navident,
+                orgTilknytninger = ressurs.orgTilknytning.map { tilknytning ->
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = tilknytning.gyldigFom.let { LocalDate.parse(it) },
+                        gyldigTom = tilknytning.gyldigTom?.let { LocalDate.parse(it) },
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = tilknytning.orgEnhet.id,
+                            navn = tilknytning.orgEnhet.navn,
+                            gyldigFom = tilknytning.orgEnhet.gyldigFom.let { LocalDate.parse(it) },
+                            gyldigTom = tilknytning.orgEnhet.gyldigTom?.let { LocalDate.parse(it) }
+                        )
+                    )
+                }
+            )
+        }
+    }
 }

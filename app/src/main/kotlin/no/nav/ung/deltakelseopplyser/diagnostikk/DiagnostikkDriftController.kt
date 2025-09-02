@@ -15,14 +15,16 @@ import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramDeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
-import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
+import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelsePerEnhetStatistikkRecord
+import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -45,11 +47,12 @@ import java.util.*
     description = "API for å hente informasjon brukt for feilretting. Er sikret med Azure."
 )
 class DiagnostikkDriftController(
-    private val deltakelseRepository: UngdomsprogramDeltakelseRepository,
+    private val deltakelseRepository: DeltakelseRepository,
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val sporingsloggService: SporingsloggService,
-    private val nomApiService: NomApiService,
+    private val deltakelseStatistikkService: DeltakelseStatistikkService,
+    private val nomApiService: NomApiService
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(DiagnostikkDriftController::class.java)
@@ -96,7 +99,7 @@ class DiagnostikkDriftController(
         )
     }
 
-    @GetMapping("/hent/enheter-knyttet-nav-identer", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent enheter knyttet til alle nav-identer")
     @ResponseStatus(HttpStatus.OK)
     fun hentEnheterKnyttetNavIdenter(): DeltakelsePerEnhetResponse {
@@ -151,6 +154,15 @@ class DiagnostikkDriftController(
                 .distinctBy { it.id }
                 .toSet()
         )
+    }
+
+    @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk-v2", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Hent enheter knyttet til alle nav-identer")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentEnheterKnyttetNavIdenterV2(): List<AntallDeltakelsePerEnhetStatistikkRecord> {
+        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
+
+        return deltakelseStatistikkService.antallDeltakelserPerKontorStatistikkV2()
     }
 
     data class DeltakelsePerEnhetResponse(

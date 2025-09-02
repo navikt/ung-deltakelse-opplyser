@@ -6,6 +6,7 @@ import com.google.cloud.bigquery.StandardSQLTypeName
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryRecord
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTabell
+import no.nav.ung.deltakelseopplyser.utils.DateUtils
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -37,8 +38,7 @@ val OppgaveSvartidTabell: BigQueryTabell<OppgaveSvartidRecord> =
         mapOf(
             "antall" to rec.antall,
             "svartidAntallDager" to rec.svartidAntallDager,
-            "opprettetTidspunkt" to rec.opprettetTidspunkt
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")),
+            "opprettetTidspunkt" to rec.opprettetTidspunkt.format(DateUtils.DATE_TIME_FORMATTER),
             "erLøst" to rec.erLøst,
             "erLukket" to rec.erLukket,
             "ikkeMottattOgEldreEnn14Dager" to rec.ikkeMottattOgEldreEnn14Dager,

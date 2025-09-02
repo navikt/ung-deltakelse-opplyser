@@ -1,10 +1,10 @@
-package no.nav.ung.deltakelseopplyser.integration.nom.api
+package no.nav.ung.deltakelseopplyser.integration.nom.api.domene
 
-import no.nav.nom.generated.hentressurser.OrgEnhet
+import no.nav.nom.generated.hentressurser.RessursOrgTilknytning
 import java.time.LocalDate
 
-object OrgEnhetUtils {
-    fun OrgEnhet.ikkeErHistorisk(): Boolean {
+object RessursOrgTilknytningUtils {
+    fun RessursOrgTilknytning.ikkeErHistorisk(): Boolean {
         val gyldigFra = if (gyldigFom.isNotBlank()) LocalDate.parse(gyldigFom) else null
         val gyldigTil = if (!gyldigTom.isNullOrBlank()) LocalDate.parse(gyldigTom) else null
         val idag = LocalDate.now()
@@ -23,11 +23,11 @@ object OrgEnhetUtils {
         return gyldigFra != null
     }
 
-    fun OrgEnhet.ikkeErFremtidig(): Boolean {
+    fun RessursOrgTilknytning.ikkeErFremtidig(): Boolean {
         return gyldigTom.isNullOrBlank() || LocalDate.parse(gyldigTom).isAfter(LocalDate.now().minusDays(1))
     }
 
-    fun OrgEnhet.harRelevantPeriode(): Boolean {
+    fun RessursOrgTilknytning.harRelevantPeriode(): Boolean {
         return ikkeErHistorisk() && ikkeErFremtidig()
     }
 }
