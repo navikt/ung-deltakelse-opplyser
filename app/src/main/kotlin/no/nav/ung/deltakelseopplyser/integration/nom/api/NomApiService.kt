@@ -6,11 +6,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.nom.generated.HentRessurser
 import no.nav.nom.generated.hentressurser.Ressurs
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPeriode
-import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetUtils.harRelevantPeriode
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
-import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedEnheter
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningMedPeriode
-import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursOrgTilknytningUtils.harRelevantPeriode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDate
@@ -48,24 +45,6 @@ class NomApiService(
         }
         logger.info("Hentet ${ressurser.size} ressurser fra Nom-API")
         ressurser
-    }
-
-    fun hentResursserMedEnheter(navIdenter: Set<String>): List<RessursMedEnheter> {
-        val ressursMedEnheter = hentRessurser(navIdenter)
-            .map { ressurs ->
-                val relevanteEnheter = ressurs.orgTilknytning
-                    .filter { it.harRelevantPeriode() }
-                    .map { orgTilknytning -> orgTilknytning.orgEnhet }
-                    .filter { orgEnhet -> orgEnhet.harRelevantPeriode() }
-
-                RessursMedEnheter(
-                    navIdent = ressurs.navident,
-                    enheter = relevanteEnheter
-                )
-            }
-
-        logger.info("Fant {} unike enheter for {} forespurte navIdenter", ressursMedEnheter.size, navIdenter.size)
-        return ressursMedEnheter
     }
 
     fun hentResursserMedAlleTilknytninger(navIdenter: Set<String>): List<RessursMedAlleTilknytninger> {
