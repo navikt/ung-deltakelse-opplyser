@@ -1,5 +1,7 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
+import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelserPerEnhetTabell
+import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
@@ -17,6 +19,7 @@ class BigQueryMetrikkJobb(
     val bigQueryClient: BigQueryClient,
     val oppgaveStatistikkService: OppgaveStatistikkService,
     val deltakerStatistikkService: DeltakerStatistikkService,
+    val deltakelseStatistikkService: DeltakelseStatistikkService,
 ) {
 
     companion object {
@@ -45,8 +48,13 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserDeltakerStatistikk() {
-        val antallDeltakereIUngdomsprogrammetRecord: AntallDeltakereIUngdomsprogrammetRecord = deltakerStatistikkService.antallDeltakereIUngdomsprogrammet()
-        bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakereTabell, listOf(antallDeltakereIUngdomsprogrammetRecord)).also {
+        val antallDeltakereIUngdomsprogrammetRecord: AntallDeltakereIUngdomsprogrammetRecord =
+            deltakerStatistikkService.antallDeltakereIUngdomsprogrammet()
+        bigQueryClient.publish(
+            BIG_QUERY_DATASET,
+            AntallDeltakereTabell,
+            listOf(antallDeltakereIUngdomsprogrammetRecord)
+        ).also {
             loggPublisering(
                 AntallDeltakereTabell.tabellNavn,
                 1 // Vi publiserer kun én rad for antall deltakere
@@ -64,6 +72,18 @@ class BigQueryMetrikkJobb(
                 antallDeltakerePerOppgavetype.size
             )
         }
+    }
+
+    /**
+     * Publiserer statistikk for deltakelser.
+     */
+    @Scheduled(cron = CRON_JOBB_HVER_TIME)
+    fun publiserDeltakelseStatistikk() {
+        val antallDeltakelserPerEnhetStatistikk = deltakelseStatistikkService.antallDeltakelserPerEnhetStatistikk()
+        bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakelserPerEnhetTabell, antallDeltakelserPerEnhetStatistikk)
+            .also {
+                loggPublisering(AntallDeltakelserPerEnhetTabell.tabellNavn, antallDeltakelserPerEnhetStatistikk.size)
+            }
     }
 
     private fun loggPublisering(

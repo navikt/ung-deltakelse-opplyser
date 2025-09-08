@@ -5,6 +5,8 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
+import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelsePerEnhetStatistikkRecord
+import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelserPerEnhetTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
@@ -82,4 +84,32 @@ class BigQueryKlientTest {
         )
     }
 
+    @Test
+    fun `Skal kunne publisere antall deltakelser per enhet statistikk`() {
+        val records = listOf(
+            AntallDeltakelsePerEnhetStatistikkRecord(
+                kontor = "Kristiansand",
+                antallDeltakelser = 15,
+                opprettetTidspunkt = ZonedDateTime.now(),
+                diagnostikk = emptyMap()
+            ),
+            AntallDeltakelsePerEnhetStatistikkRecord(
+                kontor = "Oslo",
+                antallDeltakelser = 10,
+                opprettetTidspunkt = ZonedDateTime.now(),
+                diagnostikk = emptyMap()
+            ),
+            AntallDeltakelsePerEnhetStatistikkRecord(
+                kontor = "Arendal",
+                antallDeltakelser = 5,
+                opprettetTidspunkt = ZonedDateTime.now(),
+                diagnostikk = emptyMap()
+            ),
+        )
+        bigQueryKlient.publish(
+            BigQueryTestConfiguration.BIG_QUERY_DATASET,
+            AntallDeltakelserPerEnhetTabell,
+            records
+        )
+    }
 }

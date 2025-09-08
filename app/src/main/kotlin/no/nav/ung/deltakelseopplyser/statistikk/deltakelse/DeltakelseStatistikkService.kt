@@ -20,7 +20,7 @@ class DeltakelseStatistikkService(
         private val logger = LoggerFactory.getLogger(DeltakelseStatistikkService::class.java)
     }
 
-    fun antallDeltakelserPerKontorStatistikk(): List<AntallDeltakelsePerEnhetStatistikkRecord> {
+    fun antallDeltakelserPerEnhetStatistikk(): List<AntallDeltakelsePerEnhetStatistikkRecord> {
         val kjøringstidspunkt = ZonedDateTime.now()
 
         val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()

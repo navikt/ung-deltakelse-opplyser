@@ -101,7 +101,7 @@ class DiagnostikkDriftController(
         tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
 
         val antallDeltakelserPerKontorStatistikkV2 =
-            deltakelseStatistikkService.antallDeltakelserPerKontorStatistikk()
+            deltakelseStatistikkService.antallDeltakelserPerEnhetStatistikk()
 
         return mapOf(
             "deltakelerPerEnhet" to antallDeltakelserPerKontorStatistikkV2.map {
