@@ -9,11 +9,13 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_FORMATTER
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
+import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
@@ -70,6 +72,9 @@ class DeltakelseHistorikkServiceTest {
     @MockkBean(relaxed = true)
     private lateinit var pdlService: PdlService
 
+    @MockkBean(relaxed = true)
+    lateinit var sifAbacPdpService: SifAbacPdpService
+
     @MockkBean
     private lateinit var mineSiderService: MineSiderService
 
@@ -89,6 +94,9 @@ class DeltakelseHistorikkServiceTest {
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
+
 
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
@@ -214,6 +222,9 @@ class DeltakelseHistorikkServiceTest {
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
+
 
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")

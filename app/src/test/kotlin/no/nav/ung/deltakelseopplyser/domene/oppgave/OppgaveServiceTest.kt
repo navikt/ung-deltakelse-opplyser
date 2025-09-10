@@ -20,6 +20,7 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
@@ -29,6 +30,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgave
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
+import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -82,6 +84,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     @MockkBean
     lateinit var pdlService: PdlService
 
+    @MockkBean(relaxed = true)
+    lateinit var sifAbacPdpService: SifAbacPdpService
+
     @MockkBean
     lateinit var tilgangskontrollService: TilgangskontrollService
 
@@ -104,6 +109,10 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                 gruppe = IdentGruppe.AKTORID
             )
         )
+
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
+
 
 
         justRun { tilgangskontrollService.krevSystemtilgang() }

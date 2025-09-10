@@ -9,8 +9,10 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -71,16 +73,23 @@ class UngdomsprogramregisterServiceTest {
     @MockkBean(relaxed = true)
     lateinit var pdlService: PdlService
 
+
+    @MockkBean(relaxed = true)
+    lateinit var sifAbacPdpService: SifAbacPdpService
+
     @MockkBean
     lateinit var rapportertInntektService: RapportertInntektService
 
     @MockkBean
     lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
+    val defaultFødselsdato =  LocalDate.of(2000, 1, 1)
+
     @BeforeEach
     fun setUp() {
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
+        every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(defaultFødselsdato)
     }
 
     private companion object {
@@ -127,6 +136,44 @@ class UngdomsprogramregisterServiceTest {
         }
     }
 
+    @Test
+    fun `Innmelding av deltakelse med fraOgMed dato før programdato skal feile`() {
+        val programDato = LocalDate.parse("2024-01-01")
+        val dto = DeltakelseDTO(
+            deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
+            fraOgMed = programDato.minusDays(2),
+            tilOgMed = null
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon("02499435811", false, IdentGruppe.FOLKEREGISTERIDENT),
+            IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        assertThrows<IllegalArgumentException> {
+            ungdomsprogramregisterService.leggTilIProgram(dto)
+        }
+    }
+
+
+    @Test
+    fun `Innmelding av deltakelse med fraOgMed dato på eller etter 29 årsdag skal feile`() {
+        val tjuveniårsdag = defaultFødselsdato.plusYears(29)
+        val dto = DeltakelseDTO(
+            deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
+            fraOgMed = tjuveniårsdag,
+            tilOgMed = null
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon("02499435811", false, IdentGruppe.FOLKEREGISTERIDENT),
+            IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        assertThrows<IllegalArgumentException> {
+            ungdomsprogramregisterService.leggTilIProgram(dto)
+        }
+    }
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
