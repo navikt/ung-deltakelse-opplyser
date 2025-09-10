@@ -6,13 +6,10 @@ import io.mockk.justRun
 import io.mockk.verify
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
-import no.nav.pdl.generated.hentperson.Foedselsdato
-import no.nav.pdl.generated.hentperson.Folkeregisteridentifikator
-import no.nav.pdl.generated.hentperson.Navn
-import no.nav.pdl.generated.hentperson.Person
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
@@ -77,7 +74,7 @@ class UngdomsprogramregisterServiceTest {
     lateinit var pdlService: PdlService
 
 
-    @MockkBean
+    @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService
 
     @MockkBean
@@ -90,21 +87,7 @@ class UngdomsprogramregisterServiceTest {
     fun setUp() {
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
-        every { sifAbacPdpService.hentDiskresjonskoder(any()) } returns emptySet()
-        every { pdlService.hentPerson(any()) } returns Person(
-            navn = listOf(
-                Navn(
-                    fornavn = "Ola",
-                    etternavn = "Nordmann"
-                )
-            ),
-            foedselsdato = listOf(
-                Foedselsdato("2000-01-01")
-            ),
-            folkeregisteridentifikator = listOf(
-                Folkeregisteridentifikator("12345678901")
-            )
-        )
+        every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(LocalDate.of(2000, 1, 1))
     }
 
     private companion object {

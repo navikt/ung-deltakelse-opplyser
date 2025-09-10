@@ -14,6 +14,7 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
@@ -68,10 +69,11 @@ import java.util.*
 class UngdomsytelsesøknadServiceTest {
 
     @MockkBean
-    lateinit var sifAbacPdpService: SifAbacPdpService
-
-    @MockkBean
     lateinit var pdlService: PdlService
+
+
+    @MockkBean(relaxed = true)
+    lateinit var sifAbacPdpService: SifAbacPdpService
 
     @MockkBean
     lateinit var ungSakService: UngSakService
@@ -188,5 +190,8 @@ class UngdomsytelsesøknadServiceTest {
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
+
     }
 }

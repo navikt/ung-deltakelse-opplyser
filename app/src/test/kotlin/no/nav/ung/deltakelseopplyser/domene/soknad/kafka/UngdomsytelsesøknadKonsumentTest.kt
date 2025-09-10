@@ -10,11 +10,13 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
+import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
@@ -59,10 +61,13 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     @MockkBean
     lateinit var pdlService: PdlService
 
+    @MockkBean(relaxed = true)
+    lateinit var sifAbacPdpService: SifAbacPdpService
+
     @Test
     fun `Forventer at listener forsøker på nytt ved feil`() {
         val deltakerIdent = FødselsnummerGenerator.neste()
-        mockPdlIdent(deltakerIdent, IdentGruppe.FOLKEREGISTERIDENT)
+        mockPdl(deltakerIdent, IdentGruppe.FOLKEREGISTERIDENT)
 
         val journalpostId = "671161658"
 
@@ -150,7 +155,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         }
     }
 
-    private fun mockPdlIdent(deltakerIdent: String, identGruppe: IdentGruppe) {
+    private fun mockPdl(deltakerIdent: String, identGruppe: IdentGruppe) {
         val pdlPerson = IdentInformasjon(
             ident = deltakerIdent,
             historisk = false,
@@ -158,5 +163,8 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
+
     }
 }

@@ -10,12 +10,14 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektHåndtererService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
@@ -55,6 +57,9 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     @MockkBean
     lateinit var pdlService: PdlService
 
+    @MockkBean(relaxed = true)
+    lateinit var sifAbacPdpService: SifAbacPdpService
+
     @Autowired
     lateinit var registerService: UngdomsprogramregisterService
 
@@ -67,6 +72,8 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     @Test
     fun `Forventet rapportertInntekt konsumeres og deserialiseres som forventet`() {
         justRun { tilgangskontrollService.krevSystemtilgang() }
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
 
         val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
         val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
@@ -160,6 +167,9 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
+
     }
 
     private fun meldInnIProgrammet(søkerIdent: String, deltakelseStart: String): DeltakelseDTO {
