@@ -48,7 +48,7 @@ internal class DeltakerPersonaliaTest {
     }
 
     @Test
-    fun `uten programOppstartdato skal sisteMuligeInnmeldingsdato være fødselsdato + 28 år`() {
+    fun `uten programOppstartdato skal sisteMuligeInnmeldingsdato være fødselsdato + 29 år - 1 dag`() {
         val fødselsdato = LocalDate.of(1996, 5, 10)
         assertEquals(
             LocalDate.of(2025, 5, 9),
