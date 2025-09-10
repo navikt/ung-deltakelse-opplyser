@@ -48,10 +48,10 @@ internal class DeltakerPersonaliaTest {
     }
 
     @Test
-    fun `uten programOppstartdato skal sisteMuligeInnmeldingsdato være fødselsdato + 29 år`() {
+    fun `uten programOppstartdato skal sisteMuligeInnmeldingsdato være fødselsdato + 28 år`() {
         val fødselsdato = LocalDate.of(1996, 5, 10)
         assertEquals(
-            LocalDate.of(2025, 5, 10),
+            LocalDate.of(2025, 5, 9),
             lagDeltakerPersonalia(fødselsdato, null).sisteMuligeInnmeldingsdato
         )
     }
@@ -68,10 +68,10 @@ internal class DeltakerPersonaliaTest {
 
     @Test
     fun `med programOppstartdato tidligere enn sisteMuligeInnmeldingsdato skal alder vinne`() {
-        val fødselsdato = LocalDate.of(1996, 5, 10)
+        val fødselsdato = LocalDate.of(1996, 2, 11)
         val programOppstartdato = LocalDate.of(2025, 1, 1)
         assertEquals(
-            LocalDate.of(2025, 5, 10),
+            LocalDate.of(2025, 2, 10),
             lagDeltakerPersonalia(fødselsdato, programOppstartdato).sisteMuligeInnmeldingsdato
         )
     }

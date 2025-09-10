@@ -31,7 +31,7 @@ data class DeltakerPersonalia(
     @get:JsonProperty("sisteMuligeInnmeldingsdato")
     val sisteMuligeInnmeldingsdato: LocalDate
         get() {
-            val aldersDatoSiste = fødselsdato.plusYears(29)
+            val aldersDatoSiste = fødselsdato.plusYears(29).minusDays(1) // kan ikke meldes inn etter fylte 29 år
             return programOppstartdato
                 ?.let { maxOf(aldersDatoSiste, it) }
                 ?: aldersDatoSiste
