@@ -83,11 +83,13 @@ class UngdomsprogramregisterServiceTest {
     @MockkBean
     lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
+    val defaultFødselsdato =  LocalDate.of(2000, 1, 1)
+
     @BeforeEach
     fun setUp() {
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
-        every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(LocalDate.of(2000, 1, 1))
+        every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(defaultFødselsdato)
     }
 
     private companion object {
@@ -134,6 +136,44 @@ class UngdomsprogramregisterServiceTest {
         }
     }
 
+    @Test
+    fun `Innmelding av deltakelse med fraOgMed dato før programdato skal feile`() {
+        val programDato = LocalDate.parse("2024-01-01")
+        val dto = DeltakelseDTO(
+            deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
+            fraOgMed = programDato.minusDays(2),
+            tilOgMed = null
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon("02499435811", false, IdentGruppe.FOLKEREGISTERIDENT),
+            IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        assertThrows<IllegalArgumentException> {
+            ungdomsprogramregisterService.leggTilIProgram(dto)
+        }
+    }
+
+
+    @Test
+    fun `Innmelding av deltakelse med fraOgMed dato på eller etter 29 årsdag skal feile`() {
+        val tjuveniårsdag = defaultFødselsdato.plusYears(29)
+        val dto = DeltakelseDTO(
+            deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
+            fraOgMed = tjuveniårsdag,
+            tilOgMed = null
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon("02499435811", false, IdentGruppe.FOLKEREGISTERIDENT),
+            IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        assertThrows<IllegalArgumentException> {
+            ungdomsprogramregisterService.leggTilIProgram(dto)
+        }
+    }
 
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
