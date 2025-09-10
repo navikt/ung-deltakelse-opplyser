@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
+import kotlin.test.assertTrue
 
 internal class DeltakerPersonaliaTest {
 
@@ -57,13 +58,30 @@ internal class DeltakerPersonaliaTest {
     }
 
     @Test
-    fun `med programOppstartdato senere enn sisteMuligeInnmeldingsdato skal override`() {
+    fun `med programOppstartdato senere enn sisteMuligeInnmeldingsdato skal siste fødselsdato være siste mulige dato`() {
         val fødselsdato = LocalDate.of(1996, 5, 10)
         val programOppstartdato = LocalDate.of(2025, 8, 1)
+        val deltakerPersonalia = lagDeltakerPersonalia(fødselsdato, programOppstartdato)
         assertEquals(
-            LocalDate.of(2025, 8, 1),
-            lagDeltakerPersonalia(fødselsdato, programOppstartdato).sisteMuligeInnmeldingsdato
+            fødselsdato.plusYears(29).minusDays(1),
+            deltakerPersonalia.sisteMuligeInnmeldingsdato
         )
+
+        assertTrue { deltakerPersonalia.førsteMuligeInnmeldingsdato.isAfter(deltakerPersonalia.sisteMuligeInnmeldingsdato) }
+    }
+
+
+    @Test
+    fun `med programOppstartdato lik 29 årsdagen`() {
+        val fødselsdato = LocalDate.of(1996, 8, 1)
+        val programOppstartdato = LocalDate.of(2025, 8, 1)
+        val deltakerPersonalia = lagDeltakerPersonalia(fødselsdato, programOppstartdato)
+        assertEquals(
+            fødselsdato.plusYears(29).minusDays(1),
+            deltakerPersonalia.sisteMuligeInnmeldingsdato
+        )
+
+        assertTrue { deltakerPersonalia.førsteMuligeInnmeldingsdato.isAfter(deltakerPersonalia.sisteMuligeInnmeldingsdato) }
     }
 
     @Test

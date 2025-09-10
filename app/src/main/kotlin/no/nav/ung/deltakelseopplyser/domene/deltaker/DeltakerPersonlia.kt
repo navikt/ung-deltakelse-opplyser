@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import no.nav.pdl.generated.hentperson.Navn
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.*
 
@@ -19,6 +20,16 @@ data class DeltakerPersonalia(
     @Schema(hidden = true)
     private val programOppstartdato: LocalDate? = null,
 ) {
+
+    companion object {
+        private val log = LoggerFactory.getLogger(DeltakerPersonalia::class.java)
+    }
+    init {
+        if (førsteMuligeInnmeldingsdato.isAfter(sisteMuligeInnmeldingsdato)) {
+            log.warn("Første innmeldingsdato=$førsteMuligeInnmeldingsdato er satt til siste mulige programdato=$sisteMuligeInnmeldingsdato ")
+        }
+    }
+
     @get:JsonProperty("førsteMuligeInnmeldingsdato")
     val førsteMuligeInnmeldingsdato: LocalDate
         get() {
@@ -31,9 +42,6 @@ data class DeltakerPersonalia(
     @get:JsonProperty("sisteMuligeInnmeldingsdato")
     val sisteMuligeInnmeldingsdato: LocalDate
         get() {
-            val aldersDatoSiste = fødselsdato.plusYears(29).minusDays(1) // kan ikke meldes inn etter fylte 29 år
-            return programOppstartdato
-                ?.let { maxOf(aldersDatoSiste, it) }
-                ?: aldersDatoSiste
+            return fødselsdato.plusYears(29).minusDays(1)
         }
 }
