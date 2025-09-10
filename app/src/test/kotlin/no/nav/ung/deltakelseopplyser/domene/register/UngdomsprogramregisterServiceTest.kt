@@ -99,7 +99,7 @@ class UngdomsprogramregisterServiceTest {
                 )
             ),
             foedselsdato = listOf(
-                Foedselsdato("1996-01-01")
+                Foedselsdato("2000-01-01")
             ),
             folkeregisteridentifikator = listOf(
                 Folkeregisteridentifikator("12345678901")
