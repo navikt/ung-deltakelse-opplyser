@@ -63,6 +63,15 @@ class UngdomsprogramregisterService(
             deltakerService.lagreDeltaker(deltakelseDTO)
         }
 
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(deltakerDAO.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+        require(!deltakelseDTO.fraOgMed.isBefore(deltakerPersonalia.førsteMuligeInnmeldingsdato)) {
+            "Deltaker kan ikke meldes inn i programmet før førsteMuligeDato=${deltakerPersonalia.førsteMuligeInnmeldingsdato}. Var ${deltakelseDTO.fraOgMed}"
+        }
+
+        require(!deltakelseDTO.fraOgMed.isAfter(deltakerPersonalia.sisteMuligeInnmeldingsdato)) {
+            "Deltaker kan ikke meldes inn i programmet etter sisteMuligeDato=${deltakerPersonalia.sisteMuligeInnmeldingsdato}. Var ${deltakelseDTO.fraOgMed}"
+        }
+
         val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDTO.mapToDAO(deltakerDAO))
 
         oppgaveService.opprettOppgave(
