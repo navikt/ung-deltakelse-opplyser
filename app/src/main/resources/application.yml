@@ -22,6 +22,7 @@ spring:
       connection-timeout: 30000
       data-source-properties:
         logServerErrorDetail: false
+        reWriteBatchedInserts: true
     url: ${DB_JDBC_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
