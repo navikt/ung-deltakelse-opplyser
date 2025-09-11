@@ -65,9 +65,10 @@ class UngdomsprogramregisterService(
         }
 
         val deltakerPersonalia = deltakerService.hentDeltakerInfo(deltakerDAO.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
-        val deltakelseDAO = deltakelseDTO.mapToDAO(deltakerDAO)
 
-        forsikrePeriodeErInnenforDeltakersGyldigeAlder(deltakelseDAO.getFom(), deltakerPersonalia)
+        forsikrePeriodeErInnenforDeltakersGyldigeAlder(deltakelseDTO.fraOgMed, deltakerPersonalia)
+
+        val deltakelseDAO = deltakelseDTO.mapToDAO(deltakerDAO)
         val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDAO)
 
         oppgaveService.opprettOppgave(
