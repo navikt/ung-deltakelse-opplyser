@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 
 internal class DeltakerPersonaliaTest {
 
-    private fun lagDeltakerPersonalia(fødselsdato: LocalDate, programOppstartdato: LocalDate?) = DeltakerPersonalia(
+    private fun lagDeltakerPersonalia(fødselsdato: LocalDate, programOppstartdato: LocalDate) = DeltakerPersonalia(
         id = UUID.randomUUID(),
         deltakerIdent = FødselsnummerGenerator.neste(),
         navn = Navn("Ola", null, "Nordmann"),
@@ -20,16 +20,7 @@ internal class DeltakerPersonaliaTest {
     )
 
     @Test
-    fun `uten programOppstartdato skal førsteMuligeInnmeldingsdato være 18 år + 1 måned etter fødselsdato`() {
-        val fødselsdato = LocalDate.of(2000, 1, 15)
-        assertEquals(
-            LocalDate.of(2018, 2, 15),
-            lagDeltakerPersonalia(fødselsdato, null).førsteMuligeInnmeldingsdato
-        )
-    }
-
-    @Test
-    fun `med programOppstartdato senere enn aldersdato skal førsteMuligeInnmeldingsdato override`() {
+    fun `Dersom 18-årsdagen er før programOppstartdato skal programOppstartdato velges for førsteMuligeInnmeldingsdato`() {
         val fødselsdato = LocalDate.of(2000, 1, 15)
         val programOppstartdato = LocalDate.of(2025, 8, 1)
         assertEquals(
@@ -39,40 +30,27 @@ internal class DeltakerPersonaliaTest {
     }
 
     @Test
-    fun `med programOppstartdato tidligere enn aldersdato skal aldersdato vinne for førsteMuligeInnmelding`() {
+    fun `Dersom 18-årsdagen er etter programOppstartdato skal 18-årsdagen velges for førsteMuligeInnmeldingsdato`() {
         val fødselsdato = LocalDate.of(2000, 1, 15)
         val programOppstartdato = LocalDate.of(2017, 1, 1)
         assertEquals(
-            LocalDate.of(2018, 2, 15),
+            LocalDate.of(2018, 1, 15),
             lagDeltakerPersonalia(fødselsdato, programOppstartdato).førsteMuligeInnmeldingsdato
         )
     }
 
     @Test
-    fun `uten programOppstartdato skal sisteMuligeInnmeldingsdato være fødselsdato + 29 år - 1 dag`() {
-        val fødselsdato = LocalDate.of(1996, 5, 10)
+    fun `Dersom 18-årsdagen er lik programOppstartdato skal 18-årsdagen velges for førsteMuligeInnmeldingsdato`() {
+        val fødselsdato = LocalDate.of(2000, 1, 15)
+        val programOppstartdato = LocalDate.of(2018, 1, 15) // Samme dato som 18-årsdagen
         assertEquals(
-            LocalDate.of(2025, 5, 9),
-            lagDeltakerPersonalia(fødselsdato, null).sisteMuligeInnmeldingsdato
+            LocalDate.of(2018, 1, 15),
+            lagDeltakerPersonalia(fødselsdato, programOppstartdato).førsteMuligeInnmeldingsdato
         )
     }
 
     @Test
-    fun `med programOppstartdato senere enn sisteMuligeInnmeldingsdato skal siste fødselsdato være siste mulige dato`() {
-        val fødselsdato = LocalDate.of(1996, 5, 10)
-        val programOppstartdato = LocalDate.of(2025, 8, 1)
-        val deltakerPersonalia = lagDeltakerPersonalia(fødselsdato, programOppstartdato)
-        assertEquals(
-            fødselsdato.plusYears(29).minusDays(1),
-            deltakerPersonalia.sisteMuligeInnmeldingsdato
-        )
-
-        assertTrue { deltakerPersonalia.førsteMuligeInnmeldingsdato.isAfter(deltakerPersonalia.sisteMuligeInnmeldingsdato) }
-    }
-
-
-    @Test
-    fun `med programOppstartdato lik 29 årsdagen`() {
+    fun `sisteMuligeInnmeldingsdato skal være lik dagen før 29 års dagen`() {
         val fødselsdato = LocalDate.of(1996, 8, 1)
         val programOppstartdato = LocalDate.of(2025, 8, 1)
         val deltakerPersonalia = lagDeltakerPersonalia(fødselsdato, programOppstartdato)
@@ -82,15 +60,5 @@ internal class DeltakerPersonaliaTest {
         )
 
         assertTrue { deltakerPersonalia.førsteMuligeInnmeldingsdato.isAfter(deltakerPersonalia.sisteMuligeInnmeldingsdato) }
-    }
-
-    @Test
-    fun `med programOppstartdato tidligere enn sisteMuligeInnmeldingsdato skal alder vinne`() {
-        val fødselsdato = LocalDate.of(1996, 2, 11)
-        val programOppstartdato = LocalDate.of(2025, 1, 1)
-        assertEquals(
-            LocalDate.of(2025, 2, 10),
-            lagDeltakerPersonalia(fødselsdato, programOppstartdato).sisteMuligeInnmeldingsdato
-        )
     }
 }

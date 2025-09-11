@@ -27,7 +27,7 @@ class DeltakerService(
     private val pdlService: PdlService,
     private val kontoregisterService: KontoregisterService,
     private val sifAbacPdpService: SifAbacPdpService,
-    @Value("\${PROGRAM_OPPSTART_DATO}") private val programOppstartdato: String? = null,
+    @Value("\${PROGRAM_OPPSTART_DATO}") private val programOppstartdato: String
 ) {
 
     companion object {
@@ -115,7 +115,7 @@ class DeltakerService(
             deltakerIdent = deltakerDAO.deltakerIdent,
             navn = pdlPerson.navn.first(),
             fødselsdato = pdlPerson.foedselsdato.first().toLocalDate(),
-            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) },
+            programOppstartdato = programOppstartdato.let { LocalDate.parse(it) },
             diskresjonskoder = diskresjonskoder
         )
     }
@@ -154,7 +154,7 @@ class DeltakerService(
             deltakerIdent = deltakerIdent,
             navn = PdlPerson.navn.first(),
             fødselsdato = PdlPerson.foedselsdato.first().toLocalDate(),
-            programOppstartdato = programOppstartdato?.let { LocalDate.parse(it) },
+            programOppstartdato = programOppstartdato.let { LocalDate.parse(it) },
             diskresjonskoder = diskresjonskoder
         )
     }
