@@ -20,6 +20,8 @@ spring:
       connection-test-query: SELECT 1
       maximum-pool-size: 10
       connection-timeout: 30000
+      data-source-properties:
+        logServerErrorDetail: false
     url: ${DB_JDBC_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
