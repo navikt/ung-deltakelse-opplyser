@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.domene.register
 import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerPersonalia
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
@@ -64,15 +65,10 @@ class UngdomsprogramregisterService(
         }
 
         val deltakerPersonalia = deltakerService.hentDeltakerInfo(deltakerDAO.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
-        require(!deltakelseDTO.fraOgMed.isBefore(deltakerPersonalia.førsteMuligeInnmeldingsdato)) {
-            "Deltaker kan ikke meldes inn i programmet før førsteMuligeDato=${deltakerPersonalia.førsteMuligeInnmeldingsdato}. Var ${deltakelseDTO.fraOgMed}"
-        }
+        val deltakelseDAO = deltakelseDTO.mapToDAO(deltakerDAO)
 
-        require(!deltakelseDTO.fraOgMed.isAfter(deltakerPersonalia.sisteMuligeInnmeldingsdato)) {
-            "Deltaker kan ikke meldes inn i programmet etter sisteMuligeDato=${deltakerPersonalia.sisteMuligeInnmeldingsdato}. Var ${deltakelseDTO.fraOgMed}"
-        }
-
-        val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDTO.mapToDAO(deltakerDAO))
+        forsikrePeriodeErInnenforDeltakersGyldigeAlder(deltakelseDAO.getFom(), deltakerPersonalia)
+        val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDAO)
 
         oppgaveService.opprettOppgave(
             deltaker = deltakerDAO,
@@ -208,20 +204,25 @@ class UngdomsprogramregisterService(
 
     @Transactional(TRANSACTION_MANAGER)
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
-        val eksisterende = forsikreEksistererIProgram(deltakelseId)
-        logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterende.getFom()} til $endrePeriodeDatoDTO")
+        val eksisterendeDeltakelse = forsikreEksistererIProgram(deltakelseId)
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
 
-        val startdato = endrePeriodeDatoDTO.dato
-        val sluttdato = eksisterende.getTom()
-        forsikreGyldigPeriode(sluttdato, startdato)
+        logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getFom()} til $endrePeriodeDatoDTO")
+
+
+        val endretStartdato = endrePeriodeDatoDTO.dato
+        val sluttdato = eksisterendeDeltakelse.getTom()
+
+        forsikreGyldigPeriodeVedEndring(sluttdato, endretStartdato)
+        forsikrePeriodeErInnenforDeltakersGyldigeAlder(endretStartdato, deltakerPersonalia)
 
         val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (sluttdato != null) {
-            Range.closed(startdato, sluttdato)
+            Range.closed(endretStartdato, sluttdato)
         } else {
-            Range.closedInfinite(startdato)
+            Range.closedInfinite(endretStartdato)
         }
-        eksisterende.oppdaterPeriode(nyPeriodeMedEndretStartdato)
-        val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
+        eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeMedEndretStartdato)
+        val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
 
         sendEndretStartdatoHendelseTilUngSak(oppdatertDeltakelse)
 
@@ -230,16 +231,19 @@ class UngdomsprogramregisterService(
 
     @Transactional(TRANSACTION_MANAGER)
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
-        val eksisterende = forsikreEksistererIProgram(deltakelseId)
-        logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterende.getTom()} til $endrePeriodeDatoDTO")
+        val eksisterendeDeltakelse = forsikreEksistererIProgram(deltakelseId)
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+        logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getTom()} til $endrePeriodeDatoDTO")
 
-        val startdato = eksisterende.getFom()
-        val sluttdato = endrePeriodeDatoDTO.dato
-        forsikreGyldigPeriode(sluttdato, startdato)
+        val deltakelseFraOgMedDato = eksisterendeDeltakelse.getFom()
+        val endretSluttdato = endrePeriodeDatoDTO.dato
+        forsikreGyldigPeriodeVedEndring(endretSluttdato, deltakelseFraOgMedDato)
+        forsikrePeriodeErInnenforDeltakersGyldigeAlder(endretSluttdato, deltakerPersonalia)
 
-        val nyPeriodeMedEndretSluttdato = Range.closed(eksisterende.getFom(), endrePeriodeDatoDTO.dato)
-        eksisterende.oppdaterPeriode(nyPeriodeMedEndretSluttdato)
-        val oppdatertDeltakelse = deltakelseRepository.save(eksisterende)
+
+        val nyPeriodeMedEndretSluttdato = Range.closed(eksisterendeDeltakelse.getFom(), endrePeriodeDatoDTO.dato)
+        eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeMedEndretSluttdato)
+        val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
 
         sendEndretSluttdatoHendelseTilUngSak(oppdatertDeltakelse)
 
@@ -320,12 +324,32 @@ class UngdomsprogramregisterService(
             )
         }
 
-    private fun forsikreGyldigPeriode(sluttdato: LocalDate?, startdato: LocalDate) {
+    private fun forsikreGyldigPeriodeVedEndring(sluttdato: LocalDate?, startdato: LocalDate) {
         if (sluttdato != null && sluttdato < startdato) {
             throw ErrorResponseException(
                 HttpStatus.BAD_REQUEST,
                 ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
                     it.detail = "Ny startdato kan ikke være etter sluttdato"
+                },
+                null
+            )
+        }
+    }
+
+    private fun forsikrePeriodeErInnenforDeltakersGyldigeAlder(
+        dato: LocalDate,
+        deltakerPersonalia: DeltakerPersonalia,
+    ) {
+        val førsteMuligeInnmeldingsdato = deltakerPersonalia.førsteMuligeInnmeldingsdato
+        val sisteMuligeInnmeldingsdato = deltakerPersonalia.sisteMuligeInnmeldingsdato
+        val tillattPeriode = førsteMuligeInnmeldingsdato..sisteMuligeInnmeldingsdato
+        logger.info("Validerer at dato=$dato er innenfor gyldig periode $tillattPeriode")
+
+        if (!tillattPeriode.contains(dato)) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail = "Oppgitt dato=$dato er utenfor tillatt periode $tillattPeriode"
                 },
                 null
             )

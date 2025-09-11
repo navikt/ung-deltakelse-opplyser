@@ -18,12 +18,13 @@ data class DeltakerPersonalia(
     val diskresjonskoder: Set<Diskresjonskode>,
 
     @Schema(hidden = true)
-    private val programOppstartdato: LocalDate? = null,
+    private val programOppstartdato: LocalDate,
 ) {
 
     companion object {
         private val log = LoggerFactory.getLogger(DeltakerPersonalia::class.java)
     }
+
     init {
         if (førsteMuligeInnmeldingsdato.isAfter(sisteMuligeInnmeldingsdato)) {
             log.warn("Første innmeldingsdato=$førsteMuligeInnmeldingsdato er satt til siste mulige programdato=$sisteMuligeInnmeldingsdato ")
@@ -33,15 +34,31 @@ data class DeltakerPersonalia(
     @get:JsonProperty("førsteMuligeInnmeldingsdato")
     val førsteMuligeInnmeldingsdato: LocalDate
         get() {
-            val aldersDato = fødselsdato.plusYears(18).plusMonths(1)
-            return programOppstartdato
-                ?.let { maxOf(aldersDato, it) }
-                ?: aldersDato
+            return when {
+                attenÅrsDagen.isBefore(programOppstartdato) -> {
+                    // 18-årsdagen er før programOppstartdato - velg programOppstartdato
+                    programOppstartdato
+                }
+
+                attenÅrsDagen.isEqual(programOppstartdato) -> {
+                    // 18-årsdagen er lik programOppstartdato - programOppstartdato
+                    programOppstartdato
+                }
+
+                else -> {
+                    // 18-årsdagen er etter programOppstartdato - velg 18-årsdagen
+                    attenÅrsDagen
+                }
+            }
         }
 
     @get:JsonProperty("sisteMuligeInnmeldingsdato")
     val sisteMuligeInnmeldingsdato: LocalDate
-        get() {
-            return fødselsdato.plusYears(29).minusDays(1)
-        }
+        get() = dagenFørTjueniårsDagen
+
+    private val attenÅrsDagen: LocalDate
+        get() = fødselsdato.plusYears(18)
+
+    private val dagenFørTjueniårsDagen: LocalDate
+        get() = fødselsdato.plusYears(29).minusDays(1)
 }

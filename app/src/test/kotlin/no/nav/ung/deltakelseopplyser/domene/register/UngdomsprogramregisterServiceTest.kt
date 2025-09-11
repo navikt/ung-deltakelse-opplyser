@@ -37,8 +37,10 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
 import java.util.*
 
@@ -150,8 +152,11 @@ class UngdomsprogramregisterServiceTest {
             IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
         )
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows<ErrorResponseException> {
             ungdomsprogramregisterService.leggTilIProgram(dto)
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+            assertThat(it.body.detail).isEqualTo("Oppgitt dato=2023-12-30 er utenfor tillatt periode 2024-01-01..2028-12-31")
         }
     }
 
@@ -170,8 +175,11 @@ class UngdomsprogramregisterServiceTest {
             IdentInformasjon("451", true, IdentGruppe.FOLKEREGISTERIDENT)
         )
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows<ErrorResponseException> {
             ungdomsprogramregisterService.leggTilIProgram(dto)
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+            assertThat(it.body.detail).isEqualTo("Oppgitt dato=2029-01-01 er utenfor tillatt periode 2024-01-01..2028-12-31")
         }
     }
 
@@ -253,6 +261,31 @@ class UngdomsprogramregisterServiceTest {
     }
 
     @Test
+    fun `Endring av startdato til før første mulige innmeldingsdato gir valideringsfeil`() {
+        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            tilOgMed = null
+        )
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.endreStartdato(innmelding.id!!, mockEndrePeriodeDTO(LocalDate.parse("2023-12-31")))
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+            assertThat(it.body.detail).isEqualTo("Oppgitt dato=2023-12-31 er utenfor tillatt periode 2024-01-01..2028-12-31")
+        }
+    }
+
+    @Test
     fun `Endring av sluttdato på deltakelse oppretter BEKREFT_ENDRET_SLUTTDATO oppgave`() {
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
@@ -284,6 +317,36 @@ class UngdomsprogramregisterServiceTest {
         assertEquals(innmelding.deltaker, endretSluttdatoDeltakelse.deltaker)
         assertThat(endretSluttdatoDeltakelse.fraOgMed).isEqualTo(mandag)
         assertThat(endretSluttdatoDeltakelse.tilOgMed).isEqualTo(onsdag.plusWeeks(1))
+    }
+
+    @Test
+    fun `Endring av sluttdato til etter siste mulige innmeldingsdato gir valideringsfeil`() {
+        val mandag = LocalDate.parse("2024-10-07")
+        val onsdag = LocalDate.parse("2024-10-09")
+
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            tilOgMed = null
+        )
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val oppdatertDto = DeltakelseDTO(
+            deltaker = innmelding.deltaker,
+            fraOgMed = mandag,
+            tilOgMed = onsdag
+        )
+        ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, mockEndrePeriodeDTO(LocalDate.parse("2029-01-01")))
+        }
     }
 
     @Test
