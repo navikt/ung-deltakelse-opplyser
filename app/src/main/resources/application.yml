@@ -18,8 +18,8 @@ spring:
   datasource:
     hikari:
       connection-test-query: SELECT 1
-      maximum-pool-size: 2
-      connection-timeout: 1000
+      maximum-pool-size: 10
+      connection-timeout: 30000
     url: ${DB_JDBC_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
