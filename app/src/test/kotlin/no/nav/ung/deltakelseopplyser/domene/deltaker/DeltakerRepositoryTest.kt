@@ -113,7 +113,7 @@ class DeltakerRepositoryTest {
         entityManager.persist(deltaker)
         entityManager.flush()
 
-        val oppdatertDeltaker = deltakerRepository.findByDeltakerIdent(deltaker.deltakerIdent)?.let {
+        val oppdatertDeltaker = deltakerRepository.findByDeltakerIdentIn(listOf(deltaker.deltakerIdent)).firstOrNull()?.let {
             assertThat(it.oppgaver).isNotEmpty
             val oppgaveDAO = it.oppgaver.first()
             oppgaveDAO.markerSomLøst()

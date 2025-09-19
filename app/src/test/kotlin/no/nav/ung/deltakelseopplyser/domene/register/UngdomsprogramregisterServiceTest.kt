@@ -208,7 +208,7 @@ class UngdomsprogramregisterServiceTest {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val deltakerDAO = deltakerRepository.findByDeltakerIdent(innmelding.deltaker.deltakerIdent)
+        val deltakerDAO = deltakerRepository.findByDeltakerIdentIn(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
         assertThat(deltakerDAO).isNotNull
         assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
 
