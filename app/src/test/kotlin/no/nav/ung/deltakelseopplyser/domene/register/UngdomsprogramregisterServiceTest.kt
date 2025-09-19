@@ -235,7 +235,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Endring av startdato på deltakelse oppretter BEKREFT_ENDRET_STARTDATO oppgave`() {
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+        every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )
@@ -262,7 +262,7 @@ class UngdomsprogramregisterServiceTest {
 
     @Test
     fun `Endring av startdato til før første mulige innmeldingsdato gir valideringsfeil`() {
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+        every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )
@@ -298,7 +298,7 @@ class UngdomsprogramregisterServiceTest {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+        every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )
@@ -332,7 +332,7 @@ class UngdomsprogramregisterServiceTest {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+        every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )

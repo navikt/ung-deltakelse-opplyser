@@ -40,7 +40,7 @@ class PdlService(
         }
     }
 
-    fun hentIdenter(ident: String, historisk: Boolean = false): Identliste = runBlocking {
+    fun hentIdenter(ident: String): Identliste = runBlocking {
         val response = pdlClient.execute(HentIdent(HentIdent.Variables(ident)))
 
         if (!response.extensions.isNullOrEmpty()) logger.info("PDL response extensions: ${response.extensions}")
@@ -52,9 +52,7 @@ class PdlService(
                 throw IllegalStateException("Feil ved henting av identListe.")
             }
 
-            response.data!!.hentIdenter != null -> response.data!!.hentIdenter!!.identer
-                .filter { historisk || !it.historisk }
-                .let { Identliste(it) }
+            response.data!!.hentIdenter != null -> Identliste(response.data!!.hentIdenter!!.identer)
 
             else -> {
                 error("Feil ved henting av person.")
@@ -67,14 +65,14 @@ class PdlService(
         return identliste.identer.filter { it.gruppe == IdentGruppe.FOLKEREGISTERIDENT }
     }
 
-    fun hentAktørIder(ident: String, historisk: Boolean = false): List<IdentInformasjon> {
-        val identliste = hentIdenter(ident = ident, historisk = historisk)
+    fun hentAktørIder(ident: String): List<IdentInformasjon> {
+        val identliste = hentIdenter(ident = ident)
         return runCatching {
             identliste.identer.filter { it.gruppe == IdentGruppe.AKTORID }
         }
             .getOrElse {
-                logger.error("Fant ingen aktørIder. Historisk=$historisk")
-                throw IllegalStateException("Fant ingen historiske aktørId. Historisk=$historisk")
+                logger.error("Fant ingen aktørIder.")
+                throw IllegalStateException("Fant ingen historiske aktørId.")
             }
     }
 }
