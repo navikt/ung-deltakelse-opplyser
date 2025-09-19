@@ -140,7 +140,7 @@ class DeltakerService(
 
     private fun hentDeltakere(deltakerIdentEllerAktørId: String): List<DeltakerDAO> {
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
-        return deltakerRepository.findByDeltakerIdentIn(identer)
+        return deltakerRepository.finnDeltakerGittIdenter(identer)
     }
 
     private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonalia {
@@ -149,6 +149,9 @@ class DeltakerService(
         val PdlPerson = hentPdlPerson(deltaker?.deltakerIdent ?: deltakerIdent)
         val diskresjonskoder: Set<Diskresjonskode> = sifAbacPdpService.hentDiskresjonskoder(PersonIdent.fra(deltakerIdent))
 
+        if (deltaker == null) {
+            logger.info("Fant ikke deltaker med ident. Returnerer kun personinfo fra PDL.")
+        }
         return DeltakerPersonalia(
             id = deltaker?.id,
             deltakerIdent = deltakerIdent,

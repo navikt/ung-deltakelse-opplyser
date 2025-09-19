@@ -9,8 +9,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -113,7 +111,7 @@ class DeltakerRepositoryTest {
         entityManager.persist(deltaker)
         entityManager.flush()
 
-        val oppdatertDeltaker = deltakerRepository.findByDeltakerIdentIn(listOf(deltaker.deltakerIdent)).firstOrNull()?.let {
+        val oppdatertDeltaker = deltakerRepository.finnDeltakerGittIdenter(listOf(deltaker.deltakerIdent)).firstOrNull()?.let {
             assertThat(it.oppgaver).isNotEmpty
             val oppgaveDAO = it.oppgaver.first()
             oppgaveDAO.markerSomLøst()
