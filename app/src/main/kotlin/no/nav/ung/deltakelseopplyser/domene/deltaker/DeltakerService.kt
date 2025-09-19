@@ -140,6 +140,7 @@ class DeltakerService(
 
     private fun hentDeltakere(deltakerIdentEllerAktørId: String): List<DeltakerDAO> {
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
+        logger.info("Fant identer: ${identer.joinToString(", ")} fra PDL") //TOOD: fjerne før prod
         return deltakerRepository.finnDeltakerGittIdenter(identer)
     }
 
