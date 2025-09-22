@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.integration.enhetsregisteret
 
 import no.nav.ung.deltakelseopplyser.http.MDCValuesPropagatingClientHttpRequestInterceptor
+import no.nav.ung.deltakelseopplyser.utils.RestTemplateUtils.requestLoggerInterceptor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -33,7 +34,7 @@ class EnhetsregisterKlientKonfig(
             .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .rootUri(enhetsregisterBaseUrl)
             .defaultMessageConverters()
-            .interceptors(mdcInterceptor)
+            .interceptors(mdcInterceptor, requestLoggerInterceptor(logger))
             .build()
     }
 }

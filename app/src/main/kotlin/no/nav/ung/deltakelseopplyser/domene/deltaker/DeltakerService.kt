@@ -70,7 +70,7 @@ class DeltakerService(
     }
 
     fun finnDeltakerGittIdent(deltakerIdent: String): DeltakerDAO? {
-        return deltakerRepository.findByDeltakerIdent(deltakerIdent)
+        return hentDeltakere(deltakerIdent).firstOrNull()
     }
 
     fun finnDeltakerGittId(id: UUID): Optional<DeltakerDAO> {
@@ -121,7 +121,7 @@ class DeltakerService(
     }
 
     private fun hentPdlPerson(deltakerIdent: String): Person {
-        val PdlPerson = kotlin.runCatching { pdlService.hentPerson(deltakerIdent) }
+        val PdlPerson = runCatching { pdlService.hentPerson(deltakerIdent) }
             .fold(
                 onSuccess = { it },
                 onFailure = {
@@ -140,17 +140,20 @@ class DeltakerService(
 
     private fun hentDeltakere(deltakerIdentEllerAktørId: String): List<DeltakerDAO> {
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
-        return deltakerRepository.findByDeltakerIdentIn(identer)
+        return deltakerRepository.finnDeltakerGittIdenter(identer)
     }
 
     private fun hentDeltakerInfoMedIdent(deltakerIdent: String): DeltakerPersonalia {
-        val deltakerDAO = deltakerRepository.findByDeltakerIdent(deltakerIdent)
+        val deltaker = hentDeltakere(deltakerIdent).firstOrNull()
 
-        val PdlPerson = hentPdlPerson(deltakerDAO?.deltakerIdent ?: deltakerIdent)
+        val PdlPerson = hentPdlPerson(deltaker?.deltakerIdent ?: deltakerIdent)
         val diskresjonskoder: Set<Diskresjonskode> = sifAbacPdpService.hentDiskresjonskoder(PersonIdent.fra(deltakerIdent))
 
+        if (deltaker == null) {
+            logger.info("Fant ikke deltaker med ident. Returnerer kun personinfo fra PDL.")
+        }
         return DeltakerPersonalia(
-            id = deltakerDAO?.id,
+            id = deltaker?.id,
             deltakerIdent = deltakerIdent,
             navn = PdlPerson.navn.first(),
             fødselsdato = PdlPerson.foedselsdato.first().toLocalDate(),

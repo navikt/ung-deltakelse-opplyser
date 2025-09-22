@@ -6,8 +6,14 @@ import org.springframework.data.repository.query.Param
 import java.util.*
 
 interface DeltakerRepository : JpaRepository<DeltakerDAO, UUID> {
-    fun findByDeltakerIdent(deltakerIdent: String): DeltakerDAO?
-    fun findByDeltakerIdentIn(deltakerIdenter: List<String>): List<DeltakerDAO>
+    @Query(
+        value = """
+                SELECT d.* FROM deltaker d
+                WHERE d.deltaker_ident IN (:deltakerIdenter)
+            """,
+        nativeQuery = true
+    )
+    fun finnDeltakerGittIdenter(@Param("deltakerIdenter") deltakerIdenter: List<String>): List<DeltakerDAO>
 
     @Query(
         value = """

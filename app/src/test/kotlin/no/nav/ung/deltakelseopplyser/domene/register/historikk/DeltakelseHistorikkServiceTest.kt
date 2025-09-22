@@ -90,7 +90,7 @@ class DeltakelseHistorikkServiceTest {
 
     @Test
     fun `Deltaker blir meldt inn i programmet, startdato endres, deltaker søker ytelse, og deretter meldes deltaker ut av programmet`() {
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+        every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )
@@ -218,7 +218,7 @@ class DeltakelseHistorikkServiceTest {
 
     @Test
     fun `Flere endringer på engang skal føre til feil ved henting av historikk`() {
-        every { pdlService.hentAktørIder(any(), true) } returns listOf(
+        every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
         )

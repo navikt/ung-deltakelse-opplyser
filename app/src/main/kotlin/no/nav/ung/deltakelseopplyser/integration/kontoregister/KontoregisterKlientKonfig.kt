@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.integration.kontoregister
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.ung.deltakelseopplyser.http.MDCValuesPropagatingClientHttpRequestInterceptor
+import no.nav.ung.deltakelseopplyser.utils.RestTemplateUtils.requestLoggerInterceptor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -45,7 +46,7 @@ class KontoregisterKlientKonfig(
             .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .rootUri(kontoregisterBaseUrl)
             .defaultMessageConverters()
-            .interceptors(bearerTokenInterceptor(), mdcInterceptor)
+            .interceptors(bearerTokenInterceptor(), mdcInterceptor, requestLoggerInterceptor(logger))
             .build()
     }
 

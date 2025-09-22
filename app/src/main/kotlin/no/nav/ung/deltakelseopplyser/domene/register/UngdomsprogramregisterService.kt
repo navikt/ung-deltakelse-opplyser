@@ -256,7 +256,7 @@ class UngdomsprogramregisterService(
         requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
 
         logger.info("Henter aktørIder for deltaker")
-        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent, historisk = true)
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
         logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
@@ -283,7 +283,7 @@ class UngdomsprogramregisterService(
         val startdato = oppdatert.getFom()
 
         logger.info("Henter aktørIder for deltaker")
-        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent, historisk = true)
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
         logger.info("Sender inn hendelse til ung-sak om at programmet har endret startdato")

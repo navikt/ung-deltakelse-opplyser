@@ -102,7 +102,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @BeforeEach
     fun setUpEach() {
-        every { pdlService.hentAktørIder(any(), any()) } returns listOf(
+        every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon(
                 ident = deltakerAktørId,
                 historisk = false,
