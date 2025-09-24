@@ -11,8 +11,10 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendI
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.kafka.support.SendResult
 import org.springframework.stereotype.Service
 import java.time.ZonedDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 class MineSiderService(
@@ -131,17 +133,11 @@ class MineSiderService(
             produsent = produsent()
         }
 
-        kafkaTemplate.send(minSideVarselTopic, oppgaveId, inaktiver)
-            .whenComplete { sendResult, exception ->
-                if (exception != null) {
-                    val feilmelding =
-                        "Feilet med å publisere inaktivering av min-side oppgave til topic $minSideVarselTopic med key $oppgaveId"
-                    logger.error(feilmelding, exception)
-                    throw RuntimeException(feilmelding, exception)
-                } else {
-                    logger.info("Publiserte inaktivering av min-side oppgave: {}", sendResult.recordMetadata.toString())
-                }
-            }
+        val result: SendResult<String, String> = kafkaTemplate
+            .send(minSideVarselTopic, oppgaveId, inaktiver)
+            .get(60, TimeUnit.SECONDS)
+
+        logger.info("Publiserte inaktivering av min-side oppgave: {}", result.recordMetadata.toString())
     }
 
     fun aktiverMikrofrontend(
@@ -156,17 +152,10 @@ class MineSiderService(
             this.sensitivitet = sensitivitet
         }.text()
 
-        kafkaTemplate.send(minSideMikrofrontendTopic, microfrontendId.id, enable)
-            .whenComplete { sendResult, exception ->
-                if (exception != null) {
-                    val feilmelding =
-                        "Feilet med å publisere aktivering av mikrofrontend til topic $minSideMikrofrontendTopic"
-                    logger.error(feilmelding, exception)
-                    throw RuntimeException(feilmelding, exception)
-                } else {
-                    logger.info("Publiserte aktivering av mikrofrontend: {}", sendResult.recordMetadata.toString())
-                }
-            }
+        val result = kafkaTemplate
+            .send(minSideMikrofrontendTopic, microfrontendId.id, enable)
+            .get(60, TimeUnit.SECONDS)
+        logger.info("Publiserte aktivering av mikrofrontend: {}", result.recordMetadata.toString())
     }
 
     fun deaktiverMikrofrontend(
