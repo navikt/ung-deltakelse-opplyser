@@ -28,6 +28,7 @@
     <modules>
         <module>kontrakt</module>
         <module>app</module>
+        <module>outbox</module>
     </modules>
 
 
@@ -41,6 +42,11 @@
             <dependency>
                 <groupId>no.nav.ung.deltakelseopplyser</groupId>
                 <artifactId>app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.nav.ung.deltakelseopplyser</groupId>
+                <artifactId>outbox</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

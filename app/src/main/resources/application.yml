@@ -169,3 +169,14 @@ springdoc:
     authorizationUrl: ${AZURE_LOGIN_URL:http://localhost:8080}/authorize
     tokenUrl: ${AZURE_LOGIN_URL:http://localhost:8080}/token
     apiScope: api://${AZURE_APP_CLIENT_ID:abc123}/.default
+
+# Outbox configuration
+outbox:
+  scheduler:
+    enabled: true
+    process-interval: 5000      # 5 seconds
+    retry-interval: 60000       # 1 minute
+    cleanup-interval: 3600000   # 1 hour
+    dead-letter-check-interval: 300000  # 5 minutes
+  batch-size: 10
+  cleanup-retention-days: 7

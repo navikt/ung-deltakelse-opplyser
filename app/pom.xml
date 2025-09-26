@@ -39,6 +39,11 @@
         </dependency>
 
         <dependency>
+            <groupId>no.nav.ung.deltakelseopplyser</groupId>
+            <artifactId>outbox</artifactId>
+        </dependency>
+
+        <dependency>
             <!-- Spring Boot -->
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
