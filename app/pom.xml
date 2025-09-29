@@ -128,6 +128,12 @@
         </dependency>
         <!-- K9 Kontrakter -->
 
+        <dependency>
+            <groupId>no.nav.familie</groupId>
+            <artifactId>prosessering-core</artifactId>
+            <version>2.20250922094930_4bb329c</version>
+        </dependency>
+
         <!-- GraphQL -->
         <dependency>
             <groupId>com.expediagroup</groupId>
@@ -408,6 +414,10 @@
     </build>
 
     <repositories>
+        <repository>
+            <id>github-familie-felles</id>
+            <url>https://maven.pkg.github.com/navikt/familie-felles</url>
+        </repository>
         <repository>
             <id>nav-maven-repo</id>
             <url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>
