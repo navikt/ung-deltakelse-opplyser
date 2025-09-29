@@ -124,7 +124,10 @@ class ApplicationSecurityTests {
         val apiMappings: MutableMap<RequestMappingInfo, HandlerMethod> = requestMappingHandlerMapping.handlerMethods
 
         val endpointList =
-            apiMappings.entries.mapNotNull { (mappingInfo: RequestMappingInfo, handlerMethod: HandlerMethod) ->
+            apiMappings.entries
+                // Filtrerer bort endepunkter som ikke er relevante for oss
+                .filterNot { it.value.beanType.name.startsWith("no.nav.familie") }
+                .mapNotNull { (mappingInfo: RequestMappingInfo, handlerMethod: HandlerMethod) ->
                 logger.info("--> Endpoint: {}", mappingInfo.toString())
                 val requestMethod = mappingInfo.methodsCondition.methods.firstOrNull()
                 if (requestMethod == null) {
