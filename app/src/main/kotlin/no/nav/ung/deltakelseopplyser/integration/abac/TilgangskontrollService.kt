@@ -58,20 +58,18 @@ class TilgangskontrollService(
 
     fun krevSystemtilgang(godkjenteApplikasjoner: List<String> = listOf("ung-sak")) {
         val jwt = hentTokenForInnloggetBruker()
-        val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
-        val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
         val azp = jwt.jwtTokenClaims.getStringClaim("azp")
-        val godkjenteClidentIds = godkjenteApplikasjoner.map { clientIdForApplikasjon(it) }
-        val erGodkjentApplikasjon = godkjenteClidentIds.contains(azp)
+
         logger.info(
             "Azp i token '{}' azpname '{}' godkjente applikasjoner '{}' godkjente clientID '{}'",
             azp,
             jwt.jwtTokenClaims.getStringClaim("azp_name"),
             godkjenteApplikasjoner,
-            godkjenteClidentIds
+            getGodkjenteClidentIds(godkjenteApplikasjoner)
         )
-        val tilgang = erAzureToken && erClientCredentials && erGodkjentApplikasjon
-        if (!tilgang) {
+
+        val harTilgang = erSystemBruker() && erGodkjentApplikasjon(azp, godkjenteApplikasjoner)
+        if (!harTilgang) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
@@ -82,6 +80,22 @@ class TilgangskontrollService(
             )
         }
     }
+
+    private fun erGodkjentApplikasjon(azp: String, godkjenteApplikasjoner: List<String>): Boolean {
+        val godkjenteClidentIds = getGodkjenteClidentIds(godkjenteApplikasjoner)
+        return godkjenteClidentIds.contains(azp)
+    }
+
+    private fun getGodkjenteClidentIds(godkjenteApplikasjoner: List<String>): List<String> =
+        godkjenteApplikasjoner.map { clientIdForApplikasjon(it) }
+
+    fun erSystemBruker(): Boolean {
+        val jwt = hentTokenForInnloggetBruker()
+        val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
+        val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
+        return erAzureToken && erClientCredentials
+    }
+
 
     fun clientIdForApplikasjon(appname: String): String {
         val matches = azureAppPreAuthorizedApps
