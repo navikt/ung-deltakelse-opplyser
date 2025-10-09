@@ -4,6 +4,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
+import no.nav.sif.abac.kontrakt.abac.ResourceType
+import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
+import no.nav.sif.abac.kontrakt.person.AktørId
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.kontrakt.register.ungsak.DeltakelseOpplysningerDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
@@ -32,7 +37,17 @@ class UngdomsprogramRegisterUngSakController(
     @Operation(summary = "Hent alle deltakelser for en deltaker i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleDeltakelserGittDeltakerAktør(@RequestBody aktørIdDto: AktørIdDto): DeltakelseOpplysningerDTO {
-        tilgangskontrollService.krevSystemtilgang()
+        if (tilgangskontrollService.erSystemBruker()) {
+            tilgangskontrollService.krevSystemtilgang()
+        } else {
+            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+                PersonerOperasjonDto(
+                    listOf(AktørId(aktørIdDto.aktorId)),
+                    listOf(),
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.READ, setOf())
+                )
+            )
+        }
         val opplysninger = registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
         return DeltakelseOpplysningerDTO(opplysninger)
     }
