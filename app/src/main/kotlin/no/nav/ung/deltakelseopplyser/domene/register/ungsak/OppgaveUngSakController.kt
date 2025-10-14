@@ -28,6 +28,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.Innte
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.søkytelse.SøkYtelseOppgaveDTO
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -293,6 +294,53 @@ class OppgaveUngSakController(
                 tomDato = opprettInntektsrapporteringOppgaveDTO.tomDato
             )
         )
+
+    }
+
+    @PostMapping("/los/sokytelse", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Løser søk ytelse oppgave for deltaker med gitt ident")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun løsOppgaveForSøkytelse(@RequestBody søkYtelseOppgaveDTO: SøkYtelseOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Oppretter oppgave for kontroll av registerinntekt")
+        val deltaker = forsikreEksistererIProgram(søkYtelseOppgaveDTO.deltakerIdent)
+
+        val deltakersOppgaver =
+            deltakerService.hentDeltakersOppgaver(søkYtelseOppgaveDTO.deltakerIdent)
+
+        val søkYtelseOppgave = deltakersOppgaver
+            .firstOrNull {
+                it.oppgavetype == Oppgavetype.SØK_YTELSE
+            }
+
+        if (søkYtelseOppgave == null)
+        {
+            throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.NOT_FOUND,
+                    "Fant ingen oppgave av type SØK_YTELSE for deltaker med id ${deltaker.id}"
+                ),
+                null
+            )
+        }
+
+        when (søkYtelseOppgave.status) {
+            OppgaveStatus.LØST -> logger.info("Oppgave av type SØK_YTELSE for deltaker med id ${deltaker.id} har allerede status LØST")
+            OppgaveStatus.ULØST -> oppgaveService.løsOppgave(søkYtelseOppgave.oppgaveReferanse)
+            else -> {
+                throw ErrorResponseException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ProblemDetail.forStatusAndDetail(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Oppgaven av type SØK_YTELSE for deltaker med id ${deltaker.id} har status ${søkYtelseOppgave.status}."
+                    ),
+                    null
+                )
+            }
+        }
+        return oppgaveMapperService.mapOppgaveTilDTO(søkYtelseOppgave)
 
     }
 
