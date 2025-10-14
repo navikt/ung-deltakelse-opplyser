@@ -15,17 +15,11 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -34,18 +28,13 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.Innte
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.søkytelse.SøkYtelseOppgaveDTO
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -308,11 +297,11 @@ class OppgaveUngSakController(
     @Operation(summary = "Løser søk ytelse oppgave for deltaker med gitt ident")
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
-    fun løsOppgaveForSøkytelse(@RequestBody søkYtelseOppgaveDTO: SøkYtelseOppgaveDTO): OppgaveDTO {
+    fun løsOppgaveForSøkytelse(@RequestBody deltakerDto: DeltakerDTO): OppgaveDTO {
         if (tilgangskontrollService.erSystemBruker()) {
             tilgangskontrollService.krevSystemtilgang()
         } else {
-            val aktørId = pdlService.hentAktørIder(søkYtelseOppgaveDTO.deltakerIdent).firstOrNull()?.ident
+            val aktørId = pdlService.hentAktørIder(deltakerDto.deltakerIdent).firstOrNull()?.ident
                 ?: throw ErrorResponseException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     ProblemDetail.forStatusAndDetail(
@@ -330,10 +319,10 @@ class OppgaveUngSakController(
             )
         }
         logger.info("Oppretter oppgave for kontroll av registerinntekt")
-        val deltaker = forsikreEksistererIProgram(søkYtelseOppgaveDTO.deltakerIdent)
+        val deltaker = forsikreEksistererIProgram(deltakerDto.deltakerIdent)
 
         val deltakersOppgaver =
-            deltakerService.hentDeltakersOppgaver(søkYtelseOppgaveDTO.deltakerIdent)
+            deltakerService.hentDeltakersOppgaver(deltakerDto.deltakerIdent)
 
         val søkYtelseOppgave = deltakersOppgaver
             .firstOrNull {
