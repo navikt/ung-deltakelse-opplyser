@@ -4,6 +4,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
+import no.nav.sif.abac.kontrakt.abac.ResourceType
+import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
+import no.nav.sif.abac.kontrakt.person.AktørId
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
@@ -20,6 +25,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDA
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -61,6 +67,7 @@ class OppgaveUngSakController(
     private val deltakelseRepository: DeltakelseRepository,
     private val oppgaveMapperService: OppgaveMapperService,
     private val oppgaveService: OppgaveService,
+    private val pdlService: PdlService,
 ) {
 
     private companion object {
@@ -302,7 +309,26 @@ class OppgaveUngSakController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun løsOppgaveForSøkytelse(@RequestBody søkYtelseOppgaveDTO: SøkYtelseOppgaveDTO): OppgaveDTO {
-        tilgangskontrollService.krevSystemtilgang()
+        if (tilgangskontrollService.erSystemBruker()) {
+            tilgangskontrollService.krevSystemtilgang()
+        } else {
+            val aktørId = pdlService.hentAktørIder(søkYtelseOppgaveDTO.deltakerIdent).firstOrNull()?.ident
+                ?: throw ErrorResponseException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ProblemDetail.forStatusAndDetail(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Fant ingen aktørId for deltaker."
+                    ),
+                    null
+                )
+            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+                PersonerOperasjonDto(
+                    listOf(AktørId(aktørId)),
+                    listOf(),
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.READ, setOf())
+                )
+            )
+        }
         logger.info("Oppretter oppgave for kontroll av registerinntekt")
         val deltaker = forsikreEksistererIProgram(søkYtelseOppgaveDTO.deltakerIdent)
 
