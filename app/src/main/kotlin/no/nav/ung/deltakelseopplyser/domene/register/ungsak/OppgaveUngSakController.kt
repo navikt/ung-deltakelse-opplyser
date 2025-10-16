@@ -13,10 +13,15 @@ import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -57,6 +62,8 @@ class OppgaveUngSakController(
     private val oppgaveMapperService: OppgaveMapperService,
     private val oppgaveService: OppgaveService,
     private val pdlService: PdlService,
+    private val ungdomsprogramregisterService: UngdomsprogramregisterService,
+    private val microfrontendService: MicrofrontendService,
 ) {
 
     private companion object {
@@ -318,9 +325,23 @@ class OppgaveUngSakController(
                 )
             )
         }
-        logger.info("Oppretter oppgave for kontroll av registerinntekt")
         val deltaker = forsikreEksistererIProgram(deltakerDto.deltakerIdent)
+        logger.info("Løser oppgave for søk ytelse for deltaker med id ${deltaker.id}")
 
+        markerDeltakelseSomSøkt(deltaker)
+
+        val søkYtelseOppgave = markerSøkYtelseOppgaveSomLøst(deltakerDto, deltaker)
+
+        aktiverMikrofrontend(deltaker)
+
+        return oppgaveMapperService.mapOppgaveTilDTO(søkYtelseOppgave)
+
+    }
+
+    private fun markerSøkYtelseOppgaveSomLøst(
+        deltakerDto: DeltakerDTO,
+        deltaker: DeltakerDAO,
+    ): OppgaveDAO {
         val deltakersOppgaver =
             deltakerService.hentDeltakersOppgaver(deltakerDto.deltakerIdent)
 
@@ -329,8 +350,7 @@ class OppgaveUngSakController(
                 it.oppgavetype == Oppgavetype.SØK_YTELSE
             }
 
-        if (søkYtelseOppgave == null)
-        {
+        if (søkYtelseOppgave == null) {
             throw ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatusAndDetail(
@@ -341,7 +361,7 @@ class OppgaveUngSakController(
             )
         }
 
-        when (søkYtelseOppgave.status) {
+        when (val status = søkYtelseOppgave.status) {
             OppgaveStatus.LØST -> logger.info("Oppgave av type SØK_YTELSE for deltaker med id ${deltaker.id} har allerede status LØST")
             OppgaveStatus.ULØST -> oppgaveService.løsOppgave(søkYtelseOppgave.oppgaveReferanse)
             else -> {
@@ -349,14 +369,34 @@ class OppgaveUngSakController(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     ProblemDetail.forStatusAndDetail(
                         HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Oppgaven av type SØK_YTELSE for deltaker med id ${deltaker.id} har status ${søkYtelseOppgave.status}."
+                        "Oppgaven av type SØK_YTELSE for deltaker med id ${deltaker.id} har status ${status}."
                     ),
                     null
                 )
             }
         }
-        return oppgaveMapperService.mapOppgaveTilDTO(søkYtelseOppgave)
+        return søkYtelseOppgave
+    }
 
+    private fun aktiverMikrofrontend(deltaker: DeltakerDAO) {
+        logger.info("Aktiverer mikrofrontend for deltaker med id: {}", deltaker.id)
+        microfrontendService.sendOgLagre(
+            MinSideMicrofrontendStatusDAO(
+                id = UUID.randomUUID(),
+                deltaker = deltaker,
+                status = MicrofrontendStatus.ENABLE,
+                opprettet = ZonedDateTime.now(ZoneOffset.UTC),
+            )
+        ).also {
+            logger.info("Mikrofrontend aktivert for deltaker med id: {}", deltaker.id)
+        }
+    }
+
+    private fun markerDeltakelseSomSøkt(deltaker: DeltakerDAO) {
+        val deltakelse = ungdomsprogramregisterService.hentAlleForDeltaker(deltaker.deltakerIdent)
+            .first()
+
+        ungdomsprogramregisterService.markerSomHarSøkt(deltakelse.id!!)
     }
 
     private fun forsikreEksistererIProgram(deltakerIdent: String): DeltakerDAO {
