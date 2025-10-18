@@ -39,7 +39,7 @@
       "cluster": "dev-gcp"
     },
     {
-      "app": "ungdomsytelse-veileder-dev",
+      "app": "ungdomsprogramytelse-innsyn-mikrofrontend-ssr",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
     },
