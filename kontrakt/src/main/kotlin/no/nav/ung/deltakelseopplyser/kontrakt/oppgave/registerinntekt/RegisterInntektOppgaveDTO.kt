@@ -13,6 +13,7 @@ data class RegisterInntektOppgaveDTO(
     @JsonProperty("fomDato") val fomDato: LocalDate,
     @JsonProperty("tomDato") val tomDato: LocalDate,
     @JsonProperty("registerInntekter") val registerInntekter: RegisterInntektDTO,
+    @JsonProperty("gjelderDelerAvMåned") val gjelderDelerAvMåned: Boolean,
     )
 
 data class RegisterInntektDTO(
