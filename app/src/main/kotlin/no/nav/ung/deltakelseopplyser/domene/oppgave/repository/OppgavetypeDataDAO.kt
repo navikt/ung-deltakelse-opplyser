@@ -115,7 +115,7 @@ data class KontrollerRegisterInntektOppgaveTypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
 
-    @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
+    @JsonProperty(defaultValue = "n/a") val gjelderSisteMåned: Boolean,
 ) : OppgavetypeDataDAO()
 
 data class SøkYtelseOppgavetypeDataDAO(

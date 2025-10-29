@@ -22,7 +22,7 @@ data class KontrollerRegisterinntektOppgavetypeDataDTO(
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
     @JsonProperty("registerinntekt") val registerinntekt: RegisterinntektDTO,
-    @JsonProperty("gjelderDelerAvMåned") val gjelderDelerAvMåned: Boolean,
+    @JsonProperty("gjelderSisteMåned") val gjelderSisteMåned: Boolean,
     ) : OppgavetypeDataDTO
 
 data class RegisterinntektDTO(

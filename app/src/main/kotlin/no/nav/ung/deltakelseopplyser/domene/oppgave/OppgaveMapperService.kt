@@ -75,7 +75,7 @@ class OppgaveMapperService(
             fomDato,
             tomDato,
             registerinntekt.tilDTO(),
-            gjelderDelerAvMåned
+            gjelderSisteMåned
         )
 
         is InntektsrapporteringOppgavetypeDataDAO -> {

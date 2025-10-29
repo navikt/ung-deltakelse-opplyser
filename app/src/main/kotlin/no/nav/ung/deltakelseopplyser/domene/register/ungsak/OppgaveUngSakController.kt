@@ -174,7 +174,7 @@ class OppgaveUngSakController(
                         )
                     } ?: emptyList(),
                 ),
-                gjelderDelerAvMåned = opprettOppgaveDto.gjelderDelerAvMåned
+                gjelderSisteMåned = opprettOppgaveDto.gjelderSisteMåned
             )
         )
     }
