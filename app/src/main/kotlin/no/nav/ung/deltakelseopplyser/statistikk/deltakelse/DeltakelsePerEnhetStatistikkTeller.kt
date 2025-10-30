@@ -92,8 +92,8 @@ class DeltakelsePerEnhetStatistikkTeller {
             return eksaktGyldigeEnheter
         }
 
-        // Fallback: Finn siste gyldige enhet innen toleranseperiode (1 dage)
-        val toleranseDager = 1L
+        // Fallback: Finn siste gyldige enhet innen toleranseperiode (30 dager)
+        val toleranseDager = 30L
 
         val sisteGyldigeEnhet = ressurs.orgTilknytninger
             .filter { tilknytning ->
