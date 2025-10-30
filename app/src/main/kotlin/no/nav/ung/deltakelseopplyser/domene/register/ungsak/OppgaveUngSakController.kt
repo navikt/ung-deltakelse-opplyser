@@ -173,7 +173,8 @@ class OppgaveUngSakController(
                             it.ytelseType
                         )
                     } ?: emptyList(),
-                )
+                ),
+                gjelderSisteMåned = opprettOppgaveDto.gjelderSisteMåned
             )
         )
     }

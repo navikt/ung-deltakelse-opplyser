@@ -142,7 +142,8 @@ class DeltakerStatistikkServiceTest {
                         ytelseInntekter = listOf()
                     ),
                     fomDato = LocalDate.now().minusWeeks(1),
-                    tomDato = LocalDate.now().minusWeeks(2).plusDays(index.toLong())
+                    tomDato = LocalDate.now().minusWeeks(2).plusDays(index.toLong()),
+                    gjelderSisteMåned = false
                 )
             )
         }
