@@ -373,4 +373,51 @@ class DeltakelseStatistikkBeregnerTest {
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Bergen", 1)
     }
+
+    @Test
+    fun `skal bruke siste gyldige enhet når deltakelse opprettes i gap-periode mellom enhetsbytte`() {
+        // Gitt en deltakelse opprettet i en gap-periode mellom to tilknytninger
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-10-09"))
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "ABC123",
+                orgTilknytninger = listOf(
+                    // Gammel tilknytning som utløp 30. september
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2024-01-01"),
+                        gyldigTom = LocalDate.parse("2025-09-30"),
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1001",
+                            navn = "NAV Oslo",
+                            gyldigFom = LocalDate.parse("2020-01-01"),
+                            gyldigTom = LocalDate.parse("2025-09-30")
+                        )
+                    ),
+                    // Ny tilknytning som starter 20. oktober
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2025-10-20"),
+                        gyldigTom = null,
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1002",
+                            navn = "NAV Bergen",
+                            gyldigFom = LocalDate.parse("2025-10-01"),
+                            gyldigTom = null
+                        )
+                    )
+                )
+            )
+        )
+
+        // Når vi beregner antall deltakelser per enhet
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        // Da skal deltakelsen tildeles den gamle enheten (NAV Oslo)
+        // fordi den var siste gyldige enhet veilederen hadde
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Bergen")
+    }
+
 }
