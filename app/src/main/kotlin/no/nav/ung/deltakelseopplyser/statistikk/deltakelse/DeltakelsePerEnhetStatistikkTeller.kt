@@ -81,11 +81,43 @@ class DeltakelsePerEnhetStatistikkTeller {
         ressurs: RessursMedAlleTilknytninger,
         opprettetDato: LocalDate,
     ): List<OrgEnhetMedPeriode> {
-        return ressurs.orgTilknytninger
+        // Først: Prøv å finne enheter som er gyldige på eksakt tidspunkt
+        val eksaktGyldigeEnheter = ressurs.orgTilknytninger
             .filter { it.erGyldigPåTidspunkt(opprettetDato) }
             .map { it.orgEnhet }
             .filter { it.erGyldigPåTidspunkt(opprettetDato) }
             .distinctBy { "${it.id}-${it.navn}" }
+
+        if (eksaktGyldigeEnheter.isNotEmpty()) {
+            return eksaktGyldigeEnheter
+        }
+
+        // Fallback: Finn siste gyldige enhet innen toleranseperiode (1 dage)
+        val toleranseDager = 1L
+
+        val sisteGyldigeEnhet = ressurs.orgTilknytninger
+            .filter { tilknytning ->
+                // Tilknytningen må ha startet før opprettelsesdato
+                !tilknytning.gyldigFom.isAfter(opprettetDato) &&
+                        // Enheten må ha sluttet nylig (innen toleranseperiode)
+                        tilknytning.gyldigTom != null &&
+                        !tilknytning.gyldigTom.isBefore(opprettetDato.minusDays(toleranseDager))
+            }
+            .sortedByDescending { it.gyldigTom }
+            .take(1)
+            .map { it.orgEnhet }
+
+        if (sisteGyldigeEnhet.isNotEmpty()) {
+            logger.info(
+                "Bruker fallback: Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på $opprettetDato, " +
+                        "bruker siste gyldige enhet: ${sisteGyldigeEnhet.first().navn} " +
+                        "(gyldigTom: ${ressurs.orgTilknytninger.first { it.orgEnhet.id == sisteGyldigeEnhet.first().id }.gyldigTom})"
+            )
+            return sisteGyldigeEnhet
+        }
+
+        logger.warn("Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på tidspunkt $opprettetDato, heller ikke i fallback. Prøv å øke toleranseDager.")
+        return emptyList()
     }
 
     private fun velgMestPopulæreEnhet(
