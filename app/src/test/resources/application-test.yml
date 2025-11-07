@@ -14,12 +14,8 @@ spring:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
     hikari:
-      connection-test-query: SELECT 1
-      maximum-pool-size: 2
-      connection-timeout: 30000
       data-source-properties:
         logServerErrorDetail: true
-
 
   flyway:
     enabled: true
