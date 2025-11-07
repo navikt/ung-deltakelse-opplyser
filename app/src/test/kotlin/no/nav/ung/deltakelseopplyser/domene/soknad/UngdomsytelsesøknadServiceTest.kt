@@ -30,6 +30,8 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -42,6 +44,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @SpringBootTest
 @EnableMockOAuth2Server
@@ -89,9 +92,10 @@ class UngdomsytelsesøknadServiceTest {
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelseDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
-        val sendSøknadOppgave =
+
+        val sendSøknadOppgave = await.atMost(5, TimeUnit.SECONDS).untilNotNull {
             deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
-                ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
+        }
 
         ungdomsytelsesøknadService.håndterMottattSøknad(
             ungdomsytelsesøknad = lagUngdomsytelseSøknad(
