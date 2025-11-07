@@ -75,12 +75,8 @@ class DeltakelseHistorikkServiceTest {
     @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService
 
-    @MockkBean
-    private lateinit var mineSiderService: MineSiderService
-
     @BeforeEach
     fun setUp() {
-        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
     }
 
