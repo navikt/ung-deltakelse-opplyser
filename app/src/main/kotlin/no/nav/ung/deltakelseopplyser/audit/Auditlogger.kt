@@ -1,6 +1,5 @@
 package no.nav.ung.deltakelseopplyser.audit
 
-import no.nav.k9.felles.log.audit.Auditdata
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -25,7 +24,7 @@ class Auditlogger(
     val product: String get() = auditConfiguration.auditProduct()
 
 
-    fun logg(auditdata: Auditdata) {
+    fun logg(auditdata: AuditData) {
         auditLogger.info(auditdata.toString())
     }
 
