@@ -20,7 +20,7 @@ class DeltakelseStatistikkService(
         private val logger = LoggerFactory.getLogger(DeltakelseStatistikkService::class.java)
     }
 
-    fun antallDeltakelserPerEnhetStatistikk(): List<AntallDeltakelsePerEnhetStatistikkRecord> {
+    fun antallDeltakelserPerEnhetStatistikk(kastFeilVedInkonsekventTelling: Boolean = true): List<AntallDeltakelsePerEnhetStatistikkRecord> {
         val kjøringstidspunkt = ZonedDateTime.now()
 
         val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
@@ -62,16 +62,17 @@ class DeltakelseStatistikkService(
         }
 
         return statistikkRecords.also {
-            verifiserKonekventTelling(it, alleDeltakelser)
+            verifiserKonekventTelling(it, alleDeltakelser, kastFeilVedInkonsekventTelling)
         }
     }
 
     private fun verifiserKonekventTelling(
         statistikkRecords: List<AntallDeltakelsePerEnhetStatistikkRecord>,
         alleDeltakelser: List<DeltakelseDAO>,
+        kastFeilVedInkonsekventTelling: Boolean
     ) {
         val totalAntallDeltakelserStatistikk = statistikkRecords.sumOf { it.antallDeltakelser }
-        if (totalAntallDeltakelserStatistikk != alleDeltakelser.size) {
+        if (kastFeilVedInkonsekventTelling && totalAntallDeltakelserStatistikk != alleDeltakelser.size) {
             throw IllegalStateException("Inkonsekvent telling: Total antall deltakelser i statistikk (${totalAntallDeltakelserStatistikk}) stemmer ikke overens med totalt antall deltakelser (${alleDeltakelser.size})")
         } else {
             logger.info("Verifisert at total antall deltakelser i statistikk (${totalAntallDeltakelserStatistikk}) stemmer overens med totalt antall deltakelser for enhetene (${alleDeltakelser.size})")

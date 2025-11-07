@@ -207,7 +207,8 @@ class OppgaveStatistikkServiceTest {
                     ytelseInntekter = listOf()
                 ),
                 fomDato = LocalDate.now(),
-                tomDato = LocalDate.now().plusWeeks(1)
+                tomDato = LocalDate.now().plusWeeks(1),
+                gjelderSisteMåned = false
             ),
             status = OppgaveStatus.LØST,
             opprettetDato = opprettetDato,

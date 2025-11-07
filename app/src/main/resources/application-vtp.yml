@@ -1,16 +1,13 @@
 spring:
   kafka:
+    security:
+      protocol: SSL
     ssl:
       trust-store-location: file:${KAFKA_TRUSTSTORE_PATH}
-      trust-store-password: changeit
+      trust-store-password: ${KAFKA_CREDSTORE_PASSWORD}
       trust-store-type: JKS
       key-store-location: file:${KAFKA_KEYSTORE_PATH}
-      key-store-password: devillokeystore1234
+      key-store-password: ${KAFKA_CREDSTORE_PASSWORD}
       key-store-type: PKCS12
-    properties:
-      security.protocol: SASL_SSL
-      sasl:
-        mechanism: PLAIN
-        jaas.config: "org.apache.kafka.common.security.scram.ScramLoginModule required username='vtp' password='vtp';"
 logging:
   config: classpath:logback-vtp.xml

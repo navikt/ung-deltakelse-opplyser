@@ -4,22 +4,22 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
+import no.nav.sif.abac.kontrakt.abac.ResourceType
+import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
+import no.nav.sif.abac.kontrakt.person.AktørId
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.ArbeidOgFrilansRegisterInntektDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.YtelseRegisterInntektDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -34,11 +34,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -60,6 +56,7 @@ class OppgaveUngSakController(
     private val deltakelseRepository: DeltakelseRepository,
     private val oppgaveMapperService: OppgaveMapperService,
     private val oppgaveService: OppgaveService,
+    private val pdlService: PdlService,
 ) {
 
     private companion object {
@@ -176,7 +173,8 @@ class OppgaveUngSakController(
                             it.ytelseType
                         )
                     } ?: emptyList(),
-                )
+                ),
+                gjelderSisteMåned = opprettOppgaveDto.gjelderSisteMåned
             )
         )
     }
@@ -293,6 +291,72 @@ class OppgaveUngSakController(
                 tomDato = opprettInntektsrapporteringOppgaveDTO.tomDato
             )
         )
+
+    }
+
+    @PostMapping("/los/sokytelse", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Løser søk ytelse oppgave for deltaker med gitt ident")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun løsOppgaveForSøkytelse(@RequestBody deltakerDto: DeltakerDTO): OppgaveDTO {
+        if (tilgangskontrollService.erSystemBruker()) {
+            tilgangskontrollService.krevSystemtilgang()
+        } else {
+            val aktørId = pdlService.hentAktørIder(deltakerDto.deltakerIdent).firstOrNull()?.ident
+                ?: throw ErrorResponseException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ProblemDetail.forStatusAndDetail(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Fant ingen aktørId for deltaker."
+                    ),
+                    null
+                )
+            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+                PersonerOperasjonDto(
+                    listOf(AktørId(aktørId)),
+                    listOf(),
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.READ, setOf())
+                )
+            )
+        }
+        logger.info("Oppretter oppgave for kontroll av registerinntekt")
+        val deltaker = forsikreEksistererIProgram(deltakerDto.deltakerIdent)
+
+        val deltakersOppgaver =
+            deltakerService.hentDeltakersOppgaver(deltakerDto.deltakerIdent)
+
+        val søkYtelseOppgave = deltakersOppgaver
+            .firstOrNull {
+                it.oppgavetype == Oppgavetype.SØK_YTELSE
+            }
+
+        if (søkYtelseOppgave == null)
+        {
+            throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.NOT_FOUND,
+                    "Fant ingen oppgave av type SØK_YTELSE for deltaker med id ${deltaker.id}"
+                ),
+                null
+            )
+        }
+
+        when (søkYtelseOppgave.status) {
+            OppgaveStatus.LØST -> logger.info("Oppgave av type SØK_YTELSE for deltaker med id ${deltaker.id} har allerede status LØST")
+            OppgaveStatus.ULØST -> oppgaveService.løsOppgave(søkYtelseOppgave.oppgaveReferanse)
+            else -> {
+                throw ErrorResponseException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ProblemDetail.forStatusAndDetail(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Oppgaven av type SØK_YTELSE for deltaker med id ${deltaker.id} har status ${søkYtelseOppgave.status}."
+                    ),
+                    null
+                )
+            }
+        }
+        return oppgaveMapperService.mapOppgaveTilDTO(søkYtelseOppgave)
 
     }
 
