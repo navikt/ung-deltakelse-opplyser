@@ -30,6 +30,7 @@
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.6.0</sif-abac-kontrakt.version>
         <google-cloud-bigquery.version>2.54.2</google-cloud-bigquery.version>
+        <prosessering-core.version>2.20250922094930_4bb329c</prosessering-core.version>
     </properties>
     <dependencies>
 
@@ -131,7 +132,7 @@
         <dependency>
             <groupId>no.nav.familie</groupId>
             <artifactId>prosessering-core</artifactId>
-            <version>2.20250922094930_4bb329c</version>
+            <version>${prosessering-core.version}</version>
         </dependency>
 
         <!-- GraphQL -->

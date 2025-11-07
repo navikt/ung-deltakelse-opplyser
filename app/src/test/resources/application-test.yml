@@ -119,3 +119,6 @@ wiremock:
   reset-mappings-after-each-test: true
   server:
     port: 0 # random port
+
+prosessering:
+  rolle: 7ac42b69-14af-479e-9e9c-b2235bea9863

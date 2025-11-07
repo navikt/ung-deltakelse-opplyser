@@ -2,8 +2,6 @@ package no.nav.ung.deltakelseopplyser.domene.register
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.justRun
-import io.mockk.verify
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
@@ -11,7 +9,6 @@ import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
@@ -44,7 +41,6 @@ import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
 import java.util.*
 
-
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnableMockOAuth2Server
@@ -62,9 +58,6 @@ class UngdomsprogramregisterServiceTest {
 
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
-
-    @MockkBean
-    lateinit var mineSiderService: MineSiderService
 
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
@@ -85,11 +78,10 @@ class UngdomsprogramregisterServiceTest {
     @MockkBean
     lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
-    val defaultFødselsdato =  LocalDate.of(2000, 1, 1)
+    val defaultFødselsdato = LocalDate.of(2000, 1, 1)
 
     @BeforeEach
     fun setUp() {
-        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
         every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(defaultFødselsdato)
     }
@@ -208,7 +200,8 @@ class UngdomsprogramregisterServiceTest {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val deltakerDAO = deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
+        val deltakerDAO =
+            deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
         assertThat(deltakerDAO).isNotNull
         assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
 
@@ -359,7 +352,6 @@ class UngdomsprogramregisterServiceTest {
         )
         ungdomsprogramregisterService.leggTilIProgram(dto)
         assertThrows<DataIntegrityViolationException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
-        verify(exactly = 1) { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
     }
 
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
