@@ -1,19 +1,14 @@
 package no.nav.ung.deltakelseopplyser
 
 import com.nimbusds.jwt.SignedJWT
-import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
-import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpEntity
@@ -23,22 +18,13 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.mock.web.MockMultipartFile
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
-import org.springframework.context.annotation.Import
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@EnableMockOAuth2Server
-@AutoConfigureWireMock
-@Import(BigQueryTestConfiguration::class)
-class ApplicationSecurityTests {
+class ApplicationSecurityTests : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var applicationContext: ApplicationContext
@@ -46,8 +32,10 @@ class ApplicationSecurityTests {
     @Autowired
     private lateinit var testRestTemplate: TestRestTemplate
 
-    @Autowired
-    lateinit var mockOAuth2Server: MockOAuth2Server
+    override val consumerGroupPrefix: String
+        get() = "ApplicationSecurityTests"
+    override val consumerGroupTopics: List<String>
+        get() = listOf()
 
     private companion object {
         private val logger = LoggerFactory.getLogger(ApplicationSecurityTests::class.java)
@@ -128,34 +116,35 @@ class ApplicationSecurityTests {
                 // Filtrerer bort endepunkter som ikke er relevante for oss
                 .filterNot { it.value.beanType.name.startsWith("no.nav.familie") }
                 .mapNotNull { (mappingInfo: RequestMappingInfo, handlerMethod: HandlerMethod) ->
-                logger.info("--> Endpoint: {}", mappingInfo.toString())
-                val requestMethod = mappingInfo.methodsCondition.methods.firstOrNull()
-                if (requestMethod == null) {
-                    logger.warn("No request method found for mapping info: $mappingInfo")
-                    return@mapNotNull null
+                    logger.info("--> Endpoint: {}", mappingInfo.toString())
+                    val requestMethod = mappingInfo.methodsCondition.methods.firstOrNull()
+                    if (requestMethod == null) {
+                        logger.warn("No request method found for mapping info: $mappingInfo")
+                        return@mapNotNull null
+                    }
+                    val pathPattern = mappingInfo.pathPatternsCondition!!.patterns.first()
+                    val path = pathPattern.patternString
+
+                    val urlVariables: Array<String>? = if (path.contains("{") && path.contains("}")) {
+                        generateUrlVariables(path)
+                    } else {
+                        null
+                    }
+
+                    val contentType = mappingInfo.consumesCondition.consumableMediaTypes.firstOrNull()
+
+                    val requiredIssuers: RequiredIssuers =
+                        handlerMethod.beanType.getAnnotation(RequiredIssuers::class.java)
+                    val issuers = requiredIssuers.value.map { it.issuer }
+
+                    Endpoint(
+                        method = requestMethod.asHttpMethod(),
+                        url = path,
+                        urlVariables = urlVariables,
+                        contentType = contentType,
+                        issuers = issuers
+                    )
                 }
-                val pathPattern = mappingInfo.pathPatternsCondition!!.patterns.first()
-                val path = pathPattern.patternString
-
-                val urlVariables: Array<String>? = if (path.contains("{") && path.contains("}")) {
-                    generateUrlVariables(path)
-                } else {
-                    null
-                }
-
-                val contentType = mappingInfo.consumesCondition.consumableMediaTypes.firstOrNull()
-
-                val requiredIssuers: RequiredIssuers = handlerMethod.beanType.getAnnotation(RequiredIssuers::class.java)
-                val issuers = requiredIssuers.value.map { it.issuer }
-
-                Endpoint(
-                    method = requestMethod.asHttpMethod(),
-                    url = path,
-                    urlVariables = urlVariables,
-                    contentType = contentType,
-                    issuers = issuers
-                )
-            }
 
         logger.info("Found endpoints: $endpointList")
         return endpointList

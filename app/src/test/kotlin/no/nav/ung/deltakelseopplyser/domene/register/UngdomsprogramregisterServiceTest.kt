@@ -5,7 +5,7 @@ import io.mockk.every
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
@@ -16,7 +16,6 @@ import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
-import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
@@ -25,30 +24,18 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Import
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
 import java.util.*
 
-@SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnableMockOAuth2Server
-@ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ExtendWith(SpringExtension::class)
-@Import(BigQueryTestConfiguration::class)
-class UngdomsprogramregisterServiceTest {
+class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Autowired
     private lateinit var deltakerRepository: DeltakerRepository
@@ -80,8 +67,13 @@ class UngdomsprogramregisterServiceTest {
 
     val defaultFødselsdato = LocalDate.of(2000, 1, 1)
 
+    override val consumerGroupPrefix: String
+        get() = "UngdomsprogramregisterServiceTest"
+    override val consumerGroupTopics: List<String>
+        get() = listOf()
+
     @BeforeEach
-    fun setUp() {
+    fun beforeEach() {
         springTokenValidationContextHolder.mockContext()
         every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(defaultFødselsdato)
     }
@@ -271,7 +263,10 @@ class UngdomsprogramregisterServiceTest {
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         assertThrows<ErrorResponseException> {
-            ungdomsprogramregisterService.endreStartdato(innmelding.id!!, mockEndrePeriodeDTO(LocalDate.parse("2023-12-31")))
+            ungdomsprogramregisterService.endreStartdato(
+                innmelding.id!!,
+                mockEndrePeriodeDTO(LocalDate.parse("2023-12-31"))
+            )
         }.also {
             assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
             assertThat(it.body.detail).isEqualTo("Oppgitt dato=2023-12-31 er utenfor tillatt periode 2024-01-01..2028-12-31")
@@ -338,7 +333,10 @@ class UngdomsprogramregisterServiceTest {
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
 
         assertThrows<ErrorResponseException> {
-            ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, mockEndrePeriodeDTO(LocalDate.parse("2029-01-01")))
+            ungdomsprogramregisterService.endreSluttdato(
+                innmelding.id!!,
+                mockEndrePeriodeDTO(LocalDate.parse("2029-01-01"))
+            )
         }
     }
 
