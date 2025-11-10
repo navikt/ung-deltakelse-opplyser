@@ -72,6 +72,11 @@ class OppgaveService(
 
         deltakerService.oppdaterDeltaker(deltaker)
 
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
+            return
+        }
+
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
         taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
     }
@@ -140,6 +145,11 @@ class OppgaveService(
             return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
         }
 
+        if (oppgave.status == OppgaveStatus.AVBRUTT) {
+            logger.info("Oppgave med oppgaveReferanse $oppgaveReferanse er allerede avbrutt.")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
+
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
         val oppdatertOppgave = oppgave.markerSomAvbrutt()
 
@@ -159,6 +169,11 @@ class OppgaveService(
 
         if (oppgave.status == OppgaveStatus.LØST) {
             logger.error("Oppgave med oppgaveReferanse $oppgaveReferanse er løst og kan ikke utløpes.")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
+
+        if (oppgave.status == OppgaveStatus.UTLØPT) {
+            logger.info("Oppgave med oppgaveReferanse $oppgaveReferanse er allerede utløpt.")
             return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
         }
 
@@ -247,6 +262,11 @@ class OppgaveService(
                 ),
                 null
             )
+        }
+
+        if (oppgave.status == OppgaveStatus.LUKKET) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede lukket")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
         }
 
         val oppdatertOppgave = oppgave.markerSomLukket()
