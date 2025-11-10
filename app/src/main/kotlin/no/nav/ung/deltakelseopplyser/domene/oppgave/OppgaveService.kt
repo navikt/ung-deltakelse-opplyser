@@ -181,6 +181,12 @@ class OppgaveService(
             .find { it.oppgaveReferanse == oppgaveReferanse }
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
+        // Sjekk om oppgaven allerede er løst
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
+
         val oppdatertOppgave = oppgave.markerSomLøst()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
@@ -193,6 +199,12 @@ class OppgaveService(
 
     fun løsOppgave(oppgaveReferanse: UUID): OppgaveDTO {
         val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        // Sjekk om oppgaven allerede er løst
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
 
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
         val oppdatertOppgave = oppgave.markerSomLøst()
