@@ -60,6 +60,11 @@ class OppgaveService(
             .find { it.oppgaveReferanse == oppgaveReferanse }
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
+            return
+        }
+
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
         oppgave.markerSomLøst()
 
@@ -71,11 +76,6 @@ class OppgaveService(
         )
 
         deltakerService.oppdaterDeltaker(deltaker)
-
-        if (oppgave.status == OppgaveStatus.LØST) {
-            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
-            return
-        }
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
         taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
