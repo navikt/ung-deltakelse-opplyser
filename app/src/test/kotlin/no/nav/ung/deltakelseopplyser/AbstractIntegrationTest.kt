@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.WireMockServer
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.context.annotation.Import
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.context.EmbeddedKafka
@@ -64,6 +66,7 @@ import org.springframework.test.web.servlet.MockMvc
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @AutoConfigureMockMvc
+@AutoConfigureWireMock
 @Import(BigQueryTestConfiguration::class)
 abstract class AbstractIntegrationTest {
 
@@ -78,6 +81,9 @@ abstract class AbstractIntegrationTest {
 
     @Autowired
     protected lateinit var mockOAuth2Server: MockOAuth2Server
+
+    @Autowired
+    lateinit var wireMockServer: WireMockServer
 
     protected lateinit var producer: Producer<String, Any> // Kafka producer som brukes til å legge på kafka meldinger. Mer spesifikk, Hendelser om pp-sykt-barn
     protected lateinit var consumer: Consumer<String, String> // Kafka producer som brukes til å legge på kafka meldinger. Mer spesifikk, Hendelser om pp-sykt-barn

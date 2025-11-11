@@ -169,3 +169,33 @@ springdoc:
     authorizationUrl: ${AZURE_LOGIN_URL:http://localhost:8080}/authorize
     tokenUrl: ${AZURE_LOGIN_URL:http://localhost:8080}/token
     apiScope: api://${AZURE_APP_CLIENT_ID:abc123}/.default
+
+prosessering:
+  rolle: ${PROSESSERING_UNG_DRIFT_ROLLE} # 0000-CA-ung-drift
+
+  # mulighet får å skru av prosessering
+  enabled: true
+  # antall tasks som prosesseres samtidig
+  maxAntall: 10
+  # Antall ms mellom hver polling av tasks fra databasen
+  fixedDelayString.in.milliseconds: 30000
+
+  # antall tasks som plukkes opp fra databasen
+  queue.capacity: 20
+
+  # antall parallelle tasks som kjøres
+  pool.size: 4
+
+  # Se egen dokumentasjon om continuousRunning
+  continuousRunning.enabled: false
+
+  # sletter historiske tasks - med status ferdig
+  delete:
+    # antall uker
+    after.weeks: 2
+
+    # antall tasks som plukkes opp for sletting
+    pagesize: 10000
+
+  # tidspunkt for når jobb som rekjører feilede tasks skal kjøre
+  cronRetryTasks: 0 0 7 1/1 * ?
