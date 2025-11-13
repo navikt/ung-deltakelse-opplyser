@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.minside
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.familie.prosessering.AsyncTaskStep
 import no.nav.familie.prosessering.TaskStepBeskrivelse
 import no.nav.familie.prosessering.domene.Task
@@ -41,6 +42,7 @@ class AktiverMikrofrontendMinSideTask private constructor(
         }
     }
 
+    @WithSpan
     override fun doTask(task: Task) {
         logger.info("Kjører task med id=${task.id} og type=${task.type}")
         val aktiverMikrofrontendMinSideData =

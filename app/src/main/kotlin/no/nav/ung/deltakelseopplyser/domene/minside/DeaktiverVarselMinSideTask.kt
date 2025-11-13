@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.minside
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.familie.prosessering.AsyncTaskStep
 import no.nav.familie.prosessering.TaskStepBeskrivelse
 import no.nav.familie.prosessering.domene.Task
@@ -36,6 +37,7 @@ class DeaktiverVarselMinSideTask private constructor(
         }
     }
 
+    @WithSpan
     override fun doTask(task: Task) {
         logger.info("Kjører task med id=${task.id} og type=${task.type}")
         val oppgaveReferanse = task.payload
