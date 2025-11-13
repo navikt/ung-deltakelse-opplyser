@@ -2,7 +2,6 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.justRun
 import no.nav.k9.søknad.Søknad
 import no.nav.k9.søknad.felles.Kildesystem
 import no.nav.k9.søknad.felles.personopplysninger.Søker
@@ -12,16 +11,11 @@ import no.nav.k9.søknad.ytelse.ung.v1.UngSøknadstype
 import no.nav.k9.søknad.ytelse.ung.v1.Ungdomsytelse
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
-import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
+import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
-import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
@@ -35,42 +29,19 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilNotNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
+import java.util.concurrent.TimeUnit
 
-@DataJpaTest
-@ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ExtendWith(SpringExtension::class)
-@AutoConfigureTestDatabase(
-    replace = AutoConfigureTestDatabase.Replace.NONE
-)
-@Import(
-    DeltakerService::class,
-    UngdomsytelsesøknadService::class,
-    UngdomsprogramregisterService::class,
-    RapportertInntektService::class,
-    DeltakerappConfig::class,
-    MicrofrontendService::class,
-    OppgaveService::class,
-    OppgaveMapperService::class
-)
-class UngdomsytelsesøknadServiceTest {
+class UngdomsytelsesøknadServiceTest : AbstractIntegrationTest() {
 
     @MockkBean
     lateinit var pdlService: PdlService
-
 
     @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService
@@ -80,9 +51,6 @@ class UngdomsytelsesøknadServiceTest {
 
     @MockkBean
     lateinit var kontoregisterService: KontoregisterService
-
-    @MockkBean
-    lateinit var mineSiderService: MineSiderService
 
     @MockkBean
     lateinit var enhetsregisterService: EnhetsregisterService
@@ -102,13 +70,6 @@ class UngdomsytelsesøknadServiceTest {
     @Autowired
     lateinit var deltakerService: DeltakerService
 
-    @BeforeAll
-    fun setUp() {
-        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
-        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
-        justRun { mineSiderService.deaktiverOppgave(any()) }
-    }
-
     @Test
     fun `Forventer at søknad markerer deltakelsen som søkt og oppgaven løses`() {
         val søkerIdent = FødselsnummerGenerator.neste()
@@ -116,8 +77,10 @@ class UngdomsytelsesøknadServiceTest {
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelseDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
-        val sendSøknadOppgave = deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
-            ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
+
+        val sendSøknadOppgave = await.atMost(5, TimeUnit.SECONDS).untilNotNull {
+            deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
+        }
 
         ungdomsytelsesøknadService.håndterMottattSøknad(
             ungdomsytelsesøknad = lagUngdomsytelseSøknad(
@@ -194,4 +157,9 @@ class UngdomsytelsesøknadServiceTest {
             .lagPerson(LocalDate.of(2000, 1, 1))
 
     }
+
+    override val consumerGroupPrefix: String
+        get() = "ungdomsytelsesøknad-service-test"
+    override val consumerGroupTopics: List<String>
+        get() = listOf()
 }

@@ -110,6 +110,8 @@
     "NOM_API_AZURE_SCOPE": "api://dev-gcp.nom.nom-api/.default",
 
     "SWAGGER_ENABLED": "true",
-    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0"
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
+
+    "PROSESSERING_UNG_DRIFT_ROLLE": "0d0da462-c300-43d9-8364-38a0a8cf2401"
   }
 }

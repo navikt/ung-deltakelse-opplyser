@@ -2,34 +2,26 @@ package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
 import com.ninjasquad.springmockk.MockkBean
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelsePerEnhetStatistikkRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelserPerEnhetTabell
+import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidRecord
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.ZonedDateTime
 
-@ActiveProfiles("test")
-@EnableMockOAuth2Server
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@ExtendWith(SpringExtension::class)
-@Import(BigQueryTestConfiguration::class)
-class BigQueryKlientTest {
+class BigQueryKlientTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var bigQueryKlient: BigQueryKlient
@@ -37,9 +29,14 @@ class BigQueryKlientTest {
     @MockkBean
     private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
+    override val consumerGroupPrefix: String
+        get() = "BigQueryKlientTest"
+    override val consumerGroupTopics: List<String>
+        get() = listOf()
+
 
     @BeforeEach
-    fun setUp() {
+    fun beforeEach() {
         springTokenValidationContextHolder.mockContext()
     }
 

@@ -101,6 +101,8 @@
     "NOM_API_AZURE_SCOPE": "api://prod-gcp.nom.nom-api/.default",
 
     "SWAGGER_ENABLED": "true",
-    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0"
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0",
+
+    "PROSESSERING_UNG_DRIFT_ROLLE": "873ae729-e918-4f35-9a26-652ca994b9c3"
   }
 }

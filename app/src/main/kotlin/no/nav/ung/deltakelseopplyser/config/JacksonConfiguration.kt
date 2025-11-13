@@ -19,14 +19,16 @@ class JacksonConfiguration {
 
     companion object {
         val zonedDateTimeFormatter = DateTimeFormatter.ISO_INSTANT.withZone(UTC)
+
+        val JAVA_TIME_MODULE = JavaTimeModule().also {
+            it.addSerializer(ZonedDateTime::class.java, CustomZonedDateTimeSerializer())
+            it.addDeserializer(ZonedDateTime::class.java, CustomZonedDateTimeDeSerializer())
+        }
     }
 
     @Bean
     fun javaTimeModule(): JavaTimeModule {
-        return JavaTimeModule().also {
-            it.addSerializer(ZonedDateTime::class.java, CustomZonedDateTimeSerializer())
-            it.addDeserializer(ZonedDateTime::class.java, CustomZonedDateTimeDeSerializer())
-        }
+        return JAVA_TIME_MODULE
     }
 }
 
