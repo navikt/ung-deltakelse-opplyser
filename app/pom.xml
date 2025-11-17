@@ -21,15 +21,15 @@
         <logback.logstash.version>9.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>6.0.4</ung-sak.version>
+        <ung-sak.version>6.1.0</ung-sak.version>
         <fp-sak.version>2.7.3</fp-sak.version>
-        <k9-format.version>12.6.1</k9-format.version>
-        <k9-felles.version>7.1.5</k9-felles.version>
+        <k9-format.version>12.6.2</k9-format.version>
+        <k9-felles.version>9.1.5</k9-felles.version>
         <graphql-kotlin.version>8.8.1</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.6.0</sif-abac-kontrakt.version>
-        <google-cloud-bigquery.version>2.55.3</google-cloud-bigquery.version>
+        <google-cloud-bigquery.version>2.56.0</google-cloud-bigquery.version>
     </properties>
     <dependencies>
 
@@ -181,7 +181,7 @@
         <dependency>
             <groupId>io.hypersistence</groupId>
             <artifactId>hypersistence-utils-hibernate-63</artifactId>
-            <version>3.11.0</version>
+            <version>3.12.0</version>
         </dependency>
 
         <dependency>
