@@ -1,48 +1,38 @@
 package no.nav.ung.deltakelseopplyser.integration.enhetsregister
 
-import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.ninjasquad.springmockk.MockkBean
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterException
 import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterService
-import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
-import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.retry.ExhaustedRetryException
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.net.URI
 
-@AutoConfigureWireMock
-@EnableMockOAuth2Server
-@ExtendWith(SpringExtension::class)
-@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@Import(BigQueryTestConfiguration::class)
-class EnhetsregisterServiceTest {
+class EnhetsregisterServiceTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var enhetsregisterService: EnhetsregisterService
 
-    @Autowired
-    lateinit var wireMockServer: WireMockServer
-
     @MockkBean
     private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
+    override val consumerGroupPrefix: String
+        get() = "EnhetsregisterServiceTest"
+    override val consumerGroupTopics: List<String>
+        get() = listOf()
+
     @BeforeEach
-    fun setUp() {
+    fun beforeEach() {
         springTokenValidationContextHolder.mockContext()
     }
 

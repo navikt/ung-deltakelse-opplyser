@@ -7,17 +7,19 @@ import no.nav.tms.varsel.action.Sensitivitet
 import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.tms.varsel.builder.VarselActionBuilder
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.support.SendResult
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 @Service
-class MineSiderService(
+internal class MineSiderService(
     @Value("\${topic.producer.min-side-varsel.navn}") private val minSideVarselTopic: String,
     @Value("\${topic.producer.min-side-mikrofrontend.navn}") private val minSideMikrofrontendTopic: String,
     private val kafkaTemplate: KafkaTemplate<String, String>,
@@ -40,6 +42,7 @@ class MineSiderService(
      * @param varseltype Type på varsel (beskjed, oppgave, innboks).
      * @param aktivFremTil Tidspunkt for når varslet skal inaktiverer automatisk av systemet.
      */
+    @Transactional(TRANSACTION_MANAGER)
     fun opprettVarsel(
         varselId: String,
         deltakerIdent: String,
@@ -122,6 +125,7 @@ class MineSiderService(
      * Deaktiverer et varsel.
      * @param oppgaveId Id til varselet som skal deaktiveres.
      */
+    @Transactional(TRANSACTION_MANAGER)
     fun deaktiverOppgave(oppgaveId: String) {
         /**
          * Deaktiverer et varsel
@@ -140,6 +144,7 @@ class MineSiderService(
         logger.info("Publiserte inaktivering av min-side oppgave: {}", result.recordMetadata.toString())
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun aktiverMikrofrontend(
         deltakerIdent: String,
         microfrontendId: MicrofrontendId,

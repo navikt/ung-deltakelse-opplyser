@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
+import no.nav.familie.prosessering.internal.TaskService
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretSluttdatoBekreftelse
@@ -9,9 +10,17 @@ import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
+import no.nav.ung.deltakelseopplyser.domene.minside.DeaktiverVarselMinSideTask
+import no.nav.ung.deltakelseopplyser.domene.minside.OpprettVarselMinSideTask
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.*
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveBekreftelse
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -29,9 +38,9 @@ import no.nav.k9.oppgave.OppgaveBekreftelse as UngOppgaveBekreftelse
 @Service
 class OppgaveService(
     private val deltakerService: DeltakerService,
-    private val mineSiderService: MineSiderService,
     private val deltakerappConfig: DeltakerappConfig,
-    private val oppgaveMapperService: OppgaveMapperService
+    private val oppgaveMapperService: OppgaveMapperService,
+    private val taskService: TaskService,
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
@@ -51,6 +60,11 @@ class OppgaveService(
             .find { it.oppgaveReferanse == oppgaveReferanse }
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
+            return
+        }
+
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
         oppgave.markerSomLøst()
 
@@ -64,14 +78,14 @@ class OppgaveService(
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
     }
 
     fun opprettOppgave(
         deltaker: DeltakerDAO,
         oppgaveReferanse: UUID,
         oppgaveTypeDataDAO: OppgavetypeDataDAO,
-        frist: ZonedDateTime
+        frist: ZonedDateTime,
     ): OppgaveDTO {
         val oppgavetype = when (oppgaveTypeDataDAO) {
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
@@ -99,13 +113,17 @@ class OppgaveService(
         deltaker.leggTilOppgave(nyOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
 
-        mineSiderService.opprettVarsel(
-            varselId = nyOppgave.oppgaveReferanse.toString(),
-            deltakerIdent = deltaker.deltakerIdent,
-            tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
-            varselLink = utledVarselLink(nyOppgave),
-            varseltype = Varseltype.Oppgave,
-            aktivFremTil = frist,
+        taskService.save(
+            OpprettVarselMinSideTask.opprettTask(
+                OpprettVarselMinSideTask.OpprettVarselMinSideData(
+                    varselId = nyOppgave.oppgaveReferanse.toString(),
+                    deltakerIdent = deltaker.deltakerIdent,
+                    tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
+                    varselLink = utledVarselLink(nyOppgave),
+                    varseltype = Varseltype.Oppgave,
+                    aktivFremTil = frist,
+                )
+            )
         )
 
         return oppgaveMapperService.mapOppgaveTilDTO(nyOppgave)
@@ -127,6 +145,11 @@ class OppgaveService(
             return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
         }
 
+        if (oppgave.status == OppgaveStatus.AVBRUTT) {
+            logger.info("Oppgave med oppgaveReferanse $oppgaveReferanse er allerede avbrutt.")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
+
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som avbrutt")
         val oppdatertOppgave = oppgave.markerSomAvbrutt()
 
@@ -134,7 +157,7 @@ class OppgaveService(
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
 
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
@@ -149,6 +172,11 @@ class OppgaveService(
             return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
         }
 
+        if (oppgave.status == OppgaveStatus.UTLØPT) {
+            logger.info("Oppgave med oppgaveReferanse $oppgaveReferanse er allerede utløpt.")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
+
         logger.info("Markerer oppgave med oppgaveReferanse $oppgaveReferanse som utløpt")
         val oppdatertOppgave = oppgave.markerSomUtløpt()
 
@@ -156,7 +184,7 @@ class OppgaveService(
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
 
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
@@ -168,18 +196,30 @@ class OppgaveService(
             .find { it.oppgaveReferanse == oppgaveReferanse }
             ?: throw RuntimeException("Deltaker har ikke oppgave for oppgaveReferanse=$oppgaveReferanse")
 
+        // Sjekk om oppgaven allerede er løst
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
+
         val oppdatertOppgave = oppgave.markerSomLøst()
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
     fun løsOppgave(oppgaveReferanse: UUID): OppgaveDTO {
         val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+
+        // Sjekk om oppgaven allerede er løst
+        if (oppgave.status == OppgaveStatus.LØST) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede løst")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
 
         logger.info("Markerer oppgave som løst for deltaker=${deltaker.id}")
         val oppdatertOppgave = oppgave.markerSomLøst()
@@ -188,7 +228,7 @@ class OppgaveService(
         deltakerService.oppdaterDeltaker(deltaker)
 
         logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+        taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
@@ -224,9 +264,14 @@ class OppgaveService(
             )
         }
 
+        if (oppgave.status == OppgaveStatus.LUKKET) {
+            logger.info("Oppgave med oppgaveReferanse=$oppgaveReferanse er allerede lukket")
+            return oppgaveMapperService.mapOppgaveTilDTO(oppgave)
+        }
+
         val oppdatertOppgave = oppgave.markerSomLukket()
         deltakerService.oppdaterDeltaker(deltaker)
-        mineSiderService.deaktiverOppgave(oppgaveReferanse.toString())
+        taskService.save(DeaktiverVarselMinSideTask.opprettTask(oppgave.oppgaveReferanse))
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 

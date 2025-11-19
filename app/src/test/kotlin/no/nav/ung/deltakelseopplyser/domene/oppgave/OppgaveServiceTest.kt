@@ -1,10 +1,10 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.verify
+import no.nav.familie.prosessering.internal.TaskService
 import no.nav.k9.oppgave.OppgaveBekreftelse
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
@@ -21,7 +21,6 @@ import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebekreftelse
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
@@ -44,6 +43,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import no.nav.ung.deltakelseopplyser.domene.minside.DeaktiverVarselMinSideTask
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -78,8 +78,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var deltakerService: DeltakerService
 
-    @SpykBean
-    lateinit var mineSiderService: MineSiderService
+    @Autowired
+    private lateinit var taskService: TaskService
 
     @MockkBean
     lateinit var pdlService: PdlService
@@ -170,7 +170,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveBekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.oppgaveBekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
 
-        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+        val deaktiverVarselTask =
+            taskService.finnAlleTaskerMedPayloadOgType(oppgaveReferanse.toString(), DeaktiverVarselMinSideTask.TYPE)
+        assertThat(deaktiverVarselTask).hasSize(1)
     }
 
 
@@ -222,7 +224,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveBekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.oppgaveBekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
 
-        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+        val deaktiverVarselTask =
+            taskService.finnAlleTaskerMedPayloadOgType(oppgaveReferanse.toString(), DeaktiverVarselMinSideTask.TYPE)
+        assertThat(deaktiverVarselTask).hasSize(1)
     }
 
     @Test
@@ -265,8 +269,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveBekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.oppgaveBekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil inntekt i registeret")
 
-        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
-
+        val deaktiverVarselTask =
+            taskService.finnAlleTaskerMedPayloadOgType(oppgaveReferanse.toString(), DeaktiverVarselMinSideTask.TYPE)
+        assertThat(deaktiverVarselTask).hasSize(1)
     }
 
 
@@ -302,7 +307,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         }
 
-        verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+        val deaktiverVarselTask =
+            taskService.finnAlleTaskerMedPayloadOgType(oppgaveReferanse.toString(), DeaktiverVarselMinSideTask.TYPE)
+        assertThat(deaktiverVarselTask).isEmpty()
     }
 
     private fun mockHentFolkeregisteridenter(deltakerIdent: String) {

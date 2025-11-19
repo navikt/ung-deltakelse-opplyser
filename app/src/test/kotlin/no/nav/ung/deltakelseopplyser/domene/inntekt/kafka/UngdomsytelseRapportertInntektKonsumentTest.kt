@@ -5,24 +5,25 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.verify
+import no.nav.familie.prosessering.internal.TaskService
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektHåndtererService
 import no.nav.ung.deltakelseopplyser.domene.inntekt.repository.RapportertInntektRepository
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import no.nav.ung.deltakelseopplyser.domene.minside.DeaktiverVarselMinSideTask
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakController
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.leggPåTopic
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -33,7 +34,7 @@ import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
+class UngdomsytelseRapportertInntektKonsumentTest(@Autowired private val taskService: TaskService) : AbstractIntegrationTest() {
 
     private companion object {
         const val TOPIC = "dusseldorf.ungdomsytelse-inntektsrapportering-cleanup"
@@ -50,9 +51,6 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
 
     @SpykBean
     lateinit var rapportertInntektRepository: RapportertInntektRepository
-
-    @SpykBean
-    lateinit var mineSiderService: MineSiderService
 
     @MockkBean
     lateinit var pdlService: PdlService
@@ -136,7 +134,7 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
             verify(exactly = 1) { rapportertInntektHåndtererService.håndterRapportertInntekt(any()) }
             verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
-            verify(exactly = 1) { mineSiderService.deaktiverOppgave(any()) }
+            taskService.finnAlleTaskerMedPayloadOgType(søknadId, DeaktiverVarselMinSideTask.TYPE)
             verify(exactly = 1) { rapportertInntektRepository.save(any()) }
 
             val oppgave = deltakerService.hentDeltakersOppgaver(søkerIdent).first()
