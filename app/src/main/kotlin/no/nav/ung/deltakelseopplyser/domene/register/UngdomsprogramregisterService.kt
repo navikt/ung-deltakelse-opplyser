@@ -21,6 +21,7 @@ import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
@@ -39,6 +40,7 @@ class UngdomsprogramregisterService(
     private val pdlService: PdlService,
     private val oppgaveService: OppgaveService,
     private val oppgaveMapperService: OppgaveMapperService,
+    @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -86,18 +88,27 @@ class UngdomsprogramregisterService(
         val deltakerId = deltaker.id
         logger.info("Fjerner deltaker fra programmet med id $deltakerId")
 
-        val deltakelser = hentAlleForDeltakerId(deltakerId)
+        val deltakelser = hentIkkeSlettetForDeltakerId(deltakerId)
         val harSøkteDeltakelser = deltakelser.any { it.søktTidspunkt != null }
 
         if (harSøkteDeltakelser) {
-            logger.error("Klarte ikke å slette deltaker fra programmet med id $deltakerId, fordi deltakeren har søkt")
-            throw ErrorResponseException(
-                HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatus(HttpStatus.FORBIDDEN).also {
-                    it.detail = "Deltakeren har søkt og deltakelsen kan derfor ikke slettes"
-                },
-                null
-            )
+
+            if (slettSoktDeltakelseEnabled) {
+                deltakelser.forEach {
+                    markerSomSlettet(it.id!!)
+                }
+                return true
+            } else {
+
+                logger.error("Klarte ikke å slette deltaker fra programmet med id $deltakerId, fordi deltakeren har søkt")
+                throw ErrorResponseException(
+                    HttpStatus.FORBIDDEN,
+                    ProblemDetail.forStatus(HttpStatus.FORBIDDEN).also {
+                        it.detail = "Deltakeren har søkt og deltakelsen kan derfor ikke slettes"
+                    },
+                    null
+                )
+            }
         }
 
         val deltakerSlettet = deltakerService.slettDeltaker(deltakerId)
@@ -134,6 +145,13 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
+    fun markerSomSlettet(id: UUID): DeltakelseDTO {
+        logger.info("Markerer at deltakelse er slettet med id $id")
+        val eksisterende = forsikreEksistererIProgram(id)
+        eksisterende.markerSomSlettet()
+        return deltakelseRepository.save(eksisterende).mapToDTO()
+    }
+
     fun hentFraProgram(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreEksistererIProgram(id)
@@ -163,6 +181,25 @@ class UngdomsprogramregisterService(
 
         val deltakterIder = deltakerService.hentDeltakterIder(deltakerDAO.deltakerIdent)
         val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
+        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
+
+        return ungdomsprogramDAOs.map { it.mapToDTO() }
+    }
+
+    fun hentIkkeSlettetForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
+        logger.info("Henter alle programopplysninger for deltaker.")
+        val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
+            ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen deltaker med id $deltakerId"
+                },
+                null
+            )
+        }
+
+        val deltakterIder = deltakerService.hentDeltakterIder(deltakerDAO.deltakerIdent)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdAndEr_slettet(deltakterIder, false)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }

@@ -21,7 +21,11 @@ class DeltakerDAO(
     @Column(name = "deltaker_ident", unique = true, nullable = false)
     val deltakerIdent: String,
 
-    @OneToMany(mappedBy = "deltaker", cascade = [CascadeType.ALL], orphanRemoval = true) // Refererer til UngdomsprogramDeltakelseDAO
+    @OneToMany(
+        mappedBy = "deltaker",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true
+    ) // Refererer til UngdomsprogramDeltakelseDAO
     val deltakelseList: List<DeltakelseDAO> = emptyList(),
 
 
