@@ -48,7 +48,7 @@ class UngdomsprogramRegisterUngSakController(
                 )
             )
         }
-        val opplysninger = registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
+        val opplysninger = registerService.hentIkkeSlettetForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
         return DeltakelseOpplysningerDTO(opplysninger)
     }
 

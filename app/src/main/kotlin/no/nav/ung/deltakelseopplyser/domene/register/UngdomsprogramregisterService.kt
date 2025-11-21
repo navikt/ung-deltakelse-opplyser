@@ -189,6 +189,17 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
+
+    fun hentIkkeSlettetForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
+        logger.info("Henter alle programopplysninger for deltaker.")
+        val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdInAndErSlettet(deltakerIder, false)
+        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
+        return ungdomsprogramDAOs.map { it.mapToDTO() }
+    }
+
+
+
     fun hentIkkeSlettetForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
@@ -202,7 +213,7 @@ class UngdomsprogramregisterService(
         }
 
         val deltakterIder = deltakerService.hentDeltakterIder(deltakerDAO.deltakerIdent)
-        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdAndEr_slettet(deltakterIder, false)
+        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdInAndErSlettet(deltakterIder, false)
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }
