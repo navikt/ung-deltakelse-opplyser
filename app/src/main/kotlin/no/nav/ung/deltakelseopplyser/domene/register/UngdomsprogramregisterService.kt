@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
@@ -52,7 +53,8 @@ class UngdomsprogramregisterService(
                 deltaker = deltaker.mapToDTO(),
                 søktTidspunkt = søktTidspunkt,
                 fraOgMed = getFom(),
-                tilOgMed = getTom()
+                tilOgMed = getTom(),
+                erSlettet = erSlettet,
             )
         }
     }
@@ -96,6 +98,7 @@ class UngdomsprogramregisterService(
             if (slettSoktDeltakelseEnabled) {
                 deltakelser.forEach {
                     markerSomSlettet(it.id!!)
+                    sendFjernetDeltakelseHendelseTilUngSak(it)
                 }
                 return true
             } else {
@@ -287,6 +290,33 @@ class UngdomsprogramregisterService(
 
         return oppdatertDeltakelse.mapToDTO()
     }
+
+    private fun sendFjernetDeltakelseHendelseTilUngSak(oppdatert: DeltakelseDTO) {
+        val opphørsdato = oppdatert.fraOgMed.minusDays(1)
+        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
+
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+
+        logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
+
+        val hendelsedato = LocalDateTime.now()
+
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
+        ungSakService.sendInnHendelse(
+            hendelse = HendelseDto(
+                hendelse,
+                AktørId(nåværendeAktørId)
+            )
+        )
+    }
+
 
     private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: DeltakelseDAO) {
         val opphørsdato = oppdatert.getTom()

@@ -24,6 +24,9 @@ data class DeltakelseDTO(
     @JsonProperty("tilOgMed")
     val tilOgMed: LocalDate? = null,
 
+    @JsonProperty("erSlettet")
+    val erSlettet: Boolean = false,
+
     @JsonProperty("søktTidspunkt")
     val søktTidspunkt: ZonedDateTime? = null
 ) {
