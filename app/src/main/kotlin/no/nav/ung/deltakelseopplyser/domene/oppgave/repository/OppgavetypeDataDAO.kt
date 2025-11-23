@@ -78,6 +78,14 @@ sealed class OppgavetypeDataDAO {
                 default = true
             )
         )
+
+        is FjernetPeriodeOppgaveDataDAO -> listOf(
+            Tekst(
+                tekst = "Se og gi tilbakemelding på fjernet periode i ungdomsprogrammet",
+                spraakkode = "nb",
+                default = true
+            )
+        )
     }
 }
 
@@ -96,6 +104,15 @@ data class EndretSluttdatoOppgaveDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
 ) : OppgavetypeDataDAO()
+
+data class FjernetPeriodeOppgaveDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("forrigeStartdato") val forrigeStartdato: LocalDate,
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
+) : OppgavetypeDataDAO()
+
 
 data class ProgramperiodeDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")

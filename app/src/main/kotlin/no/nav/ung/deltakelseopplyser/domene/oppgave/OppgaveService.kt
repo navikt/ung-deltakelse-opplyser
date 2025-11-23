@@ -79,6 +79,7 @@ class OppgaveService(
             is EndretSluttdatoOppgaveDataDAO -> Oppgavetype.BEKREFT_ENDRET_SLUTTDATO
             is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
             is SøkYtelseOppgavetypeDataDAO -> Oppgavetype.SØK_YTELSE
+            is FjernetPeriodeOppgaveDataDAO -> Oppgavetype.BEKREFT_FJERNET_PERIODE
         }
 
         logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")

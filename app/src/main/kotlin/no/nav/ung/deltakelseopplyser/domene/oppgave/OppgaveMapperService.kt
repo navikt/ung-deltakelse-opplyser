@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.domene.oppgave
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.FjernetPeriodeOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveBekreftelse
@@ -15,6 +16,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegi
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoDataDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.FjernetPeriodeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.InntektsrapporteringOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.KontrollerRegisterinntektOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
@@ -24,6 +26,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SøkYtelseOppgavetypeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.FjernetPeriodeOppgaveDTO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -69,6 +72,11 @@ class OppgaveMapperService(
         is EndretSluttdatoOppgaveDataDAO -> EndretSluttdatoDataDTO(
             nySluttdato = this.nySluttdato,
             forrigeSluttdato = this.forrigeSluttdato,
+        )
+
+        is FjernetPeriodeOppgaveDataDAO -> FjernetPeriodeDataDTO(
+            forrigeStartdato = this.forrigeStartdato,
+            forrigeSluttdato = this.forrigeSluttdato
         )
 
         is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(

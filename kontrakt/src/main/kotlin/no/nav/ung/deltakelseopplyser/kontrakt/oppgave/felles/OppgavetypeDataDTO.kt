@@ -18,6 +18,11 @@ data class EndretSluttdatoDataDTO(
     @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
 ) : OppgavetypeDataDTO
 
+data class FjernetPeriodeDataDTO(
+    @JsonProperty("forrigeStartdato") val forrigeStartdato: LocalDate,
+    @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
+) : OppgavetypeDataDTO
+
 data class KontrollerRegisterinntektOppgavetypeDataDTO(
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
