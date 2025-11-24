@@ -257,8 +257,8 @@ class OppgaveUngSakController(
         )
     }
 
-    @PostMapping("/opprett/endret-sluttdato", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Oppretter oppgave for endret sluttdato")
+    @PostMapping("/opprett/fjernet-periode", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Oppretter oppgave for fjernet periode")
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun opprettOppgaveForFjernetPeriode(@RequestBody fjernetPeriodeOppgaveDTO: FjernetPeriodeOppgaveDTO): OppgaveDTO {
