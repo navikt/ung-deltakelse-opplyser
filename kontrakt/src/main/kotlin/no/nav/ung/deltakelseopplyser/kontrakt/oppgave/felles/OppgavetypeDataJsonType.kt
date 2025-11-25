@@ -36,6 +36,12 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoO
         name = "BEKREFT_ENDRET_SLUTTDATO"
     ),
 
+    // Endret sluttdato oppgavetype data
+    JsonSubTypes.Type(
+        value = FjernetPeriodeDataDTO::class,
+        name = "BEKREFT_FJERNET_PERIODE"
+    ),
+
     // Kontroller registerinntekt oppgavetype data
     JsonSubTypes.Type(
         value = KontrollerRegisterinntektOppgavetypeDataDTO::class,
