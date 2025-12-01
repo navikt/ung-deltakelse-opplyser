@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -12,7 +13,7 @@ data class RegisterInntektOppgaveDTO(
     @JsonProperty("fomDato") val fomDato: LocalDate,
     @JsonProperty("tomDato") val tomDato: LocalDate,
     @JsonProperty("registerInntekter") val registerInntekter: RegisterInntektDTO,
-    @JsonProperty("gjelderDelerAvMåned") val gjelderDelerAvMåned: Boolean,
+    @JsonProperty("gjelderSisteMåned") val gjelderSisteMåned: Boolean,
     )
 
 data class RegisterInntektDTO(

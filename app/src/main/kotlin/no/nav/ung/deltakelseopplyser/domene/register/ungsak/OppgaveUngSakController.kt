@@ -174,7 +174,7 @@ class OppgaveUngSakController(
                         )
                     } ?: emptyList(),
                 ),
-                gjelderDelerAvMåned = opprettOppgaveDto.gjelderDelerAvMåned
+                gjelderSisteMåned = opprettOppgaveDto.gjelderSisteMåned
             )
         )
     }
@@ -288,8 +288,7 @@ class OppgaveUngSakController(
             oppgaveReferanse = opprettInntektsrapporteringOppgaveDTO.referanse,
             oppgaveTypeDataDAO = InntektsrapporteringOppgavetypeDataDAO(
                 fomDato = opprettInntektsrapporteringOppgaveDTO.fomDato,
-                tomDato = opprettInntektsrapporteringOppgaveDTO.tomDato,
-                gjelderDelerAvMåned = opprettInntektsrapporteringOppgaveDTO.gjelderDelerAvMåned
+                tomDato = opprettInntektsrapporteringOppgaveDTO.tomDato
             )
         )
 

@@ -155,7 +155,6 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
                 frist = LocalDateTime.now().plusDays(6),
                 fomDato = now.withDayOfMonth(1),
                 tomDato = now.withDayOfMonth(now.lengthOfMonth()),
-                gjelderDelerAvMåned = false
             )
         )
     }
