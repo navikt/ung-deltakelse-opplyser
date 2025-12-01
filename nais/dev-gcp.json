@@ -110,6 +110,8 @@
     "NOM_API_AZURE_SCOPE": "api://dev-gcp.nom.nom-api/.default",
 
     "SWAGGER_ENABLED": "true",
-    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0"
+    "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
+
+    "FLYWAY_REPAIR_ON_FAIL": true
   }
 }
