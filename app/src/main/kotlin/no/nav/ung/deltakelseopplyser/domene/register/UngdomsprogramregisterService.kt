@@ -18,8 +18,10 @@ import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
+import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -303,14 +305,12 @@ class UngdomsprogramregisterService(
     }
 
     private fun sendFjernetDeltakelseHendelseTilUngSak(oppdatert: DeltakelseDTO) {
-        val opphørsdato = oppdatert.fraOgMed.minusDays(1)
-        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
 
         logger.info("Henter aktørIder for deltaker")
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
-        logger.info("Sender inn hendelse til ung-sak om at deltaker har opphørt programmet")
+        logger.info("Sender inn hendelse til ung-sak om at veileder har fjernet deltaker fra programmet")
 
         val hendelsedato = LocalDateTime.now()
 
@@ -319,7 +319,9 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
+        val hendelse = UngdomsprogramFjernDeltakelseHendelse(hendelseInfo.build(),
+            Periode(oppdatert.fraOgMed, oppdatert.tilOgMed)
+        )
         ungSakService.sendInnHendelse(
             hendelse = HendelseDto(
                 hendelse,
