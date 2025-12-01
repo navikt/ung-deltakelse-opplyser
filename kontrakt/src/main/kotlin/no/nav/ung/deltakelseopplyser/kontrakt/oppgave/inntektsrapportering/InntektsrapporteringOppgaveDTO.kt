@@ -10,6 +10,5 @@ data class InntektsrapporteringOppgaveDTO(
     @JsonProperty("referanse") val referanse: UUID,
     @JsonProperty("frist") val frist: LocalDateTime,
     @JsonProperty("fomDato") val fomDato: LocalDate,
-    @JsonProperty("tomDato") val tomDato: LocalDate,
-    @JsonProperty("gjelderDelerAvMåned") val gjelderDelerAvMåned: Boolean
+    @JsonProperty("tomDato") val tomDato: LocalDate
 )

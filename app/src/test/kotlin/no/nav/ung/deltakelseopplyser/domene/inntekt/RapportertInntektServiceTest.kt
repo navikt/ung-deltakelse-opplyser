@@ -75,8 +75,7 @@ class RapportertInntektServiceTest {
                 oppgavetypeData = InntektsrapporteringOppgavetypeDataDTO(
                     fraOgMed = fraOgMed,
                     tilOgMed = tilOgMed,
-                    rapportertInntekt = null, // Forventes oppdatert av tjenesten,
-                    gjelderDelerAvMåned = false
+                    rapportertInntekt = null // Forventes oppdatert av tjenesten
                 ),
                 bekreftelse = BekreftelseDTO(
                     harUttalelse = true,
@@ -111,8 +110,7 @@ class RapportertInntektServiceTest {
             oppgavetypeData = InntektsrapporteringOppgavetypeDataDTO(
                 fraOgMed = LocalDate.now(),
                 tilOgMed = LocalDate.now().plusDays(30),
-                rapportertInntekt = null ,// Forventes oppdatert av tjenesten
-                gjelderDelerAvMåned = false
+                rapportertInntekt = null // Forventes oppdatert av tjenesten
             ),
             bekreftelse = BekreftelseDTO(
                 harUttalelse = true,
