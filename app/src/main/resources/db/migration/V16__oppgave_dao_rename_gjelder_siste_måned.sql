@@ -5,4 +5,4 @@ SET oppgavetype_data = jsonb_set(
         to_jsonb(coalesce(oppgavetype_data ->> 'gjelderSisteMåned', 'false')), -- kopierer verdien
         true -- Oppretter felt hvis det ikke finnes og
                       )
-WHERE oppgavetype_data IS NOT NULL and oppgavetype in ('RAPPORTER_INNTEKT', 'BEKREFT_AVVIK_REGISTERINNTEKT');
+WHERE oppgavetype in ('RAPPORTER_INNTEKT', 'BEKREFT_AVVIK_REGISTERINNTEKT');
