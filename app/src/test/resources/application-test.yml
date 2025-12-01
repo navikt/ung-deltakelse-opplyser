@@ -8,6 +8,7 @@ NAIS_APP_NAME: ung-deltakelse-opplyser
 HOSTNAME: ung-deltakelse-opplyser
 
 PROGRAM_OPPSTART_DATO: 2024-01-01
+FLYWAY_REPAIR_ON_FAIL: false
 
 spring:
   datasource:
