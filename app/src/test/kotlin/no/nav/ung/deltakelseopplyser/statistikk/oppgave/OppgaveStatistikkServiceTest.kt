@@ -208,7 +208,7 @@ class OppgaveStatistikkServiceTest {
                 ),
                 fomDato = LocalDate.now(),
                 tomDato = LocalDate.now().plusWeeks(1),
-                gjelderSisteMåned = false
+                gjelderDelerAvMåned = false
             ),
             status = OppgaveStatus.LØST,
             opprettetDato = opprettetDato,
