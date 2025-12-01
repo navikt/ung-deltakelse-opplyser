@@ -30,6 +30,7 @@
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.6.0</sif-abac-kontrakt.version>
         <google-cloud-bigquery.version>2.55.3</google-cloud-bigquery.version>
+        <prosessering-core.version>2.20250922094930_4bb329c</prosessering-core.version>
     </properties>
     <dependencies>
 
@@ -137,6 +138,12 @@
             <version>${sif-abac-kontrakt.version}</version>
         </dependency>
         <!-- K9 Kontrakter -->
+
+        <dependency>
+            <groupId>no.nav.familie</groupId>
+            <artifactId>prosessering-core</artifactId>
+            <version>${prosessering-core.version}</version>
+        </dependency>
 
         <!-- GraphQL -->
         <dependency>
@@ -418,6 +425,10 @@
     </build>
 
     <repositories>
+        <repository>
+            <id>github-familie-felles</id>
+            <url>https://maven.pkg.github.com/navikt/familie-felles</url>
+        </repository>
         <repository>
             <id>nav-maven-repo</id>
             <url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>

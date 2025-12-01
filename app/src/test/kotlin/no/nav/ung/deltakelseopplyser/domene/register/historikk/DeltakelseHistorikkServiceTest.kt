@@ -3,14 +3,12 @@ package no.nav.ung.deltakelseopplyser.domene.register.historikk
 import com.ninjasquad.springmockk.MockkBean
 import io.hypersistence.utils.hibernate.type.range.Range
 import io.mockk.every
-import io.mockk.justRun
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_FORMATTER
@@ -22,34 +20,19 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
-import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Import
 import org.springframework.kafka.listener.KafkaExceptionLogLevelAware
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
-@SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnableMockOAuth2Server
-@ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ExtendWith(SpringExtension::class)
-@Import(BigQueryTestConfiguration::class)
-class DeltakelseHistorikkServiceTest {
+class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
 
     @Autowired
     private lateinit var kafkaExceptionLogLevelAware: KafkaExceptionLogLevelAware
@@ -75,12 +58,14 @@ class DeltakelseHistorikkServiceTest {
     @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService
 
-    @MockkBean
-    private lateinit var mineSiderService: MineSiderService
+    override val consumerGroupPrefix: String
+        get() = "deltakelse-historikk-service-test"
+
+    override val consumerGroupTopics: List<String>
+        get() = listOf()
 
     @BeforeEach
-    fun setUp() {
-        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
+    fun beforeEach() {
         springTokenValidationContextHolder.mockContext()
     }
 
@@ -184,7 +169,13 @@ class DeltakelseHistorikkServiceTest {
         assertThat(tredjeInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(tredjeInnslag.endretAv).isNotNull()
         assertThat(tredjeInnslag.endretTidspunkt).isNotNull()
-        assertThat(tredjeInnslag.utledEndringsTekst()).isEqualTo("Deltaker har søkt om ytelse den ${formater(søktTidspunkt)}.")
+        assertThat(tredjeInnslag.utledEndringsTekst()).isEqualTo(
+            "Deltaker har søkt om ytelse den ${
+                formater(
+                    søktTidspunkt
+                )
+            }."
+        )
 
         val fjerdeInnslag = innslag.next() // Fjerde innslag er avslutning av deltakelse
         assertThat(fjerdeInnslag.revisjonsnummer).isGreaterThan(tredjeInnslag.revisjonsnummer)
@@ -213,7 +204,13 @@ class DeltakelseHistorikkServiceTest {
         assertThat(femteInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(femteInnslag.endretAv).isNotNull()
         assertThat(femteInnslag.endretTidspunkt).isNotNull()
-        assertThat(femteInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er endret fra ${formater(onsdag)} til ${formater(onsdag.plusWeeks(1))}.")
+        assertThat(femteInnslag.utledEndringsTekst()).isEqualTo(
+            "Sluttdato for deltakelse er endret fra ${
+                formater(
+                    onsdag
+                )
+            } til ${formater(onsdag.plusWeeks(1))}."
+        )
     }
 
     @Test

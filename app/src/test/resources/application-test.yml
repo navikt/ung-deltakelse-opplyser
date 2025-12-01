@@ -14,12 +14,8 @@ spring:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
     hikari:
-      connection-test-query: SELECT 1
-      maximum-pool-size: 2
-      connection-timeout: 30000
       data-source-properties:
         logServerErrorDetail: true
-
 
   flyway:
     enabled: true
@@ -119,3 +115,6 @@ wiremock:
   reset-mappings-after-each-test: true
   server:
     port: 0 # random port
+
+prosessering:
+  rolle: 7ac42b69-14af-479e-9e9c-b2235bea9863
