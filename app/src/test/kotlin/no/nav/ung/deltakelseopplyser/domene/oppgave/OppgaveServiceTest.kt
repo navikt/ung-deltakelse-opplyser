@@ -370,7 +370,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                         RegisterInntektYtelseDTO(2000, YtelseType.PLEIEPENGER_SYKT_BARN),
                     )
                 ),
-                gjelderSisteMåned = false
+                gjelderDelerAvMåned = false
             )
         )
     }

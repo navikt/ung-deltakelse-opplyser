@@ -75,14 +75,15 @@ class OppgaveMapperService(
             fomDato,
             tomDato,
             registerinntekt.tilDTO(),
-            gjelderSisteMåned
+            gjelderDelerAvMåned
         )
 
         is InntektsrapporteringOppgavetypeDataDAO -> {
             InntektsrapporteringOppgavetypeDataDTO(
                 fraOgMed = this.fomDato,
                 tilOgMed = this.tomDato,
-                rapportertInntekt = null
+                rapportertInntekt = null,
+                gjelderDelerAvMåned = this.gjelderDelerAvMåned
             )
         }
 
