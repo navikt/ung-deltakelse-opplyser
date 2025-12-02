@@ -36,6 +36,9 @@ class DeltakelseDAO(
     @Column(name = "periode", columnDefinition = "daterange")
     private var periode: Range<LocalDate>,
 
+    @Column(name = "er_slettet")
+    var erSlettet: Boolean = false,
+
     @Column(name = "søkt_tidspunkt")
     var søktTidspunkt: ZonedDateTime? = null,
 ) : BaseAuditEntity() {
@@ -60,6 +63,10 @@ class DeltakelseDAO(
 
     fun markerSomHarSøkt() {
         søktTidspunkt = ZonedDateTime.now(ZoneOffset.UTC)
+    }
+
+    fun markerSomSlettet() {
+        erSlettet = true
     }
 }
 

@@ -28,6 +28,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.Innte
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.FjernetPeriodeOppgaveDTO
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -256,6 +257,49 @@ class OppgaveUngSakController(
         )
     }
 
+    @PostMapping("/opprett/fjernet-periode", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Oppretter oppgave for fjernet periode")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun opprettOppgaveForFjernetPeriode(@RequestBody fjernetPeriodeOppgaveDTO: FjernetPeriodeOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Oppretter oppgave for fjernet periode med referanse ${fjernetPeriodeOppgaveDTO.oppgaveReferanse}")
+        val deltaker = forsikreEksistererIProgram(fjernetPeriodeOppgaveDTO.deltakerIdent)
+
+        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(fjernetPeriodeOppgaveDTO.deltakerIdent)
+
+        deltakersOppgaver.stream()
+            .anyMatch {
+                        (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST) ||
+                        (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST) ||
+                        (it.oppgavetype == Oppgavetype.BEKREFT_FJERNET_PERIODE && it.status == OppgaveStatus.ULØST)
+            }
+            .also { harUløstEndretPeriodeOppgave ->
+                if (harUløstEndretPeriodeOppgave) {
+                    logger.error("Det finnes allerede en uløst oppgave for endring i periode")
+                    throw ErrorResponseException(
+                        HttpStatus.CONFLICT,
+                        ProblemDetail.forStatusAndDetail(
+                            HttpStatus.CONFLICT,
+                            "Det finnes allerede en uløst oppgave for endring i periode"
+                        ),
+                        null
+                    )
+                }
+            }
+
+        return oppgaveService.opprettOppgave(
+            deltaker = deltaker,
+            frist = ZonedDateTime.of(fjernetPeriodeOppgaveDTO.frist, ZoneOffset.UTC),
+            oppgaveReferanse = fjernetPeriodeOppgaveDTO.oppgaveReferanse,
+            oppgaveTypeDataDAO = FjernetPeriodeOppgaveDataDAO(
+                forrigeStartdato = fjernetPeriodeOppgaveDTO.forrigeStartdato,
+                forrigeSluttdato = fjernetPeriodeOppgaveDTO.forrigeSluttdato
+            )
+        )
+    }
+
+
     @PostMapping("/opprett/inntektsrapportering", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for inntektsrapportering")
     @ResponseStatus(HttpStatus.OK)
@@ -331,8 +375,7 @@ class OppgaveUngSakController(
                 it.oppgavetype == Oppgavetype.SØK_YTELSE
             }
 
-        if (søkYtelseOppgave == null)
-        {
+        if (søkYtelseOppgave == null) {
             throw ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatusAndDetail(

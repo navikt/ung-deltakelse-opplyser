@@ -4,6 +4,7 @@ import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretSluttdatoBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretStartdatoBekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.FjernetPeriodeBekreftelse
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
@@ -79,6 +80,7 @@ class OppgaveService(
             is EndretSluttdatoOppgaveDataDAO -> Oppgavetype.BEKREFT_ENDRET_SLUTTDATO
             is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
             is SøkYtelseOppgavetypeDataDAO -> Oppgavetype.SØK_YTELSE
+            is FjernetPeriodeOppgaveDataDAO -> Oppgavetype.BEKREFT_FJERNET_PERIODE
         }
 
         logger.info("Oppretter ny oppgave av oppgavetype $oppgavetype med referanse $oppgaveReferanse")
@@ -252,7 +254,7 @@ class OppgaveService(
         Oppgavetype.BEKREFT_ENDRET_STARTDATO ->
             oppgaveBekreftelse.getBekreftelse() as? EndretStartdatoBekreftelse
                 ?: throw IllegalStateException(
-                    "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
+                    "For oppgavetype=${oppgave.oppgavetype} forventet EndretStartdatoBekreftelse, " +
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
 
@@ -260,9 +262,17 @@ class OppgaveService(
         Oppgavetype.BEKREFT_ENDRET_SLUTTDATO ->
             oppgaveBekreftelse.getBekreftelse() as? EndretSluttdatoBekreftelse
                 ?: throw IllegalStateException(
-                    "For oppgavetype=${oppgave.oppgavetype} forventet EndretProgramperiodeBekreftelse, " +
+                    "For oppgavetype=${oppgave.oppgavetype} forventet EndretSluttdatoBekreftelse, " +
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
+
+        Oppgavetype.BEKREFT_FJERNET_PERIODE ->
+            oppgaveBekreftelse.getBekreftelse() as? FjernetPeriodeBekreftelse
+                ?: throw IllegalStateException(
+                    "For oppgavetype=${oppgave.oppgavetype} forventet FjernetPeriodeBekreftelse, " +
+                            "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
+                )
+
 
         else -> throw IllegalStateException("Uventet oppgavetype=${oppgave.oppgavetype}")
     }
