@@ -104,7 +104,7 @@
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0",
 
 
-    "SLETT_SOKT_DELTAKELSE_ENABLED": false
+    "SLETT_SOKT_DELTAKELSE_ENABLED": false,
 
     "FLYWAY_REPAIR_ON_FAIL": false
 
