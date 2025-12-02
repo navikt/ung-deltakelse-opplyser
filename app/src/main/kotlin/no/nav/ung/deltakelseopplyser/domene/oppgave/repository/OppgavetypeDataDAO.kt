@@ -5,9 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import no.nav.tms.varsel.action.Tekst
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.RegisterinntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.YtelseRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.utils.DateUtils.måned
 import java.time.LocalDate
@@ -132,7 +129,7 @@ data class KontrollerRegisterInntektOppgaveTypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
 
-    @JsonProperty(defaultValue = "n/a") val gjelderSisteMåned: Boolean,
+    @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
 ) : OppgavetypeDataDAO()
 
 data class SøkYtelseOppgavetypeDataDAO(
@@ -152,7 +149,9 @@ data class InntektsrapporteringOppgavetypeDataDAO(
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
-) : OppgavetypeDataDAO()
+
+    @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
+    ) : OppgavetypeDataDAO()
 
 data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
