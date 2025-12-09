@@ -362,5 +362,36 @@ class UngdomsprogramregisterServiceTest {
         verify(exactly = 1) { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
     }
 
+    @Test
+    fun `Deltaker blir fjernet fra programmet_etter_søkt_ytelse`() {
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        val deltakerDTO = DeltakerDTO(deltakerIdent = deltakerIdent)
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = LocalDate.now(),
+            tilOgMed = null
+        )
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT),
+        )
+
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+        ungdomsprogramregisterService.markerSomHarSøkt(innmelding.id!!)
+
+        val deltakerDAO = deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
+        assertThat(deltakerDAO).isNotNull
+        assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
+
+        val utmelding = ungdomsprogramregisterService.fjernFraProgram(deltakerDAO!!)
+        assertTrue(utmelding)
+
+        val deltakelser = ungdomsprogramregisterService.hentIkkeSlettetForDeltakerId(deltakerDAO.id)
+        assertThat(deltakelser).isEmpty()
+    }
+
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
 }
