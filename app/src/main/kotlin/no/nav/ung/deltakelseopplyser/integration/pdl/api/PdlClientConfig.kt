@@ -22,6 +22,8 @@ import reactor.core.publisher.Mono
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientRequest
 import reactor.netty.http.client.HttpClientResponse
+import reactor.util.retry.Retry
+import java.time.Duration
 
 @Configuration
 class PdlClientConfig(
@@ -44,6 +46,8 @@ class PdlClientConfig(
             .clientConnector(
                 ReactorClientHttpConnector(
                     HttpClient.create()
+                        .keepAlive(false)
+                        .responseTimeout(Duration.ofSeconds(10))
                         .doOnRequest { request: HttpClientRequest, _ ->
                             logger.info("{} {} {}", request.version(), request.method(), request.resourceUrl())
                         }
@@ -58,6 +62,13 @@ class PdlClientConfig(
                         }
                 )
             )
+            .filter { request, next ->
+                next.exchange(request)
+                    .retryWhen(
+                        Retry.max(3)
+                            .filter { it is java.util.concurrent.TimeoutException }
+                    )
+            }
             .filter(exchangeBearerTokenFilter())
             .filter(requestLoggerInterceptor(logger))
             .filter(requestTracingInterceptor())
