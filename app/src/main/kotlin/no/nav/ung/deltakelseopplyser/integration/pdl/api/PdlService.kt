@@ -11,7 +11,6 @@ import no.nav.pdl.generated.hentident.Identliste
 import no.nav.pdl.generated.hentperson.Person
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import kotlin.math.log
 
 @Service
 class PdlService(
