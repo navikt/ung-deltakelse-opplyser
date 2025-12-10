@@ -11,6 +11,7 @@ import no.nav.pdl.generated.hentident.Identliste
 import no.nav.pdl.generated.hentperson.Person
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import kotlin.math.log
 
 @Service
 class PdlService(
@@ -41,7 +42,9 @@ class PdlService(
     }
 
     fun hentIdenter(ident: String): Identliste = runBlocking {
+        logger.info("Henter identer fra PDL.")
         val response = pdlClient.execute(HentIdent(HentIdent.Variables(ident)))
+        logger.info("Ferdig å hente identer fra PDL.")
 
         if (!response.extensions.isNullOrEmpty()) logger.info("PDL response extensions: ${response.extensions}")
 
