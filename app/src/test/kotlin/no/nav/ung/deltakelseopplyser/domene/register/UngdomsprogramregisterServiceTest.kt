@@ -386,11 +386,12 @@ class UngdomsprogramregisterServiceTest {
         assertThat(deltakerDAO).isNotNull
         assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
 
-        val utmelding = ungdomsprogramregisterService.fjernFraProgram(deltakerDAO!!)
+        assertThat(ungdomsprogramregisterService.hentIkkeSlettetForDeltakerId(deltakerDAO!!.id).isNotEmpty())
+
+        val utmelding = ungdomsprogramregisterService.fjernFraProgram(deltakerDAO)
         assertTrue(utmelding)
 
-        val deltakelser = ungdomsprogramregisterService.hentIkkeSlettetForDeltakerId(deltakerDAO.id)
-        assertThat(deltakelser).isEmpty()
+        assertThat(ungdomsprogramregisterService.hentIkkeSlettetForDeltakerId(deltakerDAO.id).isEmpty())
     }
 
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
