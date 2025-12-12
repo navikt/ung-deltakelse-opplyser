@@ -28,9 +28,6 @@ updates:
     registries:
       - k9-felles
     groups:
-      nav-scurity-deps:
-        patterns:
-          - "*no.nav.security*"
       nav-deps:
         patterns:
           - "*no.nav*"
