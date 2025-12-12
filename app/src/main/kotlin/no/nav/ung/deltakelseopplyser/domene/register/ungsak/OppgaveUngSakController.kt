@@ -270,7 +270,7 @@ class OppgaveUngSakController(
         val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
 
         deltakersOppgaver.stream()
-            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
+            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_PERIODE && it.status == OppgaveStatus.ULØST }
             .also { harUløstEndreStartdatoOppgave ->
                 if (harUløstEndreStartdatoOppgave) {
                     logger.error("Det finnes allerede en uløst oppgave for endret periode")
