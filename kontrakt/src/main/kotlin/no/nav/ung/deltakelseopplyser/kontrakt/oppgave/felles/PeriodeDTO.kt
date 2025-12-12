@@ -9,5 +9,5 @@ data class PeriodeDTO (
     @JsonProperty("fom") val fom: LocalDate,
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty("tom")val tom: LocalDate? = null
+    @JsonProperty("tom")val tom: LocalDate?
 )

@@ -122,7 +122,7 @@ data class FjernetPeriodeOppgaveDataDAO(
 data class EndretPeriodeOppgaveDataDAO(
     @JsonProperty("nyPeriode") val nyPeriode: PeriodeDTO?,
 
-    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO? = null,
+    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
 
  ) : OppgavetypeDataDAO()
 

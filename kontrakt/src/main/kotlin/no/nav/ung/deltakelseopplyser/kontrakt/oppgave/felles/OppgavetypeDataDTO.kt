@@ -25,7 +25,7 @@ data class FjernetPeriodeDataDTO(
 
 data class EndretPeriodeDataDTO(
     @JsonProperty("nyPeriode") val nyPeriode: PeriodeDTO?,
-    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO? = null,
+    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
 ) : OppgavetypeDataDTO
 
 data class KontrollerRegisterinntektOppgavetypeDataDTO(

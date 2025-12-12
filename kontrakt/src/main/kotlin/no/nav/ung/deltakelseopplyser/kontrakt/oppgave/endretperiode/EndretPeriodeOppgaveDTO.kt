@@ -10,5 +10,5 @@ data class EndretPeriodeOppgaveDTO(
     @JsonProperty("oppgaveReferanse") val oppgaveReferanse: UUID,
     @JsonProperty("frist") val frist: LocalDateTime,
     @JsonProperty("nyPeriode") val nyPeriode: PeriodeDTO?,
-    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO? = null,
+    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
 )
