@@ -6,8 +6,8 @@ import java.time.LocalDate
 
 data class PeriodeDTO (
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty("startdato") val fom: LocalDate? = null,
+    @JsonProperty("fom") val fom: LocalDate,
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty("startdato")val tom: LocalDate? = null
+    @JsonProperty("tom")val tom: LocalDate? = null
 )
