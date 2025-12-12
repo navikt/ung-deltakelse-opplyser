@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.oppgave
 
 import no.nav.k9.oppgave.bekreftelse.Bekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.inntekt.InntektBekreftelse
+import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretPeriodeBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretSluttdatoBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.EndretStartdatoBekreftelse
 import no.nav.k9.oppgave.bekreftelse.ung.periodeendring.FjernetPeriodeBekreftelse
@@ -78,6 +79,7 @@ class OppgaveService(
             is KontrollerRegisterInntektOppgaveTypeDataDAO -> Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT
             is EndretStartdatoOppgaveDataDAO -> Oppgavetype.BEKREFT_ENDRET_STARTDATO
             is EndretSluttdatoOppgaveDataDAO -> Oppgavetype.BEKREFT_ENDRET_SLUTTDATO
+            is EndretPeriodeOppgaveDataDAO -> Oppgavetype.BEKREFT_ENDRET_PERIODE
             is InntektsrapporteringOppgavetypeDataDAO -> Oppgavetype.RAPPORTER_INNTEKT
             is SøkYtelseOppgavetypeDataDAO -> Oppgavetype.SØK_YTELSE
             is FjernetPeriodeOppgaveDataDAO -> Oppgavetype.BEKREFT_FJERNET_PERIODE
@@ -258,11 +260,17 @@ class OppgaveService(
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
 
-
         Oppgavetype.BEKREFT_ENDRET_SLUTTDATO ->
             oppgaveBekreftelse.getBekreftelse() as? EndretSluttdatoBekreftelse
                 ?: throw IllegalStateException(
                     "For oppgavetype=${oppgave.oppgavetype} forventet EndretSluttdatoBekreftelse, " +
+                            "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
+                )
+
+        Oppgavetype.BEKREFT_ENDRET_PERIODE ->
+            oppgaveBekreftelse.getBekreftelse() as? EndretPeriodeBekreftelse
+                ?: throw IllegalStateException(
+                    "For oppgavetype=${oppgave.oppgavetype} forventet EndretPeriodeBekreftelse, " +
                             "men fikk ${oppgaveBekreftelse.getBekreftelse<Bekreftelse>()::class.simpleName}"
                 )
 
