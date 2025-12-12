@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
 import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretPeriodeOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.FjernetPeriodeOppgaveDataDAO
@@ -14,6 +15,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgave
 import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.ArbeidOgFrilansRegisterInntektDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretPeriodeDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretSluttdatoDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndretStartdatoDataDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.FjernetPeriodeDataDTO
@@ -77,6 +79,11 @@ class OppgaveMapperService(
         is FjernetPeriodeOppgaveDataDAO -> FjernetPeriodeDataDTO(
             forrigeStartdato = this.forrigeStartdato,
             forrigeSluttdato = this.forrigeSluttdato
+        )
+
+        is EndretPeriodeOppgaveDataDAO -> EndretPeriodeDataDTO(
+            nyPeriode = this.nyPeriode,
+            forrigePeriode = this.forrigePeriode
         )
 
         is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(

@@ -20,6 +20,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.endretperiode.EndretPeriodeOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -253,6 +254,44 @@ class OppgaveUngSakController(
             oppgaveTypeDataDAO = EndretSluttdatoOppgaveDataDAO(
                 nySluttdato = endretSluttdatoOppgaveDTO.nySluttdato,
                 forrigeSluttdato = endretSluttdatoOppgaveDTO.forrigeSluttdato
+            )
+        )
+    }
+
+    @PostMapping("/opprett/endret-periode", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Oppretter oppgave for endret periode")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun opprettOppgaveForEndretPeriode(@RequestBody endretPeriodeOppgaveDTO: EndretPeriodeOppgaveDTO): OppgaveDTO {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Oppretter oppgave for endret startdato med referanse ${endretPeriodeOppgaveDTO.oppgaveReferanse}")
+        val deltaker = forsikreEksistererIProgram(endretPeriodeOppgaveDTO.deltakerIdent)
+
+        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(endretPeriodeOppgaveDTO.deltakerIdent)
+
+        deltakersOppgaver.stream()
+            .anyMatch { it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST }
+            .also { harUløstEndreStartdatoOppgave ->
+                if (harUløstEndreStartdatoOppgave) {
+                    logger.error("Det finnes allerede en uløst oppgave for endret periode")
+                    throw ErrorResponseException(
+                        HttpStatus.CONFLICT,
+                        ProblemDetail.forStatusAndDetail(
+                            HttpStatus.CONFLICT,
+                            "Det finnes allerede en uløst oppgave for endret periode"
+                        ),
+                        null
+                    )
+                }
+            }
+
+        return oppgaveService.opprettOppgave(
+            deltaker = deltaker,
+            frist = ZonedDateTime.of(endretPeriodeOppgaveDTO.frist, ZoneOffset.UTC),
+            oppgaveReferanse = endretPeriodeOppgaveDTO.oppgaveReferanse,
+            oppgaveTypeDataDAO = EndretPeriodeOppgaveDataDAO(
+                nyPeriode = endretPeriodeOppgaveDTO.nyPeriode,
+                forrigePeriode = endretPeriodeOppgaveDTO.forrigePeriode
             )
         )
     }
