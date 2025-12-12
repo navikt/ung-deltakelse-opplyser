@@ -28,9 +28,18 @@ updates:
     registries:
       - k9-felles
     groups:
-      maven:
+      nav-deps:
+        patterns:
+          - "*no.nav*"
+      spring-deps:
+        patterns:
+          - "*spring*"
+      annet-deps:
         patterns:
           - "*"
+        exclude-patterns:
+          - "*spring*"
+          - "*no.nav*"
 
   - package-ecosystem: docker
     directory: "/"
