@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import no.nav.tms.varsel.action.Tekst
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.PeriodeDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.utils.DateUtils.måned
 import java.time.LocalDate
@@ -83,6 +84,14 @@ sealed class OppgavetypeDataDAO {
                 default = true
             )
         )
+
+        is EndretPeriodeOppgaveDataDAO -> listOf(
+            Tekst(
+                tekst = "Se og gi tilbakemelding på endret periode i ungdomsprogrammet",
+                spraakkode = "nb",
+                default = true
+            )
+        )
     }
 }
 
@@ -110,6 +119,12 @@ data class FjernetPeriodeOppgaveDataDAO(
     @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
 ) : OppgavetypeDataDAO()
 
+data class EndretPeriodeOppgaveDataDAO(
+    @JsonProperty("nyPeriode") val nyPeriode: PeriodeDTO?,
+
+    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
+
+ ) : OppgavetypeDataDAO()
 
 data class ProgramperiodeDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
