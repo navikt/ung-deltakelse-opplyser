@@ -31,6 +31,11 @@ data class EndretPeriodeDataDTO(
     @JsonProperty("endringer") val endringer: Set<PeriodeEndringType>,
 ) : OppgavetypeDataDTO
 
+data class EndretPeriodeDataDTO(
+    @JsonProperty("nyPeriode") val nyPeriode: PeriodeDTO?,
+    @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
+) : OppgavetypeDataDTO
+
 data class KontrollerRegisterinntektOppgavetypeDataDTO(
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate,
