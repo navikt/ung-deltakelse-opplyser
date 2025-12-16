@@ -11,4 +11,6 @@ data class EndretPeriodeOppgaveDTO(
     @JsonProperty("frist") val frist: LocalDateTime,
     @JsonProperty("nyPeriode") val nyPeriode: PeriodeDTO?,
     @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
-)
+    @JsonProperty("endringer") val endringer: Set<PeriodeEndringType>,
+
+    )

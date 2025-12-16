@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import no.nav.tms.varsel.action.Tekst
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.endretperiode.PeriodeEndringType
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.PeriodeDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.utils.DateUtils.måned
@@ -124,7 +125,9 @@ data class EndretPeriodeOppgaveDataDAO(
 
     @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
 
- ) : OppgavetypeDataDAO()
+    @JsonProperty("endringer") val endringer: Set<PeriodeEndringType>,
+
+    ) : OppgavetypeDataDAO()
 
 data class ProgramperiodeDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
