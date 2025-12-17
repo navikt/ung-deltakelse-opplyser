@@ -291,7 +291,8 @@ class OppgaveUngSakController(
             oppgaveReferanse = endretPeriodeOppgaveDTO.oppgaveReferanse,
             oppgaveTypeDataDAO = EndretPeriodeOppgaveDataDAO(
                 nyPeriode = endretPeriodeOppgaveDTO.nyPeriode,
-                forrigePeriode = endretPeriodeOppgaveDTO.forrigePeriode
+                forrigePeriode = endretPeriodeOppgaveDTO.forrigePeriode,
+                endringer = endretPeriodeOppgaveDTO.endringer
             )
         )
     }

@@ -83,7 +83,8 @@ class OppgaveMapperService(
 
         is EndretPeriodeOppgaveDataDAO -> EndretPeriodeDataDTO(
             nyPeriode = this.nyPeriode,
-            forrigePeriode = this.forrigePeriode
+            forrigePeriode = this.forrigePeriode,
+            endringer = this.endringer
         )
 
         is KontrollerRegisterInntektOppgaveTypeDataDAO -> KontrollerRegisterinntektOppgavetypeDataDTO(

@@ -2,7 +2,9 @@ package no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.RapportertInntektPeriodeinfoDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.endretperiode.PeriodeEndringType
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
+import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import java.time.LocalDate
 
 @OppgavetypeDataJsonType
@@ -21,12 +23,14 @@ data class EndretSluttdatoDataDTO(
 data class FjernetPeriodeDataDTO(
     @JsonProperty("forrigeStartdato") val forrigeStartdato: LocalDate,
     @JsonProperty("forrigeSluttdato") val forrigeSluttdato: LocalDate? = null,
-) : OppgavetypeDataDTO
+    ) : OppgavetypeDataDTO
 
 data class EndretPeriodeDataDTO(
     @JsonProperty("nyPeriode") val nyPeriode: PeriodeDTO?,
     @JsonProperty("forrigePeriode") val forrigePeriode: PeriodeDTO?,
+    @JsonProperty("endringer") val endringer: Set<PeriodeEndringType>,
 ) : OppgavetypeDataDTO
+
 
 data class KontrollerRegisterinntektOppgavetypeDataDTO(
     @JsonProperty("fraOgMed") val fraOgMed: LocalDate,
