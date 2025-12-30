@@ -60,7 +60,12 @@ class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
     ): ZonedDateTime? {
         this.forsikreDatasetEksisterer(dataset)
         val table = bigQuery.getTable(TableId.of(dataset, tableDef.tabellNavn))
-        return table?.lastModifiedTime?.let {
+        if (table == null) {
+            logger.warn("Fant ikke tabell ${tableDef.tabellNavn} i datasettet $dataset, kan derfor ikke finne siste oppdateringstid.")
+            return null
+        }
+        logger.info("Fant tabell ${tableDef.tabellNavn} i datasettet $dataset med siste oppdateringstid ${table.lastModifiedTime}")
+        return table.lastModifiedTime?.let {
             Instant.ofEpochMilli(it).atZone(ZoneId.of("Europe/Oslo"))
         }
     }

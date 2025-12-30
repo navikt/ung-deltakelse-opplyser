@@ -31,6 +31,7 @@ class BigQueryMetrikkJobb(
         const val BIG_QUERY_DATASET = "ung_deltakelse_opplyser_statistikk_dataset"
 
         private const val CRON_JOBB_HVER_TIME = "0 0 * * * *" // Hver time
+        private const val CRON_JOBB_HVER_HALVTIME = "0 0/30 * * * *" // Hver halvtime
     }
 
     /**
@@ -50,14 +51,20 @@ class BigQueryMetrikkJobb(
     /**
      * Publiserer statistikk for inntektsraportering.
      */
-    @Scheduled(cron = CRON_JOBB_HVER_TIME)
+    @Scheduled(cron = CRON_JOBB_HVER_HALVTIME)
     fun publiserRapporterInntektStatistikk() {
         val sisteOppdateringAvTabell =
             bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell)
                 ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
 
+        log.info("Henter oppgaver for rapporter inntekt som er oppdater etter $sisteOppdateringAvTabell")
+
 
         val endredeOppgaver = oppgaveStatistikkService.oppgaverForRapporterInntektMedEndringSidenSisteKjøring(sisteOppdateringAvTabell)
+        if (endredeOppgaver.isEmpty()) {
+            log.info("Ingen endringer siden siste kjøring for tabell ${RapporterInntektOppgaveTabell.tabellNavn}. Hopper over publisering.")
+            return
+        }
         bigQueryClient.publish(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell, endredeOppgaver)
             .also {
                 loggPublisering(RapporterInntektOppgaveTabell.tabellNavn, endredeOppgaver.size)
