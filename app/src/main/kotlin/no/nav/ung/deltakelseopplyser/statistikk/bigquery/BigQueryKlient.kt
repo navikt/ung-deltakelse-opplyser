@@ -31,12 +31,11 @@ interface BigQueryClient {
 }
 
 @Service
-class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
+class BigQueryKlient(private val bigQuery: BigQuery) : BigQueryClient {
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(BigQueryKlient::class.java)
     }
-
 
 
     override fun <T> publish(
@@ -61,10 +60,9 @@ class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
         this.forsikreDatasetEksisterer(dataset)
         val table = bigQuery.getTable(TableId.of(dataset, tableDef.tabellNavn))
         if (table == null) {
-            logger.warn("Fant ikke tabell ${tableDef.tabellNavn} i datasettet $dataset, kan derfor ikke finne siste oppdateringstid.")
+            logger.warn("Kunne ikke hente siste oppdateringstid på tabell: ${tableDef.tabellNavn} fordi tabellen ikke ble funnet i datasettet $dataset.")
             return null
         }
-        logger.info("Fant tabell ${tableDef.tabellNavn} i datasettet $dataset med siste oppdateringstid ${table.lastModifiedTime}")
         return table.lastModifiedTime?.let {
             Instant.ofEpochMilli(it).atZone(ZoneId.of("Europe/Oslo"))
         }

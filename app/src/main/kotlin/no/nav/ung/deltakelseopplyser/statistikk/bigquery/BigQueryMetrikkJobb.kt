@@ -6,9 +6,10 @@ import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdoms
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.DeltakerStatistikkService
-import no.nav.ung.deltakelseopplyser.statistikk.oppgave.RapporterInntektOppgaveTabell
+import no.nav.ung.deltakelseopplyser.statistikk.oppgave.BekreftAvvikOppgaveTabell
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
+import no.nav.ung.deltakelseopplyser.statistikk.oppgave.RapporterInntektOppgaveTabell
 import no.nav.ung.kodeverk.uttak.Tid
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -31,7 +32,6 @@ class BigQueryMetrikkJobb(
         const val BIG_QUERY_DATASET = "ung_deltakelse_opplyser_statistikk_dataset"
 
         private const val CRON_JOBB_HVER_TIME = "0 0 * * * *" // Hver time
-        private const val CRON_JOBB_HVER_HALVTIME = "0 0/30 * * * *" // Hver halvtime
     }
 
     /**
@@ -51,16 +51,17 @@ class BigQueryMetrikkJobb(
     /**
      * Publiserer statistikk for inntektsraportering.
      */
-    @Scheduled(cron = CRON_JOBB_HVER_HALVTIME)
+    @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserRapporterInntektStatistikk() {
         val sisteOppdateringAvTabell =
             bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell)
                 ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
 
-        log.info("Henter oppgaver for rapporter inntekt som er oppdater etter $sisteOppdateringAvTabell")
+        log.info("Henter oppgaver for rapporter inntekt som er oppdatert etter ${sisteOppdateringAvTabell}")
 
 
-        val endredeOppgaver = oppgaveStatistikkService.oppgaverForRapporterInntektMedEndringSidenSisteKjøring(sisteOppdateringAvTabell)
+        val endredeOppgaver =
+            oppgaveStatistikkService.oppgaverForRapporterInntektMedEndringSidenSisteKjøring(sisteOppdateringAvTabell)
         if (endredeOppgaver.isEmpty()) {
             log.info("Ingen endringer siden siste kjøring for tabell ${RapporterInntektOppgaveTabell.tabellNavn}. Hopper over publisering.")
             return
@@ -68,6 +69,30 @@ class BigQueryMetrikkJobb(
         bigQueryClient.publish(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell, endredeOppgaver)
             .also {
                 loggPublisering(RapporterInntektOppgaveTabell.tabellNavn, endredeOppgaver.size)
+            }
+    }
+
+
+    /**
+     * Publiserer statistikk for avvik i inntektsrapportering.
+     */
+    @Scheduled(cron = CRON_JOBB_HVER_TIME)
+    fun publiserBekreftAvvikStatistikk() {
+        val sisteOppdateringAvTabell =
+            bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, BekreftAvvikOppgaveTabell)
+                ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
+
+        log.info("Henter oppgaver for bekreft avvik som er oppdatert etter $sisteOppdateringAvTabell")
+
+        val endredeOppgaver =
+            oppgaveStatistikkService.oppgaverForBekreftAvvikMedEndringSidenSisteKjøring(sisteOppdateringAvTabell)
+        if (endredeOppgaver.isEmpty()) {
+            log.info("Ingen endringer siden siste kjøring for tabell ${BekreftAvvikOppgaveTabell.tabellNavn}. Hopper over publisering.")
+            return
+        }
+        bigQueryClient.publish(BIG_QUERY_DATASET, BekreftAvvikOppgaveTabell, endredeOppgaver)
+            .also {
+                loggPublisering(BekreftAvvikOppgaveTabell.tabellNavn, endredeOppgaver.size)
             }
     }
 
