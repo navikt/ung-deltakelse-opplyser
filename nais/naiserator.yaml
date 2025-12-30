@@ -105,6 +105,8 @@ spec:
         databases:
           - name: {{ database.name }}
             envVarPrefix: {{ database.envVarPrefix }}
+        pointInTimeRecovery: true
+        retainedBackups: 30
     bigQueryDatasets:
       {{#each bigQueryDatasets}}
       - name: {{ name }}
