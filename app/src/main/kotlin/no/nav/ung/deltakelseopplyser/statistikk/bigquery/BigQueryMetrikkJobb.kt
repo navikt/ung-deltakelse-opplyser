@@ -6,12 +6,16 @@ import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdoms
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.DeltakerStatistikkService
+import no.nav.ung.deltakelseopplyser.statistikk.oppgave.RapporterInntektOppgaveTabell
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
+import no.nav.ung.kodeverk.uttak.Tid
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @Service
 @Profile(value = ["prod-gcp", "dev-gcp"])
@@ -41,6 +45,23 @@ class BigQueryMetrikkJobb(
                 oppgaverMedSvarEllerEldreEnn14Dager.size
             )
         }
+    }
+
+    /**
+     * Publiserer statistikk for inntektsraportering.
+     */
+    @Scheduled(cron = CRON_JOBB_HVER_TIME)
+    fun publiserRapporterInntektStatistikk() {
+        val sisteOppdateringAvTabell =
+            bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell)
+                ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
+
+
+        val endredeOppgaver = oppgaveStatistikkService.oppgaverForRapporterInntektMedEndringSidenSisteKjøring(sisteOppdateringAvTabell)
+        bigQueryClient.publish(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell, endredeOppgaver)
+            .also {
+                loggPublisering(RapporterInntektOppgaveTabell.tabellNavn, endredeOppgaver.size)
+            }
     }
 
     /**

@@ -12,6 +12,9 @@ import com.google.cloud.bigquery.TableInfo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 
 interface BigQueryClient {
@@ -20,6 +23,11 @@ interface BigQueryClient {
         tableDef: BigQueryTabell<T>,
         records: Collection<T>
     )
+
+    fun <T> finnSisteOppdateringAvTabell(
+        dataset: String,
+        tableDef: BigQueryTabell<T>,
+    ): ZonedDateTime?
 }
 
 @Service
@@ -46,6 +54,16 @@ class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
         håndterResponse(insertAllResponse, request, tableDef, dataset)
     }
 
+    override fun <T> finnSisteOppdateringAvTabell(
+        dataset: String,
+        tableDef: BigQueryTabell<T>
+    ): ZonedDateTime? {
+        this.forsikreDatasetEksisterer(dataset)
+        val table = bigQuery.getTable(TableId.of(dataset, tableDef.tabellNavn))
+        return table?.lastModifiedTime?.let {
+            Instant.ofEpochMilli(it).atZone(ZoneId.of("Europe/Oslo"))
+        }
+    }
 
     private fun <T> finnTabell(tableDef: BigQueryTabell<T>, dataset: String): TableId {
         val table = bigQuery.getTable(TableId.of(dataset, tableDef.tabellNavn))
