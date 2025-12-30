@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.statistikk.oppgave
 
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.springframework.stereotype.Service
@@ -22,6 +23,36 @@ class OppgaveStatistikkService(val oppgaveStatistikkRepository: OppgaveStatistik
 
         return records
     }
+
+    fun oppgaverForRapporterInntektMedEndringSidenSisteKjøring(sisteKjøringTidspunkt: ZonedDateTime): List<OppgaveRapporterInntektRecord> {
+        val relevanteOppgaver =
+            oppgaveStatistikkRepository.finnOppgaverForInntektsRapporteringMedEndringSidenSisteKjøring(
+                sisteKjøringTidspunkt
+            )
+
+        val records = ArrayList<OppgaveRapporterInntektRecord>()
+
+        finnSisteEndretTidspunkt(relevanteOppgaver).forEach(records::add)
+
+        return records
+    }
+
+    private fun finnSisteEndretTidspunkt(relevanteOppgaver: List<OppgaveDAO>): List<OppgaveRapporterInntektRecord> {
+        return relevanteOppgaver.mapNotNull {
+            val sistEndret = listOfNotNull(it.opprettetDato, it.løstDato, it.lukketDato).maxOrNull()!!
+            val data = it.oppgavetypeDataDAO
+            (data as? InntektsrapporteringOppgavetypeDataDAO)?.let { d ->
+                OppgaveRapporterInntektRecord(
+                    opprettetTidspunkt = sistEndret,
+                    oppgaveStatus = it.status,
+                    fom = d.fomDato,
+                    tom = d.tomDato,
+                    gjelderDelerAvPerioden = d.gjelderDelerAvMåned
+                )
+            }
+        }
+    }
+
 
     private fun finnOppgaverSomIkkeErLøstEllerLukketPåOver14Dager(relevanteOppgaver: List<OppgaveDAO>) =
         relevanteOppgaver.stream().filter { it.lukketDato == null && it.løstDato == null }
