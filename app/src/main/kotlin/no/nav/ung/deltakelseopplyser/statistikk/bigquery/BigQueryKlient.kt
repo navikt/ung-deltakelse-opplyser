@@ -58,6 +58,7 @@ class BigQueryKlient(private val bigQuery: BigQuery): BigQueryClient {
         dataset: String,
         tableDef: BigQueryTabell<T>
     ): ZonedDateTime? {
+        this.forsikreDatasetEksisterer(dataset)
         val table = bigQuery.getTable(TableId.of(dataset, tableDef.tabellNavn))
         return table?.lastModifiedTime?.let {
             Instant.ofEpochMilli(it).atZone(ZoneId.of("Europe/Oslo"))
