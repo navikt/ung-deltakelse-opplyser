@@ -1,7 +1,9 @@
 package no.nav.ung.deltakelseopplyser.statistikk.oppgave
 
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.InntektsrapporteringOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.RegisterinntektDAO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.springframework.stereotype.Service
 import java.time.ZonedDateTime
@@ -24,20 +26,34 @@ class OppgaveStatistikkService(val oppgaveStatistikkRepository: OppgaveStatistik
         return records
     }
 
-    fun oppgaverForRapporterInntektMedEndringSidenSisteKjøring(sisteKjøringTidspunkt: ZonedDateTime): List<OppgaveRapporterInntektRecord> {
+    fun oppgaverForBekreftAvvikMedEndringSidenSisteKjøring(sisteKjøringTidspunkt: ZonedDateTime): List<OppgaveBekreftAvvikRecord> {
         val relevanteOppgaver =
-            oppgaveStatistikkRepository.finnOppgaverForInntektsRapporteringMedEndringSidenSisteKjøring(
-                sisteKjøringTidspunkt
+            oppgaveStatistikkRepository.finnOppgaverMedEndringSidenSisteKjøring(
+                sisteKjøringTidspunkt,
+                Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT.name
             )
 
-        val records = ArrayList<OppgaveRapporterInntektRecord>()
+        val records = ArrayList<OppgaveBekreftAvvikRecord>()
 
-        finnSisteEndretTidspunkt(relevanteOppgaver).forEach(records::add)
+        lagBekreftAvvikRecordOgfinnSisteEndretTidspunkt(relevanteOppgaver).forEach(records::add)
 
         return records
     }
 
-    private fun finnSisteEndretTidspunkt(relevanteOppgaver: List<OppgaveDAO>): List<OppgaveRapporterInntektRecord> {
+    fun oppgaverForRapporterInntektMedEndringSidenSisteKjøring(sisteKjøringTidspunkt: ZonedDateTime): List<OppgaveRapporterInntektRecord> {
+        val relevanteOppgaver =
+            oppgaveStatistikkRepository.finnOppgaverMedEndringSidenSisteKjøring(
+                sisteKjøringTidspunkt, Oppgavetype.RAPPORTER_INNTEKT.name
+            )
+
+        val records = ArrayList<OppgaveRapporterInntektRecord>()
+
+        lagRapporterInntektRecordOgfinnSisteEndretTidspunkt(relevanteOppgaver).forEach(records::add)
+
+        return records
+    }
+
+    private fun lagRapporterInntektRecordOgfinnSisteEndretTidspunkt(relevanteOppgaver: List<OppgaveDAO>): List<OppgaveRapporterInntektRecord> {
         return relevanteOppgaver.mapNotNull {
             val sistEndret = listOfNotNull(it.opprettetDato, it.løstDato, it.lukketDato).maxOrNull()!!
             val data = it.oppgavetypeDataDAO
@@ -51,6 +67,29 @@ class OppgaveStatistikkService(val oppgaveStatistikkRepository: OppgaveStatistik
                 )
             }
         }
+    }
+
+    private fun lagBekreftAvvikRecordOgfinnSisteEndretTidspunkt(relevanteOppgaver: List<OppgaveDAO>): List<OppgaveBekreftAvvikRecord> {
+        return relevanteOppgaver.mapNotNull {
+            val sistEndret = listOfNotNull(it.opprettetDato, it.løstDato, it.lukketDato).maxOrNull()!!
+            val data = it.oppgavetypeDataDAO
+            (data as? KontrollerRegisterInntektOppgaveTypeDataDAO)?.let { d ->
+                OppgaveBekreftAvvikRecord(
+                    opprettetTidspunkt = sistEndret,
+                    oppgaveStatus = it.status,
+                    fom = d.fomDato,
+                    tom = d.tomDato,
+                    gjelderDelerAvPerioden = d.gjelderDelerAvMåned,
+                    harRegisterInntekt = harRegisterInntekt(d.registerinntekt)
+                )
+            }
+        }
+    }
+
+    private fun harRegisterInntekt(registerInntektDAO: RegisterinntektDAO): Boolean {
+        registerInntektDAO.ytelseInntekter.forEach { if (it.inntekt > 0) return true }
+        registerInntektDAO.arbeidOgFrilansInntekter.forEach { if (it.inntekt > 0) return true }
+        return false
     }
 
 

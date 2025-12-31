@@ -24,7 +24,7 @@ or o.opprettet_dato < (CURRENT_DATE - INTERVAL '14 days') and o.status in ('LØS
         value =
             """
                 SELECT o.* from oppgave o
-                WHERE o.oppgavetype = 'RAPPORTER_INNTEKT'
+                WHERE o.oppgavetype = :oppgaveType
                 and (
                     o.løst_dato > :sisteKjoringTidspunkt 
                     or o.lukket_dato > :sisteKjoringTidspunkt
@@ -33,5 +33,8 @@ or o.opprettet_dato < (CURRENT_DATE - INTERVAL '14 days') and o.status in ('LØS
             """,
         nativeQuery = true
     )
-    fun finnOppgaverForInntektsRapporteringMedEndringSidenSisteKjøring(sisteKjoringTidspunkt: ZonedDateTime): List<OppgaveDAO>
+    fun finnOppgaverMedEndringSidenSisteKjøring(
+        sisteKjoringTidspunkt: ZonedDateTime,
+        oppgaveType: String
+    ): List<OppgaveDAO>
 }
