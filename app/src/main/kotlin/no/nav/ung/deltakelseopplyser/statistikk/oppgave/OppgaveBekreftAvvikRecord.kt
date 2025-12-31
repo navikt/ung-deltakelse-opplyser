@@ -23,7 +23,7 @@ data class OppgaveBekreftAvvikRecord(
 
 val BekreftAvvikOppgaveTabell: BigQueryTabell<OppgaveBekreftAvvikRecord> =
     BigQueryTabell(
-        "oppgave_er_inntekt",
+        "oppgave_bekreft_avvik",
         Schema.of(
             Field.of("opprettetTidspunkt", StandardSQLTypeName.DATETIME),
             Field.of("oppgaveStatus", StandardSQLTypeName.STRING),
