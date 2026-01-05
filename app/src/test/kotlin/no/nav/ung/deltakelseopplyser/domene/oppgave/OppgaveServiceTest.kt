@@ -367,7 +367,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                     ),
                     registerinntekterForYtelse = listOf(
                         RegisterInntektYtelseDTO(1000, YtelseType.SYKEPENGER),
-                        RegisterInntektYtelseDTO(2000, YtelseType.PLEIEPENGER_SYKT_BARN),
+                        RegisterInntektYtelseDTO(2000, YtelseType.PLEIEPENGER),
                     )
                 ),
                 gjelderDelerAvMåned = false
