@@ -33,7 +33,10 @@ data class RegisterInntektArbeidOgFrilansDTO (
 enum class YtelseType {
     SYKEPENGER,
     OMSORGSPENGER,
+    PLEIEPENGER,
+    @Deprecated("Bruk PLEIEPENGER i stedet",  replaceWith = ReplaceWith("PLEIEPENGER"))
     PLEIEPENGER_SYKT_BARN,
+    @Deprecated("Bruk PLEIEPENGER i stedet", replaceWith = ReplaceWith("PLEIEPENGER"))
     PLEIEPENGER_LIVETS_SLUTTFASE,
     OPPLAERINGSPENGER
 }
