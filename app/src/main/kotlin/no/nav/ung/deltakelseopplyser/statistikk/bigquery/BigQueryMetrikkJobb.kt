@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
+import no.nav.ung.deltakelseopplyser.integration.leader.LeaderElectorService
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelserPerEnhetTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
@@ -25,6 +26,7 @@ class BigQueryMetrikkJobb(
     val oppgaveStatistikkService: OppgaveStatistikkService,
     val deltakerStatistikkService: DeltakerStatistikkService,
     val deltakelseStatistikkService: DeltakelseStatistikkService,
+    val leaderElectorService: LeaderElectorService,
 ) {
 
     companion object {
@@ -39,6 +41,10 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserOppgaveSvartidStatistikk() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Denne instansen er ikke leder. Hopper over publisering av oppgave svartid statistikk.")
+            return
+        }
         val oppgaverMedSvarEllerEldreEnn14Dager = oppgaveStatistikkService.oppgaverMedSvarEllerEldreEnn14Dager()
         bigQueryClient.publish(BIG_QUERY_DATASET, OppgaveSvartidTabell, oppgaverMedSvarEllerEldreEnn14Dager).also {
             loggPublisering(
@@ -53,6 +59,10 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserRapporterInntektStatistikk() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Denne instansen er ikke leder. Hopper over publisering av rapporter inntekt statistikk.")
+            return
+        }
         val sisteOppdateringAvTabell =
             bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell)
                 ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
@@ -78,6 +88,10 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserBekreftAvvikStatistikk() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Denne instansen er ikke leder. Hopper over publisering av bekreft avvik statistikk.")
+            return
+        }
         val sisteOppdateringAvTabell =
             bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, BekreftAvvikOppgaveTabell)
                 ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
@@ -101,6 +115,10 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserDeltakerStatistikk() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Denne instansen er ikke leder. Hopper over publisering av deltaker statistikk.")
+            return
+        }
         val antallDeltakereIUngdomsprogrammetRecord: AntallDeltakereIUngdomsprogrammetRecord =
             deltakerStatistikkService.antallDeltakereIUngdomsprogrammet()
         bigQueryClient.publish(
@@ -132,6 +150,10 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserDeltakelseStatistikk() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Denne instansen er ikke leder. Hopper over publisering av deltakelse statistikk.")
+            return
+        }
         val antallDeltakelserPerEnhetStatistikk = deltakelseStatistikkService.antallDeltakelserPerEnhetStatistikk()
         bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakelserPerEnhetTabell, antallDeltakelserPerEnhetStatistikk)
             .also {
