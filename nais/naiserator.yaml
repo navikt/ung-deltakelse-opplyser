@@ -14,6 +14,7 @@ spec:
   {{#each ingresses as |url|}}
     - {{url}}
   {{/each}}
+  leaderElection: true
   tokenx:
     enabled: true
   azure:
