@@ -8,8 +8,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.net.InetAddress
@@ -21,14 +19,6 @@ import java.time.Duration
  *
  */
 
-@Retryable(
-    backoff = Backoff(
-        delayExpression = "\${spring.rest.retry.initialDelay}",
-        multiplierExpression = "\${spring.rest.retry.multiplier}",
-        maxDelayExpression = "\${spring.rest.retry.maxDelay}"
-    ),
-    maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
-)
 @Service
 class LeaderElectorService(
     @Value("\${ELECTOR_GET_URL}") private val leaderElectorURL: String,
