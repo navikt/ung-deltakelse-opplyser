@@ -51,7 +51,7 @@ class LeaderElectorService(
         }
     }
 
-    fun restTemplate(
+    private fun restTemplate(
     ): RestTemplate {
         return restTemplateBuilder
             .connectTimeout(Duration.ofSeconds(20))
