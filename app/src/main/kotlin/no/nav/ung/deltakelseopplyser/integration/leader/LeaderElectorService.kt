@@ -18,21 +18,27 @@ import java.time.Duration
  * Service for finne ut om denne instansen er leder.
  *
  */
-
 @Service
 class LeaderElectorService(
     @Value("\${ELECTOR_GET_URL}") private val leaderElectorURL: String,
-    private val restTemplateBuilder: RestTemplateBuilder,
+    restTemplateBuilder: RestTemplateBuilder,
 ) {
+
+    private val restTemplate : RestTemplate = restTemplateBuilder
+    .connectTimeout(Duration.ofSeconds(20))
+    .readTimeout(Duration.ofSeconds(20))
+    .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+    .defaultMessageConverters()
+    .build()
+
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(LeaderElectorService::class.java)
     }
 
     fun erLeader(): Boolean {
         return try {
-            val response = restTemplate().exchange(leaderElectorURL, HttpMethod.GET, null, String::class.java)
-            val jsonObject = JSONObject(response.body ?: "{}")
-            val leaderName = jsonObject.optString("name", "")
+            val response = restTemplate.exchange(leaderElectorURL, HttpMethod.GET, null, ElectorResponse::class.java)
+            val leaderName = response.body?.name ?: ""
             val hostname = InetAddress.getLocalHost().hostName
             leaderName == hostname
         } catch (e: Exception) {
@@ -41,13 +47,4 @@ class LeaderElectorService(
         }
     }
 
-    private fun restTemplate(
-    ): RestTemplate {
-        return restTemplateBuilder
-            .connectTimeout(Duration.ofSeconds(20))
-            .readTimeout(Duration.ofSeconds(20))
-            .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .defaultMessageConverters()
-            .build()
-    }
 }
