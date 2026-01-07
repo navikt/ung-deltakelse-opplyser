@@ -38,7 +38,7 @@ val BekreftAvvikOppgaveTabell: BigQueryTabell<OppgaveBekreftAvvikRecord> =
     ) { rec ->
         mapOf(
             "opprettetTidspunkt" to rec.opprettetTidspunkt.format(DateUtils.DATE_TIME_FORMATTER),
-            "oppgaveReferanse" to rec.oppgaveReferanse.toString(),
+            "oppgaveReferanse" to rec.eksternReferanse.toString(),
             "oppgaveStatus" to rec.oppgaveStatus.name,
             "fom" to rec.fom.format(DateTimeFormatter.ISO_LOCAL_DATE),
             "tom" to rec.tom.format(DateTimeFormatter.ISO_LOCAL_DATE),

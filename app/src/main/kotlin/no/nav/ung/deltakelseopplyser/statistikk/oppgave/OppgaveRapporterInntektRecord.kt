@@ -14,7 +14,7 @@ import java.util.UUID
 
 data class OppgaveRapporterInntektRecord(
     val opprettetTidspunkt: ZonedDateTime,
-    val oppgaveReferanse: UUID,
+    val eksternReferanse: UUID,
     val oppgaveStatus: OppgaveStatus,
     val fom: LocalDate,
     val tom: LocalDate,
@@ -27,7 +27,7 @@ val RapporterInntektOppgaveTabell: BigQueryTabell<OppgaveRapporterInntektRecord>
         "oppgave_rapporter_inntekt_v2",
         Schema.of(
             Field.of("opprettetTidspunkt", StandardSQLTypeName.DATETIME),
-            Field.of("oppgaveReferanse", StandardSQLTypeName.STRING),
+            Field.of("eksternReferanse", StandardSQLTypeName.STRING),
             Field.of("oppgaveStatus", StandardSQLTypeName.STRING),
             Field.of("fom", StandardSQLTypeName.DATE),
             Field.of("tom", StandardSQLTypeName.DATE),
@@ -36,7 +36,7 @@ val RapporterInntektOppgaveTabell: BigQueryTabell<OppgaveRapporterInntektRecord>
     ) { rec ->
         mapOf(
             "opprettetTidspunkt" to rec.opprettetTidspunkt.format(DateUtils.DATE_TIME_FORMATTER),
-            "oppgaveReferanse" to rec.oppgaveReferanse.toString(),
+            "eksternReferanse" to rec.eksternReferanse.toString(),
             "oppgaveStatus" to rec.oppgaveStatus.name,
             "fom" to rec.fom.format(DateTimeFormatter.ISO_LOCAL_DATE),
             "tom" to rec.tom.format(DateTimeFormatter.ISO_LOCAL_DATE),
