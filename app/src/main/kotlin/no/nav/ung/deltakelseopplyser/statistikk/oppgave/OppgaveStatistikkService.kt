@@ -61,6 +61,7 @@ class OppgaveStatistikkService(val oppgaveStatistikkRepository: OppgaveStatistik
             (data as? InntektsrapporteringOppgavetypeDataDAO)?.let { d ->
                 OppgaveRapporterInntektRecord(
                     opprettetTidspunkt = sistEndret,
+                    oppgaveReferanse = it.oppgaveReferanse,
                     oppgaveStatus = it.status,
                     fom = d.fomDato,
                     tom = d.tomDato,
