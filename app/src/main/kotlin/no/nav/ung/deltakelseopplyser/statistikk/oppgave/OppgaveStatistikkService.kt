@@ -78,6 +78,7 @@ class OppgaveStatistikkService(val oppgaveStatistikkRepository: OppgaveStatistik
             (data as? KontrollerRegisterInntektOppgaveTypeDataDAO)?.let { d ->
                 OppgaveBekreftAvvikRecord(
                     opprettetTidspunkt = sistEndret,
+                    eksternReferanse = it.oppgaveReferanse,
                     oppgaveStatus = it.status,
                     fom = d.fomDato,
                     tom = d.tomDato,
