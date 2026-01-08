@@ -27,8 +27,8 @@ or o.opprettet_dato < (CURRENT_DATE - INTERVAL '14 days') and o.status in ('LØS
                 WHERE o.oppgavetype = :oppgaveType
                 and (
                     o.løst_dato > :sisteKjoringTidspunkt 
-                    or o.lukket_dato > :sisteKjoringTidspunkt
                     or o.opprettet_dato > :sisteKjoringTidspunkt
+                    or (o.status = 'UTLØPT' and o.frist > :sisteKjoringTidspunkt)
                 )
             """,
         nativeQuery = true

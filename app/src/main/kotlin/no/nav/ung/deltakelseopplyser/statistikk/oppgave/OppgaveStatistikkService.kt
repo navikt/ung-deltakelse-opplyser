@@ -55,11 +55,13 @@ class OppgaveStatistikkService(val oppgaveStatistikkRepository: OppgaveStatistik
 
     private fun lagRapporterInntektRecordOgfinnSisteEndretTidspunkt(relevanteOppgaver: List<OppgaveDAO>): List<OppgaveRapporterInntektRecord> {
         return relevanteOppgaver.mapNotNull {
-            val sistEndret = listOfNotNull(it.opprettetDato, it.løstDato, it.lukketDato).maxOrNull()!!
+            var utløptDato = if (it.status == no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus.UTLØPT) it.frist else null
+            val sistEndret = listOfNotNull(it.opprettetDato, it.løstDato, utløptDato).maxOrNull()!!
             val data = it.oppgavetypeDataDAO
             (data as? InntektsrapporteringOppgavetypeDataDAO)?.let { d ->
                 OppgaveRapporterInntektRecord(
                     opprettetTidspunkt = sistEndret,
+                    eksternReferanse = it.oppgaveReferanse,
                     oppgaveStatus = it.status,
                     fom = d.fomDato,
                     tom = d.tomDato,
@@ -76,6 +78,7 @@ class OppgaveStatistikkService(val oppgaveStatistikkRepository: OppgaveStatistik
             (data as? KontrollerRegisterInntektOppgaveTypeDataDAO)?.let { d ->
                 OppgaveBekreftAvvikRecord(
                     opprettetTidspunkt = sistEndret,
+                    eksternReferanse = it.oppgaveReferanse,
                     oppgaveStatus = it.status,
                     fom = d.fomDato,
                     tom = d.tomDato,
