@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.diagnostikk
+package no.nav.ung.deltakelseopplyser.drift
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -13,6 +13,7 @@ import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveRepository
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
@@ -43,6 +44,7 @@ import java.util.*
     description = "API for å hente informasjon brukt for feilretting. Er sikret med Azure."
 )
 class DiagnostikkDriftController(
+    private val oppgaveRepository: OppgaveRepository,
     private val deltakelseRepository: DeltakelseRepository,
     private val tilgangskontrollService: TilgangskontrollService,
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
@@ -93,6 +95,48 @@ class DiagnostikkDriftController(
             historikk = deltakelseHistorikk
         )
     }
+
+    @PostMapping(
+        "/finnDeltakelseForOppgaveReferanse/{oppgaveReferanse}",
+        consumes = [MediaType.TEXT_PLAIN_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Hent deltakelse gitt oppgavereferanse")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentDeltakelseForOppgaveReferanse(
+        @PathVariable oppgaveReferanse: UUID,
+        @RequestBody begrunnelse: String,
+    ): DeltakelseDiagnostikkDto {
+        val oppgave = oppgaveRepository.findByOppgaveReferanse(oppgaveReferanse)
+            ?: throw IllegalArgumentException("Fant ikke oppgave med referanse: $oppgaveReferanse")
+
+        val deltakelseDto = oppgave.deltaker.deltakelseList.first().mapToDTO()
+        val deltakerPersonIdent = PersonIdent(deltakelseDto.deltaker.deltakerIdent)
+
+        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+            PersonerOperasjonDto(
+                null,
+                listOf(deltakerPersonIdent),
+                OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.READ, setOf<AksjonspunktType>())
+            )
+        ).also {
+            sporingsloggService.logg(
+                url = "/diagnostikk/finnDeltakelseForOppgaveReferanse/$oppgaveReferanse",
+                beskrivelse = begrunnelse,
+                bruker = deltakerPersonIdent,
+                eventClassId = EventClassId.AUDIT_ACCESS
+            )
+        }
+
+        val deltakelseHistorikk: List<DeltakelseHistorikk> =
+            deltakelseHistorikkService.deltakelseHistorikk(oppgave.deltaker.id)
+
+        return DeltakelseDiagnostikkDto(
+            deltakelse = deltakelseDto,
+            historikk = deltakelseHistorikk
+        )
+    }
+
 
     @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Hent enheter knyttet til alle nav-identer")
