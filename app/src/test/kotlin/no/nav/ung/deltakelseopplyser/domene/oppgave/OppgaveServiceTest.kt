@@ -36,11 +36,8 @@ import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektArbeidOgFrilansDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektYtelseDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.*
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretStartdatoOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
@@ -55,6 +52,7 @@ import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
+import java.time.temporal.TemporalAdjusters
 import java.util.*
 
 @ActiveProfiles("test")
@@ -120,7 +118,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @AfterEach
     fun verifiser() {
-        verify(atLeast = 1, verifyBlock = {tilgangskontrollService.krevSystemtilgang()})
+        verify(atLeast = 1, verifyBlock = { tilgangskontrollService.krevSystemtilgang() })
     }
 
     @Test
@@ -301,6 +299,68 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
                 )
             )
         }
+
+        verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+    }
+
+    @Test
+    fun `Skal kunne utløpe alle for gitt periode og type`() {
+        val originalStartdato: LocalDate = LocalDate.now()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockHentFolkeregisteridenter(deltakerIdent)
+        meldInnIProgrammet(deltakerIdent, originalStartdato)
+
+        val fomDato = originalStartdato.plusMonths(1).withDayOfMonth(1)
+        val tomDato = originalStartdato.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth())
+        oppgaveUngSakController.opprettOppgaveForInntektsrapportering(
+            opprettInntektsrapporteringOppgaveDTO = InntektsrapporteringOppgaveDTO(
+                deltakerIdent = deltakerIdent,
+                referanse = UUID.randomUUID(),
+                frist = LocalDateTime.now().plusDays(14),
+                fomDato = fomDato,
+                tomDato = tomDato,
+                gjelderDelerAvMåned = false
+            )
+        )
+
+        val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+        assertThat(oppgaver).hasSize(2)
+        val oppgaveReferanse =
+            oppgaver.first { it.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT }.oppgaveReferanse
+
+
+        oppgaveService.markerUløsteOppgaverSomUtløptForTypeOgPeriode(Oppgavetype.RAPPORTER_INNTEKT, fomDato, tomDato)
+
+        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+    }
+
+    @Test
+    fun `Skal ikke utløpe for en annen periode`() {
+        val originalStartdato: LocalDate = LocalDate.now()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockHentFolkeregisteridenter(deltakerIdent)
+        meldInnIProgrammet(deltakerIdent, originalStartdato)
+
+        val fomDato = originalStartdato.plusMonths(1).withDayOfMonth(1)
+        val tomDato = originalStartdato.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth())
+        oppgaveUngSakController.opprettOppgaveForInntektsrapportering(
+            opprettInntektsrapporteringOppgaveDTO = InntektsrapporteringOppgaveDTO(
+                deltakerIdent = deltakerIdent,
+                referanse = UUID.randomUUID(),
+                frist = LocalDateTime.now().plusDays(14),
+                fomDato = fomDato,
+                tomDato = tomDato,
+                gjelderDelerAvMåned = false
+            )
+        )
+
+        val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+        assertThat(oppgaver).hasSize(2)
+        val oppgaveReferanse =
+            oppgaver.first { it.oppgavetype == Oppgavetype.RAPPORTER_INNTEKT }.oppgaveReferanse
+
+
+        oppgaveService.markerUløsteOppgaverSomUtløptForTypeOgPeriode(Oppgavetype.RAPPORTER_INNTEKT, fomDato.plusMonths(1), fomDato.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth()))
 
         verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }

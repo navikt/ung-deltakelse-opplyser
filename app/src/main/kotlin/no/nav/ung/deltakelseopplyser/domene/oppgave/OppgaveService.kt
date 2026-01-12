@@ -244,6 +244,7 @@ class OppgaveService(
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun markerUløsteOppgaverSomUtløptForTypeOgPeriode(
         type: Oppgavetype,
         fomDato: LocalDate,
