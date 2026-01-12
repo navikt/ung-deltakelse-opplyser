@@ -130,7 +130,7 @@ class OppgaveUngSakController(
     @Transactional(TRANSACTION_MANAGER)
     fun avbrytOppgaveForTypeOgPeriode(@RequestBody endreStatusDTO: EndreStatusDTO) {
         tilgangskontrollService.krevSystemtilgang()
-        logger.info("Utløper oppgave av type: ${endreStatusDTO.oppgavetype} med periode [${endreStatusDTO.fomDato} - ${endreStatusDTO.tomDato}]")
+        logger.info("Avbryter oppgave av type: ${endreStatusDTO.oppgavetype} med periode [${endreStatusDTO.fomDato} - ${endreStatusDTO.tomDato}]")
 
         val deltaker = deltakerEksisterer(endreStatusDTO.deltakerIdent)
 
