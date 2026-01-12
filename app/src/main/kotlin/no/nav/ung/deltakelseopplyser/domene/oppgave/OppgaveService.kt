@@ -23,6 +23,7 @@ import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.ErrorResponseException
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
@@ -33,7 +34,8 @@ class OppgaveService(
     private val deltakerService: DeltakerService,
     private val mineSiderService: MineSiderService,
     private val deltakerappConfig: DeltakerappConfig,
-    private val oppgaveMapperService: OppgaveMapperService
+    private val oppgaveMapperService: OppgaveMapperService,
+    private val oppgaveRepository: OppgaveRepository
 ) {
     private companion object {
         private val logger = LoggerFactory.getLogger(OppgaveService::class.java)
@@ -241,6 +243,36 @@ class OppgaveService(
         deltakerService.oppdaterDeltaker(deltaker)
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
+
+    fun markerUløsteOppgaverSomUtløptForTypeOgPeriode(
+        type: Oppgavetype,
+        fomDato: LocalDate,
+        tomDato: LocalDate
+    ): List<OppgaveDTO> {
+        val oppgaver = oppgaveRepository.findAllByOppgavetypeAndStatus(type, OppgaveStatus.ULØST)
+        val oppgaverForPeriode = oppgaver.filter {
+            (it.oppgavetypeDataDAO as PeriodisertOppgaveDataDAO).fomDato == fomDato &&
+                    (it.oppgavetypeDataDAO as PeriodisertOppgaveDataDAO).tomDato == tomDato
+        }
+        val oppdaterteOppgaver = mutableListOf<OppgaveDAO>()
+        for (oppgave in oppgaverForPeriode) {
+            val deltaker = oppgave.deltaker
+            logger.info("Markerer oppgave av type ${oppgave.oppgavetype} som utløpt for deltaker=${deltaker.id}")
+            oppdaterteOppgaver.add(oppgave.markerSomUtløpt())
+            logger.info("Lagrer oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} på deltaker med id ${deltaker.id}")
+            deltakerService.oppdaterDeltaker(deltaker)
+        }
+
+        // Utfører eksterne kall sist i transaksjon for å unngå delvis oppdateringer
+        for (oppgave in oppdaterteOppgaver) {
+            logger.info("Deaktiverer oppgave med oppgaveReferanse ${oppgave.oppgaveReferanse} på min side")
+            mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
+
+        }
+
+        return oppdaterteOppgaver.map { oppgaveMapperService.mapOppgaveTilDTO(it) }
+    }
+
 
     private fun forsikreRiktigOppgaveBekreftelse(
         oppgave: OppgaveDAO,

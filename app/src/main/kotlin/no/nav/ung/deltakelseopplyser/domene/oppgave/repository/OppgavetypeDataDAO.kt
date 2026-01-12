@@ -96,6 +96,18 @@ sealed class OppgavetypeDataDAO {
     }
 }
 
+sealed class PeriodisertOppgaveDataDAO(
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty(defaultValue = "n/a")
+    open val fomDato: LocalDate,
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty(defaultValue = "n/a")
+    open val tomDato: LocalDate,
+
+    ): OppgavetypeDataDAO()
+
+
 data class EndretStartdatoOppgaveDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty("nyStartdato") val nyStartdato: LocalDate,
@@ -139,16 +151,14 @@ data class ProgramperiodeDAO(
 
 data class KontrollerRegisterInntektOppgaveTypeDataDAO(
     @JsonProperty(defaultValue = "n/a") val registerinntekt: RegisterinntektDAO,
-
+    @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(defaultValue = "n/a")
-    val fomDato: LocalDate,
-
+    override val fomDato: LocalDate,
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
-
-    @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
-) : OppgavetypeDataDAO()
+    @JsonProperty(defaultValue = "n/a")
+    override val tomDato: LocalDate,
+) : PeriodisertOppgaveDataDAO(fomDato, tomDato)
 
 data class SøkYtelseOppgavetypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -161,15 +171,15 @@ data class RegisterinntektDAO(
 )
 
 data class InntektsrapporteringOppgavetypeDataDAO(
+    @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(defaultValue = "n/a")
-    val fomDato: LocalDate,
-
+    override val fomDato: LocalDate,
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
-
-    @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
-    ) : OppgavetypeDataDAO()
+    @JsonProperty(defaultValue = "n/a")
+    override val tomDato: LocalDate,
+    ) : PeriodisertOppgaveDataDAO(fomDato, tomDato)
 
 data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,

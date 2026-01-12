@@ -96,6 +96,17 @@ class OppgaveUngSakController(
         )
     }
 
+    @PostMapping("/utlopt/alle/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Setter alle uløste oppgaver til utløpt for gitt type og periode")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun utløperAlleOppgaverForTypeOgPeriode(@RequestBody settTilUtløptDTO: SettTilUtløptDTO) {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Utløper uløste oppgaver av type: ${settTilUtløptDTO.oppgavetype}")
+
+        oppgaveService.markerUløsteOppgaverSomUtløptForTypeOgPeriode(settTilUtløptDTO.oppgavetype, settTilUtløptDTO.fomDato, settTilUtløptDTO.tomDato)
+    }
+
     @PostMapping("/utlopt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Setter oppgave til utløpt for type og periode")
     @ResponseStatus(HttpStatus.OK)
