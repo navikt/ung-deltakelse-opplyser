@@ -24,7 +24,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.endretperiode.EndretPeriod
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.SettTilUtløptDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndreStatusDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
@@ -100,22 +100,22 @@ class OppgaveUngSakController(
     @Operation(summary = "Setter oppgave til utløpt for type og periode")
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
-    fun utløperOppgaveForTypeOgPeriode(@RequestBody settTilUtløptDTO: SettTilUtløptDTO) {
+    fun utløperOppgaveForTypeOgPeriode(@RequestBody endreStatusDTO: EndreStatusDTO) {
         tilgangskontrollService.krevSystemtilgang()
-        logger.info("Utløper oppgave av type: ${settTilUtløptDTO.oppgavetype} med periode [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}]")
+        logger.info("Utløper oppgave av type: ${endreStatusDTO.oppgavetype} med periode [${endreStatusDTO.fomDato} - ${endreStatusDTO.tomDato}]")
 
-        val deltaker = deltakerEksisterer(settTilUtløptDTO.deltakerIdent)
+        val deltaker = deltakerEksisterer(endreStatusDTO.deltakerIdent)
 
-        logger.info("Henter oppgave av type ${settTilUtløptDTO.oppgavetype} med periode [${settTilUtløptDTO.fomDato} - ${settTilUtløptDTO.tomDato}]")
+        logger.info("Henter oppgave av type ${endreStatusDTO.oppgavetype} med periode [${endreStatusDTO.fomDato} - ${endreStatusDTO.tomDato}]")
         // Ser kun på uløste oppgaver. Dersom oppgaven har en annen status blir denne stående
         // Grunnen til dette er at ung-sak slipper å sjekke på status på oppgaven før den kaller
         val uløstOppgaveISammePeriode = deltaker.oppgaver
-            .filter { it.oppgavetype == settTilUtløptDTO.oppgavetype }
+            .filter { it.oppgavetype == endreStatusDTO.oppgavetype }
             .find {
-                it.oppgavetype == settTilUtløptDTO.oppgavetype && gjelderSammePeriodeForInntektsrapportering(
+                it.oppgavetype == endreStatusDTO.oppgavetype && gjelderSammePeriodeForInntektsrapportering(
                     it,
-                    settTilUtløptDTO.fomDato,
-                    settTilUtløptDTO.tomDato
+                    endreStatusDTO.fomDato,
+                    endreStatusDTO.tomDato
                 ) && it.status == OppgaveStatus.ULØST
             }
 
@@ -123,6 +123,35 @@ class OppgaveUngSakController(
             oppgaveService.utløperOppgave(deltaker, uløstOppgaveISammePeriode.oppgaveReferanse)
         }
     }
+
+    @PostMapping("/avbrutt/forTypeOgPeriode", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Setter oppgave til avbrutt for type og periode")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun avbrytOppgaveForTypeOgPeriode(@RequestBody endreStatusDTO: EndreStatusDTO) {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Avbryter oppgave av type: ${endreStatusDTO.oppgavetype} med periode [${endreStatusDTO.fomDato} - ${endreStatusDTO.tomDato}]")
+
+        val deltaker = deltakerEksisterer(endreStatusDTO.deltakerIdent)
+
+        logger.info("Henter oppgave av type ${endreStatusDTO.oppgavetype} med periode [${endreStatusDTO.fomDato} - ${endreStatusDTO.tomDato}]")
+        // Ser kun på uløste oppgaver. Dersom oppgaven har en annen status blir denne stående
+        // Grunnen til dette er at ung-sak slipper å sjekke på status på oppgaven før den kaller
+        val uløstOppgaveISammePeriode = deltaker.oppgaver
+            .filter { it.oppgavetype == endreStatusDTO.oppgavetype }
+            .find {
+                it.oppgavetype == endreStatusDTO.oppgavetype && gjelderSammePeriodeForInntektsrapportering(
+                    it,
+                    endreStatusDTO.fomDato,
+                    endreStatusDTO.tomDato
+                ) && it.status == OppgaveStatus.ULØST
+            }
+
+        if (uløstOppgaveISammePeriode != null) {
+            oppgaveService.avbrytOppgave(deltaker, uløstOppgaveISammePeriode.oppgaveReferanse)
+        }
+    }
+
 
     @PostMapping("/opprett/kontroll/registerinntekt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Oppretter oppgave for kontroll av registerinntekt")
