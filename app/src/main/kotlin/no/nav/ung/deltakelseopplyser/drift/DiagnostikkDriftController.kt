@@ -13,6 +13,10 @@ import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
+import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveRepository
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
@@ -21,8 +25,8 @@ import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistori
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
@@ -30,8 +34,11 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.*
 
 @RestController
@@ -50,11 +57,10 @@ class DiagnostikkDriftController(
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val sporingsloggService: SporingsloggService,
     private val deltakelseStatistikkService: DeltakelseStatistikkService,
+    private val oppgaveMapperService: OppgaveMapperService,
+    private val deltakerRepository: DeltakerRepository,
+    private val microfrontendRepository: MicrofrontendRepository,
 ) {
-    private companion object {
-        private val logger = LoggerFactory.getLogger(DiagnostikkDriftController::class.java)
-    }
-
     @PostMapping(
         "/hent/deltakelse/{deltakelseId}",
         consumes = [MediaType.TEXT_PLAIN_VALUE],
@@ -158,8 +164,93 @@ class DiagnostikkDriftController(
         )
     }
 
+
+
+    @PostMapping(
+        "/hent/oppgaver-for-deltaker",
+        consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Hent oppgaver for deltaker (form params: personIdent + begrunnelse)")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentOppgaverForDeltaker(
+        @RequestParam personIdent: String,
+        @RequestParam begrunnelse: String,
+    ): List<OppgaveDTO> {
+        val deltakerPersonIdent = PersonIdent(personIdent)
+
+        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+            PersonerOperasjonDto(
+                null,
+                listOf(deltakerPersonIdent),
+                OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.READ, setOf<AksjonspunktType>())
+            )
+        ).also {
+            sporingsloggService.logg(
+                url = "/diagnostikk/hent/oppgaver-for-deltaker",
+                beskrivelse = begrunnelse,
+                bruker = deltakerPersonIdent,
+                eventClassId = EventClassId.AUDIT_ACCESS
+            )
+        }
+
+        return oppgaveRepository
+            .findAllByDeltaker_DeltakerIdent(personIdent)
+            .map { oppgaveMapperService.mapOppgaveTilDTO(it) }
+    }
+
+    @PostMapping(
+        "/hent/min-side-microfrontend-status",
+        consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Hent Min Side microfrontend-status for deltaker (form params: personIdent + begrunnelse)")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentMinSideMicrofrontendStatusForDeltaker(
+        @RequestParam personIdent: String,
+        @RequestParam begrunnelse: String,
+    ): MicrofrontendStatusDiagnostikkDto? {
+        val deltakerPersonIdent = PersonIdent(personIdent)
+
+        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+            PersonerOperasjonDto(
+                null,
+                listOf(deltakerPersonIdent),
+                OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.READ, setOf<AksjonspunktType>())
+            )
+        ).also {
+            sporingsloggService.logg(
+                url = "/diagnostikk/hent/min-side-microfrontend-status",
+                beskrivelse = begrunnelse,
+                bruker = deltakerPersonIdent,
+                eventClassId = EventClassId.AUDIT_ACCESS
+            )
+        }
+
+        val deltaker = deltakerRepository.finnDeltakerGittIdenter(listOf(personIdent)).firstOrNull()
+            ?: return null
+
+        val statusDao = microfrontendRepository.findByDeltaker(deltaker) ?: return null
+
+        return MicrofrontendStatusDiagnostikkDto(
+            id = statusDao.id,
+            deltakerIdent = personIdent,
+            status = statusDao.status,
+            opprettet = statusDao.opprettet,
+            endret = statusDao.endret,
+        )
+    }
+
     data class DeltakelseDiagnostikkDto(
         val deltakelse: DeltakelseDTO,
         val historikk: List<DeltakelseHistorikk>,
+    )
+
+    data class MicrofrontendStatusDiagnostikkDto(
+        val id: UUID,
+        val deltakerIdent: String,
+        val status: MicrofrontendStatus,
+        val opprettet: ZonedDateTime?,
+        val endret: LocalDateTime?,
     )
 }
