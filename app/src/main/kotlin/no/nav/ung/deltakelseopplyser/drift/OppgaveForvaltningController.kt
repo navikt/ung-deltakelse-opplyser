@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/forvaltning")
+@RequestMapping("/forvaltning/oppgave")
 @RequiredIssuers(
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
@@ -40,7 +40,7 @@ class OppgaveForvaltningController(
 ) {
 
     @PostMapping(
-        "/oppgave/avbryt/{oppgaveReferanse}",
+        "/avbryt/{oppgaveReferanse}",
         consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )

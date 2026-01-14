@@ -28,7 +28,7 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @RestController
-@RequestMapping("/forvaltning")
+@RequestMapping("/forvaltning/min-side")
 @RequiredIssuers(
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
@@ -48,7 +48,7 @@ class MinSideForvaltningController(
     }
 
     @PostMapping(
-        "/min-side/innsyn/aktiver/{deltakerId}",
+        "/innsyn/aktiver/{deltakerId}",
         consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
