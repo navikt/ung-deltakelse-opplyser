@@ -2,7 +2,6 @@ package no.nav.ung.deltakelseopplyser.drift
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.websocket.server.PathParam
 import no.nav.k9.felles.log.audit.EventClassId
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
