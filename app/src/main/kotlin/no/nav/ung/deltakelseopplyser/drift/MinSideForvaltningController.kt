@@ -33,8 +33,8 @@ import java.util.*
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
 @Tag(
-    name = "Forvaltningsendepunkter for feilretting",
-    description = "API for å endre data på oppgaver i forbindelse med forvaltning. Er sikret med Azure."
+    name = "Forvaltningsendepunkter for feilretting av min-side-visning",
+    description = "API for å endre status og visning på min-side i forbindelse med forvaltning. Er sikret med Azure."
 )
 class MinSideForvaltningController(
     private val deltakerService: DeltakerService,
