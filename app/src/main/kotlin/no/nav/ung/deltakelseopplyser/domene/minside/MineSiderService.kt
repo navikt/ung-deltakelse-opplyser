@@ -8,6 +8,7 @@ import no.nav.tms.varsel.action.Tekst
 import no.nav.tms.varsel.action.Varseltype
 import no.nav.tms.varsel.builder.VarselActionBuilder
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class MineSiderService(
+    private val pdlService: PdlService,
     @Value("\${topic.producer.min-side-varsel.navn}") private val minSideVarselTopic: String,
     @Value("\${topic.producer.min-side-mikrofrontend.navn}") private val minSideMikrofrontendTopic: String,
     private val kafkaTemplate: KafkaTemplate<String, String>,
@@ -50,6 +52,8 @@ class MineSiderService(
     ) {
         logger.info("Oppretter min-side oppgave med id $varselId")
 
+        val aktivFolkeregisterIdent = pdlService.hentFolkeregisteridenter(deltakerIdent).first { !it.historisk }.ident
+
         val opprett: String = VarselActionBuilder.opprett {
             /**
              * Type på varsel (beskjed, oppgave, innboks)
@@ -70,7 +74,7 @@ class MineSiderService(
             /**
              * Fodselsnummer (evt. d-nummer eller tilsvarende) til mottaker av varsel
              */
-            ident = deltakerIdent
+            ident = aktivFolkeregisterIdent
 
             /**
              * Teksten som faktisk vises i varselet med språkkode.
@@ -142,11 +146,13 @@ class MineSiderService(
 
     fun aktiverMikrofrontend(
         deltakerIdent: String,
-        microfrontendId: MicrofrontendId,
+        microfrontendId: MicrofrontendId ,
         sensitivitet: no.nav.tms.microfrontend.Sensitivitet
     ) {
+        val aktivFolkeregisterIdent = pdlService.hentFolkeregisteridenter(deltakerIdent).first { !it.historisk }.ident
+
         val enable = MicrofrontendMessageBuilder.enable {
-            ident = deltakerIdent
+            ident = aktivFolkeregisterIdent
             initiatedBy = namespace
             this.microfrontendId = microfrontendId.id
             this.sensitivitet = sensitivitet

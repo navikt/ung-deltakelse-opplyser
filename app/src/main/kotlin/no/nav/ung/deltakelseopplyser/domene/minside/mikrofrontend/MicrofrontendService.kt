@@ -18,4 +18,14 @@ class MicrofrontendService(
         )
         microfrontendRepository.save(minSideMicrofrontendStatusDAO)
     }
+
+    fun deaktiverOgSlett(eksisterende: MinSideMicrofrontendStatusDAO) {
+        mineSiderService.deaktiverMikrofrontend(
+            deltakerIdent = eksisterende.deltaker.deltakerIdent,
+            microfrontendId = MicrofrontendId.UNGDOMSPROGRAMYTELSE_INNSYN
+        )
+        microfrontendRepository.delete(eksisterende)
+    }
+
+
 }
