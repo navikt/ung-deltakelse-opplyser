@@ -13,6 +13,7 @@ import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveRepository
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
@@ -20,11 +21,12 @@ import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/forvaltning")
+@RequestMapping("/forvaltning/oppgave")
 @RequiredIssuers(
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
@@ -39,8 +41,9 @@ class OppgaveForvaltningController(
     private val sporingsloggService: SporingsloggService,
 ) {
 
+    @Transactional(TRANSACTION_MANAGER)
     @PostMapping(
-        "/oppgave/avbryt/{oppgaveReferanse}",
+        "/avbryt/{oppgaveReferanse}",
         consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
@@ -49,7 +52,7 @@ class OppgaveForvaltningController(
     fun avbrytOppgave(
         @PathVariable oppgaveReferanse: UUID,
         @RequestParam begrunnelse: String,
-    ) : OppgaveDTO {
+    ): OppgaveDTO {
         val oppgave = oppgaveRepository.findByOppgaveReferanse(oppgaveReferanse)
             ?: throw IllegalArgumentException("Fant ikke oppgave med referanse: $oppgaveReferanse")
 

@@ -13,6 +13,7 @@ import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
@@ -22,13 +23,14 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
 
 @RestController
-@RequestMapping("/forvaltning")
+@RequestMapping("/forvaltning/min-side")
 @RequiredIssuers(
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
@@ -47,8 +49,9 @@ class MinSideForvaltningController(
         private val logger = LoggerFactory.getLogger(MinSideForvaltningController::class.java)
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     @PostMapping(
-        "/min-side/innsyn/aktiver/{deltakerId}",
+        "/innsyn/aktiver/{deltakerId}",
         consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
