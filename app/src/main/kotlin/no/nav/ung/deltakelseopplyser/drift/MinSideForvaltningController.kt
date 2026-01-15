@@ -19,7 +19,6 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendS
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -82,8 +81,11 @@ class MinSideForvaltningController(
 
         deltaker.minSideMicrofrontendStatusDAO
             ?.also {  logger.info("Deaktiverer eksisterende mikrofrontend for deltaker med id: {}", deltaker.id) }
-            ?.let { microfrontendService.deaktiverOgSlett(it) }
+            ?.let { microfrontendService.deaktiver(it) }
 
+        // Fjern eksisterende status før ny opprettes
+        deltaker.minSideMicrofrontendStatusDAO = null;
+        deltakerService.oppdaterDeltaker(deltaker);
 
         logger.info("Aktiverer mikrofrontend for deltaker med id: {}", deltaker.id)
         microfrontendService.sendOgLagre(

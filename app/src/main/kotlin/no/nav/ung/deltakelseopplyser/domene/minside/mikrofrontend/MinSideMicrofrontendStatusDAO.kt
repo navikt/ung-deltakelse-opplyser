@@ -1,14 +1,6 @@
 package no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.OneToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UpdateTimestamp
@@ -35,7 +27,7 @@ class MinSideMicrofrontendStatusDAO(
         nullable = false,
         length = 10
     ) @Enumerated(EnumType.STRING)
-    val status: MicrofrontendStatus,
+    var status: MicrofrontendStatus,
 
     @Column(name = "opprettet")
     @CreatedDate
@@ -44,4 +36,10 @@ class MinSideMicrofrontendStatusDAO(
     @Column(name = "endret")
     @UpdateTimestamp
     val endret: LocalDateTime? = null
-)
+
+) {
+    fun settStatus(status: MicrofrontendStatus): MinSideMicrofrontendStatusDAO {
+        this.status = status
+        return this
+    }
+}
