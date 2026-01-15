@@ -24,7 +24,7 @@ class MicrofrontendService(
             deltakerIdent = eksisterende.deltaker.deltakerIdent,
             microfrontendId = MicrofrontendId.UNGDOMSPROGRAMYTELSE_INNSYN
         )
-        microfrontendRepository.delete(eksisterende)
+        microfrontendRepository.deleteById(eksisterende.id)
     }
 
 
