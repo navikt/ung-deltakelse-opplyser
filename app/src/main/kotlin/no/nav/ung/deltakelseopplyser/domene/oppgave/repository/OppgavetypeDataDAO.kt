@@ -23,6 +23,9 @@ import java.time.LocalDate
     // Endret sluttdato oppgavetype data
     JsonSubTypes.Type(value = EndretSluttdatoOppgaveDataDAO::class, name = "BEKREFT_ENDRET_SLUTTDATO"),
 
+    // Endret sluttdato oppgavetype data
+    JsonSubTypes.Type(value = EndretPeriodeOppgaveDataDAO::class, name = "BEKREFT_ENDRET_PERIODE"),
+
     // Kontroller registerinntekt oppgavetype data
     JsonSubTypes.Type(
         value = KontrollerRegisterInntektOppgaveTypeDataDAO::class,
