@@ -163,6 +163,12 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAO.mapToDTO()
     }
 
+    fun hentFraProgramInkludertSlettet(id: UUID): DeltakelseDTO {
+        logger.info("Henter programopplysninger for deltaker med id $id")
+        val ungdomsprogramDAO = forsikreHarHattDeltakelse(id)
+        return ungdomsprogramDAO.mapToDTO()
+    }
+
     fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
@@ -395,6 +401,17 @@ class UngdomsprogramregisterService(
     }
 
     private fun forsikreEksistererIProgram(id: UUID): DeltakelseDAO =
+        deltakelseRepository.findById(id).filter { !it.erSlettet }.orElseThrow {
+            ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen deltakelse med id $id"
+                },
+                null
+            )
+        }
+
+    private fun forsikreHarHattDeltakelse(id: UUID): DeltakelseDAO =
         deltakelseRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
