@@ -74,6 +74,7 @@ class OppgaveDAO(
     }
 
     fun markerSomLøst(): OppgaveDAO {
+        this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
         return settStatus(OppgaveStatus.LØST)
     }
 
@@ -98,7 +99,6 @@ class OppgaveDAO(
 
     fun settStatus(oppgaveStatus: OppgaveStatus): OppgaveDAO {
         this.status = oppgaveStatus
-        this.løstDato = ZonedDateTime.now(ZoneOffset.UTC)
         return this
     }
 }
