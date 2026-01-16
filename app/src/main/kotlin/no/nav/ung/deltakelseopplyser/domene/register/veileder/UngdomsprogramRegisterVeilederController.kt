@@ -180,7 +180,7 @@ class UngdomsprogramRegisterVeilederController(
         "/deltakelse/{deltakelseId}/historikk", produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun deltakelseHistorikk(@PathVariable deltakelseId: UUID): List<DeltakelseHistorikkDTO> {
-        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        val eksisterendeDeltakelse = registerService.hentFraProgramInkludertSlettet(deltakelseId)
         tilgangskontrollService.krevAnsattTilgang(
             READ,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))

@@ -145,21 +145,27 @@ class UngdomsprogramregisterService(
 
     fun markerSomHarSøkt(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
-        val eksisterende = forsikreEksistererIProgram(id)
+        val eksisterende = forsikreEksistererDeltakelse(id)
         eksisterende.markerSomHarSøkt()
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
     fun markerSomSlettet(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltakelse er slettet med id $id")
-        val eksisterende = forsikreEksistererIProgram(id)
+        val eksisterende = forsikreEksistererDeltakelse(id)
         eksisterende.markerSomSlettet()
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
     fun hentFraProgram(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
-        val ungdomsprogramDAO = forsikreEksistererIProgram(id)
+        val ungdomsprogramDAO = forsikreEksistererDeltakelse(id)
+        return ungdomsprogramDAO.mapToDTO()
+    }
+
+    fun hentFraProgramInkludertSlettet(id: UUID): DeltakelseDTO {
+        logger.info("Henter programopplysninger for deltaker med id $id")
+        val ungdomsprogramDAO = forsikreHarHattDeltakelse(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
@@ -238,7 +244,7 @@ class UngdomsprogramregisterService(
         deltakelseDTO: DeltakelseDTO,
     ): DeltakelseDTO {
         logger.info("Avsluttr deltakelse i program for deltaker med $deltakelseDTO")
-        val eksiterende = forsikreEksistererIProgram(id)
+        val eksiterende = forsikreEksistererDeltakelse(id)
 
         val periode = if (deltakelseDTO.tilOgMed == null) {
             Range.closedInfinite(deltakelseDTO.fraOgMed)
@@ -258,7 +264,7 @@ class UngdomsprogramregisterService(
 
     @Transactional(TRANSACTION_MANAGER)
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
-        val eksisterendeDeltakelse = forsikreEksistererIProgram(deltakelseId)
+        val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
         val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
 
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getFom()} til $endrePeriodeDatoDTO")
@@ -285,7 +291,7 @@ class UngdomsprogramregisterService(
 
     @Transactional(TRANSACTION_MANAGER)
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
-        val eksisterendeDeltakelse = forsikreEksistererIProgram(deltakelseId)
+        val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
         val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getTom()} til $endrePeriodeDatoDTO")
 
@@ -394,7 +400,27 @@ class UngdomsprogramregisterService(
         )
     }
 
-    private fun forsikreEksistererIProgram(id: UUID): DeltakelseDAO =
+    private fun forsikreEksistererDeltakelse(id: UUID): DeltakelseDAO =
+        deltakelseRepository.findById(id).orElseThrow {
+            ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Fant ingen deltakelse med id $id"
+                },
+                null
+            )
+        }.takeIf { !it.erSlettet }
+            ?: throw
+            ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
+                    it.detail = "Deltakelse med $id er slettet"
+                },
+                null
+            )
+
+
+    private fun forsikreHarHattDeltakelse(id: UUID): DeltakelseDAO =
         deltakelseRepository.findById(id).orElseThrow {
             ErrorResponseException(
                 HttpStatus.NOT_FOUND,
