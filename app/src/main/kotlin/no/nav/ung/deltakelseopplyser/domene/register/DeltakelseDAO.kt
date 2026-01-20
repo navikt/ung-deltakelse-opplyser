@@ -39,6 +39,9 @@ class DeltakelseDAO(
     @Column(name = "er_slettet")
     var erSlettet: Boolean = false,
 
+    @Column(name = "har_opphoersvedtak")
+    var harOpphørsvedtak: Boolean = false,
+
     @Column(name = "søkt_tidspunkt")
     var søktTidspunkt: ZonedDateTime? = null,
 ) : BaseAuditEntity() {
@@ -67,6 +70,10 @@ class DeltakelseDAO(
 
     fun markerSomSlettet() {
         erSlettet = true
+    }
+
+    fun markerMedOpphørsvedtak() {
+        harOpphørsvedtak = true
     }
 }
 
