@@ -30,7 +30,7 @@ class UngdomsytelseYtelseVedtattKonsument(
         topics = ["#{'\${topic.listener.ung-vedtakhendelse.navn}'}"],
         id = "#{'\${topic.listener.ung-vedtakhendelse.id}'}",
         groupId = "#{'\${spring.kafka.consumer.group-id}'}",
-        autoStartup = "#{'\${topic.listener.ung-oppgavebekreftelse.bryter}'}",
+        autoStartup = "#{'\${topic.listener.ung-vedtakhendelse.bryter}'}",
         filter = OPPHØRSVEDTAK_FILTER,
         properties = [
             "auto.offset.reset=#{'\${topic.listener.ung-vedtakhendelse.auto-offset-reset}'}"
@@ -66,7 +66,8 @@ class UngdomsytelseVedtakFattetKonsumentConfiguration(
                 objectMapper.readValue(consumerRecord.value(), no.nav.abakus.vedtak.ytelse.Ytelse::class.java)
             logger.info("Deserialisert vedtak fra topic for key ${consumerRecord.key()}")
             val mottattVedtak1 = mottattVedtak as YtelseV1
-            mottattVedtak1.anvist?.isEmpty() != false || mottattVedtak1.anvist?.all { it.dagsats.verdi.compareTo(BigDecimal.ZERO) == 0 } == true
+            // Return true if the record should be discarded
+            mottattVedtak1.anvist.any { it.dagsats.verdi.compareTo(BigDecimal.ZERO) != 0 }
         } catch (e: Exception) {
             logger.error("Kunne ikke deserialisere UngdomsytelseOppgavebekreftelse fra topic for key ${consumerRecord.key()}", e)
             throw e
