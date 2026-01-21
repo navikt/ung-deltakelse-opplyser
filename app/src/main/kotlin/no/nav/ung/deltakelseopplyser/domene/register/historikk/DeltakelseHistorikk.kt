@@ -21,6 +21,7 @@ data class DeltakelseHistorikk(
     val endretStartdato: EndretStartdatoHistorikk?,
     val endretSluttdato: EndretSluttdatoHistorikk?,
     val søktTidspunktSatt: SøktTidspunktHistorikk?,
+    val deltakelseFjernet: DeltakelseFjernetHistorikk?
 ) {
 
     companion object {
@@ -66,6 +67,13 @@ data class DeltakelseHistorikk(
                 requireNotNull(søktTidspunktSatt)
                 val formatertTidspunkt = DATE_TIME_FORMATTER.format(søktTidspunktSatt.søktTidspunkt)
                 "Deltaker har søkt om ytelse den ${formatertTidspunkt}."
+            }
+
+            Endringstype.DELTAKELSE_FJERNET -> {
+                requireNotNull(deltakelseFjernet)
+                val formattertPeriode = "fra " + DATE_FORMATTER.format(deltakelseFjernet.forrigeStartdato) +
+                        (deltakelseFjernet.forrigeSluttdato?.let { " og til " + DATE_FORMATTER.format(it) })
+                "Deltakelsen ${formattertPeriode} er fjernet."
             }
 
             Endringstype.UKJENT -> "Endringstype er ukjent."
