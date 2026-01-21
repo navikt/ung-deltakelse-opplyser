@@ -60,17 +60,20 @@ class UngdomsytelseVedtakFattetKonsumentConfiguration(
     }
 
     @Bean(OPPHØRSVEDTAK_FILTER)
-    fun opphørsvedtakFilter() = RecordFilterStrategy<String, String> { consumerRecord ->
+    fun kunOpphørsvedtakFilter() = RecordFilterStrategy<String, String> { consumerRecord ->
         try {
             val mottattVedtak =
                 objectMapper.readValue(consumerRecord.value(), no.nav.abakus.vedtak.ytelse.Ytelse::class.java)
             logger.info("Deserialisert vedtak fra topic for key ${consumerRecord.key()}")
             val mottattVedtak1 = mottattVedtak as YtelseV1
             // Return true if the record should be discarded
-            mottattVedtak1.anvist.any { it.dagsats.verdi.compareTo(BigDecimal.ZERO) != 0 }
+            gjelderIkkeOpphørsvedtak(mottattVedtak1)
         } catch (e: Exception) {
             logger.error("Kunne ikke deserialisere UngdomsytelseOppgavebekreftelse fra topic for key ${consumerRecord.key()}", e)
             throw e
         }
     }
+
+    private fun gjelderIkkeOpphørsvedtak(mottattVedtak1: YtelseV1): Boolean =
+        mottattVedtak1.anvist.any { it.dagsats.verdi.compareTo(BigDecimal.ZERO) != 0 }
 }
