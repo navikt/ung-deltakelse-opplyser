@@ -89,7 +89,7 @@ class DeltakelseHistorikkServiceTest {
     }
 
     @Test
-    fun `Deltaker blir meldt inn i programmet, startdato endres, deltaker søker ytelse, og deretter meldes deltaker ut av programmet`() {
+    fun `Deltaker blir meldt inn i programmet, startdato endres, deltaker søker ytelse, meldes ut av programmet, og deltakelsen fjernes`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
@@ -97,11 +97,15 @@ class DeltakelseHistorikkServiceTest {
         every { pdlService.hentPerson(any()) } returns Scenarioer
             .lagPerson(LocalDate.of(2000, 1, 1))
 
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
 
         val mandag = LocalDate.parse("2024-10-07")
         val onsdag = LocalDate.parse("2024-10-09")
 
-        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val deltakerDTO = DeltakerDTO(deltakerIdent = deltakerIdent)
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
@@ -119,6 +123,9 @@ class DeltakelseHistorikkServiceTest {
         val søktTidspunkt =
             ungdomsprogramregisterService.markerSomHarSøkt(deltakelseId).søktTidspunkt // Fører til tredje historikkinnslag
 
+        deltakelseRepository.flush();
+        deltakerRepository.flush()
+
         ungdomsprogramregisterService.avsluttDeltakelse(
             deltakelseId, DeltakelseDTO(
                 deltaker = innmelding.deltaker,
@@ -132,8 +139,11 @@ class DeltakelseHistorikkServiceTest {
             EndrePeriodeDatoDTO(onsdag.plusWeeks(1))
         ) // Fører til femte historikkinnslag
 
+        val deltakerDAO = deltakerRepository.finnDeltakerGittIdenter(deltakerIdenter = listOf(deltakerDTO.deltakerIdent)).first()
+        ungdomsprogramregisterService.fjernFraProgram(deltakerDAO) // Sjette historikkinnslag
+
         val historikk = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
-        assertThat(historikk).hasSize(5).also {
+        assertThat(historikk).hasSize(6).also {
             historikk.forEach { logger.info("Innslag: {}", it.utledEndringsTekst()) }
         }
 
@@ -214,6 +224,20 @@ class DeltakelseHistorikkServiceTest {
         assertThat(femteInnslag.endretAv).isNotNull()
         assertThat(femteInnslag.endretTidspunkt).isNotNull()
         assertThat(femteInnslag.utledEndringsTekst()).isEqualTo("Sluttdato for deltakelse er endret fra ${formater(onsdag)} til ${formater(onsdag.plusWeeks(1))}.")
+
+        val sjetteInnslag = innslag.next() // Femte innslag er endring av sluttdato
+        assertThat(sjetteInnslag.revisjonsnummer).isGreaterThan(femteInnslag.revisjonsnummer)
+        assertThat(sjetteInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
+        assertThat(sjetteInnslag.endringstype).isEqualTo(Endringstype.DELTAKELSE_FJERNET)
+        assertThat(sjetteInnslag.deltakelseFjernet).isNotNull
+        assertThat(sjetteInnslag.deltakelseFjernet!!.forrigeStartdato).isEqualTo(onsdag)
+        assertThat(sjetteInnslag.deltakelseFjernet.forrigeSluttdato).isEqualTo(onsdag.plusWeeks(1))
+        assertThat(sjetteInnslag.deltakelse.erSlettet).isEqualTo(true)
+        assertThat(sjetteInnslag.opprettetAv).isEqualTo(førsteInnslag.opprettetAv)
+        assertThat(sjetteInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
+        assertThat(sjetteInnslag.endretAv).isNotNull()
+        assertThat(sjetteInnslag.endretTidspunkt).isNotNull()
+        assertThat(sjetteInnslag.utledEndringsTekst()).isEqualTo("Deltakelsen fra ${formater(onsdag)} og til ${formater(onsdag.plusWeeks(1))} er fjernet.")
     }
 
     @Test
