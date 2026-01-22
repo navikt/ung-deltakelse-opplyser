@@ -27,6 +27,9 @@ data class DeltakelseDTO(
     @JsonProperty("erSlettet")
     val erSlettet: Boolean = false,
 
+    @JsonProperty("harOpphørsvedtak")
+    val harOpphørsvedtak: Boolean = false,
+
     @JsonProperty("søktTidspunkt")
     val søktTidspunkt: ZonedDateTime? = null
 ) {
