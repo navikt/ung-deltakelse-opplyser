@@ -73,7 +73,12 @@ topic:
       navn: dusseldorf.ungdomsytelse-inntektsrapportering-cleanup
       bryter: true
       auto-offset-reset: earliest
-
+    # topic.listener.ung-vedtakhendelse
+    ung-vedtakhendelse:
+      id: ungdomsytelseVedtak-listener
+      navn: k9saksbehandling.ung-vedtakhendelse
+      bryter: true
+      auto-offset-reset: earliest
 management:
   endpoint:
     health:

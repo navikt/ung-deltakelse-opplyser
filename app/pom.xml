@@ -25,6 +25,7 @@
         <fp-sak.version>2.7.3</fp-sak.version>
         <k9-format.version>12.7.2</k9-format.version>
         <k9-felles.version>7.1.5</k9-felles.version>
+        <k9-abakus.version>1.4.1</k9-abakus.version>
         <graphql-kotlin.version>8.8.1</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
@@ -135,6 +136,11 @@
             <groupId>no.nav.sif.abac</groupId>
             <artifactId>kontrakt</artifactId>
             <version>${sif-abac-kontrakt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.k9.abakus</groupId>
+            <artifactId>abakus-vedtak</artifactId>
+            <version>${k9-abakus.version}</version>
         </dependency>
         <!-- K9 Kontrakter -->
 

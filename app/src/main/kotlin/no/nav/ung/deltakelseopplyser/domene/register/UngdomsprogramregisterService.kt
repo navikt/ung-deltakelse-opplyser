@@ -157,6 +157,14 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
+    fun markerSomFattetOpphørsvedtak(id: UUID): DeltakelseDTO {
+        logger.info("Markerer at deltakelse er slettet og fattet vedtak om opphør med id $id")
+        val eksisterende = forsikreEksistererDeltakelse(id)
+        eksisterende.markerMedOpphørsvedtak()
+        return deltakelseRepository.save(eksisterende).mapToDTO()
+    }
+
+
     fun hentFraProgram(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreEksistererDeltakelse(id)
