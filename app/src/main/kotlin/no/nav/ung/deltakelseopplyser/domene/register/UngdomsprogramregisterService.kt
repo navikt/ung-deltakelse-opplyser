@@ -57,6 +57,7 @@ class UngdomsprogramregisterService(
                 fraOgMed = getFom(),
                 tilOgMed = getTom(),
                 erSlettet = erSlettet,
+                harOpphørsvedtak = harOpphørsvedtak
             )
         }
     }
