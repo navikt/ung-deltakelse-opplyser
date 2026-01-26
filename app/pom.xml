@@ -21,15 +21,15 @@
         <logback.logstash.version>9.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>6.2.0</ung-sak.version>
+        <ung-sak.version>6.2.1</ung-sak.version>
         <fp-sak.version>2.7.3</fp-sak.version>
-        <k9-format.version>12.7.2</k9-format.version>
-        <k9-felles.version>7.1.5</k9-felles.version>
+        <k9-format.version>12.7.4</k9-format.version>
+        <k9-felles.version>10.0.12</k9-felles.version>
         <k9-abakus.version>1.4.1</k9-abakus.version>
         <graphql-kotlin.version>8.8.1</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
-        <sif-abac-kontrakt.version>1.6.0</sif-abac-kontrakt.version>
+        <sif-abac-kontrakt.version>1.7.0</sif-abac-kontrakt.version>
         <google-cloud-bigquery.version>2.57.1</google-cloud-bigquery.version>
     </properties>
     <dependencies>
