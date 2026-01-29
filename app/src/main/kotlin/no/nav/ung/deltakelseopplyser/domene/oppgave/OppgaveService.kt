@@ -244,7 +244,7 @@ class OppgaveService(
     fun endreFrist(oppgaveReferanse: UUID, nyFrist: ZonedDateTime): OppgaveDTO {
         val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
         val oppdatertOppgave = oppgave.endreFrist(nyFrist)
-        logger.info("Oppdaterer frist oppgave med oppgaveReferanse $oppgaveReferanse")
+        logger.info("Oppdaterer frist for oppgave med oppgaveReferanse $oppgaveReferanse")
         deltakerService.oppdaterDeltaker(deltaker)
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
