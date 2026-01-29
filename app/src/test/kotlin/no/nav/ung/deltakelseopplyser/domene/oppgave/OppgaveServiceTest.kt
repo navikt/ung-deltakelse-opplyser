@@ -333,7 +333,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT }.oppgaveReferanse
 
 
-        val nyFrist = opprinneligFrist.plusDays(7).atZone(ZoneId.systemDefault())
+        val nyFrist = opprinneligFrist.plusDays(7).atZone(ZoneId.of("Europe/Oslo"))
 
         // Bruker transactionTemplate for å oppdatere databasen
         transactionTemplate.execute {
@@ -344,7 +344,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.ULØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
-        assertThat(oppgave.frist!!.withZoneSameInstant(ZoneId.systemDefault())).isEqualTo(nyFrist)
+        assertThat(oppgave.frist!!.withZoneSameInstant(ZoneId.of("Europe/Oslo"))).isEqualTo(nyFrist)
 
 
     }
