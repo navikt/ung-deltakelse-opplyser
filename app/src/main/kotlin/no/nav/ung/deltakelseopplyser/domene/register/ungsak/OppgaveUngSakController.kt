@@ -9,6 +9,7 @@ import no.nav.sif.abac.kontrakt.abac.ResourceType
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.AktørId
+import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
@@ -21,10 +22,7 @@ import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.endretperiode.EndretPeriodeOppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndreStatusDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
@@ -93,6 +91,30 @@ class OppgaveUngSakController(
         oppgaveService.utløperOppgave(
             deltaker = deltaker,
             oppgaveReferanse = oppgaveReferanse
+        )
+    }
+
+    @PostMapping("/endre/frist", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Endrer frist for oppgave")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun endreFrist(@RequestBody endreFristDto: EndreFristDto) {
+        val deltaker = deltakerEksistererMedOppgaveReferanse(endreFristDto.oppgaveReferanse)
+        if (tilgangskontrollService.erSystemBruker()) {
+            tilgangskontrollService.krevSystemtilgang()
+        } else {
+            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+                PersonerOperasjonDto(
+                    listOf(),
+                    listOf(PersonIdent(deltaker.deltakerIdent)),
+                    OperasjonDto(ResourceType.VENTEFRIST, BeskyttetRessursActionAttributt.UPDATE, setOf())
+                )
+            )
+        }
+        logger.info("Endrer frist for oppgave med referanse ${endreFristDto.oppgaveReferanse} til ${endreFristDto.nyFrist}")
+        oppgaveService.endreFrist(
+            oppgaveReferanse = endreFristDto.oppgaveReferanse,
+            endreFristDto.nyFrist
         )
     }
 
@@ -339,7 +361,7 @@ class OppgaveUngSakController(
 
         deltakersOppgaver.stream()
             .anyMatch {
-                        (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST) ||
+                (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST) ||
                         (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST) ||
                         (it.oppgavetype == Oppgavetype.BEKREFT_FJERNET_PERIODE && it.status == OppgaveStatus.ULØST)
             }
