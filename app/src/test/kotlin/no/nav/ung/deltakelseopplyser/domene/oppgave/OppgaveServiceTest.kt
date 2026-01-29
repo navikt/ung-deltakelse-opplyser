@@ -344,7 +344,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.ULØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
-        assertThat(oppgave.frist).isEqualTo(nyFrist)
+        assertThat(oppgave.frist!!.withZoneSameInstant(ZoneId.systemDefault())).isEqualTo(nyFrist)
 
 
     }
