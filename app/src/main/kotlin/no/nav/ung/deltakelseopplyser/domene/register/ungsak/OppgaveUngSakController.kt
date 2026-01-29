@@ -103,20 +103,11 @@ class OppgaveUngSakController(
         if (tilgangskontrollService.erSystemBruker()) {
             tilgangskontrollService.krevSystemtilgang()
         } else {
-            val aktørId = pdlService.hentAktørIder(deltaker.deltakerIdent).firstOrNull()?.ident
-                ?: throw ErrorResponseException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    ProblemDetail.forStatusAndDetail(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Fant ingen aktørId for deltaker."
-                    ),
-                    null
-                )
             tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
                 PersonerOperasjonDto(
-                    listOf(AktørId(aktørId)),
                     listOf(),
-                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.UPDATE, setOf())
+                    listOf(PersonIdent(deltaker.deltakerIdent)),
+                    OperasjonDto(ResourceType.VENTEFRIST, BeskyttetRessursActionAttributt.UPDATE, setOf())
                 )
             )
         }
