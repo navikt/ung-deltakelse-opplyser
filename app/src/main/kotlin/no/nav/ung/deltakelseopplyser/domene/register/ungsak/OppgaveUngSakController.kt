@@ -9,6 +9,7 @@ import no.nav.sif.abac.kontrakt.abac.ResourceType
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.AktørId
+import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
@@ -98,7 +99,27 @@ class OppgaveUngSakController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun endreFrist(@RequestBody endreFristDto: EndreFristDto) {
-        tilgangskontrollService.krevSystemtilgang()
+        val deltaker = deltakerEksistererMedOppgaveReferanse(endreFristDto.oppgaveReferanse)
+        if (tilgangskontrollService.erSystemBruker()) {
+            tilgangskontrollService.krevSystemtilgang()
+        } else {
+            val aktørId = pdlService.hentAktørIder(deltaker.deltakerIdent).firstOrNull()?.ident
+                ?: throw ErrorResponseException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ProblemDetail.forStatusAndDetail(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Fant ingen aktørId for deltaker."
+                    ),
+                    null
+                )
+            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+                PersonerOperasjonDto(
+                    listOf(AktørId(aktørId)),
+                    listOf(),
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.UPDATE, setOf())
+                )
+            )
+        }
         logger.info("Endrer frist for oppgave med referanse ${endreFristDto.oppgaveReferanse} til ${endreFristDto.nyFrist}")
         oppgaveService.endreFrist(
             oppgaveReferanse = endreFristDto.oppgaveReferanse,
