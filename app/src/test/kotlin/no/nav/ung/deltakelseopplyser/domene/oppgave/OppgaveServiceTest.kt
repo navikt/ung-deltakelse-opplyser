@@ -54,6 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -235,7 +236,8 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         kontrollerAvvikPåInntektIRegister(
             deltakerIdent = deltakerIdent,
             fom = orginalStartdato,
-            tom = orginalStartdato.plusWeeks(4)
+            tom = orginalStartdato.plusWeeks(4),
+            frist = LocalDateTime.now().plusDays(14)
         )
 
         val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent)
@@ -305,6 +307,46 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
 
+    @Test
+    fun `Skal kunne endre frist på oppgave`() {
+        val orginalStartdato: LocalDate = LocalDate.now()
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        mockHentFolkeregisteridenter(deltakerIdent)
+        meldInnIProgrammet(deltakerIdent, orginalStartdato)
+
+        val opprinneligFrist = LocalDateTime.now().plusDays(14)
+        kontrollerAvvikPåInntektIRegister(
+            deltakerIdent = deltakerIdent,
+            fom = orginalStartdato,
+            tom = orginalStartdato.plusWeeks(4),
+            frist = opprinneligFrist
+        )
+
+        val oppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+        assertThat(oppgaver).hasSize(2)
+        val oppgaveReferanse =
+            oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT }.oppgaveReferanse
+
+        val nyFrist = opprinneligFrist.plusDays(7).atZone(ZoneId.systemDefault())
+        oppgaveService.endreFrist(
+            oppgaveReferanse,
+            nyFrist = nyFrist
+        )
+
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+            .first { it.oppgaveReferanse == oppgaveReferanse }
+
+        assertThat(oppgave.status).isEqualTo(OppgaveStatus.ULØST)
+        assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
+        assertThat(oppgave.frist).isEqualTo(nyFrist)
+
+        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
+        verify(exactly = 1) { mineSiderService.opprettVarsel(oppgaveReferanse.toString(), deltakerIdent, any(), any(), any(), nyFrist) }
+
+
+    }
+
+
     private fun mockHentFolkeregisteridenter(deltakerIdent: String) {
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
             IdentInformasjon(
@@ -352,12 +394,13 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         deltakerIdent: String,
         fom: LocalDate,
         tom: LocalDate,
+        frist: LocalDateTime,
     ) {
         oppgaveUngSakController.opprettOppgaveForKontrollAvRegisterinntekt(
             opprettOppgaveDto = RegisterInntektOppgaveDTO(
                 deltakerIdent = deltakerIdent,
                 referanse = UUID.randomUUID(),
-                frist = LocalDateTime.now().plusDays(14),
+                frist = frist,
                 fomDato = fom,
                 tomDato = tom,
                 registerInntekter = RegisterInntektDTO(

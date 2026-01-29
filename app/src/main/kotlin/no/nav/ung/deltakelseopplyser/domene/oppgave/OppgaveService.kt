@@ -108,8 +108,7 @@ class OppgaveService(
             deltakerIdent = deltaker.deltakerIdent,
             tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
             varselLink = utledVarselLink(nyOppgave),
-            varseltype = Varseltype.Oppgave,
-            aktivFremTil = frist,
+            varseltype = Varseltype.Oppgave
         )
 
         return oppgaveMapperService.mapOppgaveTilDTO(nyOppgave)
@@ -238,6 +237,14 @@ class OppgaveService(
         val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
 
         val oppdatertOppgave = oppgave.markerSomÅpnet()
+        deltakerService.oppdaterDeltaker(deltaker)
+        return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
+    }
+
+    fun endreFrist(oppgaveReferanse: UUID, nyFrist: ZonedDateTime): OppgaveDTO {
+        val (deltaker, oppgave) = hentDeltakerOppgave(oppgaveReferanse)
+        val oppdatertOppgave = oppgave.endreFrist(nyFrist)
+        logger.info("Oppdaterer frist frist oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }

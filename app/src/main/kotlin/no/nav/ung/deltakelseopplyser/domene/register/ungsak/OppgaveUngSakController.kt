@@ -21,10 +21,7 @@ import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.endretperiode.EndretPeriodeOppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.EndreStatusDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.RegisterInntektOppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.startdato.EndretSluttdatoOppgaveDTO
@@ -93,6 +90,19 @@ class OppgaveUngSakController(
         oppgaveService.utløperOppgave(
             deltaker = deltaker,
             oppgaveReferanse = oppgaveReferanse
+        )
+    }
+
+    @PostMapping("/endre/frist", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Endrer frist for oppgave")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun endreFrist(@RequestBody endreFristDto: EndreFristDto) {
+        tilgangskontrollService.krevSystemtilgang()
+        logger.info("Endrer frist for oppgave med referanse ${endreFristDto.oppgaveReferanse} til ${endreFristDto.nyFrist}")
+        oppgaveService.endreFrist(
+            oppgaveReferanse = endreFristDto.oppgaveReferanse,
+            endreFristDto.nyFrist
         )
     }
 
@@ -339,7 +349,7 @@ class OppgaveUngSakController(
 
         deltakersOppgaver.stream()
             .anyMatch {
-                        (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST) ||
+                (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_STARTDATO && it.status == OppgaveStatus.ULØST) ||
                         (it.oppgavetype == Oppgavetype.BEKREFT_ENDRET_SLUTTDATO && it.status == OppgaveStatus.ULØST) ||
                         (it.oppgavetype == Oppgavetype.BEKREFT_FJERNET_PERIODE && it.status == OppgaveStatus.ULØST)
             }

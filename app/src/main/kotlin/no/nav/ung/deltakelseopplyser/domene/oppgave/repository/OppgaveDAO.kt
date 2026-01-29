@@ -37,7 +37,7 @@ class OppgaveDAO(
     val oppgavetype: Oppgavetype,
 
     @Column(name = "frist", nullable = true)
-    val frist: ZonedDateTime? = null,
+    var frist: ZonedDateTime? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -99,6 +99,11 @@ class OppgaveDAO(
 
     fun settStatus(oppgaveStatus: OppgaveStatus): OppgaveDAO {
         this.status = oppgaveStatus
+        return this
+    }
+
+    fun endreFrist(nyFrist: ZonedDateTime?): OppgaveDAO {
+        this.frist = nyFrist
         return this
     }
 }
