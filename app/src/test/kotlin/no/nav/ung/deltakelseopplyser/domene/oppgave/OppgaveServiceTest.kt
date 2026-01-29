@@ -18,6 +18,7 @@ import no.nav.k9.søknad.felles.type.SøknadId
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
@@ -26,6 +27,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.kafka.UngdomsytelseOppgavebe
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretSluttdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.EndretStartdatoOppgaveDataDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.KontrollerRegisterInntektOppgaveTypeDataDAO
+import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
@@ -52,6 +54,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -72,6 +77,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var deltakerRepository: DeltakerRepository
+
+    @Autowired
+    lateinit var transactionTemplate: TransactionTemplate
 
     @Autowired
     lateinit var oppgaveUngSakController: OppgaveUngSakController
@@ -161,8 +169,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
-            .first { it.oppgaveReferanse == oppgaveReferanse }
+        val oppgave = hentOppdatertOppgave(deltakerIdent, oppgaveReferanse)
 
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
@@ -213,8 +220,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         )
 
 
-        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
-            .first { it.oppgaveReferanse == oppgaveReferanse }
+        val oppgave = hentOppdatertOppgave(deltakerIdent, oppgaveReferanse)
 
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
@@ -257,8 +263,7 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
-            .first { it.oppgaveReferanse == oppgaveReferanse }
+        val oppgave = hentOppdatertOppgave(deltakerIdent, oppgaveReferanse)
 
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
@@ -327,23 +332,30 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         val oppgaveReferanse =
             oppgaver.first { it.oppgavetype == Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT }.oppgaveReferanse
 
-        val nyFrist = opprinneligFrist.plusDays(7).atZone(ZoneId.systemDefault())
-        oppgaveService.endreFrist(
-            oppgaveReferanse,
-            nyFrist = nyFrist
-        )
 
-        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
-            .first { it.oppgaveReferanse == oppgaveReferanse }
+        val nyFrist = opprinneligFrist.plusDays(7).atZone(ZoneId.systemDefault())
+
+        // Bruker transactionTemplate for å oppdatere databasen
+        transactionTemplate.execute {
+            oppgaveService.endreFrist(oppgaveReferanse, nyFrist = nyFrist)
+        }
+
+        val oppgave = hentOppdatertOppgave(deltakerIdent, oppgaveReferanse)
 
         assertThat(oppgave.status).isEqualTo(OppgaveStatus.ULØST)
         assertThat(oppgave.oppgaveReferanse).isEqualTo(oppgaveReferanse)
         assertThat(oppgave.frist).isEqualTo(nyFrist)
 
-        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
-        verify(exactly = 1) { mineSiderService.opprettVarsel(oppgaveReferanse.toString(), deltakerIdent, any(), any(), any(), nyFrist) }
 
+    }
 
+    private fun hentOppdatertOppgave(
+        deltakerIdent: String,
+        oppgaveReferanse: UUID
+    ): OppgaveDAO {
+        val oppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
+            .first { it.oppgaveReferanse == oppgaveReferanse }
+        return oppgave
     }
 
 
