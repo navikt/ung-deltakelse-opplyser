@@ -165,6 +165,11 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
         every { pdlService.hentPerson(any()) } returns Scenarioer
             .lagPerson(LocalDate.of(2000, 1, 1))
-
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon(
+                "123456789",
+                false,
+                IdentGruppe.AKTORID
+            ))
     }
 }

@@ -72,9 +72,10 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     @Test
     fun `Forventet rapportertInntekt konsumeres og deserialiseres som forventet`() {
         justRun { tilgangskontrollService.krevSystemtilgang() }
-        every { pdlService.hentPerson(any()) } returns Scenarioer
+        val person = Scenarioer
             .lagPerson(LocalDate.of(2000, 1, 1))
-
+        every { pdlService.hentPerson(any()) } returns person
+        every { pdlService.hentAktørIder(any()) } returns listOf(IdentInformasjon("123456789", false, IdentGruppe.AKTORID))
         val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
         val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
         val søkerIdent = no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator.neste()
