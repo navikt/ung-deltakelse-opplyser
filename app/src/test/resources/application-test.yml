@@ -9,6 +9,7 @@ HOSTNAME: ung-deltakelse-opplyser
 PROGRAM_OPPSTART_DATO: 2024-01-01
 FLYWAY_REPAIR_ON_FAIL: false
 SLETT_SOKT_DELTAKELSE_ENABLED: true
+OPPGAVER_I_UNG_SAK_ENABLED: true
 ELECTOR_GET_URL: http://localhost:8080/elector/get # placeholder
 
 spring:
