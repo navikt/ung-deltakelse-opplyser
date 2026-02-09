@@ -91,7 +91,7 @@
     "SPRING_PROFILES_ACTIVE": "dev-gcp",
 
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.dev.nav.no/ung/sak",
-    "NO_NAV_GATEWAYS_UNG_OPPGAVER": "https://ung-sak.intern.dev.nav.no/ung/brukerdialog-oppgaver",
+    "NO_NAV_GATEWAYS_UNG_OPPGAVER": "https://ung-sak.intern.dev.nav.no/ung/sak/brukerdialog",
 
     "UNG_SAK_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.ung-sak/.default",
 
