@@ -15,6 +15,7 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
+import java.util.*
 
 @Service
 @Retryable(
@@ -34,7 +35,10 @@ class UngOppgaverService(
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(UngOppgaverService::class.java)
 
-        private val opprettSøkYtelseUrl = "/api/oppgave/opprett/sok-ytelse"
+        private const val opprettSøkYtelseUrl = "/api/oppgave/opprett/sok-ytelse"
+        private const val lukkOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/lukk"
+        private const val apneOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/apne"
+        private const val losOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/los"
     }
 
     fun opprettSøkYtelseOppgave(opprettOppgave: OpprettSøkYtelseOppgaveDto): Boolean {
@@ -73,5 +77,68 @@ class UngOppgaverService(
     ): Boolean {
         logger.error("Fikk en ResourceAccessException når man kalte opprettSøkYtelseOppgave tjeneste i ung-sak.")
         return false
+    }
+
+    fun lukkOppgave(oppgaveReferanse: UUID): Boolean {
+        return try {
+            val response = ungOppgaverKlient.exchange(
+                lukkOppgaveUrl,
+                HttpMethod.PUT,
+                null,
+                Unit::class.java,
+                oppgaveReferanse
+            )
+            response.statusCode == HttpStatus.OK
+        } catch (e: HttpServerErrorException) {
+            if (e.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
+                e.responseBodyAsString.contains("Fant ikke oppgave med oppgavereferanse:")) {
+                logger.warn("Ung-sak fant ikke oppgave med oppgavereferanse: $oppgaveReferanse. Dette er forventet for eldre oppgaver.")
+                true // Return true to indicate we handled this gracefully
+            } else {
+                throw e
+            }
+        }
+    }
+
+    fun åpneOppgave(oppgaveReferanse: UUID): Boolean {
+        return try {
+            val response = ungOppgaverKlient.exchange(
+                apneOppgaveUrl,
+                HttpMethod.PUT,
+                null,
+                Unit::class.java,
+                oppgaveReferanse
+            )
+            response.statusCode == HttpStatus.OK
+        } catch (e: HttpServerErrorException) {
+            if (e.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
+                e.responseBodyAsString.contains("Fant ikke oppgave med oppgavereferanse:")) {
+                logger.warn("Ung-sak fant ikke oppgave med oppgavereferanse: $oppgaveReferanse. Dette er forventet for eldre oppgaver.")
+                true // Return true to indicate we handled this gracefully
+            } else {
+                throw e
+            }
+        }
+    }
+
+    fun løsOppgave(oppgaveReferanse: UUID): Boolean {
+        return try {
+            val response = ungOppgaverKlient.exchange(
+                losOppgaveUrl,
+                HttpMethod.PUT,
+                null,
+                Unit::class.java,
+                oppgaveReferanse
+            )
+            response.statusCode == HttpStatus.OK
+        } catch (e: HttpServerErrorException) {
+            if (e.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
+                e.responseBodyAsString.contains("Fant ikke oppgave med oppgavereferanse:")) {
+                logger.warn("Ung-sak fant ikke oppgave med oppgavereferanse: $oppgaveReferanse. Dette er forventet for eldre oppgaver.")
+                true // Return true to indicate we handled this gracefully
+            } else {
+                throw e
+            }
+        }
     }
 }

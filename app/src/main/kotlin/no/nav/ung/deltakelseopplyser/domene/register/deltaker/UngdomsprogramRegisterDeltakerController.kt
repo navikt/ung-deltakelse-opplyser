@@ -11,9 +11,11 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.utils.personIdent
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
@@ -43,6 +45,8 @@ class UngdomsprogramRegisterDeltakerController(
     private val oppgaveService: OppgaveService,
     private val oppgaveMapperService: OppgaveMapperService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
+    private val ungOppgaverService: UngOppgaverService,
+    @Value("\${OPPGAVER_I_UNG_SAK_ENABLED}") private val oppgaverIUngSakEnabled: Boolean,
 ) {
 
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -99,7 +103,9 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-
+        if (oppgaverIUngSakEnabled) {
+            ungOppgaverService.lukkOppgave(oppgaveReferanse)
+        }
         return oppgaveService.lukkOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 
@@ -108,6 +114,9 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
+        if (oppgaverIUngSakEnabled) {
+            ungOppgaverService.åpneOppgave(oppgaveReferanse)
+        }
         return oppgaveService.åpneOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 
@@ -116,6 +125,9 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomLøst(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
+        if (oppgaverIUngSakEnabled) {
+            ungOppgaverService.løsOppgave(oppgaveReferanse)
+        }
         return oppgaveService.løsOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 }
