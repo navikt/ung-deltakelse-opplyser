@@ -82,6 +82,7 @@
     "SPRING_PROFILES_ACTIVE": "prod-gcp",
 
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.nav.no/ung/sak",
+    "NO_NAV_GATEWAYS_UNG_OPPGAVER": "https://ung-sak.intern.nav.no/ung/brukerdialog-oppgaver",
     "UNG_SAK_AZURE_SCOPE": "api://prod-gcp.k9saksbehandling.ung-sak/.default",
 
     "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api",
@@ -105,6 +106,7 @@
 
 
     "SLETT_SOKT_DELTAKELSE_ENABLED": false,
+    "OPPGAVER_I_UNG_SAK_ENABLED": false,
 
     "FLYWAY_REPAIR_ON_FAIL": false
 
