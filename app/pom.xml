@@ -21,7 +21,7 @@
         <logback.logstash.version>9.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>7.0.2</ung-sak.version>
+        <ung-sak.version>7.0.3</ung-sak.version>
         <fp-sak.version>2.7.3</fp-sak.version>
         <k9-format.version>12.7.2</k9-format.version>
         <k9-felles.version>7.1.5</k9-felles.version>
