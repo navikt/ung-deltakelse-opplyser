@@ -28,12 +28,12 @@ class UngOppgaverKlientKonfig(
     private companion object {
         val logger: Logger = LoggerFactory.getLogger(UngOppgaverKlientKonfig::class.java)
 
-        const val AZURE_UNG_SAK = "azure-ung-sak"
+        const val AZURE_UNG_OPPGAVER = "azure-ung-oppgaver"
     }
 
-    private val azureUngSakClientProperties =
-        oauth2Config.registration[AZURE_UNG_SAK]
-            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_SAK")
+    private val azureUngOppgaverClientProperties =
+        oauth2Config.registration[AZURE_UNG_OPPGAVER]
+            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_OPPGAVER")
 
     @Bean(name = ["ungOppgaverKlient"])
     fun restTemplate(
@@ -56,7 +56,7 @@ class UngOppgaverKlientKonfig(
                 request.uri.path == "/isalive" -> {} // ignorer
 
                 else -> {
-                    oAuth2AccessTokenService.getAccessToken(azureUngSakClientProperties).access_token?.let {
+                    oAuth2AccessTokenService.getAccessToken(azureUngOppgaverClientProperties).access_token?.let {
                         request.headers.setBearerAuth(it)
                     }?: throw SecurityException("Access token er null")
                 }

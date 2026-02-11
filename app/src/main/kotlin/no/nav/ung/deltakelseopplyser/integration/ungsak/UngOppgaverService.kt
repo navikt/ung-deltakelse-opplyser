@@ -37,8 +37,8 @@ class UngOppgaverService(
 
         private const val opprettSøkYtelseUrl = "/api/oppgave/opprett/sok-ytelse"
         private const val lukkOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/lukk"
-        private const val apneOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/apne"
-        private const val losOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/los"
+        private const val apneOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/apnet"
+        private const val losOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/løst"
     }
 
     fun opprettSøkYtelseOppgave(opprettOppgave: OpprettSøkYtelseOppgaveDto): Boolean {

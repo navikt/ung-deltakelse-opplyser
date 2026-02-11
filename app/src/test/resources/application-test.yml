@@ -9,6 +9,7 @@ HOSTNAME: ung-deltakelse-opplyser
 PROGRAM_OPPSTART_DATO: 2024-01-01
 FLYWAY_REPAIR_ON_FAIL: false
 SLETT_SOKT_DELTAKELSE_ENABLED: true
+OPPGAVER_I_UNG_SAK_ENABLED: true
 ELECTOR_GET_URL: http://localhost:8080/elector/get # placeholder
 
 spring:
@@ -71,7 +72,14 @@ no.nav:
               client-auth-method: private_key_jwt
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
-
+          azure-ung-oppgaver:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+            scope: api://dev-fss:k9saksbehandling:ung-sak/.default
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
           azure-sif-abac-pdp:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: client_credentials
@@ -110,7 +118,8 @@ no.nav:
               client-jwk: src/test/resources/private_jwk.json
 
   gateways:
-    ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/k9/sak
+    ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/ung/sak
+    ung-oppgaver: http://localhost:${wiremock.server.port}/ung-sak-mock/ung/sak/brukerdialog
     sif-abac-pdp: http://localhost:${wiremock.server.port}/sif-abac-pdp-mock
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock
     sokos-kontoregister-person-base-url: http://localhost:${wiremock.server.port}/sokos-kontoregister-person-mock
