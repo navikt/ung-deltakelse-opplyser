@@ -35,6 +35,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.ungsak.OppgaveUngSakControl
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -92,6 +93,9 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
 
     @MockkBean
     lateinit var pdlService: PdlService
+
+    @MockkBean(relaxed = true)
+    lateinit var ungOppgaverService: UngOppgaverService
 
     @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService

@@ -162,6 +162,7 @@ no.nav:
 
   gateways:
     ung-sak: # Settes i nais/<cluster>.json
+    ung-oppgaver: # Settes i nais/<cluster>.json
     pdl-api-base-url: # Settes i nais/<cluster>.json
     sokos-kontoregister-person-base-url: # Settes i nais/<cluster>.json
     enhetsregister-base-url: # Settes i nais/<cluster>.json
