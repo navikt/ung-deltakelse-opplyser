@@ -72,7 +72,14 @@ no.nav:
               client-auth-method: private_key_jwt
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
-
+          azure-ung-oppgaver:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+            scope: api://dev-fss:k9saksbehandling:ung-sak/.default
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
           azure-sif-abac-pdp:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: client_credentials

@@ -28,7 +28,7 @@ class UngOppgaverKlientKonfig(
     private companion object {
         val logger: Logger = LoggerFactory.getLogger(UngOppgaverKlientKonfig::class.java)
 
-        const val AZURE_UNG_SAK = "azure-ung-sak"
+        const val AZURE_UNG_SAK = "azure-ung-oppgaver"
     }
 
     private val azureUngSakClientProperties =
