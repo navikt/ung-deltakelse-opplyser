@@ -11,6 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
@@ -20,6 +21,7 @@ import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
+import no.nav.ung.sak.kontrakt.oppgaver.OpprettSøkYtelseOppgaveDto
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -43,7 +45,9 @@ class UngdomsprogramregisterService(
     private val pdlService: PdlService,
     private val oppgaveService: OppgaveService,
     private val oppgaveMapperService: OppgaveMapperService,
+    private val ungOppgaverService: UngOppgaverService,
     @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
+    @Value("\${OPPGAVER_I_UNG_SAK_ENABLED}") private val oppgaverIUngSakEnabled: Boolean,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -78,12 +82,24 @@ class UngdomsprogramregisterService(
         val deltakelseDAO = deltakelseDTO.mapToDAO(deltakerDAO)
         val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDAO)
 
+        val oppgaveReferanse = UUID.randomUUID()
         oppgaveService.opprettOppgave(
             deltaker = deltakerDAO,
-            oppgaveReferanse = UUID.randomUUID(),
+            oppgaveReferanse = oppgaveReferanse,
             oppgaveTypeDataDAO = SøkYtelseOppgavetypeDataDAO(fomDato = ungdomsprogramDAO.getFom()),
             frist = ZonedDateTime.now().plusMonths(3)
         )
+
+        if (oppgaverIUngSakEnabled) {
+            pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
+                ungOppgaverService.opprettSøkYtelseOppgave(OpprettSøkYtelseOppgaveDto(
+                    AktørId(it.ident),
+                    deltakelseDTO.fraOgMed,
+                    oppgaveReferanse
+                ))
+            }
+        }
+
 
         return ungdomsprogramDAO.mapToDTO()
     }

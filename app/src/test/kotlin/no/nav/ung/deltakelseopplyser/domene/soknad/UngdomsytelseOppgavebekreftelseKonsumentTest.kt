@@ -16,6 +16,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.leggPåTopic
@@ -49,6 +50,8 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
     @MockkBean
     lateinit var pdlService: PdlService
 
+    @MockkBean(relaxed = true)
+    lateinit var ungOppgaverService: UngOppgaverService
 
     @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService
@@ -128,6 +131,7 @@ class UngdomsytelseOppgavebekreftelseKonsumentTest : AbstractIntegrationTest() {
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
         every { pdlService.hentPerson(any()) } returns Scenarioer
             .lagPerson(LocalDate.of(2000, 1, 1))
+        every { pdlService.hentAktørIder(any()) } returns listOf(IdentInformasjon("123456789", false, IdentGruppe.AKTORID))
 
     }
 

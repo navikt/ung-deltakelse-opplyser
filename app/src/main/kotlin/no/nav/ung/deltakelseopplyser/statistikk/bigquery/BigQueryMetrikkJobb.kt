@@ -1,5 +1,7 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
+import no.nav.k9.felles.konfigurasjon.konfig.Tid
+import no.nav.k9.felles.konfigurasjon.konfig.Tid.TIDENES_BEGYNNELSE
 import no.nav.ung.deltakelseopplyser.integration.leader.LeaderElectorService
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelserPerEnhetTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
@@ -11,7 +13,6 @@ import no.nav.ung.deltakelseopplyser.statistikk.oppgave.BekreftAvvikOppgaveTabel
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
 import no.nav.ung.deltakelseopplyser.statistikk.oppgave.RapporterInntektOppgaveTabell
-import no.nav.ung.kodeverk.uttak.Tid
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -65,7 +66,7 @@ class BigQueryMetrikkJobb(
         }
         val sisteOppdateringAvTabell =
             bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, RapporterInntektOppgaveTabell)
-                ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
+                ?: ZonedDateTime.of(TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
 
         log.info("Henter oppgaver for rapporter inntekt som er oppdatert etter ${sisteOppdateringAvTabell}")
 
@@ -94,7 +95,7 @@ class BigQueryMetrikkJobb(
         }
         val sisteOppdateringAvTabell =
             bigQueryClient.finnSisteOppdateringAvTabell(BIG_QUERY_DATASET, BekreftAvvikOppgaveTabell)
-                ?: ZonedDateTime.of(Tid.TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
+                ?: ZonedDateTime.of(TIDENES_BEGYNNELSE.atStartOfDay(), ZoneId.of("Europe/Oslo"))
 
         log.info("Henter oppgaver for bekreft avvik som er oppdatert etter $sisteOppdateringAvTabell")
 

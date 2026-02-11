@@ -29,6 +29,7 @@ import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -79,6 +80,9 @@ class UngdomsytelsesøknadServiceTest {
     lateinit var ungSakService: UngSakService
 
     @MockkBean
+    lateinit var ungOppgaverService: UngOppgaverService
+
+    @MockkBean
     lateinit var kontoregisterService: KontoregisterService
 
     @MockkBean
@@ -107,6 +111,7 @@ class UngdomsytelsesøknadServiceTest {
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
         justRun { mineSiderService.deaktiverOppgave(any()) }
+        every { ungOppgaverService.opprettSøkYtelseOppgave(any()) } returns true
     }
 
     @Test
@@ -116,8 +121,9 @@ class UngdomsytelsesøknadServiceTest {
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelseDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
-        val sendSøknadOppgave = deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
-            ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
+        val sendSøknadOppgave =
+            deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
+                ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
 
         ungdomsytelsesøknadService.håndterMottattSøknad(
             ungdomsytelsesøknad = lagUngdomsytelseSøknad(
@@ -192,6 +198,13 @@ class UngdomsytelsesøknadServiceTest {
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
         every { pdlService.hentPerson(any()) } returns Scenarioer
             .lagPerson(LocalDate.of(2000, 1, 1))
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon(
+                "123456789",
+                false,
+                IdentGruppe.AKTORID
+            )
+        )
 
     }
 }

@@ -20,6 +20,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
@@ -58,6 +59,9 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     lateinit var pdlService: PdlService
 
     @MockkBean(relaxed = true)
+    lateinit var ungOppgaverService: UngOppgaverService
+
+    @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService
 
     @Autowired
@@ -72,9 +76,10 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     @Test
     fun `Forventet rapportertInntekt konsumeres og deserialiseres som forventet`() {
         justRun { tilgangskontrollService.krevSystemtilgang() }
-        every { pdlService.hentPerson(any()) } returns Scenarioer
+        val person = Scenarioer
             .lagPerson(LocalDate.of(2000, 1, 1))
-
+        every { pdlService.hentPerson(any()) } returns person
+        every { pdlService.hentAktørIder(any()) } returns listOf(IdentInformasjon("123456789", false, IdentGruppe.AKTORID))
         val søknadId = "49d5cdb9-13be-450f-8327-187a03bed1a3"
         val correlationId = "cd9b224f-b344-480c-8513-f68a19cb7b3a"
         val søkerIdent = no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator.neste()
@@ -146,11 +151,11 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         }
     }
 
-    private fun opprettOppgaveForInntektsrapportering(deltakelseStart: String, søknadId: String) {
+    private fun opprettOppgaveForInntektsrapportering(søkerIdent: String, søknadId: String) {
         val now = LocalDate.now()
         oppgaveUngSakController.opprettOppgaveForInntektsrapportering(
             opprettInntektsrapporteringOppgaveDTO = InntektsrapporteringOppgaveDTO(
-                deltakerIdent = deltakelseStart,
+                deltakerIdent = søkerIdent,
                 referanse = UUID.fromString(søknadId),
                 frist = LocalDateTime.now().plusDays(6),
                 fomDato = now.withDayOfMonth(1),

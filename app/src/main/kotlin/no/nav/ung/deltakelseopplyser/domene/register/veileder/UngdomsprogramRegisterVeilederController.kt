@@ -16,12 +16,16 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
+import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
+import no.nav.ung.sak.kontrakt.oppgaver.OpprettSøkYtelseOppgaveDto
+import no.nav.ung.sak.typer.AktørId
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -74,6 +78,7 @@ class UngdomsprogramRegisterVeilederController(
                 EventClassId.AUDIT_CREATE
             )
         }
+
     }
 
     @PutMapping(
