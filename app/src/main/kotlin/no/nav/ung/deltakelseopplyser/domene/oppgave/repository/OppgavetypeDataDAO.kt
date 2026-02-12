@@ -9,6 +9,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.endretperiode.PeriodeEndri
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.PeriodeDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import no.nav.ung.deltakelseopplyser.utils.DateUtils.måned
+import java.io.Serializable
 import java.time.LocalDate
 
 @JsonTypeInfo(
@@ -35,7 +36,7 @@ import java.time.LocalDate
     // Send søknad oppgavetype data
     JsonSubTypes.Type(value = SøkYtelseOppgavetypeDataDAO::class, name = "SØK_YTELSE")
 )
-sealed class OppgavetypeDataDAO {
+sealed class OppgavetypeDataDAO : Serializable {
 
     fun minSideVarselTekster(): List<Tekst> = when (this) {
         is KontrollerRegisterInntektOppgaveTypeDataDAO -> listOf(
@@ -135,7 +136,7 @@ data class ProgramperiodeDAO(
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty("tomDato") val tomDato: LocalDate? = null,
-)
+) : Serializable
 
 data class KontrollerRegisterInntektOppgaveTypeDataDAO(
     @JsonProperty(defaultValue = "n/a") val registerinntekt: RegisterinntektDAO,
@@ -158,7 +159,7 @@ data class SøkYtelseOppgavetypeDataDAO(
 data class RegisterinntektDAO(
     @JsonProperty("arbeidOgFrilansInntekter") val arbeidOgFrilansInntekter: List<ArbeidOgFrilansRegisterInntektDAO>,
     @JsonProperty("ytelseInntekter") val ytelseInntekter: List<YtelseRegisterInntektDAO>,
-)
+) : Serializable
 
 data class InntektsrapporteringOppgavetypeDataDAO(
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -174,10 +175,10 @@ data class InntektsrapporteringOppgavetypeDataDAO(
 data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("arbeidsgiver") val arbeidsgiver: String,
-)
+) : Serializable
 
 data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("ytelsetype") val ytelsetype: YtelseType,
-)
+) : Serializable
 
