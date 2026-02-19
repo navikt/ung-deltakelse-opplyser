@@ -100,6 +100,33 @@ class UngOppgaverService(
         }
     }
 
+    @Recover
+    private fun lukkOppgave(
+        exception: HttpClientErrorException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en HttpClientErrorException når man kalte lukkOppgave tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
+        return false
+    }
+
+    @Recover
+    private fun lukkOppgave(
+        exception: HttpServerErrorException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en HttpServerErrorException når man kalte lukkOppgave tjeneste i ung-sak.")
+        return false
+    }
+
+    @Recover
+    private fun lukkOppgave(
+        exception: ResourceAccessException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en ResourceAccessException når man kalte lukkOppgave tjeneste i ung-sak.")
+        return false
+    }
+
     fun åpneOppgave(oppgaveReferanse: UUID): Boolean {
         return try {
             val response = ungOppgaverKlient.exchange(
@@ -119,6 +146,33 @@ class UngOppgaverService(
                 throw e
             }
         }
+    }
+
+    @Recover
+    private fun åpneOppgave(
+        exception: HttpClientErrorException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en HttpClientErrorException når man kalte åpneOppgave tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
+        return false
+    }
+
+    @Recover
+    private fun åpneOppgave(
+        exception: HttpServerErrorException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en HttpServerErrorException når man kalte åpneOppgave tjeneste i ung-sak.")
+        return false
+    }
+
+    @Recover
+    private fun åpneOppgave(
+        exception: ResourceAccessException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en ResourceAccessException når man kalte åpneOppgave tjeneste i ung-sak.")
+        return false
     }
 
     fun løsOppgave(oppgaveReferanse: UUID): Boolean {
@@ -141,4 +195,32 @@ class UngOppgaverService(
             }
         }
     }
+
+    @Recover
+    private fun løsOppgave(
+        exception: HttpClientErrorException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en HttpClientErrorException når man kalte løsOppgave tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
+        return false
+    }
+
+    @Recover
+    private fun løsOppgave(
+        exception: HttpServerErrorException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en HttpServerErrorException når man kalte løsOppgave tjeneste i ung-sak.")
+        return false
+    }
+
+    @Recover
+    private fun løsOppgave(
+        exception: ResourceAccessException,
+        oppgaveReferanse: UUID,
+    ): Boolean {
+        logger.error("Fikk en ResourceAccessException når man kalte løsOppgave tjeneste i ung-sak.")
+        return false
+    }
+
 }
