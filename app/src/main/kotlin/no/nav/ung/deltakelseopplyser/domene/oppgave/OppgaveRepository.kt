@@ -36,5 +36,5 @@ interface OppgaveRepository : JpaRepository<OppgaveDAO, UUID> {
             """,
         nativeQuery = true
     )
-    fun finnAntallOppgaverAvType(oppgavetype : OppgaveType): Long
+    fun finnAntallOppgaverAvType(oppgavetype : String): Long
 }

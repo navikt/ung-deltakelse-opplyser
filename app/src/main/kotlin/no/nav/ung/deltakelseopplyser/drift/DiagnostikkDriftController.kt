@@ -173,7 +173,7 @@ class DiagnostikkDriftController(
 
         val antallLukkedeOppgaver = oppgaveRepository.finnAntallLukkedeOppgaver();
         val antallÅpnetOppgaver = oppgaveRepository.finnAntallÅpnetOppgaver();
-        val antallInntektsrapporteringOppgaver = oppgaveRepository.finnAntallOppgaverAvType(OppgaveType.RAPPORTER_INNTEKT);
+        val antallInntektsrapporteringOppgaver = oppgaveRepository.finnAntallOppgaverAvType(OppgaveType.RAPPORTER_INNTEKT.name);
 
         return mapOf(
             "antallLukkedeOppgaver" to antallLukkedeOppgaver,
