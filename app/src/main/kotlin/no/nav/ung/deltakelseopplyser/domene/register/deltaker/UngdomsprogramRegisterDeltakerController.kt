@@ -125,9 +125,6 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomLøst(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        if (oppgaverIUngSakEnabled) {
-            ungOppgaverService.løsOppgave(oppgaveReferanse)
-        }
         return oppgaveService.løsOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 }
