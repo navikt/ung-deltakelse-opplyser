@@ -170,7 +170,7 @@ data class InntektsrapporteringOppgavetypeDataDAO(
     @JsonProperty(defaultValue = "n/a") val tomDato: LocalDate,
 
     @JsonProperty(defaultValue = "n/a") val gjelderDelerAvMåned: Boolean,
-    ) : OppgavetypeDataDAO()
+) : OppgavetypeDataDAO()
 
 data class ArbeidOgFrilansRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
@@ -181,4 +181,3 @@ data class YtelseRegisterInntektDAO(
     @JsonProperty("inntekt") val inntekt: Int,
     @JsonProperty("ytelsetype") val ytelsetype: YtelseType,
 ) : Serializable
-
