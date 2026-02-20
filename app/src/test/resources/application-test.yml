@@ -67,15 +67,24 @@ no.nav:
           azure-ung-sak:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: client_credentials
-            scope: api://dev-fss:k9saksbehandling:ung-sak/.default
+            scope: api://vtp:k9saksbehandling:ung-sak/.default
             authentication:
               client-auth-method: private_key_jwt
-              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-id: vtp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
+          tokenx-ung-oppgaver:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: vtp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
+            token-exchange:
+              audience: vtp:k9saksbehandling:ung-sak
           azure-ung-oppgaver:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
-            scope: api://dev-fss:k9saksbehandling:ung-sak/.default
+            scope: api://vtp:k9saksbehandling:ung-sak/.default
             authentication:
               client-auth-method: private_key_jwt
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
@@ -83,19 +92,19 @@ no.nav:
           azure-sif-abac-pdp:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: client_credentials
-            scope: api://dev-fss:k9saksbehandling:sif-abac-pdp-sak/.default
+            scope: api://vtp:k9saksbehandling:sif-abac-pdp-sak/.default
             authentication:
               client-auth-method: private_key_jwt
-              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-id: vtp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
 
           azure-pdl-api:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: client_credentials
-            scope: api://dev-fss:pdl:pdl-api/.default
+            scope: api://vtp:pdl:pdl-api/.default
             authentication:
               client-auth-method: private_key_jwt
-              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-id: vtp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
 
           tokenx-sokos-kontoregister-person:

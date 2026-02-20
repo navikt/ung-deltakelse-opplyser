@@ -31,6 +31,8 @@ import java.util.*
 class UngOppgaverService(
     @Qualifier("ungOppgaverKlient")
     private val ungOppgaverKlient: RestTemplate,
+    @Qualifier("ungOppgaverDeltakerKlient")
+    private val ungOppgaverDeltakerKlient: RestTemplate,
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(UngOppgaverService::class.java)
@@ -38,7 +40,6 @@ class UngOppgaverService(
         private const val opprettSøkYtelseUrl = "/api/oppgave/opprett/sok-ytelse"
         private const val lukkOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/lukk"
         private const val apneOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/apnet"
-        private const val losOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/løst"
     }
 
     fun opprettSøkYtelseOppgave(opprettOppgave: OpprettSøkYtelseOppgaveDto): Boolean {
@@ -81,7 +82,7 @@ class UngOppgaverService(
 
     fun lukkOppgave(oppgaveReferanse: UUID): Boolean {
         return try {
-            val response = ungOppgaverKlient.exchange(
+            val response = ungOppgaverDeltakerKlient.exchange(
                 lukkOppgaveUrl,
                 HttpMethod.PUT,
                 null,
@@ -129,7 +130,7 @@ class UngOppgaverService(
 
     fun åpneOppgave(oppgaveReferanse: UUID): Boolean {
         return try {
-            val response = ungOppgaverKlient.exchange(
+            val response = ungOppgaverDeltakerKlient.exchange(
                 apneOppgaveUrl,
                 HttpMethod.PUT,
                 null,
@@ -172,54 +173,6 @@ class UngOppgaverService(
         oppgaveReferanse: UUID,
     ): Boolean {
         logger.error("Fikk en ResourceAccessException når man kalte åpneOppgave tjeneste i ung-sak.")
-        return false
-    }
-
-    fun løsOppgave(oppgaveReferanse: UUID): Boolean {
-        return try {
-            val response = ungOppgaverKlient.exchange(
-                losOppgaveUrl,
-                HttpMethod.PUT,
-                null,
-                Unit::class.java,
-                oppgaveReferanse
-            )
-            response.statusCode == HttpStatus.OK
-        } catch (e: HttpServerErrorException) {
-            if (e.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
-                e.responseBodyAsString.contains("Fant ikke oppgave med oppgavereferanse:")) {
-                logger.warn("Ung-sak fant ikke oppgave med oppgavereferanse: $oppgaveReferanse. Dette er forventet for eldre oppgaver.")
-                true // Return true to indicate we handled this gracefully
-            } else {
-                throw e
-            }
-        }
-    }
-
-    @Recover
-    private fun løsOppgave(
-        exception: HttpClientErrorException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en HttpClientErrorException når man kalte løsOppgave tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
-        return false
-    }
-
-    @Recover
-    private fun løsOppgave(
-        exception: HttpServerErrorException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en HttpServerErrorException når man kalte løsOppgave tjeneste i ung-sak.")
-        return false
-    }
-
-    @Recover
-    private fun løsOppgave(
-        exception: ResourceAccessException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en ResourceAccessException når man kalte løsOppgave tjeneste i ung-sak.")
         return false
     }
 
