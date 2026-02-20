@@ -92,8 +92,8 @@
 
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.dev.nav.no/ung/sak",
     "NO_NAV_GATEWAYS_UNG_OPPGAVER": "https://ung-sak.intern.dev.nav.no/ung/sak/brukerdialog",
-
     "UNG_SAK_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.ung-sak/.default",
+    "UNG_SAK_AUDIENCE": "dev-gcp:k9saksbehandling:ung-sak",
 
     "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api",
     "SIF_ABAC_PDP_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.sif-abac-pdp/.default",

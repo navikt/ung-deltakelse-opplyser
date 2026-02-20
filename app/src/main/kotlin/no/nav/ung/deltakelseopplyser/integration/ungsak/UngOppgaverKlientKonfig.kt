@@ -29,11 +29,17 @@ class UngOppgaverKlientKonfig(
         val logger: Logger = LoggerFactory.getLogger(UngOppgaverKlientKonfig::class.java)
 
         const val AZURE_UNG_OPPGAVER = "azure-ung-oppgaver"
+        const val TOKENX_UNG_OPPGAVER = "tokenx-ung-oppgaver"
+
     }
 
     private val azureUngOppgaverClientProperties =
         oauth2Config.registration[AZURE_UNG_OPPGAVER]
             ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_OPPGAVER")
+
+    private val tokenXUngOppgaverClientProperties =
+        oauth2Config.registration[TOKENX_UNG_OPPGAVER]
+            ?: throw RuntimeException("could not find oauth2 client config for $TOKENX_UNG_OPPGAVER")
 
     @Bean(name = ["ungOppgaverKlient"])
     fun restTemplate(
@@ -57,6 +63,36 @@ class UngOppgaverKlientKonfig(
 
                 else -> {
                     oAuth2AccessTokenService.getAccessToken(azureUngOppgaverClientProperties).access_token?.let {
+                        request.headers.setBearerAuth(it)
+                    }?: throw SecurityException("Access token er null")
+                }
+            }
+            execution.execute(request, body)
+        }
+    }
+
+    @Bean(name = ["ungOppgaverDeltakerKlient"])
+    fun tokenXRestTemplate(
+        builder: RestTemplateBuilder,
+        mdcInterceptor: MDCValuesPropagatingClientHttpRequestInterceptor,
+    ): RestTemplate {
+        return builder
+            .connectTimeout(Duration.ofSeconds(20))
+            .readTimeout(Duration.ofSeconds(20))
+            .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .rootUri(ungOppgaverUrl)
+            .defaultMessageConverters()
+            .interceptors(bearerTokenInterceptorForTokenX(), mdcInterceptor, requestLoggerInterceptor(logger))
+            .build()
+    }
+
+    private fun bearerTokenInterceptorForTokenX(): ClientHttpRequestInterceptor {
+        return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray, execution: ClientHttpRequestExecution ->
+            when {
+                request.uri.path == "/isalive" -> {} // ignorer
+
+                else -> {
+                    oAuth2AccessTokenService.getAccessToken(tokenXUngOppgaverClientProperties).access_token?.let {
                         request.headers.setBearerAuth(it)
                     }?: throw SecurityException("Access token er null")
                 }
