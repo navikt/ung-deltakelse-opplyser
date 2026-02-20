@@ -27,6 +27,7 @@ import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
+import no.nav.ung.sak.kontrakt.oppgaver.OppgaveType
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
@@ -161,6 +162,23 @@ class DiagnostikkDriftController(
                 )
             },
             "diagnostikk" to antallDeltakelserPerKontorStatistikkV2.first().diagnostikk
+        )
+    }
+
+    @GetMapping("/hent/antall-rapportering-oppgaver", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Hent antall oppgaver, både åpne og lukkede, samt antall oppgaver av type inntektsrapportering")
+    @ResponseStatus(HttpStatus.OK)
+    fun antallRapporteringOppgaver(): Map<String, Any> {
+        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
+
+        val antallLukkedeOppgaver = oppgaveRepository.finnAntallLukkedeOppgaver();
+        val antallÅpnetOppgaver = oppgaveRepository.finnAntallÅpnetOppgaver();
+        val antallInntektsrapporteringOppgaver = oppgaveRepository.finnAntallOppgaverAvType(OppgaveType.RAPPORTER_INNTEKT);
+
+        return mapOf(
+            "antallLukkedeOppgaver" to antallLukkedeOppgaver,
+            "antallÅpnetOppgaver" to antallÅpnetOppgaver,
+            "antallInntektsrapporteringOppgaver" to antallInntektsrapporteringOppgaver,
         )
     }
 
