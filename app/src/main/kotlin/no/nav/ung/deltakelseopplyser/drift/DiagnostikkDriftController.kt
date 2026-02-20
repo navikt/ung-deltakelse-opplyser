@@ -26,6 +26,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistori
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
 import no.nav.ung.sak.kontrakt.oppgaver.OppgaveType
 import org.springframework.http.HttpStatus
@@ -171,12 +172,14 @@ class DiagnostikkDriftController(
     fun antallRapporteringOppgaver(): Map<String, Any> {
         tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
 
-        val antallLukkedeOppgaver = oppgaveRepository.finnAntallLukkedeOppgaver();
-        val antallÅpnetOppgaver = oppgaveRepository.finnAntallÅpnetOppgaver();
-        val antallInntektsrapporteringOppgaver = oppgaveRepository.finnAntallOppgaverAvType(OppgaveType.RAPPORTER_INNTEKT);
+        val antallLukkedeOppgaver = oppgaveRepository.finnAntallLukkedeOppgaver()
+        val antallOppgaverMedLukketStatus = oppgaveRepository.finnAntallOppgaverMedStatus(OppgaveStatus.LUKKET.name)
+        val antallÅpnetOppgaver = oppgaveRepository.finnAntallÅpnetOppgaver()
+        val antallInntektsrapporteringOppgaver = oppgaveRepository.finnAntallOppgaverAvType(OppgaveType.RAPPORTER_INNTEKT.name)
 
         return mapOf(
             "antallLukkedeOppgaver" to antallLukkedeOppgaver,
+            "antallOppgaverMedLukketStatus" to antallOppgaverMedLukketStatus,
             "antallÅpnetOppgaver" to antallÅpnetOppgaver,
             "antallInntektsrapporteringOppgaver" to antallInntektsrapporteringOppgaver,
         )

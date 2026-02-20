@@ -23,6 +23,15 @@ interface OppgaveRepository : JpaRepository<OppgaveDAO, UUID> {
     @Query(
         value = """
                 SELECT count(*) FROM oppgave o
+                WHERE o.status = :status
+            """,
+        nativeQuery = true
+    )
+    fun finnAntallOppgaverMedStatus(status: String): Long
+
+    @Query(
+        value = """
+                SELECT count(*) FROM oppgave o
                 WHERE o.åpnet_dato is not null
             """,
         nativeQuery = true
@@ -36,5 +45,5 @@ interface OppgaveRepository : JpaRepository<OppgaveDAO, UUID> {
             """,
         nativeQuery = true
     )
-    fun finnAntallOppgaverAvType(oppgavetype : OppgaveType): Long
+    fun finnAntallOppgaverAvType(oppgavetype : String): Long
 }
