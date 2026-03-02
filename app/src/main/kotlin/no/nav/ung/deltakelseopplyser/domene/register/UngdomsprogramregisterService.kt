@@ -1,6 +1,8 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.søkytelse.SøkYtelseOppgavetypeDataDto
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerPersonalia
@@ -11,7 +13,7 @@ import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
@@ -45,7 +47,7 @@ class UngdomsprogramregisterService(
     private val pdlService: PdlService,
     private val oppgaveService: OppgaveService,
     private val oppgaveMapperService: OppgaveMapperService,
-    private val ungOppgaverService: UngOppgaverService,
+    private val ungBrukerdialogService: UngBrukerdialogService,
     @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
     @Value("\${OPPGAVER_I_UNG_SAK_ENABLED}") private val oppgaverIUngSakEnabled: Boolean,
 ) {
@@ -92,10 +94,11 @@ class UngdomsprogramregisterService(
 
         if (oppgaverIUngSakEnabled) {
             pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
-                ungOppgaverService.opprettSøkYtelseOppgave(OpprettSøkYtelseOppgaveDto(
-                    AktørId(it.ident),
-                    deltakelseDTO.fraOgMed,
-                    oppgaveReferanse
+                ungBrukerdialogService.opprettSøkYtelseOppgave(OpprettOppgaveDto(
+                    no.nav.ung.brukerdialog.typer.AktørId(it.ident),
+                    oppgaveReferanse,
+                    SøkYtelseOppgavetypeDataDto(deltakelseDTO.fraOgMed),
+                    null
                 ))
             }
         }

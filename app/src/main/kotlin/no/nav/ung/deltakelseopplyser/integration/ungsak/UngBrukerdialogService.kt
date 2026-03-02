@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.ungsak
 
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
 import no.nav.ung.sak.kontrakt.oppgaver.OpprettSøkYtelseOppgaveDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -7,19 +8,22 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Recover
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
+import org.springframework.web.ErrorResponseException
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
+import java.net.URI
 import java.util.*
 
 @Service
 @Retryable(
-    noRetryFor = [UngSakException::class, HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
+    noRetryFor = [UngBrukerdialogException::class, HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
     backoff = Backoff(
         delayExpression = "\${spring.rest.retry.initialDelay}",
         multiplierExpression = "\${spring.rest.retry.multiplier}",
@@ -28,23 +32,23 @@ import java.util.*
     maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
 
     )
-class UngOppgaverService(
-    @Qualifier("ungOppgaverKlient")
-    private val ungOppgaverKlient: RestTemplate,
-    @Qualifier("ungOppgaverDeltakerKlient")
-    private val ungOppgaverDeltakerKlient: RestTemplate,
+class UngBrukerdialogService(
+    @Qualifier("ungBrukerdialogKlient")
+    private val ungBrukerdialogKlient: RestTemplate,
+    @Qualifier("ungBrukerdialogDeltakerKlient")
+    private val ungBrukerdialogDeltakerKlient: RestTemplate,
 ) {
     private companion object {
-        private val logger: Logger = LoggerFactory.getLogger(UngOppgaverService::class.java)
+        private val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogService::class.java)
 
         private const val opprettSøkYtelseUrl = "/api/oppgave/opprett/sok-ytelse"
         private const val lukkOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/lukk"
         private const val apneOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/apnet"
     }
 
-    fun opprettSøkYtelseOppgave(opprettOppgave: OpprettSøkYtelseOppgaveDto): Boolean {
+    fun opprettSøkYtelseOppgave(opprettOppgave: OpprettOppgaveDto): Boolean {
         val httpEntity = HttpEntity(opprettOppgave)
-        val response = ungOppgaverKlient.exchange(
+        val response = ungBrukerdialogKlient.exchange(
             opprettSøkYtelseUrl,
             HttpMethod.POST,
             httpEntity,
@@ -82,7 +86,7 @@ class UngOppgaverService(
 
     fun lukkOppgave(oppgaveReferanse: UUID): Boolean {
         return try {
-            val response = ungOppgaverDeltakerKlient.exchange(
+            val response = ungBrukerdialogDeltakerKlient.exchange(
                 lukkOppgaveUrl,
                 HttpMethod.PUT,
                 null,
@@ -130,7 +134,7 @@ class UngOppgaverService(
 
     fun åpneOppgave(oppgaveReferanse: UUID): Boolean {
         return try {
-            val response = ungOppgaverDeltakerKlient.exchange(
+            val response = ungBrukerdialogDeltakerKlient.exchange(
                 apneOppgaveUrl,
                 HttpMethod.PUT,
                 null,
@@ -177,3 +181,24 @@ class UngOppgaverService(
     }
 
 }
+
+class UngBrukerdialogException(
+    melding: String,
+    httpStatus: HttpStatus,
+) : ErrorResponseException(httpStatus, asProblemDetail(melding, httpStatus), null) {
+    private companion object {
+        private fun asProblemDetail(
+            melding: String,
+            httpStatus: HttpStatus,
+        ): ProblemDetail {
+            val problemDetail = ProblemDetail.forStatus(httpStatus)
+            problemDetail.title = "Feil ved kall mot ung-brukerdialog"
+            problemDetail.detail = melding
+
+            problemDetail.type = URI("/problem-details/ung-brukerdialog")
+
+            return problemDetail
+        }
+    }
+}
+

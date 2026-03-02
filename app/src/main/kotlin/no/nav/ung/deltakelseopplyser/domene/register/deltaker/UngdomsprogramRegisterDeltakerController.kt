@@ -11,7 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
 import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.utils.personIdent
@@ -45,7 +45,7 @@ class UngdomsprogramRegisterDeltakerController(
     private val oppgaveService: OppgaveService,
     private val oppgaveMapperService: OppgaveMapperService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
-    private val ungOppgaverService: UngOppgaverService,
+    private val ungBrukerdialogService: UngBrukerdialogService,
     @Value("\${OPPGAVER_I_UNG_SAK_ENABLED}") private val oppgaverIUngSakEnabled: Boolean,
 ) {
 
@@ -104,7 +104,7 @@ class UngdomsprogramRegisterDeltakerController(
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
         if (oppgaverIUngSakEnabled) {
-            ungOppgaverService.lukkOppgave(oppgaveReferanse)
+            ungBrukerdialogService.lukkOppgave(oppgaveReferanse)
         }
         return oppgaveService.lukkOppgave(oppgaveReferanse = oppgaveReferanse)
     }
@@ -115,7 +115,7 @@ class UngdomsprogramRegisterDeltakerController(
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
         if (oppgaverIUngSakEnabled) {
-            ungOppgaverService.åpneOppgave(oppgaveReferanse)
+            ungBrukerdialogService.åpneOppgave(oppgaveReferanse)
         }
         return oppgaveService.åpneOppgave(oppgaveReferanse = oppgaveReferanse)
     }

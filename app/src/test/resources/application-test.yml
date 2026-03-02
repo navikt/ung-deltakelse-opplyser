@@ -72,7 +72,7 @@ no.nav:
               client-auth-method: private_key_jwt
               client-id: vtp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
-          tokenx-ung-oppgaver:
+          tokenx-ung-brukerdialog:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             authentication:
@@ -80,11 +80,11 @@ no.nav:
               client-id: vtp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
             token-exchange:
-              audience: vtp:k9saksbehandling:ung-sak
-          azure-ung-oppgaver:
+              audience: vtp:k9saksbehandling:ung-brukerdialog
+          azure-ung-brukerdialog:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
-            scope: api://vtp:k9saksbehandling:ung-sak/.default
+            scope: api://vtp:k9saksbehandling:ung-brukerdialog/.default
             authentication:
               client-auth-method: private_key_jwt
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser

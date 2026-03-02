@@ -29,7 +29,7 @@ import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -80,7 +80,7 @@ class UngdomsytelsesøknadServiceTest {
     lateinit var ungSakService: UngSakService
 
     @MockkBean
-    lateinit var ungOppgaverService: UngOppgaverService
+    lateinit var ungBrukerdialogService: UngBrukerdialogService
 
     @MockkBean
     lateinit var kontoregisterService: KontoregisterService
@@ -111,7 +111,7 @@ class UngdomsytelsesøknadServiceTest {
         justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
         justRun { mineSiderService.deaktiverOppgave(any()) }
-        every { ungOppgaverService.opprettSøkYtelseOppgave(any()) } returns true
+        every { ungBrukerdialogService.opprettSøkYtelseOppgave(any()) } returns true
     }
 
     @Test

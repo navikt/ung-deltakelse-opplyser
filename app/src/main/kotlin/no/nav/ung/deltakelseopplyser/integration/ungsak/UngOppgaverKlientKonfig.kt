@@ -28,20 +28,20 @@ class UngOppgaverKlientKonfig(
     private companion object {
         val logger: Logger = LoggerFactory.getLogger(UngOppgaverKlientKonfig::class.java)
 
-        const val AZURE_UNG_OPPGAVER = "azure-ung-oppgaver"
-        const val TOKENX_UNG_OPPGAVER = "tokenx-ung-oppgaver"
+        const val AZURE_UNG_BRUKERDIALOG = "azure-ung-brukerdialog"
+        const val TOKENX_UNG_BRUKERDIALOG = "tokenx-ung-brukerdialog"
 
     }
 
-    private val azureUngOppgaverClientProperties =
-        oauth2Config.registration[AZURE_UNG_OPPGAVER]
-            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_OPPGAVER")
+    private val azureUngBrukerdialogClientProperties =
+        oauth2Config.registration[AZURE_UNG_BRUKERDIALOG]
+            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_BRUKERDIALOG")
 
-    private val tokenXUngOppgaverClientProperties =
-        oauth2Config.registration[TOKENX_UNG_OPPGAVER]
-            ?: throw RuntimeException("could not find oauth2 client config for $TOKENX_UNG_OPPGAVER")
+    private val tokenXUngBrukerdialogClientProperties =
+        oauth2Config.registration[TOKENX_UNG_BRUKERDIALOG]
+            ?: throw RuntimeException("could not find oauth2 client config for $TOKENX_UNG_BRUKERDIALOG")
 
-    @Bean(name = ["ungOppgaverKlient"])
+    @Bean(name = ["ungBrukerdialogKlient"])
     fun restTemplate(
         builder: RestTemplateBuilder,
         mdcInterceptor: MDCValuesPropagatingClientHttpRequestInterceptor,
@@ -62,7 +62,7 @@ class UngOppgaverKlientKonfig(
                 request.uri.path == "/isalive" -> {} // ignorer
 
                 else -> {
-                    oAuth2AccessTokenService.getAccessToken(azureUngOppgaverClientProperties).access_token?.let {
+                    oAuth2AccessTokenService.getAccessToken(azureUngBrukerdialogClientProperties).access_token?.let {
                         request.headers.setBearerAuth(it)
                     }?: throw SecurityException("Access token er null")
                 }
@@ -71,7 +71,7 @@ class UngOppgaverKlientKonfig(
         }
     }
 
-    @Bean(name = ["ungOppgaverDeltakerKlient"])
+    @Bean(name = ["ungBrukerdialogDeltakerKlient"])
     fun tokenXRestTemplate(
         builder: RestTemplateBuilder,
         mdcInterceptor: MDCValuesPropagatingClientHttpRequestInterceptor,
@@ -92,7 +92,7 @@ class UngOppgaverKlientKonfig(
                 request.uri.path == "/isalive" -> {} // ignorer
 
                 else -> {
-                    oAuth2AccessTokenService.getAccessToken(tokenXUngOppgaverClientProperties).access_token?.let {
+                    oAuth2AccessTokenService.getAccessToken(tokenXUngBrukerdialogClientProperties).access_token?.let {
                         request.headers.setBearerAuth(it)
                     }?: throw SecurityException("Access token er null")
                 }
