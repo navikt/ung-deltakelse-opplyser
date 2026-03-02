@@ -19,14 +19,14 @@ import org.springframework.web.client.RestTemplate
 import java.time.Duration
 
 @Configuration
-class UngOppgaverKlientKonfig(
+class UngBrukerdialogKlientKonfig(
     @Value("\${no.nav.gateways.ung-brukerdialog}") private val ungBrukerdialogUrl: String,
     oauth2Config: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService
 ) {
 
     private companion object {
-        val logger: Logger = LoggerFactory.getLogger(UngOppgaverKlientKonfig::class.java)
+        val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogKlientKonfig::class.java)
 
         const val AZURE_UNG_BRUKERDIALOG = "azure-ung-brukerdialog"
         const val TOKENX_UNG_BRUKERDIALOG = "tokenx-ung-brukerdialog"

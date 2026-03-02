@@ -60,27 +60,27 @@ class UngBrukerdialogService(
     @Recover
     private fun opprettSøkYtelseOppgave(
         exception: HttpClientErrorException,
-        opprettOppgave: OpprettSøkYtelseOppgaveDto,
+        opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
-        logger.error("Fikk en HttpClientErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
+        logger.error("Fikk en HttpClientErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog. Error response = '${exception.responseBodyAsString}'")
         return false
     }
 
     @Recover
     private fun opprettSøkYtelseOppgave(
         exception: HttpServerErrorException,
-        opprettOppgave: OpprettSøkYtelseOppgaveDto,
+        opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
-        logger.error("Fikk en HttpServerErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-sak.")
+        logger.error("Fikk en HttpServerErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog.")
         return false
     }
 
     @Recover
     private fun opprettSøkYtelseOppgave(
         exception: ResourceAccessException,
-        opprettOppgave: OpprettSøkYtelseOppgaveDto,
+        opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
-        logger.error("Fikk en ResourceAccessException når man kalte opprettSøkYtelseOppgave tjeneste i ung-sak.")
+        logger.error("Fikk en ResourceAccessException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog.")
         return false
     }
 
