@@ -128,7 +128,7 @@ no.nav:
 
   gateways:
     ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/ung/sak
-    ung-oppgaver: http://localhost:${wiremock.server.port}/ung-sak-mock/ung/sak/brukerdialog
+    ung-brukerdialog: http://localhost:${wiremock.server.port}/ung-brukerdialog-mock/ung/brukerdialog
     sif-abac-pdp: http://localhost:${wiremock.server.port}/sif-abac-pdp-mock
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock
     sokos-kontoregister-person-base-url: http://localhost:${wiremock.server.port}/sokos-kontoregister-person-mock
