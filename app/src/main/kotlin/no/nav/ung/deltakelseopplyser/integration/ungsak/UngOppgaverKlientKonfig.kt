@@ -20,7 +20,7 @@ import java.time.Duration
 
 @Configuration
 class UngOppgaverKlientKonfig(
-    @Value("\${no.nav.gateways.ung-oppgaver}") private val ungOppgaverUrl: String,
+    @Value("\${no.nav.gateways.ung-brukerdialog}") private val ungBrukerdialogUrl: String,
     oauth2Config: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService
 ) {
@@ -50,7 +50,7 @@ class UngOppgaverKlientKonfig(
             .connectTimeout(Duration.ofSeconds(20))
             .readTimeout(Duration.ofSeconds(20))
             .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .rootUri(ungOppgaverUrl)
+            .rootUri(ungBrukerdialogUrl)
             .defaultMessageConverters()
             .interceptors(bearerTokenInterceptor(), mdcInterceptor, requestLoggerInterceptor(logger))
             .build()
@@ -80,7 +80,7 @@ class UngOppgaverKlientKonfig(
             .connectTimeout(Duration.ofSeconds(20))
             .readTimeout(Duration.ofSeconds(20))
             .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .rootUri(ungOppgaverUrl)
+            .rootUri(ungBrukerdialogUrl)
             .defaultMessageConverters()
             .interceptors(bearerTokenInterceptorForTokenX(), mdcInterceptor, requestLoggerInterceptor(logger))
             .build()
