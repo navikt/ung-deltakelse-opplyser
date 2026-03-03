@@ -45,8 +45,6 @@ class UngdomsprogramRegisterDeltakerController(
     private val oppgaveService: OppgaveService,
     private val oppgaveMapperService: OppgaveMapperService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
-    private val ungBrukerdialogService: UngBrukerdialogService,
-    @Value("\${OPPGAVER_I_UNG_SAK_ENABLED}") private val oppgaverIUngSakEnabled: Boolean,
 ) {
 
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -103,9 +101,6 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        if (oppgaverIUngSakEnabled) {
-            ungBrukerdialogService.lukkOppgave(oppgaveReferanse)
-        }
         return oppgaveService.lukkOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 
@@ -114,9 +109,6 @@ class UngdomsprogramRegisterDeltakerController(
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        if (oppgaverIUngSakEnabled) {
-            ungBrukerdialogService.åpneOppgave(oppgaveReferanse)
-        }
         return oppgaveService.åpneOppgave(oppgaveReferanse = oppgaveReferanse)
     }
 

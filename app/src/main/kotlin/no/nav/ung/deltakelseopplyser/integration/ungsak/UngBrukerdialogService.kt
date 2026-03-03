@@ -34,16 +34,12 @@ import java.util.*
     )
 class UngBrukerdialogService(
     @Qualifier("ungBrukerdialogKlient")
-    private val ungBrukerdialogKlient: RestTemplate,
-    @Qualifier("ungBrukerdialogDeltakerKlient")
-    private val ungBrukerdialogDeltakerKlient: RestTemplate,
+    private val ungBrukerdialogKlient: RestTemplate
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogService::class.java)
 
         private const val opprettSøkYtelseUrl = "/api/oppgave/opprett/sok-ytelse"
-        private const val lukkOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/lukk"
-        private const val apneOppgaveUrl = "/api/oppgave/{oppgaveReferanse}/apnet"
     }
 
     fun opprettSøkYtelseOppgave(opprettOppgave: OpprettOppgaveDto): Boolean {
@@ -84,101 +80,7 @@ class UngBrukerdialogService(
         return false
     }
 
-    fun lukkOppgave(oppgaveReferanse: UUID): Boolean {
-        return try {
-            val response = ungBrukerdialogDeltakerKlient.exchange(
-                lukkOppgaveUrl,
-                HttpMethod.PUT,
-                null,
-                Unit::class.java,
-                oppgaveReferanse
-            )
-            response.statusCode == HttpStatus.OK
-        } catch (e: HttpServerErrorException) {
-            if (e.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
-                e.responseBodyAsString.contains("Fant ikke oppgave med oppgavereferanse:")) {
-                logger.warn("Ung-sak fant ikke oppgave med oppgavereferanse: $oppgaveReferanse. Dette er forventet for eldre oppgaver.")
-                true // Return true to indicate we handled this gracefully
-            } else {
-                throw e
-            }
-        }
-    }
 
-    @Recover
-    private fun lukkOppgave(
-        exception: HttpClientErrorException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en HttpClientErrorException når man kalte lukkOppgave tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
-        return false
-    }
-
-    @Recover
-    private fun lukkOppgave(
-        exception: HttpServerErrorException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en HttpServerErrorException når man kalte lukkOppgave tjeneste i ung-sak.")
-        return false
-    }
-
-    @Recover
-    private fun lukkOppgave(
-        exception: ResourceAccessException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en ResourceAccessException når man kalte lukkOppgave tjeneste i ung-sak.")
-        return false
-    }
-
-    fun åpneOppgave(oppgaveReferanse: UUID): Boolean {
-        return try {
-            val response = ungBrukerdialogDeltakerKlient.exchange(
-                apneOppgaveUrl,
-                HttpMethod.PUT,
-                null,
-                Unit::class.java,
-                oppgaveReferanse
-            )
-            response.statusCode == HttpStatus.OK
-        } catch (e: HttpServerErrorException) {
-            if (e.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
-                e.responseBodyAsString.contains("Fant ikke oppgave med oppgavereferanse:")) {
-                logger.warn("Ung-sak fant ikke oppgave med oppgavereferanse: $oppgaveReferanse. Dette er forventet for eldre oppgaver.")
-                true // Return true to indicate we handled this gracefully
-            } else {
-                throw e
-            }
-        }
-    }
-
-    @Recover
-    private fun åpneOppgave(
-        exception: HttpClientErrorException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en HttpClientErrorException når man kalte åpneOppgave tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
-        return false
-    }
-
-    @Recover
-    private fun åpneOppgave(
-        exception: HttpServerErrorException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en HttpServerErrorException når man kalte åpneOppgave tjeneste i ung-sak.")
-        return false
-    }
-
-    @Recover
-    private fun åpneOppgave(
-        exception: ResourceAccessException,
-        oppgaveReferanse: UUID,
-    ): Boolean {
-        logger.error("Fikk en ResourceAccessException når man kalte åpneOppgave tjeneste i ung-sak.")
-        return false
-    }
 
 }
 
