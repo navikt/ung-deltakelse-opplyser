@@ -18,7 +18,7 @@ import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
@@ -63,7 +63,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     lateinit var pdlService: PdlService
 
     @MockkBean(relaxed = true)
-    lateinit var ungOppgaverService: UngOppgaverService
+    lateinit var ungBrukerdialogService: UngBrukerdialogService
 
     @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService

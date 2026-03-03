@@ -20,7 +20,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngOppgaverService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.inntektsrapportering.InntektsrapporteringOppgaveDTO
@@ -59,7 +59,7 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
     lateinit var pdlService: PdlService
 
     @MockkBean(relaxed = true)
-    lateinit var ungOppgaverService: UngOppgaverService
+    lateinit var ungBrukerdialogService: UngBrukerdialogService
 
     @MockkBean(relaxed = true)
     lateinit var sifAbacPdpService: SifAbacPdpService
