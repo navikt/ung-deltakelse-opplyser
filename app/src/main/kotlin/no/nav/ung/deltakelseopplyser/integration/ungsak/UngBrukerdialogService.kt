@@ -54,7 +54,7 @@ class UngBrukerdialogService(
     }
 
     @Recover
-    private fun opprettSøkYtelseOppgave(
+    fun opprettSøkYtelseOppgave(
         exception: HttpClientErrorException,
         opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
@@ -63,7 +63,7 @@ class UngBrukerdialogService(
     }
 
     @Recover
-    private fun opprettSøkYtelseOppgave(
+    fun opprettSøkYtelseOppgave(
         exception: HttpServerErrorException,
         opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
@@ -72,7 +72,7 @@ class UngBrukerdialogService(
     }
 
     @Recover
-    private fun opprettSøkYtelseOppgave(
+    fun opprettSøkYtelseOppgave(
         exception: ResourceAccessException,
         opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
