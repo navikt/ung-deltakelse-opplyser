@@ -26,7 +26,6 @@
 
         <fp-sak.version>2.7.4</fp-sak.version>
         <k9-format.version>12.9.0</k9-format.version>
-        <k9-felles.version>10.3.0</k9-felles.version>
         <k9-abakus.version>1.5.3</k9-abakus.version>
         <graphql-kotlin.version>8.8.1</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.2.0</tms-kotlin-builder.version>
@@ -243,11 +242,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>no.nav.k9.felles</groupId>
-            <artifactId>k9-felles-log</artifactId>
-            <version>${k9-felles.version}</version>
         </dependency>
         <dependency>
             <groupId>com.papertrailapp</groupId>
