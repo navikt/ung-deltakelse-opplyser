@@ -184,7 +184,7 @@ class UngBrukerdialogService(
         val registerinntekt = data.registerinntekt
         return BrukerdialogRegisterinntektDTO(
             registerinntekt.arbeidOgFrilansInntekter.map {
-                BrukerdialogArbeidOgFrilansRegisterInntektDTO(it.inntekt, it.arbeidsgiver, it.arbeidsgiverNavn)
+                BrukerdialogArbeidOgFrilansRegisterInntektDTO(it.inntekt, it.arbeidsgiver, it.arbeidsgiver, it.arbeidsgiverNavn)
             },
             registerinntekt.ytelseInntekter.map {
                 BrukerdialogYtelseRegisterInntektDTO(it.inntekt, BrukerdialogYtelseType.valueOf(it.ytelsetype.name))
