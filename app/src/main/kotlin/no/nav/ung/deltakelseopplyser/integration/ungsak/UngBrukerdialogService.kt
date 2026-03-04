@@ -6,6 +6,7 @@ import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretsluttdato.EndretSlu
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretstartdato.EndretStartdatoDataDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.fjernperiode.FjernetPeriodeDataDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.inntektsrapportering.InntektsrapporteringOppgavetypeDataDto
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.inntektsrapportering.RapportertInntektDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.kontrollerregisterinntekt.KontrollerRegisterinntektOppgavetypeDataDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.søkytelse.SøkYtelseOppgavetypeDataDto
 import no.nav.ung.brukerdialog.typer.AktørId
@@ -68,12 +69,10 @@ class UngBrukerdialogService(
                 AktørId(aktørId),
                 mapOppgavetype(oppgave.oppgavetype),
                 mapOppgavetypeData(oppgave.oppgavetypeData),
-                mapBekreftelse(oppgave.bekreftelse),
+                mapBekreftelse(oppgave.bekreftelse, oppgave.oppgavetypeData),
                 mapOppgaveStatus(oppgave.status),
                 oppgave.opprettetDato,
                 oppgave.løstDato,
-                oppgave.åpnetDato,
-                oppgave.lukketDato,
                 oppgave.frist
             )
         }
@@ -132,11 +131,13 @@ class UngBrukerdialogService(
         OppgaveStatus.ULØST -> BrukerdialogOppgaveStatus.ULØST
         OppgaveStatus.AVBRUTT -> BrukerdialogOppgaveStatus.AVBRUTT
         OppgaveStatus.UTLØPT -> BrukerdialogOppgaveStatus.UTLØPT
-        OppgaveStatus.LUKKET -> BrukerdialogOppgaveStatus.LUKKET
+        OppgaveStatus.LUKKET -> throw IllegalStateException("Forventer ikkje å finne LUKKET status")
     }
 
-    private fun mapBekreftelse(bekreftelse: BekreftelseDTO?): BrukerdialogBekreftelseDTO? =
-        bekreftelse?.let { SvarPåVarselDTO(it.harUttalelse, it.uttalelseFraBruker) }
+    private fun mapBekreftelse(bekreftelse: BekreftelseDTO?, oppgavetypeData: OppgavetypeDataDTO): BrukerdialogBekreftelseDTO? =
+        if (oppgavetypeData is InntektsrapporteringOppgavetypeDataDTO && oppgavetypeData.rapportertInntekt != null) {
+            RapportertInntektDto(oppgavetypeData.fraOgMed, oppgavetypeData.fraOgMed, oppgavetypeData.rapportertInntekt!!.arbeidstakerOgFrilansInntekt)
+        } else bekreftelse?.let {  SvarPåVarselDTO(it.harUttalelse, it.uttalelseFraBruker) }
 
     private fun mapOppgavetypeData(oppgavetypeData: OppgavetypeDataDTO): OppgavetypeDataDto = when (oppgavetypeData) {
         is KontrollerRegisterinntektOppgavetypeDataDTO -> KontrollerRegisterinntektOppgavetypeDataDto(
