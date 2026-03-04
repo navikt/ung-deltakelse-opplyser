@@ -32,7 +32,7 @@
         <tms-kotlin-builder.version>2.1.1</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.6.0</sif-abac-kontrakt.version>
-        <google-cloud-bigquery.version>2.58.0</google-cloud-bigquery.version>
+        <google-cloud-bigquery.version>2.59.0</google-cloud-bigquery.version>
     </properties>
     <dependencies>
 
@@ -194,7 +194,7 @@
         <dependency>
             <groupId>io.hypersistence</groupId>
             <artifactId>hypersistence-utils-hibernate-63</artifactId>
-            <version>3.15.1</version>
+            <version>3.15.2</version>
         </dependency>
 
         <dependency>
@@ -422,7 +422,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.4</version>
+                <version>3.5.5</version>
                 <configuration>
                     <argLine>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argLine>
                 </configuration>
