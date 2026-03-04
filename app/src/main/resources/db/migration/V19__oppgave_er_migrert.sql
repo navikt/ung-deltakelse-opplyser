@@ -1,0 +1,3 @@
+ALTER TABLE oppgave
+    ADD COLUMN er_migrert BOOLEAN NOT NULL DEFAULT FALSE;
+
