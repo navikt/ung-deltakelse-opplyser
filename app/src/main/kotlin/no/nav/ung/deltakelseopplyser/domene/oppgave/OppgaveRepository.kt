@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.oppgave
 
 import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.sak.kontrakt.oppgaver.OppgaveType
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.util.*
@@ -10,6 +10,8 @@ interface OppgaveRepository : JpaRepository<OppgaveDAO, UUID> {
     fun findByOppgaveReferanse(oppgaveReferanse: UUID): OppgaveDAO?
 
     fun findAllByDeltaker_DeltakerIdent(deltakerIdent: String): List<OppgaveDAO>
+
+    fun findAllByErMigrertFalse(pageable: Pageable): List<OppgaveDAO>
 
     @Query(
         value = """

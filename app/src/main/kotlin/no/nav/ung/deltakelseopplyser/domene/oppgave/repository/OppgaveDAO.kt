@@ -67,6 +67,9 @@ class OppgaveDAO(
 
     @Column(name = "lukket_dato")
     var lukketDato: ZonedDateTime? = null,
+
+    @Column(name = "er_migrert", nullable = false)
+    var erMigrert: Boolean = false,
 ) {
 
     override fun toString(): String {
@@ -94,6 +97,11 @@ class OppgaveDAO(
     fun markerSomLukket(): OppgaveDAO {
         settStatus(OppgaveStatus.LUKKET)
         this.lukketDato = ZonedDateTime.now(ZoneOffset.UTC)
+        return this
+    }
+
+    fun markerSomMigrert(): OppgaveDAO {
+        this.erMigrert = true
         return this
     }
 
