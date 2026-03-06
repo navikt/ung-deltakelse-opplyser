@@ -58,8 +58,8 @@ class UngBrukerdialogService(
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogService::class.java)
 
-        private const val opprettSøkYtelseUrl = "intern/api/oppgave"
-        private const val migrerOppgaverUrl = "intern/api/forvaltning/oppgave/migrer"
+        private const val opprettSøkYtelseUrl = "/intern/api/oppgavebehandling/opprett"
+        private const val migrerOppgaverUrl = "/intern/api/forvaltning/oppgave/migrer"
     }
 
     fun migrerOppgaver(aktørId: String, oppgaver: List<OppgaveDTO>): MigreringsResultat {
