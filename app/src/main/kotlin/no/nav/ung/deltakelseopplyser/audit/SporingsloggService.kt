@@ -1,10 +1,5 @@
 package no.nav.ung.deltakelseopplyser.audit
 
-import no.nav.k9.felles.log.audit.Auditdata
-import no.nav.k9.felles.log.audit.AuditdataHeader
-import no.nav.k9.felles.log.audit.CefField
-import no.nav.k9.felles.log.audit.CefFieldName
-import no.nav.k9.felles.log.audit.EventClassId
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.utils.navIdent

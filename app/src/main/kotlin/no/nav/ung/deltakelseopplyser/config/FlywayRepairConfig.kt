@@ -1,7 +1,5 @@
 package no.nav.ung.deltakelseopplyser.config
 
-import no.nav.k9.felles.konfigurasjon.env.Environment
-import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.UngdomsytelsesøknadKonsumentConfiguration
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.FlywayException
 import org.slf4j.LoggerFactory
@@ -22,7 +20,7 @@ class FlywayRepairConfig {
         @Value("\${FLYWAY_REPAIR_ON_FAIL}") flywayRepairOnFail: Boolean
     ): Flyway {
 
-        val isProd = Environment.current().isProd;
+        val isProd = System.getenv("NAIS_CLUSTER_NAME").startsWith("prod")
         val flyway = Flyway.configure()
             .dataSource(dataSource)
             .locations(*locations.split(",").toTypedArray())
