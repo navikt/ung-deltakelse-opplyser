@@ -28,12 +28,12 @@ class UngBrukerdialogKlientKonfig(
     private companion object {
         val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogKlientKonfig::class.java)
 
-        const val AZURE_UNG_BRUKERDIALOG = "azure-ung-brukerdialog-api"
+        const val AZURE_UNG_BRUKERDIALOG_API = "azure-ung-brukerdialog-api"
     }
 
     private val azureUngBrukerdialogClientProperties =
-        oauth2Config.registration[AZURE_UNG_BRUKERDIALOG]
-            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_BRUKERDIALOG")
+        oauth2Config.registration[AZURE_UNG_BRUKERDIALOG_API]
+            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_BRUKERDIALOG_API")
 
     @Bean(name = ["ungBrukerdialogKlient"])
     fun restTemplate(
