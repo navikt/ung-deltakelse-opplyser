@@ -94,15 +94,15 @@ class OppgaveForvaltningController(
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     @Operation(
-        summary = "Migrer alle oppgaver til ung-brukerdialog",
-        description = "Henter alle oppgaver fra databasen og sender dem til ung-brukerdialog for migrering. Idempotent - oppgaver som allerede finnes hoppes over."
+        summary = "Migrer alle oppgaver til ung-brukerdialog-api",
+        description = "Henter alle oppgaver fra databasen og sender dem til ung-brukerdialog-api for migrering. Idempotent - oppgaver som allerede finnes hoppes over."
     )
     @ResponseStatus(HttpStatus.OK)
     fun migrerOppgaver(@RequestParam maksAntall: Int = 100): MigreringsResultat {
         tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
 
         val alleOppgaver = oppgaveRepository.findAllByErMigrertFalse(PageRequest.of(0, maksAntall))
-        logger.info("Starter migrering av ${alleOppgaver.size} ikke-migrerte oppgaver til ung-brukerdialog (maks: $maksAntall)")
+        logger.info("Starter migrering av ${alleOppgaver.size} ikke-migrerte oppgaver til ung-brukerdialog-api (maks: $maksAntall)")
 
         var totaltOpprettet = 0
         var totaltHoppetOver = 0

@@ -72,10 +72,10 @@ no.nav:
               client-auth-method: private_key_jwt
               client-id: vtp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
-          azure-ung-brukerdialog:
+          azure-ung-brukerdialog-api:
             token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
             grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
-            scope: api://vtp:k9saksbehandling:ung-brukerdialog/.default
+            scope: api://vtp:k9saksbehandling:ung-brukerdialog-api/.default
             authentication:
               client-auth-method: private_key_jwt
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
@@ -119,7 +119,7 @@ no.nav:
 
   gateways:
     ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/ung/sak
-    ung-brukerdialog: http://localhost:${wiremock.server.port}/ung-brukerdialog-mock/ung/brukerdialog
+    ung-brukerdialog-api: http://localhost:${wiremock.server.port}/ung-brukerdialog-api-mock/ung/brukerdialog
     sif-abac-pdp: http://localhost:${wiremock.server.port}/sif-abac-pdp-mock
     pdl-api-base-url: http://localhost:${wiremock.server.port}/pdl-api-mock
     sokos-kontoregister-person-base-url: http://localhost:${wiremock.server.port}/sokos-kontoregister-person-mock
