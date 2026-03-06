@@ -20,7 +20,7 @@ import java.time.Duration
 
 @Configuration
 class UngBrukerdialogKlientKonfig(
-    @Value("\${no.nav.gateways.ung-brukerdialog}") private val ungBrukerdialogUrl: String,
+    @Value("\${no.nav.gateways.ung-brukerdialog-api}") private val ungBrukerdialogUrl: String,
     oauth2Config: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService
 ) {
@@ -28,7 +28,7 @@ class UngBrukerdialogKlientKonfig(
     private companion object {
         val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogKlientKonfig::class.java)
 
-        const val AZURE_UNG_BRUKERDIALOG = "azure-ung-brukerdialog"
+        const val AZURE_UNG_BRUKERDIALOG = "azure-ung-brukerdialog-api"
     }
 
     private val azureUngBrukerdialogClientProperties =

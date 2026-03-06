@@ -22,7 +22,7 @@
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
         <ung-sak.version>7.0.3</ung-sak.version>
-        <ung-brukerdialog.version>0.1.4</ung-brukerdialog.version>
+        <ung-brukerdialog-api.version>0.1.4</ung-brukerdialog-api.version>
 
         <fp-sak.version>2.7.3</fp-sak.version>
         <k9-format.version>12.7.2</k9-format.version>
@@ -127,7 +127,7 @@
         <dependency>
             <groupId>no.nav.ung.brukerdialog</groupId>
             <artifactId>kontrakt</artifactId>
-            <version>${ung-brukerdialog.version}</version>
+            <version>${ung-brukerdialog-api.version}</version>
         </dependency>
         <dependency>
             <groupId>no.nav.k9</groupId>

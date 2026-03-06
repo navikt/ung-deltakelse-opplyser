@@ -92,7 +92,7 @@ class UngBrukerdialogService(
         aktørId: String,
         oppgaver: List<OppgaveDTO>,
     ): MigreringsResultat {
-        logger.error("Fikk en HttpClientErrorException når man kalte migrerOppgaver tjeneste i ung-brukerdialog. Error response = '${exception.responseBodyAsString}'")
+        logger.error("Fikk en HttpClientErrorException når man kalte migrerOppgaver tjeneste i ung-brukerdialog-api. Error response = '${exception.responseBodyAsString}'")
         return MigreringsResultat(0, oppgaver.size)
     }
 
@@ -102,7 +102,7 @@ class UngBrukerdialogService(
         aktørId: String,
         oppgaver: List<OppgaveDTO>,
     ): MigreringsResultat {
-        logger.error("Fikk en HttpServerErrorException når man kalte migrerOppgaver tjeneste i ung-brukerdialog.")
+        logger.error("Fikk en HttpServerErrorException når man kalte migrerOppgaver tjeneste i ung-brukerdialog-api.")
         return MigreringsResultat(0, oppgaver.size)
     }
 
@@ -112,7 +112,7 @@ class UngBrukerdialogService(
         aktørId: String,
         oppgaver: List<OppgaveDTO>,
     ): MigreringsResultat {
-        logger.error("Fikk en ResourceAccessException når man kalte migrerOppgaver tjeneste i ung-brukerdialog.")
+        logger.error("Fikk en ResourceAccessException når man kalte migrerOppgaver tjeneste i ung-brukerdialog-api.")
         return MigreringsResultat(0, oppgaver.size)
     }
 
@@ -215,7 +215,7 @@ class UngBrukerdialogService(
         exception: HttpClientErrorException,
         opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
-        logger.error("Fikk en HttpClientErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog. Error response = '${exception.responseBodyAsString}'")
+        logger.error("Fikk en HttpClientErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog-api. Error response = '${exception.responseBodyAsString}'")
         return false
     }
 
@@ -224,7 +224,7 @@ class UngBrukerdialogService(
         exception: HttpServerErrorException,
         opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
-        logger.error("Fikk en HttpServerErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog.")
+        logger.error("Fikk en HttpServerErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog-api.")
         return false
     }
 
@@ -233,7 +233,7 @@ class UngBrukerdialogService(
         exception: ResourceAccessException,
         opprettOppgave: OpprettOppgaveDto,
     ): Boolean {
-        logger.error("Fikk en ResourceAccessException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog.")
+        logger.error("Fikk en ResourceAccessException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog-api.")
         return false
     }
 
@@ -250,10 +250,10 @@ class UngBrukerdialogException(
             httpStatus: HttpStatus,
         ): ProblemDetail {
             val problemDetail = ProblemDetail.forStatus(httpStatus)
-            problemDetail.title = "Feil ved kall mot ung-brukerdialog"
+            problemDetail.title = "Feil ved kall mot ung-brukerdialog-api"
             problemDetail.detail = melding
 
-            problemDetail.type = URI("/problem-details/ung-brukerdialog")
+            problemDetail.type = URI("/problem-details/ung-brukerdialog-api")
 
             return problemDetail
         }
