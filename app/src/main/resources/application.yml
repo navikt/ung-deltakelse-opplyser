@@ -180,6 +180,6 @@ springdoc:
       client-id: ${AZURE_APP_CLIENT_ID}
       scope-separator: ","
   oAuthFlow:
-    authorizationUrl: ${AZURE_LOGIN_URL:http://localhost:8080}/authorize
-    tokenUrl: ${AZURE_LOGIN_URL:http://localhost:8080}/token
-    apiScope: api://${AZURE_APP_CLIENT_ID:abc123}/.default
+    authorizationUrl: ${AZURE_LOGIN_URL:http://localhost:8060/rest/azuread}/authorize
+    tokenUrl: ${AZURE_LOGIN_URL:http://localhost:8060/rest/azuread}/token
+    apiScope: api://${AZURE_APP_CLIENT_ID:vtp}/.default
