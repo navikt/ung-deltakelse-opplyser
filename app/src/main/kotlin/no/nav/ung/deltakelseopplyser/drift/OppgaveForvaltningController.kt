@@ -108,9 +108,9 @@ class OppgaveForvaltningController(
         var totaltHoppetOver = 0
 
         alleOppgaver
-            .groupBy { it.deltaker.deltakerIdent }
-            .forEach { (deltakerIdent, oppgaverForDeltaker) ->
-                val aktørId = pdlService.hentAktørIder(deltakerIdent)
+            .groupBy { it.deltaker }
+            .forEach { (deltaker, oppgaverForDeltaker) ->
+                val aktørId = pdlService.hentAktørIder(deltaker.deltakerIdent)
                     .firstOrNull { !it.historisk }
                     ?.ident
 
@@ -124,6 +124,12 @@ class OppgaveForvaltningController(
                     oppgaveMapperService.mapOppgaveTilDTO(it)
                 }
 
+                if (oppgaveDTOer.isEmpty()) {
+                    logger.warn("Ingen oppgaver å migrere for deltaker ${deltaker.id}")
+                    return@forEach
+                }
+
+                logger.info("Migrerer ${oppgaveDTOer.size} oppgave(r) for deltaker ${deltaker.id}")
                 val resultat = ungBrukerdialogService.migrerOppgaver(aktørId, oppgaveDTOer)
                 logger.info("Migrert ${oppgaveDTOer.size} oppgave(r) for deltaker: ${resultat.antallOpprettet} opprettet, ${resultat.antallHoppetOver} hoppet over")
 
