@@ -20,7 +20,7 @@ class FlywayRepairConfig {
         @Value("\${FLYWAY_REPAIR_ON_FAIL}") flywayRepairOnFail: Boolean
     ): Flyway {
 
-        val isProd = System.getenv("NAIS_CLUSTER_NAME").startsWith("prod")
+        val isProd = System.getenv("NAIS_CLUSTER_NAME")?.startsWith("prod") ?: false
         val flyway = Flyway.configure()
             .dataSource(dataSource)
             .locations(*locations.split(",").toTypedArray())
