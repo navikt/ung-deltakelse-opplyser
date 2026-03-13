@@ -13,6 +13,7 @@ import no.nav.ung.brukerdialog.typer.AktørId
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
+import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -134,10 +135,17 @@ class UngBrukerdialogService(
         OppgaveStatus.LUKKET -> throw IllegalStateException("Forventer ikkje å finne LUKKET status")
     }
 
-    private fun mapBekreftelse(bekreftelse: BekreftelseDTO?, oppgavetypeData: OppgavetypeDataDTO): BrukerdialogBekreftelseDTO? =
+    private fun mapBekreftelse(
+        bekreftelse: BekreftelseDTO?,
+        oppgavetypeData: OppgavetypeDataDTO
+    ): BrukerdialogBekreftelseDTO? =
         if (oppgavetypeData is InntektsrapporteringOppgavetypeDataDTO && oppgavetypeData.rapportertInntekt != null) {
-            RapportertInntektDto(oppgavetypeData.fraOgMed, oppgavetypeData.fraOgMed, oppgavetypeData.rapportertInntekt!!.arbeidstakerOgFrilansInntekt)
-        } else bekreftelse?.let {  SvarPåVarselDTO(it.harUttalelse, it.uttalelseFraBruker) }
+            RapportertInntektDto(
+                oppgavetypeData.fraOgMed,
+                oppgavetypeData.fraOgMed,
+                oppgavetypeData.rapportertInntekt!!.arbeidstakerOgFrilansInntekt
+            )
+        } else bekreftelse?.let { SvarPåVarselDTO(it.harUttalelse, it.uttalelseFraBruker) }
 
     private fun mapOppgavetypeData(oppgavetypeData: OppgavetypeDataDTO): OppgavetypeDataDto = when (oppgavetypeData) {
         is KontrollerRegisterinntektOppgavetypeDataDTO -> KontrollerRegisterinntektOppgavetypeDataDto(
@@ -185,16 +193,32 @@ class UngBrukerdialogService(
         val registerinntekt = data.registerinntekt
         return BrukerdialogRegisterinntektDTO(
             registerinntekt.arbeidOgFrilansInntekter.map {
-                BrukerdialogArbeidOgFrilansRegisterInntektDTO(it.inntekt, it.arbeidsgiver, it.arbeidsgiver, it.arbeidsgiverNavn)
+                BrukerdialogArbeidOgFrilansRegisterInntektDTO(
+                    it.inntekt,
+                    it.arbeidsgiver,
+                    it.arbeidsgiver,
+                    it.arbeidsgiverNavn
+                )
             },
             registerinntekt.ytelseInntekter.map {
-                BrukerdialogYtelseRegisterInntektDTO(it.inntekt, BrukerdialogYtelseType.valueOf(it.ytelsetype.name))
+                BrukerdialogYtelseRegisterInntektDTO(it.inntekt, mapYtelseType(it))
             },
             registerinntekt.totalInntektArbeidOgFrilans,
             registerinntekt.totalInntektYtelse,
             registerinntekt.totalInntekt
         )
     }
+
+    private fun mapYtelseType(dTO: YtelseRegisterInntektDTO): BrukerdialogYtelseType =
+        when (dTO.ytelsetype) {
+            YtelseType.PLEIEPENGER_SYKT_BARN,
+            YtelseType.PLEIEPENGER_LIVETS_SLUTTFASE,
+            YtelseType.PLEIEPENGER -> BrukerdialogYtelseType.PLEIEPENGER
+
+            YtelseType.OMSORGSPENGER -> BrukerdialogYtelseType.OMSORGSPENGER
+            YtelseType.SYKEPENGER -> BrukerdialogYtelseType.SYKEPENGER
+            YtelseType.OPPLAERINGSPENGER -> BrukerdialogYtelseType.OPPLÆRINGSPENGER
+        }
 
     private fun mapPeriode(periode: PeriodeDTO?): BrukerdialogPeriodeDTO? =
         periode?.let { BrukerdialogPeriodeDTO(it.fom, it.tom) }
