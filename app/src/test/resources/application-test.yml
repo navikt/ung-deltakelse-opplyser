@@ -1,4 +1,4 @@
-UNGDOMSYTELSE_DELTAKER_BASE_URL: http://localhost:8080/ungdomsytelse-deltaker # placeholder
+UNGDOMSYTELSE_DELTAKER_BASE_URL: https://ungdomsytelse-deltaker.intern.dev.nav.no/ungdomsprogrammet/ytelsen # placeholder
 AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}]\"
 NAIS_CLUSTER_NAME: dev-gcp
 NAIS_NAMESPACE: k9saksbehandling
