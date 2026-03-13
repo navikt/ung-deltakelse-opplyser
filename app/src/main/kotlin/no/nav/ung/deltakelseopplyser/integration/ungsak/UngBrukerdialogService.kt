@@ -132,7 +132,7 @@ class UngBrukerdialogService(
         OppgaveStatus.ULØST -> BrukerdialogOppgaveStatus.ULØST
         OppgaveStatus.AVBRUTT -> BrukerdialogOppgaveStatus.AVBRUTT
         OppgaveStatus.UTLØPT -> BrukerdialogOppgaveStatus.UTLØPT
-        OppgaveStatus.LUKKET -> throw IllegalStateException("Forventer ikkje å finne LUKKET status")
+        OppgaveStatus.LUKKET -> BrukerdialogOppgaveStatus.UTLØPT
     }
 
     private fun mapBekreftelse(
