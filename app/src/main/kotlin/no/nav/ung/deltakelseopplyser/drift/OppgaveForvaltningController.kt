@@ -133,14 +133,14 @@ class OppgaveForvaltningController(
                 val resultat = ungBrukerdialogService.migrerOppgaver(aktørId, oppgaveDTOer)
                 logger.info("Migrert ${oppgaveDTOer.size} oppgave(r) for deltaker: ${resultat.antallOpprettet} opprettet, ${resultat.antallHoppetOver} hoppet over")
 
-                if (resultat.antallOpprettet > 0) {
-                    oppgaverForDeltaker.forEach { it.markerSomMigrert() }
-                    oppgaveRepository.saveAll(oppgaverForDeltaker)
-                }
 
                 totaltOpprettet += resultat.antallOpprettet
                 totaltHoppetOver += resultat.antallHoppetOver
             }
+
+        alleOppgaver.forEach { it.markerSomMigrert() }
+        oppgaveRepository.saveAll(alleOppgaver)
+
 
         val totalResultat = MigreringsResultat(totaltOpprettet, totaltHoppetOver)
         logger.info("Migrering fullført: ${totalResultat.antallOpprettet} opprettet, ${totalResultat.antallHoppetOver} hoppet over, ${totalResultat.antallTotalt} totalt")
