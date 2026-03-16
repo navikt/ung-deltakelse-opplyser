@@ -21,8 +21,8 @@
         <logback.logstash.version>9.0</logback.logstash.version>
         <spring-mockk.version>4.0.2</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>7.0.8</ung-sak.version>
-        <ung-brukerdialog-api.version>0.1.4</ung-brukerdialog-api.version>
+        <ung-sak.version>7.0.11</ung-sak.version>
+        <ung-brukerdialog-api.version>0.1.7</ung-brukerdialog-api.version>
 
         <fp-sak.version>2.7.4</fp-sak.version>
         <k9-format.version>12.9.1</k9-format.version>
