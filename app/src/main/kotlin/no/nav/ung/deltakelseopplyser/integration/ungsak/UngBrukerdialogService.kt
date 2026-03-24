@@ -4,7 +4,6 @@ import no.nav.ung.brukerdialog.kontrakt.oppgaver.*
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretperiode.EndretPeriodeDataDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretsluttdato.EndretSluttdatoDataDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretstartdato.EndretStartdatoDataDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.fjernperiode.FjernetPeriodeDataDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.inntektsrapportering.InntektsrapporteringOppgavetypeDataDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.inntektsrapportering.RapportertInntektDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.kontrollerregisterinntekt.KontrollerRegisterinntektOppgavetypeDataDto
@@ -31,7 +30,7 @@ import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.BekreftelseDTO as BrukerdialogBekreftelseDTO
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveResponsDto as OppgaveResponsDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveStatus as BrukerdialogOppgaveStatus
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveType as BrukerdialogOppgaveType
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretperiode.PeriodeDTO as BrukerdialogPeriodeDTO
@@ -121,10 +120,10 @@ class UngBrukerdialogService(
         Oppgavetype.BEKREFT_ENDRET_STARTDATO -> BrukerdialogOppgaveType.BEKREFT_ENDRET_STARTDATO
         Oppgavetype.BEKREFT_ENDRET_SLUTTDATO -> BrukerdialogOppgaveType.BEKREFT_ENDRET_SLUTTDATO
         Oppgavetype.BEKREFT_ENDRET_PERIODE -> BrukerdialogOppgaveType.BEKREFT_ENDRET_PERIODE
-        Oppgavetype.BEKREFT_FJERNET_PERIODE -> BrukerdialogOppgaveType.BEKREFT_FJERNET_PERIODE
         Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT -> BrukerdialogOppgaveType.BEKREFT_AVVIK_REGISTERINNTEKT
         Oppgavetype.RAPPORTER_INNTEKT -> BrukerdialogOppgaveType.RAPPORTER_INNTEKT
         Oppgavetype.SØK_YTELSE -> BrukerdialogOppgaveType.SØK_YTELSE
+        Oppgavetype.BEKREFT_FJERNET_PERIODE -> throw IllegalArgumentException("Ugyldig oppgavetype for migrering: ${Oppgavetype.BEKREFT_FJERNET_PERIODE.name}")
     }
 
     private fun mapOppgaveStatus(status: OppgaveStatus): BrukerdialogOppgaveStatus = when (status) {
@@ -138,14 +137,14 @@ class UngBrukerdialogService(
     private fun mapBekreftelse(
         bekreftelse: BekreftelseDTO?,
         oppgavetypeData: OppgavetypeDataDTO
-    ): BrukerdialogBekreftelseDTO? =
+    ): OppgaveResponsDto? =
         if (oppgavetypeData is InntektsrapporteringOppgavetypeDataDTO && oppgavetypeData.rapportertInntekt != null) {
             RapportertInntektDto(
                 oppgavetypeData.fraOgMed,
                 oppgavetypeData.fraOgMed,
                 oppgavetypeData.rapportertInntekt!!.arbeidstakerOgFrilansInntekt
             )
-        } else bekreftelse?.let { SvarPåVarselDTO(it.harUttalelse, it.uttalelseFraBruker) }
+        } else bekreftelse?.let { SvarPåVarselDto(it.harUttalelse, it.uttalelseFraBruker) }
 
     private fun mapOppgavetypeData(oppgavetypeData: OppgavetypeDataDTO): OppgavetypeDataDto = when (oppgavetypeData) {
         is KontrollerRegisterinntektOppgavetypeDataDTO -> KontrollerRegisterinntektOppgavetypeDataDto(
@@ -171,11 +170,6 @@ class UngBrukerdialogService(
             oppgavetypeData.endringer.map { BrukerdialogPeriodeEndringType.valueOf(it.name) }.toSet()
         )
 
-        is FjernetPeriodeDataDTO -> FjernetPeriodeDataDto(
-            oppgavetypeData.forrigeStartdato,
-            oppgavetypeData.forrigeSluttdato
-        )
-
         is InntektsrapporteringOppgavetypeDataDTO -> InntektsrapporteringOppgavetypeDataDto(
             oppgavetypeData.fraOgMed,
             oppgavetypeData.tilOgMed,
@@ -195,7 +189,6 @@ class UngBrukerdialogService(
             registerinntekt.arbeidOgFrilansInntekter.map {
                 BrukerdialogArbeidOgFrilansRegisterInntektDTO(
                     it.inntekt,
-                    it.arbeidsgiver,
                     it.arbeidsgiver,
                     it.arbeidsgiverNavn
                 )
