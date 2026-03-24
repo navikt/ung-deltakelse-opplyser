@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveYtelsetype
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.søkytelse.SøkYtelseOppgavetypeDataDto
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
@@ -96,6 +97,7 @@ class UngdomsprogramregisterService(
             pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
                 ungBrukerdialogService.opprettSøkYtelseOppgave(OpprettOppgaveDto(
                     no.nav.ung.brukerdialog.typer.AktørId(it.ident),
+                    OppgaveYtelsetype.UNGDOMSYTELSE,
                     oppgaveReferanse,
                     SøkYtelseOppgavetypeDataDto(deltakelseDTO.fraOgMed),
                     null
