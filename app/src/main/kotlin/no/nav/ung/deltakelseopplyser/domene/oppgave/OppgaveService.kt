@@ -32,7 +32,6 @@ import no.nav.k9.oppgave.OppgaveBekreftelse as UngOppgaveBekreftelse
 class OppgaveService(
     private val deltakerService: DeltakerService,
     private val mineSiderService: MineSiderService,
-    private val deltakerappConfig: DeltakerappConfig,
     private val oppgaveMapperService: OppgaveMapperService
 ) {
     private companion object {
@@ -64,9 +63,6 @@ class OppgaveService(
         )
 
         deltakerService.oppdaterDeltaker(deltaker)
-
-        logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
     }
 
     fun opprettOppgave(
@@ -103,22 +99,8 @@ class OppgaveService(
         deltaker.leggTilOppgave(nyOppgave)
         deltakerService.oppdaterDeltaker(deltaker)
 
-        mineSiderService.opprettVarsel(
-            varselId = nyOppgave.oppgaveReferanse.toString(),
-            deltakerIdent = deltaker.deltakerIdent,
-            tekster = oppgaveTypeDataDAO.minSideVarselTekster(),
-            varselLink = utledVarselLink(nyOppgave),
-            varseltype = Varseltype.Oppgave
-        )
-
         return oppgaveMapperService.mapOppgaveTilDTO(nyOppgave)
     }
-
-    private fun utledVarselLink(nyOppgave: OppgaveDAO) =
-        when (nyOppgave.oppgavetype) {
-            Oppgavetype.SØK_YTELSE -> deltakerappConfig.getSøknadUrl()
-            else -> deltakerappConfig.getOppgaveUrl(nyOppgave.oppgaveReferanse.toString())
-        }
 
     fun avbrytOppgave(deltaker: DeltakerDAO, oppgaveReferanse: UUID): OppgaveDTO {
         logger.info("Henter oppgave med oppgaveReferanse $oppgaveReferanse")
@@ -135,9 +117,6 @@ class OppgaveService(
 
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
-
-        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
 
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
@@ -158,9 +137,6 @@ class OppgaveService(
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
 
-        logger.info("Deaktiverer oppgave med oppgaveReferanse $oppgaveReferanse på min side")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
-
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
@@ -176,8 +152,6 @@ class OppgaveService(
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
 
-        logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
@@ -190,8 +164,6 @@ class OppgaveService(
         logger.info("Lagrer oppgave med oppgaveReferanse $oppgaveReferanse på deltaker med id ${deltaker.id}")
         deltakerService.oppdaterDeltaker(deltaker)
 
-        logger.info("Deaktiverer oppgave med oppgaveReferanse=$oppgaveReferanse da den er løst")
-        mineSiderService.deaktiverOppgave(oppgave.oppgaveReferanse.toString())
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 
@@ -229,7 +201,6 @@ class OppgaveService(
 
         val oppdatertOppgave = oppgave.markerSomLukket()
         deltakerService.oppdaterDeltaker(deltaker)
-        mineSiderService.deaktiverOppgave(oppgaveReferanse.toString())
         return oppgaveMapperService.mapOppgaveTilDTO(oppdatertOppgave)
     }
 

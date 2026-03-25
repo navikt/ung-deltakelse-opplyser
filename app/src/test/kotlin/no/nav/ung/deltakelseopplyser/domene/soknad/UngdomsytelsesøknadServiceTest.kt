@@ -108,9 +108,7 @@ class UngdomsytelsesøknadServiceTest {
 
     @BeforeAll
     fun setUp() {
-        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
-        justRun { mineSiderService.deaktiverOppgave(any()) }
         every { ungBrukerdialogService.opprettSøkYtelseOppgave(any()) } returns true
     }
 
