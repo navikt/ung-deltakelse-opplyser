@@ -54,6 +54,11 @@
       "cluster": "dev-gcp"
     },
     {
+      "app": "aktivitetspenger-innsyn",
+      "namespace": "dusseldorf",
+      "cluster": "dev-gcp"
+    },
+    {
       "app": "k9-brukerdialog-prosessering",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
