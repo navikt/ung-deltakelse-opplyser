@@ -49,8 +49,7 @@ class UngdomsprogramregisterService(
     private val oppgaveService: OppgaveService,
     private val oppgaveMapperService: OppgaveMapperService,
     private val ungBrukerdialogService: UngBrukerdialogService,
-    @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
-    @Value("\${OPPGAVER_I_UNG_SAK_ENABLED}") private val oppgaverIUngSakEnabled: Boolean,
+    @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -78,7 +77,8 @@ class UngdomsprogramregisterService(
             deltakerService.lagreDeltaker(deltakelseDTO)
         }
 
-        val deltakerPersonalia = deltakerService.hentDeltakerInfo(deltakerDAO.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(deltakerDAO.id)
+            ?: throw IllegalStateException("Deltakerpersonalia er null")
 
         forsikrePeriodeErInnenforDeltakersGyldigeAlder(deltakelseDTO.fraOgMed, deltakerPersonalia)
 
@@ -93,16 +93,16 @@ class UngdomsprogramregisterService(
             frist = ZonedDateTime.now().plusMonths(3)
         )
 
-        if (oppgaverIUngSakEnabled) {
-            pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
-                ungBrukerdialogService.opprettSøkYtelseOppgave(OpprettOppgaveDto(
+        pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
+            ungBrukerdialogService.opprettSøkYtelseOppgave(
+                OpprettOppgaveDto(
                     no.nav.ung.brukerdialog.typer.AktørId(it.ident),
                     OppgaveYtelsetype.UNGDOMSYTELSE,
                     oppgaveReferanse,
                     SøkYtelseOppgavetypeDataDto(deltakelseDTO.fraOgMed),
                     null
-                ))
-            }
+                )
+            )
         }
 
 
@@ -237,7 +237,6 @@ class UngdomsprogramregisterService(
     }
 
 
-
     fun hentIkkeSlettetForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
@@ -295,7 +294,8 @@ class UngdomsprogramregisterService(
     @Transactional(TRANSACTION_MANAGER)
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
-        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id)
+            ?: throw IllegalStateException("Deltakerpersonalia er null")
 
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getFom()} til $endrePeriodeDatoDTO")
 
@@ -322,7 +322,8 @@ class UngdomsprogramregisterService(
     @Transactional(TRANSACTION_MANAGER)
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
-        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id)
+            ?: throw IllegalStateException("Deltakerpersonalia er null")
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getTom()} til $endrePeriodeDatoDTO")
 
         val deltakelseFraOgMedDato = eksisterendeDeltakelse.getFom()
@@ -355,7 +356,8 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramFjernDeltakelseHendelse(hendelseInfo.build(),
+        val hendelse = UngdomsprogramFjernDeltakelseHendelse(
+            hendelseInfo.build(),
             Periode(oppdatert.fraOgMed, oppdatert.tilOgMed)
         )
         ungSakService.sendInnHendelse(
@@ -440,8 +442,7 @@ class UngdomsprogramregisterService(
                 null
             )
         }.takeIf { !it.erSlettet }
-            ?: throw
-            ErrorResponseException(
+            ?: throw ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
                     it.detail = "Deltakelse med $id er slettet"

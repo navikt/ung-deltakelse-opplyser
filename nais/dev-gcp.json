@@ -123,7 +123,6 @@
 
 
     "SLETT_SOKT_DELTAKELSE_ENABLED": true,
-    "OPPGAVER_I_UNG_SAK_ENABLED": true,
 
     "FLYWAY_REPAIR_ON_FAIL": false
 
