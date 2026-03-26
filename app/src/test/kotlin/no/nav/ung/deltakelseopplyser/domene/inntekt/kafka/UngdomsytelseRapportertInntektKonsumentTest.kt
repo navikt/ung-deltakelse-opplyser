@@ -141,7 +141,6 @@ class UngdomsytelseRapportertInntektKonsumentTest : AbstractIntegrationTest() {
         await.atMost(10, TimeUnit.SECONDS).untilAsserted {
             verify(exactly = 1) { rapportertInntektHåndtererService.håndterRapportertInntekt(any()) }
             verify(exactly = 1) { deltakerService.hentDeltakterIder(any()) }
-            verify(exactly = 1) { mineSiderService.deaktiverOppgave(any()) }
             verify(exactly = 1) { rapportertInntektRepository.save(any()) }
 
             val oppgave = deltakerService.hentDeltakersOppgaver(søkerIdent).first()

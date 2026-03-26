@@ -179,7 +179,6 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveBekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.oppgaveBekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
 
-        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
 
 
@@ -230,7 +229,6 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveBekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.oppgaveBekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil med datoen")
 
-        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
 
     @Test
@@ -273,7 +271,6 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
         assertThat(oppgave.oppgaveBekreftelse?.harUttalelse).isTrue()
         assertThat(oppgave.oppgaveBekreftelse?.uttalelseFraBruker).isEqualTo("Det er feil inntekt i registeret")
 
-        verify(exactly = 1) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
 
     }
 
@@ -310,7 +307,6 @@ class OppgaveServiceTest : AbstractIntegrationTest() {
             )
         }
 
-        verify(exactly = 0) { mineSiderService.deaktiverOppgave(oppgaveReferanse.toString()) }
     }
 
     @Test

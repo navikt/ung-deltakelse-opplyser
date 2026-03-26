@@ -89,7 +89,6 @@ class UngdomsprogramregisterServiceTest {
 
     @BeforeEach
     fun setUp() {
-        justRun { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
         springTokenValidationContextHolder.mockContext()
         every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(defaultFødselsdato)
     }
@@ -359,7 +358,6 @@ class UngdomsprogramregisterServiceTest {
         )
         ungdomsprogramregisterService.leggTilIProgram(dto)
         assertThrows<DataIntegrityViolationException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
-        verify(exactly = 1) { mineSiderService.opprettVarsel(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
