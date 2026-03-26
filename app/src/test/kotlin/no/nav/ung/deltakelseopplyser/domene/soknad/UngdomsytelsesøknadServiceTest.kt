@@ -15,24 +15,19 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.config.DeltakerappConfig
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
-import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
-import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
@@ -61,11 +56,8 @@ import java.util.*
     DeltakerService::class,
     UngdomsytelsesøknadService::class,
     UngdomsprogramregisterService::class,
-    RapportertInntektService::class,
     DeltakerappConfig::class,
     MicrofrontendService::class,
-    OppgaveService::class,
-    OppgaveMapperService::class
 )
 class UngdomsytelsesøknadServiceTest {
 
@@ -87,9 +79,6 @@ class UngdomsytelsesøknadServiceTest {
 
     @MockkBean
     lateinit var mineSiderService: MineSiderService
-
-    @MockkBean
-    lateinit var enhetsregisterService: EnhetsregisterService
 
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
@@ -113,19 +102,17 @@ class UngdomsytelsesøknadServiceTest {
     }
 
     @Test
-    fun `Forventer at søknad markerer deltakelsen som søkt og oppgaven løses`() {
+    fun `Forventer at søknad markerer deltakelsen som søkt`() {
         val søkerIdent = FødselsnummerGenerator.neste()
         val deltakelseStart = "2024-11-04"
+        val søknadId = UUID.randomUUID().toString()
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelseDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
-        val sendSøknadOppgave =
-            deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
-                ?: throw IllegalStateException("Fant ikke send søknad oppgave for deltaker med ident $søkerIdent")
 
         ungdomsytelsesøknadService.håndterMottattSøknad(
             ungdomsytelsesøknad = lagUngdomsytelseSøknad(
-                søknadId = sendSøknadOppgave.oppgaveReferanse.toString(),
+                søknadId = søknadId,
                 deltakelseId = deltakelseDTO.id!!,
                 søkerIdent = søkerIdent,
                 deltakelseStart = deltakelseStart

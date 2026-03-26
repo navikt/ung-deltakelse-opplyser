@@ -9,19 +9,16 @@ import io.mockk.verify
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
+import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.leggPåTopic
@@ -31,6 +28,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.Duration
 import java.time.LocalDate
+import java.util.UUID
 
 class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
 
@@ -46,9 +44,6 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var ungdomsprogramregisterService: UngdomsprogramregisterService
-
-    @Autowired
-    lateinit var deltakerService: DeltakerService
 
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
@@ -74,6 +69,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         mockPdl(deltakerIdent, IdentGruppe.FOLKEREGISTERIDENT)
 
         val journalpostId = "671161658"
+        val søknadId = UUID.randomUUID()
 
         val deltakelseDTO = ungdomsprogramregisterService.leggTilIProgram(
             DeltakelseDTO(
@@ -82,8 +78,6 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
                 tilOgMed = null
             )
         )
-
-        val oppgaveReferanse = deltakerService.hentDeltakersOppgaver(deltakerIdent).first { it.oppgavetype == Oppgavetype.SØK_YTELSE }.oppgaveReferanse
 
         every { microfrontendService.sendOgLagre(any()) } throwsMany listOf(
                 RuntimeException("Simulert feil 1"),
@@ -104,7 +98,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
                     "søker": {
                       "norskIdentitetsnummer": "$deltakerIdent"
                     },
-                    "søknadId": "$oppgaveReferanse",
+                    "søknadId": "$søknadId",
                     "versjon": "1.0.0",
                     "ytelse": {
                       "type": "UNGDOMSYTELSE",
@@ -138,7 +132,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
             }
         """.trimIndent()
 
-        producer.leggPåTopic(oppgaveReferanse.toString(), søknad, TOPIC)
+        producer.leggPåTopic(søknadId.toString(), søknad, TOPIC)
 
         // Vent til at alle forsøkene er gjort
         await.atMost(Duration.ofSeconds(60)).untilAsserted {
@@ -147,15 +141,11 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
                 ungdomsytelsesøknadService.håndterMottattSøknad(any())
             }
 
-            deltakerService.hentDeltakersOppgaver(deltakerIdent).first { it.oppgaveReferanse == oppgaveReferanse }.let { oppgave ->
-                assertThat(oppgave.status).isEqualTo(OppgaveStatus.LØST)
-            }
-
             deltakelseRepository.findById(deltakelseDTO.id!!).get().let { deltakelse ->
                 assertThat(deltakelse.søktTidspunkt).isNotNull
             }
 
-            assertThat(søknadRepository.findById(journalpostId)). isPresent
+            assertThat(søknadRepository.findById(journalpostId)).isPresent
         }
     }
 

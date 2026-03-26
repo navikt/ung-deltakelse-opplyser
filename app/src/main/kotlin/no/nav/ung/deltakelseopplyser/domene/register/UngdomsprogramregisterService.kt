@@ -9,22 +9,16 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerPersonalia
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
-import no.nav.ung.sak.kontrakt.oppgaver.OpprettSøkYtelseOppgaveDto
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -46,8 +40,6 @@ class UngdomsprogramregisterService(
     private val deltakerService: DeltakerService,
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
-    private val oppgaveService: OppgaveService,
-    private val oppgaveMapperService: OppgaveMapperService,
     private val ungBrukerdialogService: UngBrukerdialogService,
     @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean
 ) {
@@ -86,13 +78,6 @@ class UngdomsprogramregisterService(
         val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDAO)
 
         val oppgaveReferanse = UUID.randomUUID()
-        oppgaveService.opprettOppgave(
-            deltaker = deltakerDAO,
-            oppgaveReferanse = oppgaveReferanse,
-            oppgaveTypeDataDAO = SøkYtelseOppgavetypeDataDAO(fomDato = ungdomsprogramDAO.getFom()),
-            frist = ZonedDateTime.now().plusMonths(3)
-        )
-
         pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
             ungBrukerdialogService.opprettSøkYtelseOppgave(
                 OpprettOppgaveDto(
@@ -254,17 +239,6 @@ class UngdomsprogramregisterService(
         logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
 
         return ungdomsprogramDAOs.map { it.mapToDTO() }
-    }
-
-    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseKomposittDTO> {
-        logger.info("Henter alle programopplysninger for deltaker.")
-
-        val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
-        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdentEllerAktørId)
-        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
-        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
-
-        return ungdomsprogramDAOs.map { it.tilDeltakelsePeriodInfo(deltakersOppgaver) }
     }
 
     @Transactional(TRANSACTION_MANAGER)
@@ -492,14 +466,5 @@ class UngdomsprogramregisterService(
                 null
             )
         }
-    }
-
-    private fun DeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelseKomposittDTO {
-        val oppgaver = oppgaver.map { oppgaveMapperService.mapOppgaveTilDTO(it) }
-
-        return DeltakelseKomposittDTO(
-            deltakelse = mapToDTO(),
-            oppgaver = oppgaver
-        )
     }
 }
