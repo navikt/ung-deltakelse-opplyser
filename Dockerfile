@@ -1,4 +1,4 @@
-FROM ghcr.io/navikt/sif-baseimages/java-21:2026.03.09.0820Z
+FROM ghcr.io/navikt/sif-baseimages/java-21:2026.03.30.1339Z
 LABEL org.opencontainers.image.source=https://github.com/navikt/ung-deltakelse-opplyser
 
 COPY app/target/lib/*.jar /app/lib/
