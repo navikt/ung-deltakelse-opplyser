@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup:
+  copilot-setup-steps:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,4 +21,6 @@ jobs:
           java-version: '21'
 
       - name: Resolve Maven dependencies
-        run: ./mvnw -B -q dependency:resolve
+        run: mvn clean install -DskipTests --settings ./.github/.m2/settings.xml --file pom.xml
+        env:
+          GH_ACCESS_TOKEN: ${{ secrets.READER_TOKEN }}
