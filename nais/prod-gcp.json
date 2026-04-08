@@ -47,6 +47,11 @@
       "app": "ung-sak",
       "namespace": "k9saksbehandling",
       "cluster": "prod-gcp"
+    },
+    {
+      "app": "veilarboppfolging",
+      "namespace": "poa",
+      "cluster": "prod-gcp"
     }
   ],
   "database": {

@@ -1,5 +1,5 @@
 UNGDOMSYTELSE_DELTAKER_BASE_URL: https://ungdomsytelse-deltaker.intern.dev.nav.no/ungdomsprogrammet/ytelsen # placeholder
-AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}]\"
+AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}, {"name":"poa:veilarboppfolging", "clientId":"veilarboppfolging-client-id"}]\"
 NAIS_CLUSTER_NAME: dev-gcp
 NAIS_NAMESPACE: k9saksbehandling
 NAIS_APP_NAME: ung-deltakelse-opplyser

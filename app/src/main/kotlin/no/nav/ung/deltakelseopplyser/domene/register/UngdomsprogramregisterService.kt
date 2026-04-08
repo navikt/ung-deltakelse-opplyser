@@ -12,6 +12,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.m
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelseSjekk
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
