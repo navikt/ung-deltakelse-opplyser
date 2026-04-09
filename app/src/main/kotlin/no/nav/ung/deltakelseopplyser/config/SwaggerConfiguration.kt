@@ -20,7 +20,10 @@ import org.springframework.http.HttpHeaders
 class SwaggerConfiguration(
     @Value("\${springdoc.oAuthFlow.authorizationUrl}") val authorizationUrl: String,
     @Value("\${springdoc.oAuthFlow.tokenUrl}") val tokenUrl: String,
-    @Value("\${springdoc.oAuthFlow.apiScope}") val apiScope: String
+    @Value("\${springdoc.oAuthFlow.apiScope}") val apiScope: String,
+    @Value("\${springdoc.oAuthFlow.oboAudience:\${NAIS_CLUSTER_NAME:dev-gcp}:\${NAIS_NAMESPACE:k9saksbehandling}:\${NAIS_APP_NAME:ung-deltakelse-opplyser}}") val oboAudience: String,
+    @Value("\${springdoc.oAuthFlow.tokenXTokenGeneratorUrl:https://tokenx-token-generator.intern.dev.nav.no}") val tokenXTokenGeneratorUrl: String,
+    @Value("\${springdoc.oAuthFlow.azureTokenGeneratorUrl:https://azure-token-generator.intern.dev.nav.no}") val azureTokenGeneratorUrl: String
 ) {
 
     @Bean
@@ -77,7 +80,7 @@ class SwaggerConfiguration(
     fun openAPI(): OpenAPI {
         // use Reusable Enums for Swagger generation:
         // see https://springdoc.org/#how-can-i-apply-enumasref-true-to-all-enums
-        io.swagger.v3.core.jackson.ModelResolver.enumsAsRef = true;
+        io.swagger.v3.core.jackson.ModelResolver.enumsAsRef = true
 
         return OpenAPI()
             .info(
@@ -94,18 +97,16 @@ class SwaggerConfiguration(
             .components(
                 Components()
                     .addSecuritySchemes("Authorization", tokenXApiToken())
+                    .addSecuritySchemes("entraObo", entraOboApiToken())
                     .addSecuritySchemes("oauth2", azureLogin())
             )
-            .addSecurityItem(
-                SecurityRequirement()
-                    .addList("Authorization")
-                    .addList("oauth2", listOf("read", "write"))
-            )
+            // OpenAPI security items are OR across entries.
+            .addSecurityItem(SecurityRequirement().addList("Authorization"))
+            .addSecurityItem(SecurityRequirement().addList("entraObo"))
+            .addSecurityItem(SecurityRequirement().addList("oauth2", listOf(apiScope)))
     }
 
     private fun tokenXApiToken(): SecurityScheme {
-        val audience = "dev-gcp:k9saksbehandling:ung-deltakelse-opplyser"
-
         return SecurityScheme()
             .type(SecurityScheme.Type.HTTP)
             .name(HttpHeaders.AUTHORIZATION)
@@ -113,9 +114,25 @@ class SwaggerConfiguration(
             .bearerFormat("JWT")
             .`in`(SecurityScheme.In.HEADER)
             .description(
-                """Eksempel på verdi som skal inn i Value-feltet (Bearer trengs altså ikke å oppgis): 'ey AidH...'
-                For nytt token -> https://tokenx-token-generator.intern.dev.nav.no/api/obo?aud=$audience
-            """.trimMargin()
+                """Brukes for deltaker-endepunkter (TokenX).
+                Eksempel pa verdi i Value-feltet: 'eyAidH...'
+                Generer nytt token: $tokenXTokenGeneratorUrl/api/obo?aud=$oboAudience
+            """.trimIndent()
+            )
+    }
+
+    private fun entraOboApiToken(): SecurityScheme {
+        return SecurityScheme()
+            .type(SecurityScheme.Type.HTTP)
+            .name(HttpHeaders.AUTHORIZATION)
+            .scheme("bearer")
+            .bearerFormat("JWT")
+            .`in`(SecurityScheme.In.HEADER)
+            .description(
+                """Brukes for veileder-, ung-sak-, ekstern- og drift-endepunkter (Entra ID OBO).
+                Eksempel pa verdi i Value-feltet: 'eyAidH...'
+                Generer nytt token: $azureTokenGeneratorUrl/api/obo?aud=$oboAudience
+            """.trimIndent()
             )
     }
 

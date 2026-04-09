@@ -148,19 +148,21 @@ Ende til ende verdikjede tester som involverer denne appen finnes i [k9-verdikje
 
 ## Registrering og henting av data via api-endepunktene
 
-Applikasjonen er konfigurert swagger-ui for å kunne teste ut endepunktene.
-For å kunne teste et endepunkt som krever innlogging, må man hente et tokenx token.
-Se [Henting av token](#henting-av-token) for mer info.
+Applikasjonen er konfigurert med swagger-ui for å kunne teste ut endepunktene.
+For å kunne teste et endepunkt som krever innlogging, må man hente riktig token for endepunktet:
+- Deltaker-endepunkter: TokenX-token
+- Veileder, ung-sak, ekstern og drift: Entra ID OBO-token
 
 #### Henting av token i dev-gcp
 
 1. Åpne [Swagger](https://ung-deltakelse-opplyser.intern.dev.nav.no/swagger-ui/index.html) i nettleseren.
 2. Trykk "Authorize" i høyre hjørne.
-3. Kopier lenken i modalen åpne i ny fane.
-4. Velg "TestId på nivå høyt".
-5. Oppgi Personidentifikator på testpersonen du vil hente token for, og trykk "Autentiser".
-6. Kopier verdien av feltet "access_token" (tokenet).
-7. Gå tilbake til Swagger fanen og lim inn tokenet i feltet "Value" og trykk "Authorize".
+3. Velg riktig sikkerhetsskjema i modalen:
+   - `Authorization` for TokenX
+   - `entraObo` for Entra ID OBO
+4. Kopier token-generator-lenken fra beskrivelsen, åpne i ny fane og logg inn.
+5. Kopier verdien av feltet `access_token`.
+6. Gå tilbake til Swagger-fanen og lim inn tokenet i riktig felt under "Value", og trykk "Authorize".
 
 # 10. Drift og støtte
 

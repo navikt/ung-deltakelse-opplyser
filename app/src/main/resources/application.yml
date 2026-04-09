@@ -183,3 +183,6 @@ springdoc:
     authorizationUrl: ${AZURE_LOGIN_URL:http://localhost:8060/rest/azuread}/authorize
     tokenUrl: ${AZURE_LOGIN_URL:http://localhost:8060/rest/azuread}/token
     apiScope: api://${AZURE_APP_CLIENT_ID:vtp}/.default
+    oboAudience: ${NAIS_CLUSTER_NAME:dev-gcp}:${NAIS_NAMESPACE:k9saksbehandling}:${NAIS_APP_NAME:ung-deltakelse-opplyser}
+    tokenXTokenGeneratorUrl: ${TOKENX_TOKEN_GENERATOR_URL:https://tokenx-token-generator.intern.dev.nav.no}
+    azureTokenGeneratorUrl: ${AZURE_TOKEN_GENERATOR_URL:https://azure-token-generator.intern.dev.nav.no}
