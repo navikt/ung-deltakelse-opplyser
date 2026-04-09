@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(
     name = "Ekstern deltakelse",
     description = """API for å sjekke om en bruker er aktiv deltaker i ungdomsprogrammet.
-        Kan kalles med systemtoken (maskin-til-maskin) eller veileder sitt OBO-token.
+        Krever veileder sitt OBO-token – systemtoken (maskin-til-maskin) aksepteres ikke.
         Returnerer alltid HTTP 200 – sjekk feltet 'erDeltaker' for svar."""
 )
 class EksternDeltakelseController(
@@ -50,17 +50,15 @@ class EksternDeltakelseController(
         summary = "Sjekk om bruker er aktiv deltaker i ungdomsprogrammet",
         description = """Returnerer om brukeren er aktiv deltaker i ungdomsprogrammet og eventuelt perioden.
             En periode regnes som aktiv dersom tilOgMed er null (åpen periode) eller satt i fremtiden.
-            Kan kalles med systemtoken eller veileder sitt OBO-token.
-            For OBO-token: diskresjonskode (kode 6/7) og egne-ansatt-sjekk utføres; ingen egen Azure-gruppe kreves."""
+            Krever veileder sitt OBO-token – systemtoken aksepteres ikke.
+            Kallet må komme fra et godkjent system (sjekkes via azp-claim).
+            Diskresjonskode (kode 6/7) og egne-ansatt-sjekk utføres via ABAC."""
     )
     @ResponseStatus(HttpStatus.OK)
     fun sjekkDeltakelse(@RequestBody deltakerDTO: DeltakerDTO): DeltakelseSjekk {
         val personIdent = PersonIdent.fra(deltakerDTO.deltakerIdent)
 
-        if (tilgangskontrollService.erSystemBruker()) {
-            tilgangskontrollService.krevSystemtilgang(listOf("veilarboppfolging"))
-            return registerService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
-        }
+        tilgangskontrollService.krevOboTilgangFraGodkjentSystem(listOf("veilarboppfolging"))
 
         tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
             PersonerOperasjonDto(

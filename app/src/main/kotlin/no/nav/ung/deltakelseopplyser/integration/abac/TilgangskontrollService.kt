@@ -56,6 +56,41 @@ class TilgangskontrollService(
         return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
     }
 
+    fun krevOboTilgangFraGodkjentSystem(godkjenteApplikasjoner: List<String>) {
+        if (erSystemBruker()) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    "Endepunktet aksepterer ikke systemtoken (maskin-til-maskin). Bruk OBO-token."
+                ),
+                null
+            )
+        }
+
+        val jwt = hentTokenForInnloggetBruker()
+        val azp = jwt.jwtTokenClaims.getStringClaim("azp")
+
+        logger.info(
+            "OBO-kall: azp '{}' azp_name '{}' godkjente applikasjoner '{}' godkjente clientID '{}'",
+            azp,
+            jwt.jwtTokenClaims.getStringClaim("azp_name"),
+            godkjenteApplikasjoner,
+            getGodkjenteClidentIds(godkjenteApplikasjoner)
+        )
+
+        if (!erGodkjentApplikasjon(azp, godkjenteApplikasjoner)) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    "Kallet kommer fra et system som ikke har tilgang til dette endepunktet"
+                ),
+                null
+            )
+        }
+    }
+
     fun krevSystemtilgang(godkjenteApplikasjoner: List<String> = listOf("ung-sak")) {
         val jwt = hentTokenForInnloggetBruker()
         val azp = jwt.jwtTokenClaims.getStringClaim("azp")
