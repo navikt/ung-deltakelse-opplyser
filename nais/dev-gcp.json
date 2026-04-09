@@ -34,6 +34,11 @@
       "cluster": "dev-gcp"
     },
     {
+      "app": "azure-token-generator",
+      "namespace": "nais",
+      "cluster": "dev-gcp"
+    },
+    {
       "app": "ungdomsytelse-veileder",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
