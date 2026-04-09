@@ -54,6 +54,16 @@ class SwaggerConfiguration(
     }
 
     @Bean
+    fun eksternOpenApi(): GroupedOpenApi {
+        val packagesToscan = arrayOf(
+            "no.nav.ung.deltakelseopplyser.domene.register.ekstern"
+        )
+        return GroupedOpenApi.builder()
+            .group("ekstern").packagesToScan(*packagesToscan)
+            .build()
+    }
+
+    @Bean
     fun driftOpenApi(): GroupedOpenApi {
         val packagesToscan = arrayOf(
             "no.nav.ung.deltakelseopplyser.drift",
@@ -103,7 +113,7 @@ class SwaggerConfiguration(
             .bearerFormat("JWT")
             .`in`(SecurityScheme.In.HEADER)
             .description(
-                """Eksempel på verdi som skal inn i Value-feltet (Bearer trengs altså ikke å oppgis): 'eyAidH...'
+                """Eksempel på verdi som skal inn i Value-feltet (Bearer trengs altså ikke å oppgis): 'ey AidH...'
                 For nytt token -> https://tokenx-token-generator.intern.dev.nav.no/api/obo?aud=$audience
             """.trimMargin()
             )
