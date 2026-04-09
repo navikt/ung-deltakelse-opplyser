@@ -58,7 +58,10 @@ class EksternDeltakelseController(
     fun sjekkDeltakelse(@RequestBody deltakerDTO: DeltakerDTO): DeltakelseSjekk {
         val personIdent = PersonIdent.fra(deltakerDTO.deltakerIdent)
 
-        tilgangskontrollService.krevOboTilgangFraGodkjentSystem(listOf("veilarboppfolging"))
+        tilgangskontrollService.krevOboTilgangFraGodkjentSystem(listOf(
+            "veilarboppfolging",
+            "azure-token-generator" // TODO: Fjern før merge til prod.
+        ))
 
         tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
             PersonerOperasjonDto(
