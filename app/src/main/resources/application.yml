@@ -168,6 +168,11 @@ no.nav:
     enhetsregister-base-url: # Settes i nais/<cluster>.json
     nom-api-base-url: # Settes i nais/<cluster>.json
 
+ung:
+  authorized-groups:
+    programveileder: ${UNG_AUTHORIZED_GROUPS_PROGRAMVEILEDER}
+    drift: ${UNG_AUTHORIZED_GROUPS_DRIFT}
+
 springdoc:
   api-docs:
     enabled: ${SWAGGER_ENABLED:false}

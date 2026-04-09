@@ -26,6 +26,8 @@ class TilgangskontrollService(
     private val tokenResolver: JwtBearerTokenResolver,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
     @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String,
+    @Value("\${ung.authorized-groups.programveileder}") private val programveilederGroupId: String,
+    @Value("\${ung.authorized-groups.drift}") private val driftGroupId: String,
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
@@ -35,7 +37,40 @@ class TilgangskontrollService(
         objectMapper.readValue<List<PreauthorizedApp>>(azureAppPreAuthorizedAppsString)
     }
 
+    // Hent grupper fra token
+    private fun hentBrukerGrupper(): List<String> {
+        val jwt = hentTokenForInnloggetBruker()
+        @Suppress("UNCHECKED_CAST")
+        val groups = jwt.jwtClaimsSet.getClaim("groups") as? List<String> ?: emptyList()
+        return groups
+    }
+
+    // Valider at bruker har minst én av forventede grupper
+    private fun validerGruppemedlemskap(forventedeGruppeIds: List<String>) {
+        val brukerGrupper = hentBrukerGrupper()
+        val harGodkjentGruppe = forventedeGruppeIds.any { it in brukerGrupper }
+
+        if (!harGodkjentGruppe) {
+            logger.warn(
+                "Bruker mangler godkjent gruppe. Forventet: {}, Bruker har: {}",
+                forventedeGruppeIds,
+                brukerGrupper
+            )
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    "Bruker har ikke tilgang til denne ressursen (manglende gruppe)"
+                ),
+                null
+            )
+        }
+    }
+
     fun krevAnsattTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>) {
+        // Automatisk valider programveileder-gruppe
+        validerGruppemedlemskap(listOf(programveilederGroupId))
+
         val tilgangsbeslutning = ansattHarTilgang(action, personIdenter)
         if (!tilgangsbeslutning.harTilgang) {
             throw ErrorResponseException(
@@ -56,7 +91,7 @@ class TilgangskontrollService(
         return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
     }
 
-    fun krevOboTilgangFraGodkjentSystem(godkjenteApplikasjoner: List<String>) {
+    fun krevOboTilgangFraGodkjentEksternSystem(godkjenteApplikasjoner: List<String>, personerOperasjonDto: PersonerOperasjonDto) {
         if (erSystemBruker()) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
@@ -76,7 +111,7 @@ class TilgangskontrollService(
             azp,
             jwt.jwtTokenClaims.getStringClaim("azp_name"),
             godkjenteApplikasjoner,
-            getGodkjenteClidentIds(godkjenteApplikasjoner)
+            getGodkjenteClientIds(godkjenteApplikasjoner)
         )
 
         if (!erGodkjentApplikasjon(azp, godkjenteApplikasjoner)) {
@@ -85,6 +120,20 @@ class TilgangskontrollService(
                 ProblemDetail.forStatusAndDetail(
                     HttpStatus.FORBIDDEN,
                     "Kallet kommer fra et system som ikke har tilgang til dette endepunktet"
+                ),
+                null
+            )
+        }
+
+        // Sjekk tilgang til personer
+        val tilgangsbeslutning = sifAbacPdpService.sjekkTilgangTilPersonerForInnloggetBruker(personerOperasjonDto)
+
+        if (!tilgangsbeslutning.harTilgang) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    tilgangsbeslutning.årsakerForIkkeTilgang.somTekst()
                 ),
                 null
             )
@@ -100,7 +149,7 @@ class TilgangskontrollService(
             azp,
             jwt.jwtTokenClaims.getStringClaim("azp_name"),
             godkjenteApplikasjoner,
-            getGodkjenteClidentIds(godkjenteApplikasjoner)
+            getGodkjenteClientIds(godkjenteApplikasjoner)
         )
 
         val harTilgang = erSystemBruker() && erGodkjentApplikasjon(azp, godkjenteApplikasjoner)
@@ -117,32 +166,49 @@ class TilgangskontrollService(
     }
 
     private fun erGodkjentApplikasjon(azp: String, godkjenteApplikasjoner: List<String>): Boolean {
-        val godkjenteClidentIds = getGodkjenteClidentIds(godkjenteApplikasjoner)
-        return godkjenteClidentIds.contains(azp)
+        val godkjenteClientIds = getGodkjenteClientIds(godkjenteApplikasjoner)
+        return godkjenteClientIds.contains(azp)
     }
 
-    private fun getGodkjenteClidentIds(godkjenteApplikasjoner: List<String>): List<String> =
-        godkjenteApplikasjoner.map { clientIdForApplikasjon(it) }
+    private fun getGodkjenteClientIds(godkjenteApplikasjoner: List<String>): List<String> =
+        godkjenteApplikasjoner.mapNotNull { clientIdForApplikasjon(it) }
 
     fun erSystemBruker(): Boolean {
         val jwt = hentTokenForInnloggetBruker()
-        val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
+        val azureIssuer = multiIssuerConfiguration.issuers["azure"]?.metadata?.issuer?.value
+        val erAzureToken = azureIssuer != null && jwt.issuer == azureIssuer
         val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
         return erAzureToken && erClientCredentials
     }
 
 
-    fun clientIdForApplikasjon(appname: String): String {
+    fun clientIdForApplikasjon(appname: String): String? {
         val matches = azureAppPreAuthorizedApps
             .filter { it.name.substringAfterLast(":") == appname }
-        if (matches.size == 1) {
-            return matches.first().clientId
-        } else {
-            throw IllegalArgumentException("Kan ikke unikt identifisere applikasjon " + appname + ", har følgende kandidater: " + matches.map { it.name })
+
+        return when (matches.size) {
+            1 -> matches.first().clientId
+            0 -> {
+                logger.warn(
+                    "Fant ingen pre-authorized app for '{}'. Tilgjengelige appnavn: {}",
+                    appname,
+                    azureAppPreAuthorizedApps.map { it.name }
+                )
+                null
+            }
+
+            else -> {
+                throw IllegalArgumentException(
+                    "Kan ikke unikt identifisere applikasjon $appname, har følgende kandidater: ${matches.map { it.name }}"
+                )
+            }
         }
     }
 
     fun krevDriftsTilgang(action: BeskyttetRessursActionAttributt) {
+        // Automatisk valider drift-gruppe
+        validerGruppemedlemskap(listOf(driftGroupId))
+
         val tilgangsbeslutning = harDriftstilgang(action)
         if (!tilgangsbeslutning.harTilgang) {
             throw ErrorResponseException(
@@ -215,4 +281,3 @@ class TilgangskontrollService(
         return årsaker.joinToString(separator = "\n")
     }
 }
-

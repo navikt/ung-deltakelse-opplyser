@@ -63,7 +63,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `systemtoken avvises med 403`() {
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentSystem(any()) } throws
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
@@ -87,8 +87,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token veileder - bruker er aktiv deltaker og sporingslogg kalles`() {
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentSystem(any()) } just runs
-        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } just runs
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } just runs
         every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(
             erDeltaker = true,
             fraOgMed = LocalDate.of(2025, 1, 1),
@@ -113,8 +112,7 @@ class EksternDeltakelseControllerTest {
     @Test
     fun `OBO-token veileder - bruker er aktiv deltaker med fremtidig sluttdato`() {
         val fremtidigSluttdato = LocalDate.now().plusMonths(6)
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentSystem(any()) } just runs
-        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } just runs
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } just runs
         every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(
             erDeltaker = true,
             fraOgMed = LocalDate.now().minusMonths(3),
@@ -136,8 +134,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token veileder - bruker er ikke deltaker`() {
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentSystem(any()) } just runs
-        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } just runs
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } just runs
         every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(erDeltaker = false)
         every { sporingsloggService.logg(any(), any(), any(), any()) } just runs
 
@@ -157,7 +154,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token fra ikke-godkjent system - gir 403`() {
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentSystem(any()) } throws
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
@@ -179,8 +176,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token veileder uten tilgang - gir 403`() {
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentSystem(any()) } just runs
-        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } throws
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Ikke tilgang til kode6 person"),

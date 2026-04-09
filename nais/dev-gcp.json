@@ -131,6 +131,8 @@
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
 
+    "UNG_AUTHORIZED_GROUPS_PROGRAMVEILEDER": "37538533-e91c-4a53-b155-f4448dcada0d",
+    "UNG_AUTHORIZED_GROUPS_DRIFT": "0d0da462-c300-43d9-8364-38a0a8cf2401",
 
     "SLETT_SOKT_DELTAKELSE_ENABLED": true,
 

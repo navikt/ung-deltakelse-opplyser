@@ -58,17 +58,18 @@ class EksternDeltakelseController(
     fun sjekkDeltakelse(@RequestBody deltakerDTO: DeltakerDTO): DeltakelseSjekk {
         val personIdent = PersonIdent.fra(deltakerDTO.deltakerIdent)
 
-        tilgangskontrollService.krevOboTilgangFraGodkjentSystem(listOf(
-            "veilarboppfolging",
-            "azure-token-generator" // TODO: Fjern før merge til prod.
-        ))
+        val personerOperasjonDto = PersonerOperasjonDto(
+            null,
+            listOf(personIdent),
+            OperasjonDto(ResourceType.FAGSAK, READ, setOf())
+        )
 
-        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
-            PersonerOperasjonDto(
-                null,
-                listOf(personIdent),
-                OperasjonDto(ResourceType.FAGSAK, READ, setOf())
-            )
+        tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(
+            listOf(
+                "veilarboppfolging",
+                "azure-token-generator" // TODO: Fjern før merge til prod.
+            ),
+            personerOperasjonDto
         )
 
         return registerService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
@@ -82,4 +83,3 @@ class EksternDeltakelseController(
             }
     }
 }
-
