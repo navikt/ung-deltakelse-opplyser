@@ -316,6 +316,30 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
+    fun sjekkAktivDeltakelse(deltakerIdent: String): DeltakelseSjekk {
+        logger.info("Sjekker om bruker er aktiv deltaker i ungdomsprogrammet.")
+        val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdent)
+        if (deltakerIder.isEmpty()) {
+            logger.info("Fant ingen deltaker for ident. Returnerer erDeltaker=false.")
+            return DeltakelseSjekk(erDeltaker = false)
+        }
+        val iDag = LocalDate.now()
+        val aktivDeltakelse = deltakelseRepository
+            .findByDeltaker_IdInAndErSlettet(deltakerIder, false)
+            .firstOrNull { it.getTom() == null || it.getTom()!! >= iDag }
+        return if (aktivDeltakelse != null) {
+            logger.info("Fant aktiv deltakelse.")
+            DeltakelseSjekk(
+                erDeltaker = true,
+                fraOgMed = aktivDeltakelse.getFom(),
+                tilOgMed = aktivDeltakelse.getTom()
+            )
+        } else {
+            logger.info("Fant ingen aktiv deltakelse. Returnerer erDeltaker=false.")
+            DeltakelseSjekk(erDeltaker = false)
+        }
+    }
+
     private fun sendFjernetDeltakelseHendelseTilUngSak(oppdatert: DeltakelseDTO) {
 
         logger.info("Henter aktørIder for deltaker")
