@@ -4,18 +4,14 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt.READ
-import no.nav.sif.abac.kontrakt.abac.ResourceType
-import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
-import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.audit.EventClassId
 import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
-import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelseSjekk
+import no.nav.ung.deltakelseopplyser.kontrakt.ekstern.DeltakerIdent
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
@@ -55,24 +51,18 @@ class EksternDeltakelseController(
             Diskresjonskode (kode 6/7) og egne-ansatt-sjekk utføres via ABAC."""
     )
     @ResponseStatus(HttpStatus.OK)
-    fun sjekkDeltakelse(@RequestBody deltakerDTO: DeltakerDTO): DeltakelseSjekk {
-        val personIdent = PersonIdent.fra(deltakerDTO.deltakerIdent)
-
-        val personerOperasjonDto = PersonerOperasjonDto(
-            null,
-            listOf(personIdent),
-            OperasjonDto(ResourceType.FAGSAK, READ, setOf())
-        )
+    fun sjekkDeltakelse(@RequestBody deltakerIdent: DeltakerIdent): DeltakelseSjekk {
+        val personIdent = PersonIdent.fra(deltakerIdent.ident)
 
         tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(
             listOf(
                 "veilarboppfolging",
                 "azure-token-generator" // TODO: Fjern før merge til prod.
             ),
-            personerOperasjonDto
+            personIdent
         )
 
-        return registerService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
+        return registerService.sjekkAktivDeltakelse(deltakerIdent.ident)
             .also {
                 sporingsloggService.logg(
                     url = "/ekstern/deltakelse/sjekk",

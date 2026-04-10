@@ -2,7 +2,6 @@ UNGDOMSYTELSE_DELTAKER_BASE_URL: https://ungdomsytelse-deltaker.intern.dev.nav.n
 AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}, {"name":"poa:veilarboppfolging", "clientId":"veilarboppfolging-client-id"}]\"
 UNG_AUTHORIZED_GROUPS_PROGRAMVEILEDER: "37538533-e91c-4a53-b155-f4448dcada0d"
 UNG_AUTHORIZED_GROUPS_DRIFT: "0d0da462-c300-43d9-8364-38a0a8cf2401"
-UNG_TILGANGSMASKIN_STRATEGI: ABAC_MASTER_LOG_AVVIK
 NAIS_CLUSTER_NAME: dev-gcp
 NAIS_NAMESPACE: k9saksbehandling
 NAIS_APP_NAME: ung-deltakelse-opplyser

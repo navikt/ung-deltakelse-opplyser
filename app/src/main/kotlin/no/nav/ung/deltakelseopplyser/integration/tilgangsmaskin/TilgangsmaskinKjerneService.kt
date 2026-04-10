@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.exchange
 
 @Service
 @Retryable(
@@ -36,11 +37,10 @@ class TilgangsmaskinKjerneService(
 
     fun evaluerKjerneregler(brukerIdent: PersonIdent): TilgangsmaskinBeslutning {
         return try {
-            val response = tilgangsmaskinKlient.exchange(
+            val response = tilgangsmaskinKlient.exchange<Unit>(
                 KJERNE_PATH,
                 HttpMethod.POST,
                 HttpEntity(brukerIdent.ident),
-                Void::class.java,
             )
 
             if (response.statusCode == HttpStatus.NO_CONTENT) {

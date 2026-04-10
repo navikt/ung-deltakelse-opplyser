@@ -31,7 +31,6 @@ class TilgangskontrollService(
     @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String,
     @Value("\${ung.authorized-groups.programveileder}") private val programveilederGroupId: String,
     @Value("\${ung.authorized-groups.drift}") private val driftGroupId: String,
-    @Value("\${ung.tilgangsmaskin.strategi:ABAC_MASTER_LOG_AVVIK}") tilgangsmaskinStrategiValue: String,
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
@@ -41,37 +40,18 @@ class TilgangskontrollService(
         objectMapper.readValue<List<PreauthorizedApp>>(azureAppPreAuthorizedAppsString)
     }
 
-    private val tilgangsmaskinStrategi = TilgangsmaskinStrategi.fra(tilgangsmaskinStrategiValue)
-
     fun krevAnsattTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>) {
         // Automatisk valider programveileder-gruppe
         validerGruppemedlemskap(listOf(programveilederGroupId))
 
         val abacBeslutning = ansattHarTilgang(action, personIdenter)
-        val tilgangsmaskinBeslutning = evaluerTilgangsmaskin(personIdenter)
 
-        if (harAvvik(abacBeslutning, tilgangsmaskinBeslutning)) {
-            loggAvvik(abacBeslutning, tilgangsmaskinBeslutning!!, personIdenter.first())
-        }
-
-        val endeligTilgang = when (tilgangsmaskinStrategi) {
-            TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.harTilgang
-            TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER -> tilgangsmaskinBeslutning?.harTilgang
-                ?: abacBeslutning.harTilgang
-        }
-
-        if (!endeligTilgang) {
+        if (!abacBeslutning.harTilgang) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
                     HttpStatus.FORBIDDEN,
-                    when (tilgangsmaskinStrategi) {
-                        TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.årsakerForIkkeTilgang.somTekst()
-                        TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER ->
-                            tilgangsmaskinBeslutning?.avvisningsAarsak
-                                ?: tilgangsmaskinBeslutning?.begrunnelse
-                                ?: abacBeslutning.årsakerForIkkeTilgang.somTekst()
-                    }
+                    abacBeslutning.årsakerForIkkeTilgang.somTekst()
                 ),
                 null
             )
@@ -80,7 +60,7 @@ class TilgangskontrollService(
 
     fun krevOboTilgangFraGodkjentEksternSystem(
         godkjenteApplikasjoner: List<String>,
-        personerOperasjonDto: PersonerOperasjonDto,
+        personIdent: PersonIdent,
     ) {
         if (erSystemBruker()) {
             throw ErrorResponseException(
@@ -115,32 +95,15 @@ class TilgangskontrollService(
             )
         }
 
-        val personIdenter = personerOperasjonDto.personIdenter()
-        val abacBeslutning = sifAbacPdpService.sjekkTilgangTilPersonerForInnloggetBruker(personerOperasjonDto)
-        val tilgangsmaskinBeslutning = evaluerTilgangsmaskin(personIdenter)
+        val tilgangsmaskinBeslutning = evaluerTilgangsmaskin(personIdent)
 
-        if (harAvvik(abacBeslutning, tilgangsmaskinBeslutning)) {
-            loggAvvik(abacBeslutning, tilgangsmaskinBeslutning!!, personIdenter.first())
-        }
-
-        val endeligTilgang = when (tilgangsmaskinStrategi) {
-            TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.harTilgang
-            TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER -> tilgangsmaskinBeslutning?.harTilgang
-                ?: abacBeslutning.harTilgang
-        }
-
-        if (!endeligTilgang) {
+        if (!tilgangsmaskinBeslutning.harTilgang) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
                     HttpStatus.FORBIDDEN,
-                    when (tilgangsmaskinStrategi) {
-                        TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.årsakerForIkkeTilgang.somTekst()
-                        TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER ->
-                            tilgangsmaskinBeslutning?.avvisningsAarsak
-                                ?: tilgangsmaskinBeslutning?.begrunnelse
-                                ?: abacBeslutning.årsakerForIkkeTilgang.somTekst()
-                    }
+                    tilgangsmaskinBeslutning.avvisningsAarsak
+                        ?: tilgangsmaskinBeslutning.begrunnelse
                 ),
                 null
             )
@@ -236,18 +199,6 @@ class TilgangskontrollService(
 
     data class PreauthorizedApp(val name: String, val clientId: String)
 
-    enum class TilgangsmaskinStrategi {
-        ABAC_MASTER_LOG_AVVIK,
-        TILGANGSMASKIN_MASTER;
-
-        companion object {
-            fun fra(value: String): TilgangsmaskinStrategi {
-                return entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
-                    ?: throw IllegalArgumentException("Ugyldig verdi for ung.tilgangsmaskin.strategi: '$value'")
-            }
-        }
-    }
-
     private fun hentBrukerGrupper(): List<String> {
         val jwt = hentTokenForInnloggetBruker()
 
@@ -278,57 +229,21 @@ class TilgangskontrollService(
         }
     }
 
-    private fun evaluerTilgangsmaskin(personIdenter: List<PersonIdent>): TilgangsmaskinBeslutning? {
-        if (personIdenter.size != 1) {
-            logger.info(
-                "Hopper over tilgangsmaskin-kontroll fordi antall personidenter er {} (stottes kun for 1)",
-                personIdenter.size
-            )
-            return null
-        }
+    private fun evaluerTilgangsmaskin(personIdent: PersonIdent): TilgangsmaskinBeslutning {
 
-        return runCatching { tilgangsmaskinKjerneService.evaluerKjerneregler(personIdenter.first()) }
+        return runCatching { tilgangsmaskinKjerneService.evaluerKjerneregler(personIdent) }
             .getOrElse { error ->
-                when (tilgangsmaskinStrategi) {
-                    TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> {
-                        logger.warn("Klarte ikke evaluere tilgangsmaskin (fortsetter med ABAC-beslutning)", error)
-                        null
-                    }
+                logger.error("Klarte ikke evaluere tilgangsmaskin.", error)
 
-                    TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER -> {
-                        throw ErrorResponseException(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                            ProblemDetail.forStatusAndDetail(
-                                HttpStatus.INTERNAL_SERVER_ERROR,
-                                "Feil ved kall mot tilgangsmaskin"
-                            ),
-                            error
-                        )
-                    }
-                }
+                throw ErrorResponseException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ProblemDetail.forStatusAndDetail(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Feil ved kall mot tilgangsmaskin"
+                    ),
+                    error
+                )
             }
-    }
-
-    private fun harAvvik(
-        abacBeslutning: Tilgangsbeslutning,
-        tilgangsmaskinBeslutning: TilgangsmaskinBeslutning?,
-    ): Boolean {
-        return tilgangsmaskinBeslutning != null && abacBeslutning.harTilgang != tilgangsmaskinBeslutning.harTilgang
-    }
-
-    private fun loggAvvik(
-        abacBeslutning: Tilgangsbeslutning,
-        tilgangsmaskinBeslutning: TilgangsmaskinBeslutning,
-        personIdent: PersonIdent,
-    ) {
-        val navIdent = hentTokenForInnloggetBruker().jwtTokenClaims.getStringClaim("NAVident") ?: "ukjent"
-        logger.warn(
-            "Tilgangsavvik ABAC vs Tilgangsmaskin. navIdent='{}', bruker='{}', abacAvvisningsarsak='{}', tilgangsmaskinAvvisningsarsak='{}'",
-            navIdent,
-            maskertPersonIdent(personIdent),
-            abacBeslutning.årsakerForIkkeTilgang.somTekst().ifBlank { "IKKE_AVVIST" },
-            tilgangsmaskinBeslutning.avvisningsAarsak ?: tilgangsmaskinBeslutning.begrunnelse ?: "IKKE_AVVIST"
-        )
     }
 
     private fun ansattHarTilgang(
@@ -337,8 +252,6 @@ class TilgangskontrollService(
     ): Tilgangsbeslutning {
         return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
     }
-
-    private fun maskertPersonIdent(personIdent: PersonIdent): String = personIdent.ident.take(6)
 
     private fun erGodkjentApplikasjon(azp: String, godkjenteApplikasjoner: List<String>): Boolean {
         val godkjenteClientIds = getGodkjenteClientIds(godkjenteApplikasjoner)

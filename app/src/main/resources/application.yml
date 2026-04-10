@@ -182,8 +182,6 @@ ung:
   authorized-groups:
     programveileder: ${UNG_AUTHORIZED_GROUPS_PROGRAMVEILEDER}
     drift: ${UNG_AUTHORIZED_GROUPS_DRIFT}
-  tilgangsmaskin:
-    strategi: ${UNG_TILGANGSMASKIN_STRATEGI:ABAC_MASTER_LOG_AVVIK}
 
 springdoc:
   api-docs:
