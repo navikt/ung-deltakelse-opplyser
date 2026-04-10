@@ -50,6 +50,7 @@ spec:
         - application: ung-brukerdialog-api
         - application: k9-selvbetjening-oppslag
         - application: sif-abac-pdp
+        - application: tilgangsmaskin
         - application: sokos-kontoregister-person
           namespace: okonomi
       external:

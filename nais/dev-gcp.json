@@ -128,11 +128,15 @@
     "NO_NAV_GATEWAYS_NOM_API_BASE_URL": "https://nom-api.intern.dev.nav.no",
     "NOM_API_AZURE_SCOPE": "api://dev-gcp.nom.nom-api/.default",
 
+    "NO_NAV_GATEWAYS_TILGANGSMASKIN_BASE_URL": "https://tilgangsmaskin.intern.dev.nav.no",
+    "TILGANGSMASKIN_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.tilgangsmaskin/.default",
+
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
 
     "UNG_AUTHORIZED_GROUPS_PROGRAMVEILEDER": "37538533-e91c-4a53-b155-f4448dcada0d",
     "UNG_AUTHORIZED_GROUPS_DRIFT": "0d0da462-c300-43d9-8364-38a0a8cf2401",
+    "UNG_TILGANGSMASKIN_STRATEGI": "ABAC_MASTER_LOG_AVVIK",
 
     "SLETT_SOKT_DELTAKELSE_ENABLED": true,
 

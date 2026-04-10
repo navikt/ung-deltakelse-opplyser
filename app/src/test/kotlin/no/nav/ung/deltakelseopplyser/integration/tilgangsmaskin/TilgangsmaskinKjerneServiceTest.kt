@@ -1,0 +1,94 @@
+package no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin
+
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.ninjasquad.springmockk.MockkBean
+import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
+import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
+import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
+import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.mockContext
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
+import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.junit.jupiter.SpringExtension
+
+@AutoConfigureWireMock
+@EnableMockOAuth2Server
+@ExtendWith(SpringExtension::class)
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@Import(BigQueryTestConfiguration::class)
+class TilgangsmaskinKjerneServiceTest {
+
+    @Autowired
+    private lateinit var tilgangsmaskinKjerneService: TilgangsmaskinKjerneService
+
+    @Autowired
+    private lateinit var wireMockServer: WireMockServer
+
+    @MockkBean
+    private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
+
+    private companion object {
+        const val KJERNE_URL = "/tilgangsmaskin-mock/api/v1/kjerne"
+    }
+
+    @BeforeEach
+    fun setUp() {
+        springTokenValidationContextHolder.mockContext()
+    }
+
+    @Test
+    fun `forventer tilgang gitt 204 fra tilgangsmaskin`() {
+        val personIdent = PersonIdent(FødselsnummerGenerator.neste())
+
+        wireMockServer.stubFor(
+            WireMock.post(WireMock.urlPathEqualTo(KJERNE_URL))
+                .withRequestBody(WireMock.equalTo(personIdent.ident))
+                .willReturn(WireMock.aResponse().withStatus(HttpStatus.NO_CONTENT.value()))
+        )
+
+        val beslutning = tilgangsmaskinKjerneService.evaluerKjerneregler(personIdent)
+
+        assertThat(beslutning.harTilgang).isTrue()
+        assertThat(beslutning.avvisningsAarsak).isNull()
+    }
+
+    @Test
+    fun `forventer avvist beslutning gitt 403 fra tilgangsmaskin`() {
+        val personIdent = PersonIdent(FødselsnummerGenerator.neste())
+
+        wireMockServer.stubFor(
+            WireMock.post(WireMock.urlPathEqualTo(KJERNE_URL))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(HttpStatus.FORBIDDEN.value())
+                        .withHeader("Content-Type", "application/problem+json")
+                        .withBody(
+                            """
+                            {
+                              "title": "AVVIST_STRENGT_FORTROLIG_ADRESSE",
+                              "begrunnelse": "Du har ikke tilgang"
+                            }
+                            """.trimIndent()
+                        )
+                )
+        )
+
+        val beslutning = tilgangsmaskinKjerneService.evaluerKjerneregler(personIdent)
+
+        assertThat(beslutning.harTilgang).isFalse()
+        assertThat(beslutning.avvisningsAarsak).isEqualTo("AVVIST_STRENGT_FORTROLIG_ADRESSE")
+        assertThat(beslutning.begrunnelse).isEqualTo("Du har ikke tilgang")
+    }
+}
+

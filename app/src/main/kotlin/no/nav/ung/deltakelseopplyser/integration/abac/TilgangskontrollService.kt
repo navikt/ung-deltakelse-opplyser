@@ -11,6 +11,8 @@ import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
 import no.nav.sif.abac.kontrakt.abac.resultat.IkkeTilgangÅrsak
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinBeslutning
+import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinKjerneService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -23,75 +25,63 @@ import org.springframework.web.ErrorResponseException
 class TilgangskontrollService(
     private val objectMapper: ObjectMapper,
     private val sifAbacPdpService: SifAbacPdpService,
+    private val tilgangsmaskinKjerneService: TilgangsmaskinKjerneService,
     private val tokenResolver: JwtBearerTokenResolver,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
     @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String,
     @Value("\${ung.authorized-groups.programveileder}") private val programveilederGroupId: String,
     @Value("\${ung.authorized-groups.drift}") private val driftGroupId: String,
+    @Value("\${ung.tilgangsmaskin.strategi:ABAC_MASTER_LOG_AVVIK}") tilgangsmaskinStrategiValue: String,
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
     }
 
-    val azureAppPreAuthorizedApps: List<PreauthorizedApp> by lazy {
+    private val azureAppPreAuthorizedApps: List<PreauthorizedApp> by lazy {
         objectMapper.readValue<List<PreauthorizedApp>>(azureAppPreAuthorizedAppsString)
     }
 
-    // Hent grupper fra token
-    private fun hentBrukerGrupper(): List<String> {
-        val jwt = hentTokenForInnloggetBruker()
-        @Suppress("UNCHECKED_CAST")
-        val groups = jwt.jwtClaimsSet.getClaim("groups") as? List<String> ?: emptyList()
-        return groups
-    }
-
-    // Valider at bruker har minst én av forventede grupper
-    private fun validerGruppemedlemskap(forventedeGruppeIds: List<String>) {
-        val brukerGrupper = hentBrukerGrupper()
-        val harGodkjentGruppe = forventedeGruppeIds.any { it in brukerGrupper }
-
-        if (!harGodkjentGruppe) {
-            logger.warn(
-                "Bruker mangler godkjent gruppe. Forventet: {}, Bruker har: {}",
-                forventedeGruppeIds,
-                brukerGrupper
-            )
-            throw ErrorResponseException(
-                HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN,
-                    "Bruker har ikke tilgang til denne ressursen (manglende gruppe)"
-                ),
-                null
-            )
-        }
-    }
+    private val tilgangsmaskinStrategi = TilgangsmaskinStrategi.fra(tilgangsmaskinStrategiValue)
 
     fun krevAnsattTilgang(action: BeskyttetRessursActionAttributt, personIdenter: List<PersonIdent>) {
         // Automatisk valider programveileder-gruppe
         validerGruppemedlemskap(listOf(programveilederGroupId))
 
-        val tilgangsbeslutning = ansattHarTilgang(action, personIdenter)
-        if (!tilgangsbeslutning.harTilgang) {
+        val abacBeslutning = ansattHarTilgang(action, personIdenter)
+        val tilgangsmaskinBeslutning = evaluerTilgangsmaskin(personIdenter)
+
+        if (harAvvik(abacBeslutning, tilgangsmaskinBeslutning)) {
+            loggAvvik(abacBeslutning, tilgangsmaskinBeslutning!!, personIdenter.first())
+        }
+
+        val endeligTilgang = when (tilgangsmaskinStrategi) {
+            TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.harTilgang
+            TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER -> tilgangsmaskinBeslutning?.harTilgang
+                ?: abacBeslutning.harTilgang
+        }
+
+        if (!endeligTilgang) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
                     HttpStatus.FORBIDDEN,
-                    tilgangsbeslutning.årsakerForIkkeTilgang.somTekst()
+                    when (tilgangsmaskinStrategi) {
+                        TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.årsakerForIkkeTilgang.somTekst()
+                        TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER ->
+                            tilgangsmaskinBeslutning?.avvisningsAarsak
+                                ?: tilgangsmaskinBeslutning?.begrunnelse
+                                ?: abacBeslutning.årsakerForIkkeTilgang.somTekst()
+                    }
                 ),
                 null
             )
         }
     }
 
-    fun ansattHarTilgang(
-        action: BeskyttetRessursActionAttributt,
-        personIdenter: List<PersonIdent>,
-    ): Tilgangsbeslutning {
-        return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
-    }
-
-    fun krevOboTilgangFraGodkjentEksternSystem(godkjenteApplikasjoner: List<String>, personerOperasjonDto: PersonerOperasjonDto) {
+    fun krevOboTilgangFraGodkjentEksternSystem(
+        godkjenteApplikasjoner: List<String>,
+        personerOperasjonDto: PersonerOperasjonDto,
+    ) {
         if (erSystemBruker()) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
@@ -165,44 +155,12 @@ class TilgangskontrollService(
         }
     }
 
-    private fun erGodkjentApplikasjon(azp: String, godkjenteApplikasjoner: List<String>): Boolean {
-        val godkjenteClientIds = getGodkjenteClientIds(godkjenteApplikasjoner)
-        return godkjenteClientIds.contains(azp)
-    }
-
-    private fun getGodkjenteClientIds(godkjenteApplikasjoner: List<String>): List<String> =
-        godkjenteApplikasjoner.mapNotNull { clientIdForApplikasjon(it) }
-
     fun erSystemBruker(): Boolean {
         val jwt = hentTokenForInnloggetBruker()
         val azureIssuer = multiIssuerConfiguration.issuers["azure"]?.metadata?.issuer?.value
         val erAzureToken = azureIssuer != null && jwt.issuer == azureIssuer
         val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
         return erAzureToken && erClientCredentials
-    }
-
-
-    fun clientIdForApplikasjon(appname: String): String? {
-        val matches = azureAppPreAuthorizedApps
-            .filter { it.name.substringAfterLast(":") == appname }
-
-        return when (matches.size) {
-            1 -> matches.first().clientId
-            0 -> {
-                logger.warn(
-                    "Fant ingen pre-authorized app for '{}'. Tilgjengelige appnavn: {}",
-                    appname,
-                    azureAppPreAuthorizedApps.map { it.name }
-                )
-                null
-            }
-
-            else -> {
-                throw IllegalArgumentException(
-                    "Kan ikke unikt identifisere applikasjon $appname, har følgende kandidater: ${matches.map { it.name }}"
-                )
-            }
-        }
     }
 
     fun krevDriftsTilgang(action: BeskyttetRessursActionAttributt) {
@@ -260,6 +218,141 @@ class TilgangskontrollService(
     }
 
     data class PreauthorizedApp(val name: String, val clientId: String)
+
+    enum class TilgangsmaskinStrategi {
+        ABAC_MASTER_LOG_AVVIK,
+        TILGANGSMASKIN_MASTER;
+
+        companion object {
+            fun fra(value: String): TilgangsmaskinStrategi {
+                return entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+                    ?: throw IllegalArgumentException("Ugyldig verdi for ung.tilgangsmaskin.strategi: '$value'")
+            }
+        }
+    }
+
+    private fun hentBrukerGrupper(): List<String> {
+        val jwt = hentTokenForInnloggetBruker()
+
+        @Suppress("UNCHECKED_CAST")
+        val groups = jwt.jwtClaimsSet.getClaim("groups") as? List<String> ?: emptyList()
+        return groups
+    }
+
+    // Valider at bruker har minst én av forventede grupper
+    private fun validerGruppemedlemskap(forventedeGruppeIds: List<String>) {
+        val brukerGrupper = hentBrukerGrupper()
+        val harGodkjentGruppe = forventedeGruppeIds.any { it in brukerGrupper }
+
+        if (!harGodkjentGruppe) {
+            logger.warn(
+                "Bruker mangler godkjent gruppe. Forventet: {}, Bruker har: {}",
+                forventedeGruppeIds,
+                brukerGrupper
+            )
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    "Bruker har ikke tilgang til denne ressursen (manglende gruppe)"
+                ),
+                null
+            )
+        }
+    }
+
+    private fun evaluerTilgangsmaskin(personIdenter: List<PersonIdent>): TilgangsmaskinBeslutning? {
+        if (personIdenter.size != 1) {
+            logger.info(
+                "Hopper over tilgangsmaskin-kontroll fordi antall personidenter er {} (stottes kun for 1)",
+                personIdenter.size
+            )
+            return null
+        }
+
+        return runCatching { tilgangsmaskinKjerneService.evaluerKjerneregler(personIdenter.first()) }
+            .getOrElse { error ->
+                when (tilgangsmaskinStrategi) {
+                    TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> {
+                        logger.warn("Klarte ikke evaluere tilgangsmaskin (fortsetter med ABAC-beslutning)", error)
+                        null
+                    }
+
+                    TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER -> {
+                        throw ErrorResponseException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            ProblemDetail.forStatusAndDetail(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Feil ved kall mot tilgangsmaskin"
+                            ),
+                            error
+                        )
+                    }
+                }
+            }
+    }
+
+    private fun harAvvik(
+        abacBeslutning: Tilgangsbeslutning,
+        tilgangsmaskinBeslutning: TilgangsmaskinBeslutning?,
+    ): Boolean {
+        return tilgangsmaskinBeslutning != null && abacBeslutning.harTilgang != tilgangsmaskinBeslutning.harTilgang
+    }
+
+    private fun loggAvvik(
+        abacBeslutning: Tilgangsbeslutning,
+        tilgangsmaskinBeslutning: TilgangsmaskinBeslutning,
+        personIdent: PersonIdent,
+    ) {
+        val navIdent = hentTokenForInnloggetBruker().jwtTokenClaims.getStringClaim("NAVident") ?: "ukjent"
+        logger.warn(
+            "Tilgangsavvik ABAC vs Tilgangsmaskin. navIdent='{}', bruker='{}', abacAvvisningsarsak='{}', tilgangsmaskinAvvisningsarsak='{}'",
+            navIdent,
+            maskertPersonIdent(personIdent),
+            abacBeslutning.årsakerForIkkeTilgang.somTekst().ifBlank { "IKKE_AVVIST" },
+            tilgangsmaskinBeslutning.avvisningsAarsak ?: tilgangsmaskinBeslutning.begrunnelse ?: "IKKE_AVVIST"
+        )
+    }
+
+    private fun ansattHarTilgang(
+        action: BeskyttetRessursActionAttributt,
+        personIdenter: List<PersonIdent>,
+    ): Tilgangsbeslutning {
+        return sifAbacPdpService.ansattHarTilgang(UngdomsprogramTilgangskontrollInputDto(action, personIdenter))
+    }
+
+    private fun maskertPersonIdent(personIdent: PersonIdent): String = personIdent.ident.take(6)
+
+    private fun erGodkjentApplikasjon(azp: String, godkjenteApplikasjoner: List<String>): Boolean {
+        val godkjenteClientIds = getGodkjenteClientIds(godkjenteApplikasjoner)
+        return godkjenteClientIds.contains(azp)
+    }
+
+    private fun getGodkjenteClientIds(godkjenteApplikasjoner: List<String>): List<String> =
+        godkjenteApplikasjoner.mapNotNull { clientIdForApplikasjon(it) }
+
+    private fun clientIdForApplikasjon(appname: String): String? {
+        val matches = azureAppPreAuthorizedApps
+            .filter { it.name.substringAfterLast(":") == appname }
+
+        return when (matches.size) {
+            1 -> matches.first().clientId
+            0 -> {
+                logger.warn(
+                    "Fant ingen pre-authorized app for '{}'. Tilgjengelige appnavn: {}",
+                    appname,
+                    azureAppPreAuthorizedApps.map { it.name }
+                )
+                null
+            }
+
+            else -> {
+                throw IllegalArgumentException(
+                    "Kan ikke unikt identifisere applikasjon $appname, har følgende kandidater: ${matches.map { it.name }}"
+                )
+            }
+        }
+    }
 
     private fun MutableSet<IkkeTilgangÅrsak>.somTekst(): String {
         val årsaker = map {
