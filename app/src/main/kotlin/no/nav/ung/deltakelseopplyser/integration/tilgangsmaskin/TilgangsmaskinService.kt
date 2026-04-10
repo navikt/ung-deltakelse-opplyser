@@ -26,16 +26,16 @@ import org.springframework.web.client.exchange
     ),
     maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
 )
-class TilgangsmaskinKjerneService(
+class TilgangsmaskinService(
     @Qualifier("tilgangsmaskinKlient") private val tilgangsmaskinKlient: RestTemplate,
     private val objectMapper: ObjectMapper,
 ) {
     private companion object {
-        private val logger: Logger = LoggerFactory.getLogger(TilgangsmaskinKjerneService::class.java)
-        const val KJERNE_PATH = "/api/v1/kjerne"
+        private val logger: Logger = LoggerFactory.getLogger(TilgangsmaskinService::class.java)
+        const val KJERNE_PATH = "/api/v1/komplett"
     }
 
-    fun evaluerKjerneregler(brukerIdent: PersonIdent): TilgangsmaskinBeslutning {
+    fun evaluerKomplettRegler(brukerIdent: PersonIdent): TilgangsmaskinBeslutning {
         return try {
             val response = tilgangsmaskinKlient.exchange<Unit>(
                 KJERNE_PATH,

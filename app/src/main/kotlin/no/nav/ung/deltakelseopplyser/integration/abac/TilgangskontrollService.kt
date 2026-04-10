@@ -12,7 +12,7 @@ import no.nav.sif.abac.kontrakt.abac.resultat.IkkeTilgangÅrsak
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinBeslutning
-import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinKjerneService
+import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -25,7 +25,7 @@ import org.springframework.web.ErrorResponseException
 class TilgangskontrollService(
     private val objectMapper: ObjectMapper,
     private val sifAbacPdpService: SifAbacPdpService,
-    private val tilgangsmaskinKjerneService: TilgangsmaskinKjerneService,
+    private val tilgangsmaskinService: TilgangsmaskinService,
     private val tokenResolver: JwtBearerTokenResolver,
     private val multiIssuerConfiguration: MultiIssuerConfiguration,
     @Value("\${AZURE_APP_PRE_AUTHORIZED_APPS}") private val azureAppPreAuthorizedAppsString: String,
@@ -231,7 +231,7 @@ class TilgangskontrollService(
 
     private fun evaluerTilgangsmaskin(personIdent: PersonIdent): TilgangsmaskinBeslutning {
 
-        return runCatching { tilgangsmaskinKjerneService.evaluerKjerneregler(personIdent) }
+        return runCatching { tilgangsmaskinService.evaluerKomplettRegler(personIdent) }
             .getOrElse { error ->
                 logger.error("Klarte ikke evaluere tilgangsmaskin.", error)
 

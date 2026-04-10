@@ -27,10 +27,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Import(BigQueryTestConfiguration::class)
-class TilgangsmaskinKjerneServiceTest {
+class TilgangsmaskinServiceTest {
 
     @Autowired
-    private lateinit var tilgangsmaskinKjerneService: TilgangsmaskinKjerneService
+    private lateinit var tilgangsmaskinService: TilgangsmaskinService
 
     @Autowired
     private lateinit var wireMockServer: WireMockServer
@@ -39,7 +39,7 @@ class TilgangsmaskinKjerneServiceTest {
     private lateinit var springTokenValidationContextHolder: SpringTokenValidationContextHolder
 
     private companion object {
-        const val KJERNE_URL = "/tilgangsmaskin-mock/api/v1/kjerne"
+        const val KOMPLETT_URL = "/tilgangsmaskin-mock/api/v1/komplett"
     }
 
     @BeforeEach
@@ -52,12 +52,12 @@ class TilgangsmaskinKjerneServiceTest {
         val personIdent = PersonIdent(FødselsnummerGenerator.neste())
 
         wireMockServer.stubFor(
-            WireMock.post(WireMock.urlPathEqualTo(KJERNE_URL))
+            WireMock.post(WireMock.urlPathEqualTo(KOMPLETT_URL))
                 .withRequestBody(WireMock.equalTo(personIdent.ident))
                 .willReturn(WireMock.aResponse().withStatus(HttpStatus.NO_CONTENT.value()))
         )
 
-        val beslutning = tilgangsmaskinKjerneService.evaluerKjerneregler(personIdent)
+        val beslutning = tilgangsmaskinService.evaluerKomplettRegler(personIdent)
 
         assertThat(beslutning.harTilgang).isTrue()
         assertThat(beslutning.avvisningsAarsak).isNull()
@@ -68,7 +68,7 @@ class TilgangsmaskinKjerneServiceTest {
         val personIdent = PersonIdent(FødselsnummerGenerator.neste())
 
         wireMockServer.stubFor(
-            WireMock.post(WireMock.urlPathEqualTo(KJERNE_URL))
+            WireMock.post(WireMock.urlPathEqualTo(KOMPLETT_URL))
                 .willReturn(
                     WireMock.aResponse()
                         .withStatus(HttpStatus.FORBIDDEN.value())
@@ -84,7 +84,7 @@ class TilgangsmaskinKjerneServiceTest {
                 )
         )
 
-        val beslutning = tilgangsmaskinKjerneService.evaluerKjerneregler(personIdent)
+        val beslutning = tilgangsmaskinService.evaluerKomplettRegler(personIdent)
 
         assertThat(beslutning.harTilgang).isFalse()
         assertThat(beslutning.avvisningsAarsak).isEqualTo("AVVIST_STRENGT_FORTROLIG_ADRESSE")
