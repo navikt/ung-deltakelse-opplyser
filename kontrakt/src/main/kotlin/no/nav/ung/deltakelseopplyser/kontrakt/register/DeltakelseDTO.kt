@@ -3,14 +3,10 @@ package no.nav.ung.deltakelseopplyser.kontrakt.register
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonUnwrapped
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 
-/**
- * Kjernestruktur uten oppgaver
- */
 data class DeltakelseDTO(
     @JsonProperty("id")
     val id: UUID? = null,
@@ -37,16 +33,14 @@ data class DeltakelseDTO(
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
 }
 
-/**
- * Komposittstruktur som også inneholder oppgaver
- */
+@Deprecated("Bruk DeltakelseDTO via v2-endepunkter. Oppgaver håndteres nå i ung-brukerdialog-api.")
 data class DeltakelseKomposittDTO(
     @JsonUnwrapped
     val deltakelse: DeltakelseDTO,
 
     @JsonProperty("oppgaver")
-    val oppgaver: List<OppgaveDTO>
+    val oppgaver: List<Any> = emptyList()
 ) {
     override fun toString(): String =
-        "DeltakelseKomposittDTO(id=${deltakelse.id}, fraOgMed=${deltakelse.fraOgMed}, tilOgMed=${deltakelse.tilOgMed}, antallOppgaver=${oppgaver.size})"
+        "DeltakelseKomposittDTO(id=${deltakelse.id}, fraOgMed=${deltakelse.fraOgMed}, tilOgMed=${deltakelse.tilOgMed})"
 }

@@ -14,20 +14,4 @@ class DeltakerStatistikkService(
             opprettetTidspunkt = ZonedDateTime.now()
         )
     }
-
-    /**
-     * Henter antall deltakere per oppgavetype.
-     *
-     * @return En liste over antall deltakere per oppgavetype.
-     */
-    fun antallDeltakerePerOppgavetype(): List<AntallDeltakerePerOppgavetypeRecord> {
-        return deltakerStatistikkRepository.antallDeltakerePerOppgavetype().map {
-            AntallDeltakerePerOppgavetypeRecord(
-                oppgavetype = it.getOppgavetype(),
-                oppgavestatus = it.getStatus(),
-                antallDeltakere = it.getAntallDeltakere(),
-                opprettetTidspunkt = ZonedDateTime.now()
-            )
-        }
-    }
 }

@@ -1,18 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.ungsak
 
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.*
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretperiode.EndretPeriodeDataDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretsluttdato.EndretSluttdatoDataDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretstartdato.EndretStartdatoDataDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.inntektsrapportering.InntektsrapporteringOppgavetypeDataDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.inntektsrapportering.RapportertInntektDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.kontrollerregisterinntekt.KontrollerRegisterinntektOppgavetypeDataDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.søkytelse.SøkYtelseOppgavetypeDataDto
-import no.nav.ung.brukerdialog.typer.AktørId
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.*
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.BekreftelseDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveStatus
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.registerinntekt.YtelseType
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -30,15 +18,6 @@ import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import java.net.URI
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveResponsDto as OppgaveResponsDto
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveStatus as BrukerdialogOppgaveStatus
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveType as BrukerdialogOppgaveType
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretperiode.PeriodeDTO as BrukerdialogPeriodeDTO
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.endretperiode.PeriodeEndringType as BrukerdialogPeriodeEndringType
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.kontrollerregisterinntekt.ArbeidOgFrilansRegisterInntektDTO as BrukerdialogArbeidOgFrilansRegisterInntektDTO
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.kontrollerregisterinntekt.RegisterinntektDTO as BrukerdialogRegisterinntektDTO
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.kontrollerregisterinntekt.YtelseRegisterInntektDTO as BrukerdialogYtelseRegisterInntektDTO
-import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.kontrollerregisterinntekt.YtelseType as BrukerdialogYtelseType
 
 @Service
 @Retryable(
@@ -59,162 +38,7 @@ class UngBrukerdialogService(
         private val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogService::class.java)
 
         private const val opprettSøkYtelseUrl = "/intern/api/oppgavebehandling/opprett"
-        private const val migrerOppgaverUrl = "/intern/api/forvaltning/oppgave/migrer"
     }
-
-    fun migrerOppgaver(aktørId: String, oppgaver: List<OppgaveDTO>): MigreringsResultat {
-        val migrerOppgaveDtoer = oppgaver.map { oppgave ->
-            MigrerOppgaveDto(
-                oppgave.oppgaveReferanse,
-                AktørId(aktørId),
-                mapOppgavetype(oppgave.oppgavetype),
-                mapOppgavetypeData(oppgave.oppgavetypeData),
-                mapBekreftelse(oppgave.bekreftelse, oppgave.oppgavetypeData),
-                mapOppgaveStatus(oppgave.status),
-                oppgave.opprettetDato,
-                oppgave.løstDato,
-                oppgave.frist
-            )
-        }
-        val httpEntity = HttpEntity(MigreringsRequest(migrerOppgaveDtoer))
-        val response = ungBrukerdialogKlient.exchange(
-            migrerOppgaverUrl,
-            HttpMethod.POST,
-            httpEntity,
-            MigreringsResultat::class.java
-        )
-        return response.body ?: MigreringsResultat(0, oppgaver.size)
-    }
-
-    @Recover
-    fun migrerOppgaver(
-        exception: HttpClientErrorException,
-        aktørId: String,
-        oppgaver: List<OppgaveDTO>,
-    ): MigreringsResultat {
-        logger.error("Fikk en HttpClientErrorException når man kalte migrerOppgaver tjeneste i ung-brukerdialog-api. Error response = '${exception.responseBodyAsString}'")
-        return MigreringsResultat(0, oppgaver.size)
-    }
-
-    @Recover
-    fun migrerOppgaver(
-        exception: HttpServerErrorException,
-        aktørId: String,
-        oppgaver: List<OppgaveDTO>,
-    ): MigreringsResultat {
-        logger.error("Fikk en HttpServerErrorException når man kalte migrerOppgaver tjeneste i ung-brukerdialog-api.")
-        return MigreringsResultat(0, oppgaver.size)
-    }
-
-    @Recover
-    fun migrerOppgaver(
-        exception: ResourceAccessException,
-        aktørId: String,
-        oppgaver: List<OppgaveDTO>,
-    ): MigreringsResultat {
-        logger.error("Fikk en ResourceAccessException når man kalte migrerOppgaver tjeneste i ung-brukerdialog-api.")
-        return MigreringsResultat(0, oppgaver.size)
-    }
-
-    private fun mapOppgavetype(oppgavetype: Oppgavetype): BrukerdialogOppgaveType = when (oppgavetype) {
-        Oppgavetype.BEKREFT_ENDRET_STARTDATO -> BrukerdialogOppgaveType.BEKREFT_ENDRET_STARTDATO
-        Oppgavetype.BEKREFT_ENDRET_SLUTTDATO -> BrukerdialogOppgaveType.BEKREFT_ENDRET_SLUTTDATO
-        Oppgavetype.BEKREFT_ENDRET_PERIODE -> BrukerdialogOppgaveType.BEKREFT_ENDRET_PERIODE
-        Oppgavetype.BEKREFT_AVVIK_REGISTERINNTEKT -> BrukerdialogOppgaveType.BEKREFT_AVVIK_REGISTERINNTEKT
-        Oppgavetype.RAPPORTER_INNTEKT -> BrukerdialogOppgaveType.RAPPORTER_INNTEKT
-        Oppgavetype.SØK_YTELSE -> BrukerdialogOppgaveType.SØK_YTELSE
-        Oppgavetype.BEKREFT_FJERNET_PERIODE -> throw IllegalArgumentException("Ugyldig oppgavetype for migrering: ${Oppgavetype.BEKREFT_FJERNET_PERIODE.name}")
-    }
-
-    private fun mapOppgaveStatus(status: OppgaveStatus): BrukerdialogOppgaveStatus = when (status) {
-        OppgaveStatus.LØST -> BrukerdialogOppgaveStatus.LØST
-        OppgaveStatus.ULØST -> BrukerdialogOppgaveStatus.ULØST
-        OppgaveStatus.AVBRUTT -> BrukerdialogOppgaveStatus.AVBRUTT
-        OppgaveStatus.UTLØPT -> BrukerdialogOppgaveStatus.UTLØPT
-        OppgaveStatus.LUKKET -> BrukerdialogOppgaveStatus.UTLØPT
-    }
-
-    private fun mapBekreftelse(
-        bekreftelse: BekreftelseDTO?,
-        oppgavetypeData: OppgavetypeDataDTO
-    ): OppgaveResponsDto? =
-        if (oppgavetypeData is InntektsrapporteringOppgavetypeDataDTO && oppgavetypeData.rapportertInntekt != null) {
-            RapportertInntektDto(
-                oppgavetypeData.fraOgMed,
-                oppgavetypeData.fraOgMed,
-                oppgavetypeData.rapportertInntekt!!.arbeidstakerOgFrilansInntekt
-            )
-        } else bekreftelse?.let { SvarPåVarselDto(it.harUttalelse, it.uttalelseFraBruker) }
-
-    private fun mapOppgavetypeData(oppgavetypeData: OppgavetypeDataDTO): OppgavetypeDataDto = when (oppgavetypeData) {
-        is KontrollerRegisterinntektOppgavetypeDataDTO -> KontrollerRegisterinntektOppgavetypeDataDto(
-            oppgavetypeData.fraOgMed,
-            oppgavetypeData.tilOgMed,
-            mapRegisterinntekt(oppgavetypeData),
-            oppgavetypeData.gjelderDelerAvMåned
-        )
-
-        is EndretStartdatoDataDTO -> EndretStartdatoDataDto(
-            oppgavetypeData.nyStartdato,
-            oppgavetypeData.forrigeStartdato
-        )
-
-        is EndretSluttdatoDataDTO -> EndretSluttdatoDataDto(
-            oppgavetypeData.nySluttdato,
-            oppgavetypeData.forrigeSluttdato
-        )
-
-        is EndretPeriodeDataDTO -> EndretPeriodeDataDto(
-            mapPeriode(oppgavetypeData.nyPeriode),
-            mapPeriode(oppgavetypeData.forrigePeriode),
-            oppgavetypeData.endringer.map { BrukerdialogPeriodeEndringType.valueOf(it.name) }.toSet()
-        )
-
-        is InntektsrapporteringOppgavetypeDataDTO -> InntektsrapporteringOppgavetypeDataDto(
-            oppgavetypeData.fraOgMed,
-            oppgavetypeData.tilOgMed,
-            oppgavetypeData.gjelderDelerAvMåned
-        )
-
-        is SøkYtelseOppgavetypeDataDTO -> SøkYtelseOppgavetypeDataDto(
-            oppgavetypeData.fomDato
-        )
-
-        else -> throw IllegalStateException("Ukjent oppgavetypedata: ${oppgavetypeData::class.simpleName}")
-    }
-
-    private fun mapRegisterinntekt(data: KontrollerRegisterinntektOppgavetypeDataDTO): BrukerdialogRegisterinntektDTO {
-        val registerinntekt = data.registerinntekt
-        return BrukerdialogRegisterinntektDTO(
-            registerinntekt.arbeidOgFrilansInntekter.map {
-                BrukerdialogArbeidOgFrilansRegisterInntektDTO(
-                    it.inntekt,
-                    it.arbeidsgiver,
-                    it.arbeidsgiverNavn
-                )
-            },
-            registerinntekt.ytelseInntekter.map {
-                BrukerdialogYtelseRegisterInntektDTO(it.inntekt, mapYtelseType(it))
-            },
-            registerinntekt.totalInntektArbeidOgFrilans,
-            registerinntekt.totalInntektYtelse,
-            registerinntekt.totalInntekt
-        )
-    }
-
-    private fun mapYtelseType(dTO: YtelseRegisterInntektDTO): BrukerdialogYtelseType =
-        when (dTO.ytelsetype) {
-            YtelseType.PLEIEPENGER_SYKT_BARN,
-            YtelseType.PLEIEPENGER_LIVETS_SLUTTFASE,
-            YtelseType.PLEIEPENGER -> BrukerdialogYtelseType.PLEIEPENGER
-
-            YtelseType.OMSORGSPENGER -> BrukerdialogYtelseType.OMSORGSPENGER
-            YtelseType.SYKEPENGER -> BrukerdialogYtelseType.SYKEPENGER
-            YtelseType.OPPLAERINGSPENGER -> BrukerdialogYtelseType.OPPLÆRINGSPENGER
-        }
-
-    private fun mapPeriode(periode: PeriodeDTO?): BrukerdialogPeriodeDTO? =
-        periode?.let { BrukerdialogPeriodeDTO(it.fom, it.tom) }
 
     fun opprettSøkYtelseOppgave(opprettOppgave: OpprettOppgaveDto): Boolean {
         val httpEntity = HttpEntity(opprettOppgave)

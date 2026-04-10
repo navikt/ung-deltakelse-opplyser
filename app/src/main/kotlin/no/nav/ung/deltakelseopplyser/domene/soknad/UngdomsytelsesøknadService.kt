@@ -6,12 +6,10 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.UngSøknadDAO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.ZoneOffset
@@ -24,7 +22,6 @@ class UngdomsytelsesøknadService(
     private val deltakerService: DeltakerService,
     private val deltakelseRepository: DeltakelseRepository,
     private val microfrontendService: MicrofrontendService,
-    private val oppgaveService: OppgaveService,
 ) {
 
     private companion object {
@@ -34,7 +31,6 @@ class UngdomsytelsesøknadService(
     fun håndterMottattSøknad(ungdomsytelsesøknad: Ungdomsytelsesøknad) {
         logger.info("Håndterer mottatt søknad.")
         val søknad = ungdomsytelsesøknad.søknad
-        val oppgaveReferanse = UUID.fromString(søknad.søknadId.id)
         val deltakerIdent = søknad.søker.personIdent.verdi
         val ungdomsytelse = søknad.getYtelse<Ungdomsytelse>()
         val deltakelseId = ungdomsytelse.deltakelseId
@@ -44,17 +40,8 @@ class UngdomsytelsesøknadService(
             throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
         }
 
-        val sendSøknadOppgave = deltakerService.hentDeltakersOppgaver(deltakerIdent)
-            .find { it.oppgaveReferanse == oppgaveReferanse && it.oppgavetype == Oppgavetype.SØK_YTELSE }
-            ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden som har oppgave for oppgaveReferanse=$oppgaveReferanse")
-
         val deltaker = deltakerService.finnDeltakerGittIdent(deltakerIdent)
             ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i søknaden")
-
-        oppgaveService.løsOppgave(
-            deltaker = deltaker,
-            oppgaveReferanse = sendSøknadOppgave.oppgaveReferanse
-        )
 
         logger.info("Henter deltakelse med id $deltakelseId")
         val deltakelseDAO = deltakelseRepository.findByIdAndDeltaker_IdIn(deltakelseId, deltakterIder)
@@ -66,7 +53,7 @@ class UngdomsytelsesøknadService(
             deltakelseRepository.save(deltakelseDAO)
         } else {
             logger.info(
-                "Deltakelse med id={} er allerede markert som søkt. Vurderer å løse oppgaver.",
+                "Deltakelse med id={} er allerede markert som søkt.",
                 deltakelseDAO.id
             )
         }
