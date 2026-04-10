@@ -129,7 +129,7 @@
     "NOM_API_AZURE_SCOPE": "api://dev-gcp.nom.nom-api/.default",
 
     "NO_NAV_GATEWAYS_TILGANGSMASKIN_BASE_URL": "https://tilgangsmaskin.intern.dev.nav.no",
-    "TILGANGSMASKIN_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.tilgangsmaskin/.default",
+    "TILGANGSMASKIN_AZURE_SCOPE": "api://dev-gcp.tilgangsmaskin.populasjonstilgangskontroll/.default",
 
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
