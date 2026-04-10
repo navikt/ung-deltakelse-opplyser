@@ -115,15 +115,32 @@ class TilgangskontrollService(
             )
         }
 
-        // Sjekk tilgang til personer
-        val tilgangsbeslutning = sifAbacPdpService.sjekkTilgangTilPersonerForInnloggetBruker(personerOperasjonDto)
+        val personIdenter = personerOperasjonDto.personIdenter()
+        val abacBeslutning = sifAbacPdpService.sjekkTilgangTilPersonerForInnloggetBruker(personerOperasjonDto)
+        val tilgangsmaskinBeslutning = evaluerTilgangsmaskin(personIdenter)
 
-        if (!tilgangsbeslutning.harTilgang) {
+        if (harAvvik(abacBeslutning, tilgangsmaskinBeslutning)) {
+            loggAvvik(abacBeslutning, tilgangsmaskinBeslutning!!, personIdenter.first())
+        }
+
+        val endeligTilgang = when (tilgangsmaskinStrategi) {
+            TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.harTilgang
+            TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER -> tilgangsmaskinBeslutning?.harTilgang
+                ?: abacBeslutning.harTilgang
+        }
+
+        if (!endeligTilgang) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
                     HttpStatus.FORBIDDEN,
-                    tilgangsbeslutning.årsakerForIkkeTilgang.somTekst()
+                    when (tilgangsmaskinStrategi) {
+                        TilgangsmaskinStrategi.ABAC_MASTER_LOG_AVVIK -> abacBeslutning.årsakerForIkkeTilgang.somTekst()
+                        TilgangsmaskinStrategi.TILGANGSMASKIN_MASTER ->
+                            tilgangsmaskinBeslutning?.avvisningsAarsak
+                                ?: tilgangsmaskinBeslutning?.begrunnelse
+                                ?: abacBeslutning.årsakerForIkkeTilgang.somTekst()
+                    }
                 ),
                 null
             )
