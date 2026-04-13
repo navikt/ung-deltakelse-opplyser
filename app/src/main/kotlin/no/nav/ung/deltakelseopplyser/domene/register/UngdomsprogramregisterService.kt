@@ -326,7 +326,12 @@ class UngdomsprogramregisterService(
         val iDag = LocalDate.now()
         val aktivDeltakelse = deltakelseRepository
             .findByDeltaker_IdInAndErSlettet(deltakerIder, false)
-            .firstOrNull { it.getTom() == null || it.getTom()!! >= iDag }
+            .filter { it.getTom() == null || it.getTom()!! >= iDag }
+            .sortedWith(
+                compareByDescending<DeltakelseDAO> { it.getTom() == null }
+                    .thenByDescending { it.getFom() }
+            )
+            .firstOrNull()
         return if (aktivDeltakelse != null) {
             logger.info("Fant aktiv deltakelse.")
             DeltakelseSjekk(
