@@ -50,7 +50,7 @@
     },
     {
       "app": "veilarboppfolging",
-      "namespace": "poa",
+      "namespace": "poao",
       "cluster": "prod-gcp"
     }
   ],

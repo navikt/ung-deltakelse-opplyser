@@ -153,6 +153,20 @@ For å kunne teste et endepunkt som krever innlogging, må man hente riktig toke
 - Deltaker-endepunkter: TokenX-token
 - Veileder, ung-sak, ekstern og drift: Entra ID OBO-token
 
+### Testing av `POST /ekstern/deltakelse/sjekk`
+
+#### Tilgangskrav
+Endepunktet krever et **Azure / Entra ID OBO-token** (On-Behalf-Of) med brukerkontekst. **Systemtoken / client credentials** blir avvist. I tillegg må claimen **`azp`** matche en godkjent ekstern klient, for eksempel `veilarboppfolging`.
+
+Ved kall brukes **Tilgangsmaskin** til personautorisasjon. Det betyr at brukeren i tokenet både må komme via godkjent klient og faktisk ha tilgang til personen det spørres om.
+
+#### Praktisk i dev
+- Bruk et **OBO-token** for innlogget bruker når du tester endepunktet.
+- Tokenet må ha korrekt **`azp`** for godkjent ekstern klient.
+- Hvis du tester med systemtoken, blir requesten avvist.
+- Selv med gyldig OBO-token kan kallet feile dersom **Tilgangsmaskin** ikke gir tilgang til personen.
+- `azure-token-generator` kan brukes **midlertidig for testing i dev**, men skal ikke være en varig eller produksjonsnær måte å hente token på.
+
 #### Henting av token i dev-gcp
 
 1. Åpne [Swagger](https://ung-deltakelse-opplyser.intern.dev.nav.no/swagger-ui/index.html) i nettleseren.
