@@ -47,6 +47,33 @@ Andre applikasjoner i SiF-porteføljen bør gjøre selvstendige vurderinger om H
 
 # 6. Data
 
+## Statistikk: Deltakelser per enhet
+
+Tjenesten publiserer statistikk over antall deltakelser per NAV-enhet til BigQuery. Hver deltakelse mappes til enheten som veilederen (som opprettet deltakelsen) tilhørte på opprettelsestidspunktet, basert på data fra [NOM API](https://nom.nav.no/).
+
+### "Enhet sikkerhetsnett"
+
+Noen deltakelser kan ikke mappes til en spesifikk enhet. Disse telles under kategorien **"Enhet sikkerhetsnett"** i stedet for å bli droppet fra tellingen. Dette sikrer at summen av alle enheter alltid er lik det totale antallet deltakelser.
+
+Årsaker til at en deltakelse havner under "Enhet sikkerhetsnett":
+
+| Årsak | Forklaring |
+|-------|-----------|
+| **Ressurs ikke funnet i NOM** | Veilederens NAV-ident finnes ikke i NOM API. Kan skyldes at veilederen har sluttet eller at identen ikke er registrert. |
+| **Ingen gyldig enhet på dato** | Veilederen finnes i NOM, men ingen av enhetstilknytningene (inkludert fallback) dekker datoen deltakelsen ble opprettet. Typisk ved gap i NOM-data ved enhetsbytte. |
+
+Et høyt antall "Enhet sikkerhetsnett" tyder på datakvalitetsproblemer i NOM. Diagnostikk-data inkluderer hvilke NAV-identer som er berørt, slik at NOM-data kan korrigeres.
+
+### Toleranseperiode (fallback)
+
+Når en veileder bytter enhet, kan det oppstå et gap i NOM der den gamle tilknytningen har utløpt men den nye ikke er registrert ennå. For å håndtere dette brukes en **toleranseperiode på 90 dager**: hvis ingen enhet er gyldig på opprettelsesdatoen, velges den sist utløpte tilknytningen — forutsatt at den utløp innen de siste 90 dagene.
+
+Eksempel:
+- Veileder har tilknytning til "NAV Oslo" som utløp 30. september
+- Ny tilknytning til "NAV Bergen" registreres først 20. oktober
+- Deltakelse opprettet 9. oktober → mappes til "NAV Oslo" via fallback (gap på 9 dager < 90 dager)
+
+
 # 7. Infrastrukturarkitektur
 
 ## System Context Diagram

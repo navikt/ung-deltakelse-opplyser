@@ -21,8 +21,9 @@ data class DeltakelsePerEnhetResultat(
 )
 
 class DeltakelsePerEnhetStatistikkTeller {
-    private companion object {
+    companion object {
         private val logger = LoggerFactory.getLogger(DeltakelsePerEnhetStatistikkTeller::class.java)
+        const val ENHET_SIKKERHETSNETT = "Enhet sikkerhetsnett"
     }
 
     fun tellAntallDeltakelserPerEnhet(
@@ -31,15 +32,17 @@ class DeltakelsePerEnhetStatistikkTeller {
     ): DeltakelsePerEnhetResultat {
         val ressursLookup = ressurserMedTilknytninger.associateBy { it.navIdent }
         val veiledereMedFlereEnheter = mutableMapOf<String, List<OrgEnhetMedPeriode>>()
+        val deltakelserUtenEnhet = mutableListOf<DeltakelseInput>()
 
         val deltakelserPerEnhet = deltakelser
-            .mapNotNull { deltakelse ->
+            .map { deltakelse ->
                 finnEnhetForDeltakelse(deltakelse, ressursLookup, ressurserMedTilknytninger, veiledereMedFlereEnheter)
+                    ?: ENHET_SIKKERHETSNETT.also { deltakelserUtenEnhet.add(deltakelse) }
             }
             .groupingBy { it }
             .eachCount()
 
-        return opprettResultat(deltakelser, deltakelserPerEnhet, veiledereMedFlereEnheter, ressurserMedTilknytninger)
+        return opprettResultat(deltakelser, deltakelserPerEnhet, veiledereMedFlereEnheter, ressurserMedTilknytninger, deltakelserUtenEnhet)
     }
 
     private fun finnEnhetForDeltakelse(
@@ -49,31 +52,32 @@ class DeltakelsePerEnhetStatistikkTeller {
         veiledereMedFlereEnheter: MutableMap<String, List<OrgEnhetMedPeriode>>,
     ): String? {
         val navIdent = deltakelse.navIdent()
+        val ressurs = ressursLookup[navIdent]
 
-        return ressursLookup[navIdent]?.let { ressurs ->
-            val gyldigeEnheter = finnGyldigeEnheter(ressurs, deltakelse.opprettetDato)
-
-            when {
-                gyldigeEnheter.isEmpty() -> {
-                    logger.warn("Fant ingen gyldig enhet for NAV-ident $navIdent på tidspunkt ${deltakelse.opprettetDato}")
-                    null
-                }
-
-                gyldigeEnheter.size == 1 -> gyldigeEnheter.first().navn
-                else -> {
-                    val valgtEnhet = velgMestPopulæreEnhet(
-                        gyldigeEnheter,
-                        alleRessurser,
-                        navIdent,
-                        deltakelse.opprettetDato,
-                        veiledereMedFlereEnheter
-                    )
-                    valgtEnhet.navn
-                }
-            }
-        } ?: run {
+        if (ressurs == null) {
             logger.warn("Fant ingen ressurs for NAV-ident $navIdent")
-            null
+            return null
+        }
+
+        val gyldigeEnheter = finnGyldigeEnheter(ressurs, deltakelse.opprettetDato)
+
+        return when {
+            gyldigeEnheter.isEmpty() -> {
+                logger.warn("Fant ingen gyldig enhet for NAV-ident $navIdent på tidspunkt ${deltakelse.opprettetDato}")
+                null
+            }
+
+            gyldigeEnheter.size == 1 -> gyldigeEnheter.first().navn
+            else -> {
+                val valgtEnhet = velgMestPopulæreEnhet(
+                    gyldigeEnheter,
+                    alleRessurser,
+                    navIdent,
+                    deltakelse.opprettetDato,
+                    veiledereMedFlereEnheter
+                )
+                valgtEnhet.navn
+            }
         }
     }
 
@@ -92,8 +96,10 @@ class DeltakelsePerEnhetStatistikkTeller {
             return eksaktGyldigeEnheter
         }
 
-        // Fallback: Finn siste gyldige enhet innen toleranseperiode (30 dager)
-        val toleranseDager = 30L
+        // Fallback: Finn siste gyldige enhet innen toleranseperiode (90 dager).
+        // Toleranseperioden overbrygger korte gap i NOM-data som oppstår ved enhetsbytte,
+        // der den nye tilknytningen ikke er registrert ennå.
+        val toleranseDager = 90L
 
         val sisteGyldigeEnhet = ressurs.orgTilknytninger
             .filter { tilknytning ->
@@ -167,6 +173,7 @@ class DeltakelsePerEnhetStatistikkTeller {
         deltakelserPerEnhet: Map<String, Int>,
         veiledereMedFlereEnheter: Map<String, List<OrgEnhetMedPeriode>>,
         ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>,
+        deltakelserUtenEnhet: List<DeltakelseInput>,
     ): DeltakelsePerEnhetResultat {
         val antallUnikeNavIdenter = deltakelser
             .map { it.navIdent() }
@@ -175,13 +182,25 @@ class DeltakelsePerEnhetStatistikkTeller {
 
         logger.info("Fant $antallUnikeNavIdenter unike NAV-identer fra ${deltakelser.size} deltakelser")
 
+        if (deltakelserUtenEnhet.isNotEmpty()) {
+            val berørteNavIdenter = deltakelserUtenEnhet.map { it.navIdent() }.toSet()
+            logger.warn(
+                "${deltakelserUtenEnhet.size} deltakelser kunne ikke mappes til en enhet og er telt under '$ENHET_SIKKERHETSNETT'. " +
+                        "Berørte NAV-identer: $berørteNavIdenter"
+            )
+        }
+
         return DeltakelsePerEnhetResultat(
             deltakelserPerEnhet = deltakelserPerEnhet,
             diagnostikk = mapOf(
                 "enhetPopularitet" to beregnEnhetPopularitet(ressurserMedTilknytninger),
                 "veiledereMedFlereEnheter" to veiledereMedFlereEnheter,
                 "totalAntallDeltakelser" to deltakelser.size,
-                "antallUnikeNavIdenter" to antallUnikeNavIdenter
+                "antallUnikeNavIdenter" to antallUnikeNavIdenter,
+                "deltakelserUtenEnhet" to mapOf(
+                    "antall" to deltakelserUtenEnhet.size,
+                    "berørteNavIdenter" to deltakelserUtenEnhet.map { it.navIdent() }.toSet()
+                )
             )
         )
     }
