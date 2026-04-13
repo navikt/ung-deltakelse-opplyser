@@ -18,7 +18,7 @@ import org.springframework.web.client.exchange
 
 @Service
 @Retryable(
-    noRetryFor = [HttpClientErrorException.Forbidden::class, HttpClientErrorException.NotFound::class, ResourceAccessException::class],
+    noRetryFor = [HttpClientErrorException.Forbidden::class, HttpClientErrorException.NotFound::class, HttpClientErrorException.Unauthorized::class, ResourceAccessException::class],
     backoff = Backoff(
         delayExpression = "\${spring.rest.retry.initialDelay}",
         multiplierExpression = "\${spring.rest.retry.multiplier}",
