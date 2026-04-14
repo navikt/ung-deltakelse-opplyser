@@ -20,10 +20,12 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendR
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseVeilederEnhetService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
+import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -58,6 +60,7 @@ import java.util.*
     UngdomsprogramregisterService::class,
     DeltakerappConfig::class,
     MicrofrontendService::class,
+    DeltakelseVeilederEnhetService::class
 )
 class UngdomsytelsesøknadServiceTest {
 
@@ -76,6 +79,9 @@ class UngdomsytelsesøknadServiceTest {
 
     @MockkBean
     lateinit var kontoregisterService: KontoregisterService
+
+    @MockkBean(relaxed = true)
+    lateinit var nomApiService: NomApiService
 
     @MockkBean
     lateinit var mineSiderService: MineSiderService
