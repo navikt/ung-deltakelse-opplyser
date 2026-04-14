@@ -5,6 +5,7 @@ import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPerio
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
@@ -119,13 +120,15 @@ class DeltakelsePerEnhetStatistikkTeller {
     /**
      * Finner gyldige enheter for en veileder på en gitt dato.
      *
-     * Bruker tre strategier i prioritert rekkefølge:
+     * Bruker fire strategier i prioritert rekkefølge:
      * 1. **Eksakt match**: Både tilknytning og orgEnhet må være gyldig på datoen.
      * 2. **Bakover-fallback (90 dager)**: Bruker den sist utløpte tilknytningen som sluttet
      *    innen 90 dager før datoen. Dekker gap i NOM ved enhetsbytte.
      * 3. **Fremover-fallback (90 dager)**: Bruker den tidligste tilknytningen som starter
      *    innen 90 dager etter datoen. Dekker tilfeller der NOM-registreringen kom etter
      *    at veilederen allerede jobbet ved enheten og opprettet deltakelser.
+     * 4. **Nærmeste tilknytning (ubegrenset)**: Velger tilknytningen med korteste absolutte
+     *    avstand til datoen, uten toleransegrense. Siste utvei for historiske deltakelser.
      */
     private fun finnGyldigeEnheter(
         ressurs: RessursMedAlleTilknytninger,
@@ -194,7 +197,32 @@ class DeltakelsePerEnhetStatistikkTeller {
             return nesteGyldigeEnhet
         }
 
-        logger.warn("Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på tidspunkt $opprettetDato, heller ikke i fallback (bakover/fremover $toleranseDager dager).")
+        // Strategi 4 (nærmeste tilknytning uten toleransegrense): Siste utvei for historiske deltakelser
+        // der strategi 1–3 ikke matcher. Velger tilknytningen med korteste absolutte avstand
+        // til opprettelsesdatoen. Bedre enn å miste deltakelsen til sikkerhetsnett.
+        val nærmesteTilknytning = ressurs.orgTilknytninger
+            .map { tilknytning ->
+                val avstand = when {
+                    opprettetDato.isBefore(tilknytning.gyldigFom) ->
+                        ChronoUnit.DAYS.between(opprettetDato, tilknytning.gyldigFom)
+                    tilknytning.gyldigTom != null && opprettetDato.isAfter(tilknytning.gyldigTom) ->
+                        ChronoUnit.DAYS.between(tilknytning.gyldigTom, opprettetDato)
+                    else -> 0L
+                }
+                tilknytning to avstand
+            }
+            .minByOrNull { it.second }
+
+        if (nærmesteTilknytning != null) {
+            logger.warn(
+                "Bruker nærmeste-tilknytning-fallback (ubegrenset): NAV-ident ${ressurs.navIdent} " +
+                        "på $opprettetDato, bruker ${nærmesteTilknytning.first.orgEnhet.navn} " +
+                        "(avstand: ${nærmesteTilknytning.second} dager)"
+            )
+            return listOf(nærmesteTilknytning.first.orgEnhet)
+        }
+
+        logger.warn("Fant ingen enhet for NAV-ident ${ressurs.navIdent} på $opprettetDato — ingen tilknytninger i NOM.")
         return emptyList()
     }
 

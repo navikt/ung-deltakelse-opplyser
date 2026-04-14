@@ -224,9 +224,10 @@ class DeltakelseStatistikkBeregnerTest {
     }
 
     @Test
-    fun `skal håndtere enheter som ikke er gyldige på deltakelsestidspunkt`() {
+    fun `skal bruke nærmeste tilknytning når enheter ikke er gyldige på deltakelsestidspunkt (strategi 4)`() {
         // Gitt en deltakelse hvor ingen enheter er gyldige på deltakelsesdatoen,
-        // og gapet er større enn toleranseperioden (90 dager)
+        // og gapet er større enn toleranseperioden (90 dager).
+        // Strategi 4 skal likevel finne nærmeste tilknytning.
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15"))
         )
@@ -246,14 +247,14 @@ class DeltakelseStatistikkBeregnerTest {
                             gyldigTom = null
                         )
                     ),
-                    // Enhet som ikke var gyldig på deltakelsesdato
+                    // Tilknytning som er gyldig men orgEnheten starter etter deltakelsesdato
                     RessursOrgTilknytningMedPeriode(
                         gyldigFom = LocalDate.parse("2024-01-01"),
                         gyldigTom = null,
                         orgEnhet = OrgEnhetMedPeriode(
                             id = "1002",
                             navn = "NAV Bergen",
-                            gyldigFom = LocalDate.parse("2024-09-01"), // Starter etter deltakelsesdato
+                            gyldigFom = LocalDate.parse("2024-09-01"),
                             gyldigTom = null
                         )
                     )
@@ -261,13 +262,12 @@ class DeltakelseStatistikkBeregnerTest {
             )
         )
 
-        // Når vi beregner antall deltakelser per enhet
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Da skal deltakelsen telles under "Enhet sikkerhetsnett" siden ingen enheter var gyldige på tidspunktet
-        assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
-        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Oslo")
-        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Bergen")
+        // Strategi 4 velger nærmeste tilknytning — tilknytning 2 (NAV Bergen) har avstand 0
+        // (deltakelsesdatoen er innenfor tilknytningsperioden), noe som er bedre enn sikkerhetsnett.
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Bergen", 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
     }
 
     @Test
@@ -460,8 +460,9 @@ class DeltakelseStatistikkBeregnerTest {
     }
 
     @Test
-    fun `skal ikke bruke fremover-fallback når gap er større enn toleranseperioden`() {
-        // Gitt en deltakelse opprettet mer enn 90 dager FØR veilederens NOM-tilknytning starter
+    fun `strategi 4 skal brukes når fremover-fallback gap er større enn toleranseperioden`() {
+        // Gitt en deltakelse opprettet mer enn 90 dager FØR veilederens NOM-tilknytning starter.
+        // Strategi 3 (90-dager fremover) matcher ikke, men strategi 4 (nærmeste ubegrenset) fanger den.
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-09-11"))
         )
@@ -485,12 +486,11 @@ class DeltakelseStatistikkBeregnerTest {
             )
         )
 
-        // Når vi beregner antall deltakelser per enhet
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Da skal deltakelsen havne under "Enhet sikkerhetsnett" fordi gapet er for stort
-        assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
-        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("Kristiansand Ungdom 1")
+        // Strategi 4 fanger denne — nærmeste tilknytning uavhengig av toleransegrense
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("Kristiansand Ungdom 1", 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
     }
 
     @Test
@@ -499,7 +499,7 @@ class DeltakelseStatistikkBeregnerTest {
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2024-01-15")),
             DeltakelseInput(UUID.randomUUID(), "UNKNOWN$VEILEDER_SUFFIX", LocalDate.parse("2024-01-16")),
-            DeltakelseInput(UUID.randomUUID(), "DEF456$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15")) // Ingen gyldig enhet på dato (gap > 90 dager)
+            DeltakelseInput(UUID.randomUUID(), "DEF456$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15")) // Gap > 90 dager, men strategi 4 finner nærmeste
         )
 
         val ressurserMedTilknytninger = listOf(
@@ -543,10 +543,139 @@ class DeltakelseStatistikkBeregnerTest {
         val totalSum = resultat.deltakelserPerEnhet.values.sum()
         assertThat(totalSum).isEqualTo(deltakelser.size)
 
-        // Og diagnostikken skal vise de umappede deltakelsene
+        // ABC123 → NAV Oslo, DEF456 → NAV Bergen (via strategi 4), UNKNOWN → sikkerhetsnett
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Bergen", 1)
+        assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
+
+        // Diagnostikken viser kun UNKNOWN som umappet (DEF456 løst av strategi 4)
         @Suppress("UNCHECKED_CAST")
         val deltakelserUtenEnhet = resultat.diagnostikk["deltakelserUtenEnhet"] as Map<String, Any>
-        assertThat(deltakelserUtenEnhet["antall"]).isEqualTo(2) // UNKNOWN (ikke i NOM) + DEF456 (ingen gyldig enhet på dato)
+        assertThat(deltakelserUtenEnhet["antall"]).isEqualTo(1) // Kun UNKNOWN (ikke i NOM)
+    }
+
+    @Test
+    fun `strategi 4 - skal bruke nærmeste tilknytning fremover når gap er større enn 90 dager`() {
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-06-01"))
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "ABC123",
+                orgTilknytninger = listOf(
+                    // Tilknytning som starter 150 dager etter deltakelsesdato
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2025-10-29"),
+                        gyldigTom = null,
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1001",
+                            navn = "Skien Oppfølging ung",
+                            gyldigFom = LocalDate.parse("2025-10-01"),
+                            gyldigTom = null
+                        )
+                    )
+                )
+            )
+        )
+
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        // Strategi 4 skal finne nærmeste tilknytning uavhengig av toleranse
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("Skien Oppfølging ung", 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
+    }
+
+    @Test
+    fun `strategi 4 - skal bruke nærmeste tilknytning bakover når gap er større enn 90 dager`() {
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-12-01"))
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "ABC123",
+                orgTilknytninger = listOf(
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2025-01-01"),
+                        gyldigTom = LocalDate.parse("2025-06-30"),
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1001",
+                            navn = "NAV Oslo",
+                            gyldigFom = LocalDate.parse("2020-01-01"),
+                            gyldigTom = null
+                        )
+                    )
+                )
+            )
+        )
+
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
+    }
+
+    @Test
+    fun `strategi 4 - skal velge nærmeste av flere tilknytninger utenfor toleranse`() {
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-07-01"))
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "ABC123",
+                orgTilknytninger = listOf(
+                    // 182 dager før
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2024-06-01"),
+                        gyldigTom = LocalDate.parse("2024-12-31"),
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1001",
+                            navn = "NAV Oslo",
+                            gyldigFom = LocalDate.parse("2020-01-01"),
+                            gyldigTom = null
+                        )
+                    ),
+                    // 123 dager etter — nærmere
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2025-11-01"),
+                        gyldigTom = null,
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1002",
+                            navn = "Skien Oppfølging ung",
+                            gyldigFom = LocalDate.parse("2025-10-01"),
+                            gyldigTom = null
+                        )
+                    )
+                )
+            )
+        )
+
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        // Skien (123 dager) er nærmere enn Oslo (182 dager)
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("Skien Oppfølging ung", 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Oslo")
+    }
+
+    @Test
+    fun `skal håndtere veileder med tom orgTilknytning som sikkerhetsnett`() {
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "H155556$VEILEDER_SUFFIX", LocalDate.parse("2025-10-15"))
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "H155556",
+                orgTilknytninger = emptyList() // Har sluttet, ingen tilknytninger
+            )
+        )
+
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        // Uten kobling i koblingstabellen og tom orgTilknytning → sikkerhetsnett
+        assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
     }
 
 }
