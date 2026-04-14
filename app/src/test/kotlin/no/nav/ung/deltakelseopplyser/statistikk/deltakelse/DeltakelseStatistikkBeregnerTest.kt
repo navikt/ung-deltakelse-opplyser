@@ -124,8 +124,10 @@ class DeltakelseStatistikkBeregnerTest {
         // Når vi beregner antall deltakelser per enhet
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Da skal kun deltakelsen fra ABC123 telles
+        // Da skal deltakelsen fra ABC123 telles under NAV Oslo,
+        // og deltakelsen fra UNKNOWN telles under "Enhet sikkerhetsnett"
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
+        assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
     }
 
     @Test
@@ -223,16 +225,17 @@ class DeltakelseStatistikkBeregnerTest {
 
     @Test
     fun `skal håndtere enheter som ikke er gyldige på deltakelsestidspunkt`() {
-        // Gitt en deltakelse hvor ingen enheter er gyldige på deltakelsesdatoen
+        // Gitt en deltakelse hvor ingen enheter er gyldige på deltakelsesdatoen,
+        // og gapet er større enn toleranseperioden (90 dager)
         val deltakelser = listOf(
-            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2024-06-15"))
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15"))
         )
 
         val ressurserMedTilknytninger = listOf(
             RessursMedAlleTilknytninger(
                 navIdent = "ABC123",
                 orgTilknytninger = listOf(
-                    // Tilknytning som var gyldig før deltakelsesdato
+                    // Tilknytning som utløp mer enn 90 dager før deltakelsesdato
                     RessursOrgTilknytningMedPeriode(
                         gyldigFom = LocalDate.parse("2024-01-01"),
                         gyldigTom = LocalDate.parse("2024-03-31"),
@@ -250,7 +253,7 @@ class DeltakelseStatistikkBeregnerTest {
                         orgEnhet = OrgEnhetMedPeriode(
                             id = "1002",
                             navn = "NAV Bergen",
-                            gyldigFom = LocalDate.parse("2024-07-01"), // Starter etter deltakelsesdato
+                            gyldigFom = LocalDate.parse("2024-09-01"), // Starter etter deltakelsesdato
                             gyldigTom = null
                         )
                     )
@@ -261,8 +264,10 @@ class DeltakelseStatistikkBeregnerTest {
         // Når vi beregner antall deltakelser per enhet
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Da skal ingen deltakelser telles (ingen enheter var gyldige på tidspunktet)
-        assertThat(resultat.deltakelserPerEnhet).isEmpty()
+        // Da skal deltakelsen telles under "Enhet sikkerhetsnett" siden ingen enheter var gyldige på tidspunktet
+        assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Oslo")
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Bergen")
     }
 
     @Test
@@ -418,6 +423,62 @@ class DeltakelseStatistikkBeregnerTest {
         // fordi den var siste gyldige enhet veilederen hadde
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
         assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Bergen")
+    }
+
+    @Test
+    fun `summen av alle enheter skal alltid være lik antall input-deltakelser`() {
+        // Gitt en blanding av deltakelser med og uten gyldig enhet
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2024-01-15")),
+            DeltakelseInput(UUID.randomUUID(), "UNKNOWN$VEILEDER_SUFFIX", LocalDate.parse("2024-01-16")),
+            DeltakelseInput(UUID.randomUUID(), "DEF456$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15")) // Ingen gyldig enhet på dato (gap > 90 dager)
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "ABC123",
+                orgTilknytninger = listOf(
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2024-01-01"),
+                        gyldigTom = null,
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1001",
+                            navn = "NAV Oslo",
+                            gyldigFom = LocalDate.parse("2020-01-01"),
+                            gyldigTom = null
+                        )
+                    )
+                )
+            ),
+            RessursMedAlleTilknytninger(
+                navIdent = "DEF456",
+                orgTilknytninger = listOf(
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2024-01-01"),
+                        gyldigTom = LocalDate.parse("2024-03-31"),
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1002",
+                            navn = "NAV Bergen",
+                            gyldigFom = LocalDate.parse("2020-01-01"),
+                            gyldigTom = LocalDate.parse("2024-03-31")
+                        )
+                    )
+                )
+            )
+            // UNKNOWN mangler i ressursene
+        )
+
+        // Når vi beregner antall deltakelser per enhet
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        // Da skal summen av alle enheter (inkludert "Enhet sikkerhetsnett") alltid være lik antall input-deltakelser
+        val totalSum = resultat.deltakelserPerEnhet.values.sum()
+        assertThat(totalSum).isEqualTo(deltakelser.size)
+
+        // Og diagnostikken skal vise de umappede deltakelsene
+        @Suppress("UNCHECKED_CAST")
+        val deltakelserUtenEnhet = resultat.diagnostikk["deltakelserUtenEnhet"] as Map<String, Any>
+        assertThat(deltakelserUtenEnhet["antall"]).isEqualTo(2) // UNKNOWN (ikke i NOM) + DEF456 (ingen gyldig enhet på dato)
     }
 
 }
