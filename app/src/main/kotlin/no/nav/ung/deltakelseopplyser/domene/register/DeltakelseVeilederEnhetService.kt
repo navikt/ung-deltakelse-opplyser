@@ -45,13 +45,24 @@ class DeltakelseVeilederEnhetService(
             val ressurs = ressurser.firstOrNull()
 
             if (ressurs == null) {
-                logger.warn("Kunne ikke lagre enhet-kobling for deltakelse $deltakelseId: Fant ingen NOM-ressurs for NAV-ident $navIdent")
+                logger.warn(
+                    "Kunne ikke lagre enhet-kobling for deltakelse {}: Fant ingen NOM-ressurs for NAV-ident {} (NOM returnerte {} ressurser)",
+                    deltakelseId, navIdent, ressurser.size
+                )
                 return
             }
 
-            val enhet = resolveGyldigEnhet(ressurs, LocalDate.now())
+            val dato = LocalDate.now()
+            val enhet = resolveGyldigEnhet(ressurs, dato)
             if (enhet == null) {
-                logger.warn("Kunne ikke lagre enhet-kobling for deltakelse $deltakelseId: Fant ingen gyldig enhet for NAV-ident $navIdent")
+                val tilknytninger = ressurs.orgTilknytninger.joinToString { t ->
+                    "${t.orgEnhet.navn} (${t.gyldigFom}–${t.gyldigTom ?: "løpende"})"
+                }
+                logger.warn(
+                    "Kunne ikke lagre enhet-kobling for deltakelse {}: Fant ingen gyldig enhet for NAV-ident {} på {} " +
+                            "(antallTilknytninger={}, tilknytninger=[{}])",
+                    deltakelseId, navIdent, dato, ressurs.orgTilknytninger.size, tilknytninger
+                )
                 return
             }
 
@@ -63,9 +74,15 @@ class DeltakelseVeilederEnhetService(
                     enhetNavn = enhet.navn,
                 )
             )
-            logger.info("Lagret enhet-kobling for deltakelse $deltakelseId: NAV-ident=$navIdent, enhet=${enhet.navn} (${enhet.id})")
+            logger.info(
+                "Lagret enhet-kobling for deltakelse {}: NAV-ident={}, enhet={} ({})",
+                deltakelseId, navIdent, enhet.navn, enhet.id
+            )
         } catch (e: Exception) {
-            logger.error("Feil ved lagring av enhet-kobling for deltakelse $deltakelseId, NAV-ident $navIdent. Fortsetter uten kobling.", e)
+            logger.error(
+                "Feil ved lagring av enhet-kobling for deltakelse {}, NAV-ident {}. Fortsetter uten kobling.",
+                deltakelseId, navIdent, e
+            )
         }
     }
 
@@ -112,7 +129,8 @@ class DeltakelseVeilederEnhetService(
         val ressursLookup = ressurserMedTilknytninger.associateBy { it.navIdent }
         var antallOpprettet = 0
         var antallHoppetOver = 0
-        val feiledeIdenter = mutableSetOf<String>()
+        val identerUtenRessurs = mutableSetOf<String>()
+        val identerUtenGyldigEnhet = mutableSetOf<String>()
 
         deltakelser.forEach { input ->
             if (input.deltakelseId in eksisterendeKoblinger) {
@@ -122,14 +140,18 @@ class DeltakelseVeilederEnhetService(
 
             val ressurs = ressursLookup[input.navIdent]
             if (ressurs == null) {
-                feiledeIdenter.add(input.navIdent)
+                identerUtenRessurs.add(input.navIdent)
                 return@forEach
             }
 
             // Bruk nærmeste tilknytning uten toleransegrense for historiske deltakelser
             val enhet = resolveNærmesteEnhet(ressurs, input.opprettetDato)
             if (enhet == null) {
-                feiledeIdenter.add(input.navIdent)
+                identerUtenGyldigEnhet.add(input.navIdent)
+                logger.debug(
+                    "Backfill: Ingen gyldig enhet for NAV-ident {} på {} (deltakelseId={}, antallTilknytninger={})",
+                    input.navIdent, input.opprettetDato, input.deltakelseId, ressurs.orgTilknytninger.size
+                )
                 return@forEach
             }
 
@@ -144,7 +166,13 @@ class DeltakelseVeilederEnhetService(
             antallOpprettet++
         }
 
-        logger.info("Backfill ferdig: $antallOpprettet opprettet, $antallHoppetOver hoppet over (eksisterte), ${feiledeIdenter.size} unike identer feilet: $feiledeIdenter")
+        val feiledeIdenter = identerUtenRessurs + identerUtenGyldigEnhet
+        logger.info(
+            "Backfill ferdig: {} opprettet, {} hoppet over (eksisterte), {} feilet " +
+                    "(ingen NOM-ressurs: {}, ingen gyldig enhet: {})",
+            antallOpprettet, antallHoppetOver, feiledeIdenter.size,
+            identerUtenRessurs, identerUtenGyldigEnhet
+        )
         return BackfillResultat(antallOpprettet, antallHoppetOver, feiledeIdenter)
     }
 
@@ -216,4 +244,3 @@ class DeltakelseVeilederEnhetService(
         val feiledeNavIdenter: Set<String>,
     )
 }
-

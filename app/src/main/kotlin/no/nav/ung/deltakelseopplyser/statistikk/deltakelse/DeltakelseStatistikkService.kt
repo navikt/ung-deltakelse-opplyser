@@ -43,8 +43,8 @@ class DeltakelseStatistikkService(
         val (medKobling, utenKobling) = deltakelseInputs.partition { it.id in enhetKoblinger }
 
         logger.info(
-            "Koblingstabellen dekker ${medKobling.size} av ${deltakelseInputs.size} deltakelser. " +
-                    "${utenKobling.size} krever NOM-oppslag."
+            "Koblingstabellen dekker {} av {} deltakelser. {} krever NOM-oppslag.",
+            medKobling.size, deltakelseInputs.size, utenKobling.size
         )
 
         // Deltakelser med kobling → bruk enhetNavn direkte
@@ -66,6 +66,11 @@ class DeltakelseStatistikkService(
             val ressurserMedAlleTilknytninger: List<RessursMedAlleTilknytninger> =
                 nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
 
+            logger.info(
+                "NOM returnerte {} ressurser for {} etterspurte identer",
+                ressurserMedAlleTilknytninger.size, navIdenter.size
+            )
+
             val nomResultat = deltakelsePerEnhetStatistikkTeller.tellAntallDeltakelserPerEnhet(
                 deltakelser = utenKobling,
                 ressurserMedTilknytninger = ressurserMedAlleTilknytninger
@@ -82,6 +87,12 @@ class DeltakelseStatistikkService(
         deltakelserPerEnhetFraNom.forEach { (enhet, antall) ->
             samletDeltakelserPerEnhet.merge(enhet, antall, Int::plus)
         }
+
+        // Logg endelig fordeling for feilsøking
+        val fordeling = samletDeltakelserPerEnhet.entries
+            .sortedByDescending { it.value }
+            .joinToString { "${it.key}: ${it.value}" }
+        logger.info("Statistikk-resultat fordeling: [{}]", fordeling)
 
         @Suppress("UNCHECKED_CAST")
         val diagnostikk = mapOf<Any, Any?>(
@@ -112,9 +123,15 @@ class DeltakelseStatistikkService(
     ) {
         val totalAntallDeltakelserStatistikk = statistikkRecords.sumOf { it.antallDeltakelser }
         if (kastFeilVedInkonsekventTelling && totalAntallDeltakelserStatistikk != alleDeltakelser.size) {
-            throw IllegalStateException("Inkonsekvent telling: Total antall deltakelser i statistikk ($totalAntallDeltakelserStatistikk) stemmer ikke overens med totalt antall deltakelser (${alleDeltakelser.size})")
+            throw IllegalStateException(
+                "Inkonsekvent telling: Total antall deltakelser i statistikk ($totalAntallDeltakelserStatistikk) " +
+                        "stemmer ikke overens med totalt antall deltakelser (${alleDeltakelser.size})"
+            )
         } else {
-            logger.info("Verifisert at total antall deltakelser i statistikk ($totalAntallDeltakelserStatistikk) stemmer overens med totalt antall deltakelser for enhetene (${alleDeltakelser.size})")
+            logger.info(
+                "Verifisert konsekvent telling: {} deltakelser i statistikk = {} totalt",
+                totalAntallDeltakelserStatistikk, alleDeltakelser.size
+            )
         }
     }
 }

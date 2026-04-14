@@ -224,10 +224,9 @@ class DeltakelseStatistikkBeregnerTest {
     }
 
     @Test
-    fun `skal bruke nærmeste tilknytning når enheter ikke er gyldige på deltakelsestidspunkt (strategi 4)`() {
-        // Gitt en deltakelse hvor ingen enheter er gyldige på deltakelsesdatoen,
-        // og gapet er større enn toleranseperioden (90 dager).
-        // Strategi 4 skal likevel finne nærmeste tilknytning.
+    fun `skal bruke nærmeste tilknytning når enheter ikke er gyldige på deltakelsestidspunkt`() {
+        // Gitt en deltakelse hvor ingen enheter er gyldige på deltakelsesdatoen.
+        // Nærmeste-tilknytning-fallback skal finne nærmeste tilknytning.
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15"))
         )
@@ -264,7 +263,7 @@ class DeltakelseStatistikkBeregnerTest {
 
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Strategi 4 velger nærmeste tilknytning — tilknytning 2 (NAV Bergen) har avstand 0
+        // Nærmeste-tilknytning-fallback velger tilknytning 2 (NAV Bergen) som har avstand 0
         // (deltakelsesdatoen er innenfor tilknytningsperioden), noe som er bedre enn sikkerhetsnett.
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Bergen", 1)
         assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
@@ -426,8 +425,8 @@ class DeltakelseStatistikkBeregnerTest {
     }
 
     @Test
-    fun `skal bruke fremover-fallback når NOM-registrering kommer etter deltakelse-opprettelse`() {
-        // Gitt en deltakelse opprettet FØR veilederens NOM-tilknytning starter (innen 90 dager)
+    fun `skal bruke nærmeste tilknytning når NOM-registrering kommer etter deltakelse-opprettelse`() {
+        // Gitt en deltakelse opprettet FØR veilederens NOM-tilknytning starter
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-10-09"))
         )
@@ -454,15 +453,15 @@ class DeltakelseStatistikkBeregnerTest {
         // Når vi beregner antall deltakelser per enhet
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Da skal deltakelsen mappes via fremover-fallback til den kommende enheten
+        // Da skal deltakelsen mappes via nærmeste-tilknytning-fallback til den kommende enheten
         assertThat(resultat.deltakelserPerEnhet).containsEntry("Skien Oppfølging ung", 1)
         assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
     }
 
     @Test
-    fun `strategi 4 skal brukes når fremover-fallback gap er større enn toleranseperioden`() {
+    fun `skal bruke nærmeste tilknytning når gap er større enn 90 dager fremover`() {
         // Gitt en deltakelse opprettet mer enn 90 dager FØR veilederens NOM-tilknytning starter.
-        // Strategi 3 (90-dager fremover) matcher ikke, men strategi 4 (nærmeste ubegrenset) fanger den.
+        // Nærmeste-tilknytning-fallback fanger denne.
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-09-11"))
         )
@@ -488,7 +487,7 @@ class DeltakelseStatistikkBeregnerTest {
 
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Strategi 4 fanger denne — nærmeste tilknytning uavhengig av toleransegrense
+        // Nærmeste-tilknytning-fallback fanger denne — nærmeste tilknytning uavhengig av avstand
         assertThat(resultat.deltakelserPerEnhet).containsEntry("Kristiansand Ungdom 1", 1)
         assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
     }
@@ -499,7 +498,7 @@ class DeltakelseStatistikkBeregnerTest {
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2024-01-15")),
             DeltakelseInput(UUID.randomUUID(), "UNKNOWN$VEILEDER_SUFFIX", LocalDate.parse("2024-01-16")),
-            DeltakelseInput(UUID.randomUUID(), "DEF456$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15")) // Gap > 90 dager, men strategi 4 finner nærmeste
+            DeltakelseInput(UUID.randomUUID(), "DEF456$VEILEDER_SUFFIX", LocalDate.parse("2024-08-15")) // Gap > 90 dager, men nærmeste-tilknytning finner enheten
         )
 
         val ressurserMedTilknytninger = listOf(
@@ -543,19 +542,21 @@ class DeltakelseStatistikkBeregnerTest {
         val totalSum = resultat.deltakelserPerEnhet.values.sum()
         assertThat(totalSum).isEqualTo(deltakelser.size)
 
-        // ABC123 → NAV Oslo, DEF456 → NAV Bergen (via strategi 4), UNKNOWN → sikkerhetsnett
+        // ABC123 → NAV Oslo, DEF456 → NAV Bergen (via nærmeste tilknytning), UNKNOWN → sikkerhetsnett
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Bergen", 1)
         assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
 
-        // Diagnostikken viser kun UNKNOWN som umappet (DEF456 løst av strategi 4)
+        // Diagnostikken viser kun UNKNOWN som umappet (DEF456 løst av nærmeste-tilknytning-fallback)
         @Suppress("UNCHECKED_CAST")
         val deltakelserUtenEnhet = resultat.diagnostikk["deltakelserUtenEnhet"] as Map<String, Any>
         assertThat(deltakelserUtenEnhet["antall"]).isEqualTo(1) // Kun UNKNOWN (ikke i NOM)
     }
 
     @Test
-    fun `strategi 4 - skal bruke nærmeste tilknytning fremover når gap er større enn 90 dager`() {
+    fun `nærmeste tilknytning - skal bruke nærmeste tilknytning fremover når gap er stort`() {
+        // Gitt en deltakelse opprettet mer enn 90 dager FØR veilederens NOM-tilknytning starter.
+        // Nærmeste-tilknytning-fallback skal finne nærmeste tilknytning uavhengig av avstand
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-06-01"))
         )
@@ -581,13 +582,14 @@ class DeltakelseStatistikkBeregnerTest {
 
         val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
 
-        // Strategi 4 skal finne nærmeste tilknytning uavhengig av toleranse
+        // Nærmeste-tilknytning-fallback skal finne nærmeste tilknytning uavhengig av avstand
         assertThat(resultat.deltakelserPerEnhet).containsEntry("Skien Oppfølging ung", 1)
         assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
     }
 
     @Test
-    fun `strategi 4 - skal bruke nærmeste tilknytning bakover når gap er større enn 90 dager`() {
+    fun `nærmeste tilknytning - skal bruke nærmeste tilknytning bakover når gap er stort`() {
+        // Gitt deltakelse som ligger i en gap-periode bakover i tid
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-12-01"))
         )
@@ -617,7 +619,8 @@ class DeltakelseStatistikkBeregnerTest {
     }
 
     @Test
-    fun `strategi 4 - skal velge nærmeste av flere tilknytninger utenfor toleranse`() {
+    fun `nærmeste tilknytning - skal velge nærmeste av flere tilknytninger`() {
+        // Gitt deltakelse hvor det finnes flere tilknytninger utenfor toleranse
         val deltakelser = listOf(
             DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-07-01"))
         )
