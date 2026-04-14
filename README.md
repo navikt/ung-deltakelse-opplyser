@@ -66,12 +66,13 @@ Et høyt antall "Enhet sikkerhetsnett" tyder på datakvalitetsproblemer i NOM. D
 
 ### Toleranseperiode (fallback)
 
-Når en veileder bytter enhet, kan det oppstå et gap i NOM der den gamle tilknytningen har utløpt men den nye ikke er registrert ennå. For å håndtere dette brukes en **toleranseperiode på 90 dager**: hvis ingen enhet er gyldig på opprettelsesdatoen, velges den sist utløpte tilknytningen — forutsatt at den utløp innen de siste 90 dagene.
+Når en veileder bytter enhet, kan det oppstå et gap i NOM. For å håndtere dette brukes en **toleranseperiode på 90 dager** i to retninger:
 
-Eksempel:
-- Veileder har tilknytning til "NAV Oslo" som utløp 30. september
-- Ny tilknytning til "NAV Bergen" registreres først 20. oktober
-- Deltakelse opprettet 9. oktober → mappes til "NAV Oslo" via fallback (gap på 9 dager < 90 dager)
+1. **Bakover-fallback**: Hvis ingen enhet er gyldig på opprettelsesdatoen, velges den sist utløpte tilknytningen — forutsatt at den utløp innen de siste 90 dagene.
+2. **Fremover-fallback**: Hvis heller ingen nylig utløpt tilknytning finnes, velges den tidligste fremtidige tilknytningen — forutsatt at den starter innen 90 dager. Dette dekker tilfeller der veilederen jobber ved enheten men NOM-registreringen kom etter at deltakelsen ble opprettet.
+
+Eksempel bakover: Tilknytning til "NAV Oslo" utløp 30. sep → deltakelse opprettet 9. okt → mappes til "NAV Oslo" (gap 9 dager < 90).
+Eksempel fremover: Tilknytning til "Skien Oppfølging ung" starter 20. okt → deltakelse opprettet 9. okt → mappes til "Skien" (gap 11 dager < 90).
 
 
 # 7. Infrastrukturarkitektur

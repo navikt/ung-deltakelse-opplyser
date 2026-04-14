@@ -119,10 +119,13 @@ class DeltakelsePerEnhetStatistikkTeller {
     /**
      * Finner gyldige enheter for en veileder på en gitt dato.
      *
-     * Bruker to strategier:
+     * Bruker tre strategier i prioritert rekkefølge:
      * 1. **Eksakt match**: Både tilknytning og orgEnhet må være gyldig på datoen.
-     * 2. **Fallback (90 dager)**: Hvis ingen eksakt match, brukes den sist utløpte tilknytningen
-     *    som sluttet innen 90 dager før datoen. Dette dekker gap i NOM ved enhetsbytte.
+     * 2. **Bakover-fallback (90 dager)**: Bruker den sist utløpte tilknytningen som sluttet
+     *    innen 90 dager før datoen. Dekker gap i NOM ved enhetsbytte.
+     * 3. **Fremover-fallback (90 dager)**: Bruker den tidligste tilknytningen som starter
+     *    innen 90 dager etter datoen. Dekker tilfeller der NOM-registreringen kom etter
+     *    at veilederen allerede jobbet ved enheten og opprettet deltakelser.
      */
     private fun finnGyldigeEnheter(
         ressurs: RessursMedAlleTilknytninger,
@@ -140,9 +143,8 @@ class DeltakelsePerEnhetStatistikkTeller {
             return eksaktGyldigeEnheter
         }
 
-        // Strategi 2 (fallback): Finn siste gyldige enhet innen toleranseperiode.
-        // Toleranseperioden overbrygger korte gap i NOM-data som oppstår ved enhetsbytte,
-        // der den gamle tilknytningen har utløpt men den nye ikke er registrert ennå.
+        // Strategi 2 (bakover-fallback): Finn siste gyldige enhet innen toleranseperiode.
+        // Dekker gap der den gamle tilknytningen har utløpt men den nye ikke er registrert ennå.
         val toleranseDager = 90L
 
         val sisteGyldigeEnhet = ressurs.orgTilknytninger
@@ -161,14 +163,38 @@ class DeltakelsePerEnhetStatistikkTeller {
 
         if (sisteGyldigeEnhet.isNotEmpty()) {
             logger.info(
-                "Bruker fallback: Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på $opprettetDato, " +
+                "Bruker bakover-fallback: Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på $opprettetDato, " +
                         "bruker siste gyldige enhet: ${sisteGyldigeEnhet.first().navn} " +
                         "(gyldigTom: ${ressurs.orgTilknytninger.first { it.orgEnhet.id == sisteGyldigeEnhet.first().id }.gyldigTom})"
             )
             return sisteGyldigeEnhet
         }
 
-        logger.warn("Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på tidspunkt $opprettetDato, heller ikke i fallback. Prøv å øke toleranseDager.")
+        // Strategi 3 (fremover-fallback): Finn den tidligste fremtidige tilknytningen innen toleranseperiode.
+        // Dekker tilfeller der veilederen allerede jobbet ved enheten og opprettet deltakelser,
+        // men NOM-registreringen kom først etterpå.
+        val nesteGyldigeEnhet = ressurs.orgTilknytninger
+            .filter { tilknytning ->
+                // Tilknytningen må starte etter opprettelsesdatoen (den har ikke startet ennå)
+                tilknytning.gyldigFom.isAfter(opprettetDato) &&
+                        // Startdatoen må ikke ligge mer enn 90 dager etter opprettelsesdatoen
+                        !tilknytning.gyldigFom.isAfter(opprettetDato.plusDays(toleranseDager))
+            }
+            // Velg den som starter først (mest sannsynlig riktig enhet)
+            .sortedBy { it.gyldigFom }
+            .take(1)
+            .map { it.orgEnhet }
+
+        if (nesteGyldigeEnhet.isNotEmpty()) {
+            logger.info(
+                "Bruker fremover-fallback: Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på $opprettetDato, " +
+                        "bruker neste registrerte enhet: ${nesteGyldigeEnhet.first().navn} " +
+                        "(gyldigFom: ${ressurs.orgTilknytninger.first { it.orgEnhet.id == nesteGyldigeEnhet.first().id }.gyldigFom})"
+            )
+            return nesteGyldigeEnhet
+        }
+
+        logger.warn("Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på tidspunkt $opprettetDato, heller ikke i fallback (bakover/fremover $toleranseDager dager).")
         return emptyList()
     }
 

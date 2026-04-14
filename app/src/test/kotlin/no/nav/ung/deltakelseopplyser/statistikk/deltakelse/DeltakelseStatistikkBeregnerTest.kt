@@ -398,7 +398,7 @@ class DeltakelseStatistikkBeregnerTest {
                             id = "1001",
                             navn = "NAV Oslo",
                             gyldigFom = LocalDate.parse("2020-01-01"),
-                            gyldigTom = LocalDate.parse("2025-09-30")
+                            gyldigTom = "2025-09-30".let { LocalDate.parse(it) }
                         )
                     ),
                     // Ny tilknytning som starter 20. oktober
@@ -423,6 +423,74 @@ class DeltakelseStatistikkBeregnerTest {
         // fordi den var siste gyldige enhet veilederen hadde
         assertThat(resultat.deltakelserPerEnhet).containsEntry("NAV Oslo", 1)
         assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("NAV Bergen")
+    }
+
+    @Test
+    fun `skal bruke fremover-fallback når NOM-registrering kommer etter deltakelse-opprettelse`() {
+        // Gitt en deltakelse opprettet FØR veilederens NOM-tilknytning starter (innen 90 dager)
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-10-09"))
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "ABC123",
+                orgTilknytninger = listOf(
+                    // Tilknytning som starter 11 dager etter deltakelsesdato
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2025-10-20"),
+                        gyldigTom = null,
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1001",
+                            navn = "Skien Oppfølging ung",
+                            gyldigFom = LocalDate.parse("2025-10-01"),
+                            gyldigTom = null
+                        )
+                    )
+                )
+            )
+        )
+
+        // Når vi beregner antall deltakelser per enhet
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        // Da skal deltakelsen mappes via fremover-fallback til den kommende enheten
+        assertThat(resultat.deltakelserPerEnhet).containsEntry("Skien Oppfølging ung", 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT)
+    }
+
+    @Test
+    fun `skal ikke bruke fremover-fallback når gap er større enn toleranseperioden`() {
+        // Gitt en deltakelse opprettet mer enn 90 dager FØR veilederens NOM-tilknytning starter
+        val deltakelser = listOf(
+            DeltakelseInput(UUID.randomUUID(), "ABC123$VEILEDER_SUFFIX", LocalDate.parse("2025-09-11"))
+        )
+
+        val ressurserMedTilknytninger = listOf(
+            RessursMedAlleTilknytninger(
+                navIdent = "ABC123",
+                orgTilknytninger = listOf(
+                    // Tilknytning som starter 112 dager etter deltakelsesdato (> 90 dager)
+                    RessursOrgTilknytningMedPeriode(
+                        gyldigFom = LocalDate.parse("2026-01-01"),
+                        gyldigTom = null,
+                        orgEnhet = OrgEnhetMedPeriode(
+                            id = "1001",
+                            navn = "Kristiansand Ungdom 1",
+                            gyldigFom = LocalDate.parse("2020-01-01"),
+                            gyldigTom = null
+                        )
+                    )
+                )
+            )
+        )
+
+        // Når vi beregner antall deltakelser per enhet
+        val resultat = beregner.tellAntallDeltakelserPerEnhet(deltakelser, ressurserMedTilknytninger)
+
+        // Da skal deltakelsen havne under "Enhet sikkerhetsnett" fordi gapet er for stort
+        assertThat(resultat.deltakelserPerEnhet).containsEntry(DeltakelsePerEnhetStatistikkTeller.ENHET_SIKKERHETSNETT, 1)
+        assertThat(resultat.deltakelserPerEnhet).doesNotContainKey("Kristiansand Ungdom 1")
     }
 
     @Test
