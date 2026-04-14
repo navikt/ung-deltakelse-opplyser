@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(
     name = "Ekstern deltakelse",
     description = """API for å sjekke om en bruker er aktiv deltaker i ungdomsprogrammet.
-        Krever veileder sitt OBO-token – systemtoken (maskin-til-maskin) aksepteres ikke.
+        Støtter både OBO-token (veileder) og systemtoken / M2M (maskin-til-maskin).
         Returnerer alltid HTTP 200 – sjekk feltet 'erDeltaker' for svar."""
 )
 class EksternDeltakelseController(
@@ -36,6 +36,13 @@ class EksternDeltakelseController(
     private val tilgangskontrollService: TilgangskontrollService,
     private val registerService: UngdomsprogramregisterService,
 ) {
+
+    companion object {
+        private val GODKJENTE_APPLIKASJONER = listOf(
+            "veilarboppfolging",
+            "azure-token-generator" // TODO: Fjern før merge til prod.
+        )
+    }
 
     @PostMapping(
         "/sjekk",
@@ -46,30 +53,35 @@ class EksternDeltakelseController(
         summary = "Sjekk om bruker er aktiv deltaker i ungdomsprogrammet",
         description = """Returnerer om brukeren er aktiv deltaker i ungdomsprogrammet og eventuelt perioden.
             En periode regnes som aktiv dersom tilOgMed er null (åpen periode) eller satt i fremtiden.
-            Krever veileder sitt OBO-token – systemtoken aksepteres ikke.
+            Støtter både OBO-token (veileder) og systemtoken / M2M (maskin-til-maskin).
             Kallet må komme fra et godkjent system (sjekkes via azp-claim).
-            Diskresjonskode (kode 6/7) og egne-ansatt-sjekk utføres via ABAC."""
+            For OBO-token: tilgangskontroll via Tilgangsmaskin og sporingslogg.
+            For systemtoken: kun applikasjonsvalidering, ingen sporingslogg."""
     )
     @ResponseStatus(HttpStatus.OK)
     fun sjekkDeltakelse(@RequestBody deltakerIdent: DeltakerIdent): DeltakelseSjekk {
         val personIdent = PersonIdent.fra(deltakerIdent.ident)
+        val erSystemkall = tilgangskontrollService.erSystemBruker()
 
-        tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(
-            listOf(
-                "veilarboppfolging",
-                "azure-token-generator" // TODO: Fjern før merge til prod.
-            ),
-            personIdent
-        )
+        if (erSystemkall) {
+            tilgangskontrollService.krevSystemtilgang(GODKJENTE_APPLIKASJONER)
+        } else {
+            tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(
+                GODKJENTE_APPLIKASJONER,
+                personIdent
+            )
+        }
 
         return registerService.sjekkAktivDeltakelse(deltakerIdent.ident)
             .also {
-                sporingsloggService.logg(
-                    url = "/ekstern/deltakelse/sjekk",
-                    beskrivelse = "Sjekket om bruker er aktiv deltaker i ungdomsprogrammet",
-                    bruker = personIdent,
-                    eventClassId = EventClassId.AUDIT_ACCESS
-                )
+                if (!erSystemkall) {
+                    sporingsloggService.logg(
+                        url = "/ekstern/deltakelse/sjekk",
+                        beskrivelse = "Sjekket om bruker er aktiv deltaker i ungdomsprogrammet",
+                        bruker = personIdent,
+                        eventClassId = EventClassId.AUDIT_ACCESS
+                    )
+                }
             }
     }
 }

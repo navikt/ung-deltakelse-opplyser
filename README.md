@@ -156,15 +156,18 @@ For å kunne teste et endepunkt som krever innlogging, må man hente riktig toke
 ### Testing av `POST /ekstern/deltakelse/sjekk`
 
 #### Tilgangskrav
-Endepunktet krever et **Azure / Entra ID OBO-token** (On-Behalf-Of) med brukerkontekst. **Systemtoken / client credentials** blir avvist. I tillegg må claimen **`azp`** matche en godkjent ekstern klient, for eksempel `veilarboppfolging`.
+Endepunktet støtter **to token-typer**:
 
-Ved kall brukes **Tilgangsmaskin** til personautorisasjon. Det betyr at brukeren i tokenet både må komme via godkjent klient og faktisk ha tilgang til personen det spørres om.
+- **OBO-token** (veileder): Tilgangskontroll via **Tilgangsmaskin** (kode 6/7, egen ansatt, geografisk tilknytning). Sporingslogg skrives.
+- **Systemtoken / M2M** (maskin-til-maskin): Kun validering av kallende applikasjon (`azp`). Ingen sporingslogg (ingen NAVident).
+
+I begge tilfeller må claimen **`azp`** matche en godkjent ekstern klient, for eksempel `veilarboppfolging`.
 
 #### Praktisk i dev
-- Bruk et **OBO-token** for innlogget bruker når du tester endepunktet.
+- Bruk et **OBO-token** for å teste veileder-flyten, eller et **systemtoken** for å teste M2M-flyten.
 - Tokenet må ha korrekt **`azp`** for godkjent ekstern klient.
-- Hvis du tester med systemtoken, blir requesten avvist.
-- Selv med gyldig OBO-token kan kallet feile dersom **Tilgangsmaskin** ikke gir tilgang til personen.
+- Ved OBO: kallet kan feile dersom **Tilgangsmaskin** ikke gir tilgang til personen.
+- Ved systemtoken: kun applikasjonssjekk, ingen Tilgangsmaskin-validering.
 - `azure-token-generator` kan brukes **midlertidig for testing i dev**, men skal ikke være en varig eller produksjonsnær måte å hente token på.
 
 #### Henting av token i dev-gcp

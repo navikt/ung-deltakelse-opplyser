@@ -59,16 +59,58 @@ class EksternDeltakelseControllerTest {
 
     private val deltakerIdent = FødselsnummerGenerator.neste()
 
-    // ── systemtoken avvises ────────────────────────────────────────────────────
+    // ── systemtoken (M2M) ────────────────────────────────────────────────────
 
     @Test
-    fun `systemtoken avvises med 403`() {
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } throws
+    fun `systemtoken - bruker er aktiv deltaker og sporingslogg hoppes over`() {
+        every { tilgangskontrollService.erSystemBruker() } returns true
+        every { tilgangskontrollService.krevSystemtilgang(any()) } just runs
+        every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(
+            erDeltaker = true,
+            fraOgMed = LocalDate.of(2025, 1, 1),
+            tilOgMed = null
+        )
+
+        val response = testRestTemplate.exchange(
+            "/ekstern/deltakelse/sjekk",
+            HttpMethod.POST,
+            HttpEntity(DeltakerDTO(deltakerIdent = deltakerIdent), azureSystemToken()),
+            DeltakelseSjekk::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body!!.erDeltaker).isTrue()
+        assertThat(response.body!!.fraOgMed).isEqualTo(LocalDate.of(2025, 1, 1))
+        verify(exactly = 0) { sporingsloggService.logg(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `systemtoken - bruker er ikke deltaker`() {
+        every { tilgangskontrollService.erSystemBruker() } returns true
+        every { tilgangskontrollService.krevSystemtilgang(any()) } just runs
+        every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(erDeltaker = false)
+
+        val response = testRestTemplate.exchange(
+            "/ekstern/deltakelse/sjekk",
+            HttpMethod.POST,
+            HttpEntity(DeltakerDTO(deltakerIdent = deltakerIdent), azureSystemToken()),
+            DeltakelseSjekk::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body!!.erDeltaker).isFalse()
+        verify(exactly = 0) { sporingsloggService.logg(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `systemtoken fra ikke-godkjent app - gir 403`() {
+        every { tilgangskontrollService.erSystemBruker() } returns true
+        every { tilgangskontrollService.krevSystemtilgang(any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatusAndDetail(
                     HttpStatus.FORBIDDEN,
-                    "Endepunktet aksepterer ikke systemtoken (maskin-til-maskin). Bruk OBO-token."
+                    "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
                 ),
                 null
             )
@@ -87,6 +129,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token veileder - bruker er aktiv deltaker og sporingslogg kalles`() {
+        every { tilgangskontrollService.erSystemBruker() } returns false
         every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } just runs
         every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(
             erDeltaker = true,
@@ -112,6 +155,7 @@ class EksternDeltakelseControllerTest {
     @Test
     fun `OBO-token veileder - bruker er aktiv deltaker med fremtidig sluttdato`() {
         val fremtidigSluttdato = LocalDate.now().plusMonths(6)
+        every { tilgangskontrollService.erSystemBruker() } returns false
         every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } just runs
         every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(
             erDeltaker = true,
@@ -134,6 +178,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token veileder - bruker er ikke deltaker`() {
+        every { tilgangskontrollService.erSystemBruker() } returns false
         every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } just runs
         every { registerService.sjekkAktivDeltakelse(deltakerIdent) } returns DeltakelseSjekk(erDeltaker = false)
         every { sporingsloggService.logg(any(), any(), any(), any()) } just runs
@@ -154,6 +199,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token fra ikke-godkjent system - gir 403`() {
+        every { tilgangskontrollService.erSystemBruker() } returns false
         every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
@@ -176,6 +222,7 @@ class EksternDeltakelseControllerTest {
 
     @Test
     fun `OBO-token veileder uten tilgang - gir 403`() {
+        every { tilgangskontrollService.erSystemBruker() } returns false
         every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
