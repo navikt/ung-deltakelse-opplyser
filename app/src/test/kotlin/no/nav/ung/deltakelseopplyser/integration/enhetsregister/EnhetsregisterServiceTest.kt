@@ -12,12 +12,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.retry.ExhaustedRetryException
 import java.net.URI
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class EnhetsregisterServiceTest : AbstractIntegrationTest() {
 
     @Autowired
