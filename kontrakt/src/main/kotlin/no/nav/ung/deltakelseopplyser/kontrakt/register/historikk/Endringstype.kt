@@ -6,5 +6,6 @@ enum class Endringstype {
     ENDRET_STARTDATO,
     ENDRET_SLUTTDATO,
     DELTAKER_HAR_SØKT_YTELSE,
+    DELTAKELSE_FJERNET,
     UKJENT
 }

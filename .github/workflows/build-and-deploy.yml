@@ -21,7 +21,7 @@ jobs:
     uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@main
     with:
       java-version: 21
-      build-image: ${{ github.actor != 'dependabot[bot]' }}
+      build-image: true
       push-image: ${{ startsWith(github.ref, 'refs/heads/dev-') ||  github.ref_name == github.event.repository.default_branch }}
       upload-image: ${{ !startsWith(github.ref, 'refs/heads/dev-') &&  github.ref_name != github.event.repository.default_branch }}
       additional-tag: ${{ startsWith(github.ref, 'refs/heads/dev-') && 'latest-dev' }}
@@ -35,7 +35,6 @@ jobs:
       contents: read
       packages: read
     uses: navikt/sif-gha-workflows/.github/workflows/verdikjede-test-v2.yml@main
-    if: ${{github.actor != 'dependabot[bot]'}}
     needs: build-app
     with:
       tag: ${{ needs.build-app.outputs.build-version }}

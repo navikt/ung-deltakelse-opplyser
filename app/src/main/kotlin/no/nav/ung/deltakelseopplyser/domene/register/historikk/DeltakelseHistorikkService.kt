@@ -59,7 +59,9 @@ class DeltakelseHistorikkService(
                     endretStartdato = historikkEndring.endretStartdatoData,
                     deltakerMeldtUt = historikkEndring.deltakerMeldtUtData,
                     endretSluttdato = historikkEndring.endretSluttdatoData,
-                    søktTidspunktSatt = historikkEndring.søktTidspunktSatt
+                    søktTidspunktSatt = historikkEndring.søktTidspunktSatt,
+                    deltakelseFjernet = historikkEndring.deltakelseFjernetData
+
                 )
             }.also {
                 logger.info("Fant ${it.size} historikkoppføringer for deltakelse med id $id")

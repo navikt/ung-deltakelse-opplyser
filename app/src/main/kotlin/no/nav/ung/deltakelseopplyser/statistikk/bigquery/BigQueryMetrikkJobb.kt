@@ -1,13 +1,12 @@
 package no.nav.ung.deltakelseopplyser.statistikk.bigquery
 
+import no.nav.k9.felles.konfigurasjon.konfig.Tid.TIDENES_BEGYNNELSE
+import no.nav.ung.deltakelseopplyser.integration.leader.LeaderElectorService
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.AntallDeltakelserPerEnhetTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereIUngdomsprogrammetRecord
-import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakerePerOppgavetypeTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.AntallDeltakereTabell
 import no.nav.ung.deltakelseopplyser.statistikk.deltaker.DeltakerStatistikkService
-import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveStatistikkService
-import no.nav.ung.deltakelseopplyser.statistikk.oppgave.OppgaveSvartidTabell
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -17,9 +16,9 @@ import org.springframework.stereotype.Service
 @Profile(value = ["prod-gcp", "dev-gcp"])
 class BigQueryMetrikkJobb(
     val bigQueryClient: BigQueryClient,
-    val oppgaveStatistikkService: OppgaveStatistikkService,
     val deltakerStatistikkService: DeltakerStatistikkService,
     val deltakelseStatistikkService: DeltakelseStatistikkService,
+    val leaderElectorService: LeaderElectorService,
 ) {
 
     companion object {
@@ -30,24 +29,14 @@ class BigQueryMetrikkJobb(
     }
 
     /**
-     * Publiserer statistikk for oppgaver som har fått svar eller er eldre enn 14 dager.
-     */
-    @Scheduled(cron = CRON_JOBB_HVER_TIME)
-    fun publiserOppgaveSvartidStatistikk() {
-        val oppgaverMedSvarEllerEldreEnn14Dager = oppgaveStatistikkService.oppgaverMedSvarEllerEldreEnn14Dager()
-        bigQueryClient.publish(BIG_QUERY_DATASET, OppgaveSvartidTabell, oppgaverMedSvarEllerEldreEnn14Dager).also {
-            loggPublisering(
-                OppgaveSvartidTabell.tabellNavn,
-                oppgaverMedSvarEllerEldreEnn14Dager.size
-            )
-        }
-    }
-
-    /**
      * Publiserer statistikk for deltakere.
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserDeltakerStatistikk() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Denne instansen er ikke leder. Hopper over publisering av deltaker statistikk.")
+            return
+        }
         val antallDeltakereIUngdomsprogrammetRecord: AntallDeltakereIUngdomsprogrammetRecord =
             deltakerStatistikkService.antallDeltakereIUngdomsprogrammet()
         bigQueryClient.publish(
@@ -60,18 +49,6 @@ class BigQueryMetrikkJobb(
                 1 // Vi publiserer kun én rad for antall deltakere
             )
         }
-
-        val antallDeltakerePerOppgavetype = deltakerStatistikkService.antallDeltakerePerOppgavetype()
-        bigQueryClient.publish(
-            BIG_QUERY_DATASET,
-            AntallDeltakerePerOppgavetypeTabell,
-            antallDeltakerePerOppgavetype
-        ).also {
-            loggPublisering(
-                AntallDeltakereTabell.tabellNavn,
-                antallDeltakerePerOppgavetype.size
-            )
-        }
     }
 
     /**
@@ -79,6 +56,10 @@ class BigQueryMetrikkJobb(
      */
     @Scheduled(cron = CRON_JOBB_HVER_TIME)
     fun publiserDeltakelseStatistikk() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Denne instansen er ikke leder. Hopper over publisering av deltakelse statistikk.")
+            return
+        }
         val antallDeltakelserPerEnhetStatistikk = deltakelseStatistikkService.antallDeltakelserPerEnhetStatistikk()
         bigQueryClient.publish(BIG_QUERY_DATASET, AntallDeltakelserPerEnhetTabell, antallDeltakelserPerEnhetStatistikk)
             .also {

@@ -83,6 +83,10 @@
 
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.nav.no/ung/sak",
     "UNG_SAK_AZURE_SCOPE": "api://prod-gcp.k9saksbehandling.ung-sak/.default",
+    "UNG_SAK_AUDIENCE": "prod-gcp:k9saksbehandling:ung-sak",
+
+    "NO_NAV_GATEWAYS_UNG_BRUKERDIALOG_API": "https://ung-brukerdialog-api.intern.nav.no/ung/brukerdialog",
+    "UNG_BRUKERDIALOG_API_AZURE_SCOPE": "api://prod-gcp.k9saksbehandling.ung-brukerdialog-api/.default",
 
     "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api",
     "SIF_ABAC_PDP_AZURE_SCOPE": "api://prod-gcp.k9saksbehandling.sif-abac-pdp/.default",
@@ -102,6 +106,11 @@
 
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/v2.0",
+
+
+    "SLETT_SOKT_DELTAKELSE_ENABLED": false,
+
+    "FLYWAY_REPAIR_ON_FAIL": false,
 
     "PROSESSERING_UNG_DRIFT_ROLLE": "873ae729-e918-4f35-9a26-652ca994b9c3"
   }

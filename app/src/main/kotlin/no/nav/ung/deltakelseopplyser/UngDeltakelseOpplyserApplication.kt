@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableTransactionManagement
 @SpringBootApplication
 @EnableRetry
-@EnableScheduling
 class UngDeltakelseOpplyserApplication
 
 fun main(args: Array<String>) {

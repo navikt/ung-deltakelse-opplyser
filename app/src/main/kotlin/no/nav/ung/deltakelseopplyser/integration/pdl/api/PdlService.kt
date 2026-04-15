@@ -41,7 +41,9 @@ class PdlService(
     }
 
     fun hentIdenter(ident: String): Identliste = runBlocking {
+        logger.info("Henter identer fra PDL.")
         val response = pdlClient.execute(HentIdent(HentIdent.Variables(ident)))
+        logger.info("Ferdig å hente identer fra PDL.")
 
         if (!response.extensions.isNullOrEmpty()) logger.info("PDL response extensions: ${response.extensions}")
 

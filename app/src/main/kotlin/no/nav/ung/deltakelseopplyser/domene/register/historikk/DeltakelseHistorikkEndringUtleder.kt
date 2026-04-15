@@ -26,6 +26,7 @@ object DeltakelseHistorikkEndringUtleder {
         val nåværendeSluttdato = nåværendeDeltakelseRevisjon.getTom()
         val deltakerMeldtUt = forrigeSluttdato == null && nåværendeSluttdato != null
         val sluttdatoErEndret = forrigeSluttdato != null && forrigeSluttdato != nåværendeSluttdato
+        val deltakelseErFjernet = nåværendeDeltakelseRevisjon.erSlettet && forrigeDeltakelseRevisjon?.erSlettet != true
 
         val soktTidspunktErEndret =
             forrigeDeltakelseRevisjon?.søktTidspunkt != nåværendeDeltakelseRevisjon.søktTidspunkt
@@ -35,7 +36,8 @@ object DeltakelseHistorikkEndringUtleder {
             "startdato".takeIf { startdatoErEndret },
             "sluttdatoSatt".takeIf { deltakerMeldtUt },
             "sluttdatoEndret".takeIf { sluttdatoErEndret },
-            "søktTidspunkt".takeIf { soktTidspunktErEndret }
+            "søktTidspunkt".takeIf { soktTidspunktErEndret },
+            "deltakelseFjernet".takeIf { deltakelseErFjernet }
         )
 
         håndterFlereEndringerISammeRevisjon(endredeFelter, nåværendeDeltakelseRevisjon.id)
@@ -46,7 +48,8 @@ object DeltakelseHistorikkEndringUtleder {
                 startdatoErEndret,
                 deltakerMeldtUt,
                 sluttdatoErEndret,
-                soktTidspunktErEndret
+                soktTidspunktErEndret,
+                deltakelseErFjernet
             ),
 
             endretStartdatoData = utledEndretStartdatoHistorikkDTO(
@@ -63,7 +66,12 @@ object DeltakelseHistorikkEndringUtleder {
                 nåværendeDeltakelseRevisjon
             ),
 
-            søktTidspunktSatt = utledSøktTidspunktHistorikkDTO(soktTidspunktErEndret, nåværendeDeltakelseRevisjon)
+            søktTidspunktSatt = utledSøktTidspunktHistorikkDTO(soktTidspunktErEndret, nåværendeDeltakelseRevisjon),
+
+            deltakelseFjernetData = if (deltakelseErFjernet) DeltakelseFjernetHistorikk(
+                forrigeStartdato = forrigeDeltakelseRevisjon!!.getFom(),
+                forrigeSluttdato = forrigeSluttdato
+            ) else null
         )
     }
 
@@ -124,6 +132,7 @@ object DeltakelseHistorikkEndringUtleder {
         deltakerMeldtUt: Boolean,
         sluttdatoErEndret: Boolean,
         soktTidspunktErEndret: Boolean,
+        deltakelseErFjernet: Boolean,
     ) = when {
         // Dersom vi ikke har en tidligere revisjon, betyr det at dette er den første revisjonen for deltakelsen.
         // Vi tolker dette som at deltakelsen er opprettet og at deltakeren er meldt inn i programmet.
@@ -132,6 +141,7 @@ object DeltakelseHistorikkEndringUtleder {
         deltakerMeldtUt -> Endringstype.DELTAKER_MELDT_UT
         sluttdatoErEndret -> Endringstype.ENDRET_SLUTTDATO
         soktTidspunktErEndret -> Endringstype.DELTAKER_HAR_SØKT_YTELSE
+        deltakelseErFjernet -> Endringstype.DELTAKELSE_FJERNET
         else -> Endringstype.UKJENT
     }
 
@@ -149,5 +159,6 @@ object DeltakelseHistorikkEndringUtleder {
         val deltakerMeldtUtData: DeltakerMeldtUtHistorikk?,
         val endretSluttdatoData: EndretSluttdatoHistorikk?,
         val søktTidspunktSatt: SøktTidspunktHistorikk?,
+        val deltakelseFjernetData: DeltakelseFjernetHistorikk?,
     )
 }

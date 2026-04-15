@@ -4,7 +4,6 @@ import no.nav.pdl.generated.hentperson.Foedselsdato
 import no.nav.pdl.generated.hentperson.Person
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.person.PersonIdent
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
@@ -85,17 +84,6 @@ class DeltakerService(
         return deltakerRepository.save(deltaker)
     }
 
-    fun hentDeltakersOppgaver(deltakerIdentEllerAktørId: String): List<OppgaveDAO> {
-        logger.info("Henter deltakers oppgaver")
-        val oppgaver = hentDeltakere(deltakerIdentEllerAktørId).flatMap { it.oppgaver }
-        logger.info("Fant ${oppgaver.size} oppgaver for deltaker.")
-        return oppgaver
-    }
-
-    fun finnDeltakerGittOppgaveReferanse(oppgaveReferanse: UUID): DeltakerDAO? {
-        return deltakerRepository.finnDeltakerGittOppgaveReferanse(oppgaveReferanse)
-    }
-
     private fun hentDeltakerInfoMedId(id: UUID): DeltakerPersonalia {
         val deltakerDAO = deltakerRepository.findById(id).orElseThrow {
             ErrorResponseException(
@@ -140,6 +128,7 @@ class DeltakerService(
 
     private fun hentDeltakere(deltakerIdentEllerAktørId: String): List<DeltakerDAO> {
         val identer = pdlService.hentFolkeregisteridenter(ident = deltakerIdentEllerAktørId).map { it.ident }
+        logger.info("Fant ${identer.size} deltaker for deltaker. Finner deltaker for identer.")
         return deltakerRepository.finnDeltakerGittIdenter(identer)
     }
 

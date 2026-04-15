@@ -8,10 +8,8 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.config.Issuers.TOKEN_X
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.utils.personIdent
 import org.springframework.http.HttpStatus
@@ -40,24 +38,46 @@ import java.util.*
 class UngdomsprogramRegisterDeltakerController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakerService: DeltakerService,
-    private val oppgaveService: OppgaveService,
-    private val oppgaveMapperService: OppgaveMapperService,
     private val tokenValidationContextHolder: SpringTokenValidationContextHolder,
 ) {
 
+    @Deprecated("Bruk /hent/alle/v2 som returnerer DeltakelseDTO. Oppgaver håndteres nå i ung-brukerdialog-api.")
     @GetMapping("/hent/alle", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet")
+    @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet (deprecated – bruk /hent/alle/v2)")
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleMineDeltakelser(): List<DeltakelseKomposittDTO> {
         val personIdent = tokenValidationContextHolder.personIdent()
-        return registerService.hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId = personIdent)
+        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = personIdent)
+            .map { DeltakelseKomposittDTO(deltakelse = it) }
     }
 
+    @GetMapping("/hent/alle/v2", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Henter alle deltakelser for en deltaker i ungdomsprogrammet")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentAlleMineDeltakelserV2(): List<DeltakelseDTO> {
+        val personIdent = tokenValidationContextHolder.personIdent()
+        return registerService.hentAlleForDeltaker(deltakerIdentEllerAktørId = personIdent)
+    }
+
+    @Deprecated("Bruk /{id}/marker-har-sokt/v2 som returnerer DeltakelseDTO. Oppgaver håndteres nå i ung-brukerdialog-api.")
     @PutMapping("/{id}/marker-har-sokt", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Markerer at deltakelsen er søkt om")
+    @Operation(summary = "Markerer at deltakelsen er søkt om (deprecated – bruk /{id}/marker-har-sokt/v2)")
     @ResponseStatus(HttpStatus.OK)
     @Transactional(TRANSACTION_MANAGER)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID): DeltakelseKomposittDTO {
+        val deltakelseDTO = markerOgValider(id)
+        return DeltakelseKomposittDTO(deltakelse = deltakelseDTO)
+    }
+
+    @PutMapping("/{id}/marker-har-sokt/v2", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Markerer at deltakelsen er søkt om")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional(TRANSACTION_MANAGER)
+    fun markerDeltakelseSomSøktV2(@PathVariable id: UUID): DeltakelseDTO {
+        return markerOgValider(id)
+    }
+
+    private fun markerOgValider(id: UUID): DeltakelseDTO {
         val alleDeltakersIdenter = deltakerService.hentDeltakterIdenter(tokenValidationContextHolder.personIdent())
         val personPåDeltakelsen = registerService.hentFraProgram(id).deltaker.deltakerIdent
         if (!alleDeltakersIdenter.contains(personPåDeltakelsen)) {
@@ -67,55 +87,6 @@ class UngdomsprogramRegisterDeltakerController(
                 null
             )
         }
-
-        val deltakelseDTO = registerService.markerSomHarSøkt(id)
-        return DeltakelseKomposittDTO(
-            deltakelse = deltakelseDTO,
-            oppgaver = deltakerService.hentDeltakersOppgaver(personPåDeltakelsen)
-                .map { oppgaveMapperService.mapOppgaveTilDTO(it) }
-        )
-    }
-
-    @GetMapping("/oppgave/{oppgaveReferanse}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Henter en oppgave for en gitt deltakelse")
-    @ResponseStatus(HttpStatus.OK)
-    fun hentDeltakersOppgave(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        val personIdent = tokenValidationContextHolder.personIdent()
-        val oppgaveDAO = deltakerService.hentDeltakersOppgaver(personIdent)
-            .find { it.oppgaveReferanse == oppgaveReferanse } ?: throw ErrorResponseException(
-            HttpStatus.NOT_FOUND,
-            ProblemDetail.forStatusAndDetail(
-                HttpStatus.NOT_FOUND,
-                "Fant ingen oppgave med referanse $oppgaveReferanse for deltaker."
-            ),
-            null
-        )
-
-        return oppgaveMapperService.mapOppgaveTilDTO(oppgaveDAO)
-    }
-
-    @GetMapping("/oppgave/{oppgaveReferanse}/lukk", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Markerer en oppgave som lukket")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional(TRANSACTION_MANAGER)
-    fun markerOppgaveSomLukket(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-
-        return oppgaveService.lukkOppgave(oppgaveReferanse = oppgaveReferanse)
-    }
-
-    @GetMapping("/oppgave/{oppgaveReferanse}/apnet", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Markerer en oppgave som åpnet")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional(TRANSACTION_MANAGER)
-    fun markerOppgaveSomÅpnet(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        return oppgaveService.åpneOppgave(oppgaveReferanse = oppgaveReferanse)
-    }
-
-    @GetMapping("/oppgave/{oppgaveReferanse}/løst", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Markerer en oppgave som åpnet")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional(TRANSACTION_MANAGER)
-    fun markerOppgaveSomLøst(@PathVariable oppgaveReferanse: UUID): OppgaveDTO {
-        return oppgaveService.løsOppgave(oppgaveReferanse = oppgaveReferanse)
+        return registerService.markerSomHarSøkt(id)
     }
 }

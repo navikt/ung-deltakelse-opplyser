@@ -49,6 +49,11 @@
       "cluster": "dev-gcp"
     },
     {
+      "app": "aktivitetspenger-soknad",
+      "namespace": "dusseldorf",
+      "cluster": "dev-gcp"
+    },
+    {
       "app": "k9-brukerdialog-prosessering",
       "namespace": "dusseldorf",
       "cluster": "dev-gcp"
@@ -92,6 +97,10 @@
 
     "NO_NAV_GATEWAYS_UNG_SAK": "https://ung-sak.intern.dev.nav.no/ung/sak",
     "UNG_SAK_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.ung-sak/.default",
+    "UNG_SAK_AUDIENCE": "dev-gcp:k9saksbehandling:ung-sak",
+
+    "NO_NAV_GATEWAYS_UNG_BRUKERDIALOG_API": "https://ung-brukerdialog-api.intern.dev.nav.no/ung/brukerdialog",
+    "UNG_BRUKERDIALOG_API_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.ung-brukerdialog-api/.default",
 
     "NO_NAV_GATEWAYS_SIF_ABAC_PDP": "http://sif-abac-pdp/sif/sif-abac-pdp/api",
     "SIF_ABAC_PDP_AZURE_SCOPE": "api://dev-gcp.k9saksbehandling.sif-abac-pdp/.default",
@@ -111,6 +120,11 @@
 
     "SWAGGER_ENABLED": "true",
     "AZURE_LOGIN_URL": "https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/v2.0",
+
+
+    "SLETT_SOKT_DELTAKELSE_ENABLED": true,
+
+    "FLYWAY_REPAIR_ON_FAIL": false,
 
     "PROSESSERING_UNG_DRIFT_ROLLE": "0d0da462-c300-43d9-8364-38a0a8cf2401"
   }

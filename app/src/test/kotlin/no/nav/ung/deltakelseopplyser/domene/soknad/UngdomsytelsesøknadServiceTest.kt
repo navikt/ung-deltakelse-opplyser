@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.soknad
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import io.mockk.justRun
 import no.nav.k9.søknad.Søknad
 import no.nav.k9.søknad.felles.Kildesystem
 import no.nav.k9.søknad.felles.personopplysninger.Søker
@@ -14,6 +15,7 @@ import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
@@ -22,21 +24,20 @@ import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.enhetsregisteret.EnhetsregisterService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
+import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
+import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.Oppgavetype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilNotNull
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 class UngdomsytelsesøknadServiceTest : AbstractIntegrationTest() {
 
@@ -50,10 +51,19 @@ class UngdomsytelsesøknadServiceTest : AbstractIntegrationTest() {
     lateinit var ungSakService: UngSakService
 
     @MockkBean
+    lateinit var ungBrukerdialogService: UngBrukerdialogService
+
+    @MockkBean
     lateinit var kontoregisterService: KontoregisterService
 
     @MockkBean
     lateinit var enhetsregisterService: EnhetsregisterService
+
+    @MockkBean(relaxed = true)
+    lateinit var nomApiService: NomApiService
+
+    @MockkBean
+    lateinit var mineSiderService: MineSiderService
 
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
@@ -70,21 +80,24 @@ class UngdomsytelsesøknadServiceTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var deltakerService: DeltakerService
 
+    @BeforeAll
+    fun beforeAll() {
+        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
+        every { ungBrukerdialogService.opprettSøkYtelseOppgave(any()) } returns true
+    }
+
     @Test
-    fun `Forventer at søknad markerer deltakelsen som søkt og oppgaven løses`() {
+    fun `Forventer at søknad markerer deltakelsen som søkt`() {
         val søkerIdent = FødselsnummerGenerator.neste()
         val deltakelseStart = "2024-11-04"
+        val søknadId = UUID.randomUUID().toString()
 
         mockPdlIdent(søkerIdent, IdentGruppe.FOLKEREGISTERIDENT)
         val deltakelseDTO = meldInnIProgrammet(søkerIdent, deltakelseStart)
 
-        val sendSøknadOppgave = await.atMost(5, TimeUnit.SECONDS).untilNotNull {
-            deltakerService.hentDeltakersOppgaver(søkerIdent).find { it.oppgavetype == Oppgavetype.SØK_YTELSE }
-        }
-
         ungdomsytelsesøknadService.håndterMottattSøknad(
             ungdomsytelsesøknad = lagUngdomsytelseSøknad(
-                søknadId = sendSøknadOppgave.oppgaveReferanse.toString(),
+                søknadId = søknadId,
                 deltakelseId = deltakelseDTO.id!!,
                 søkerIdent = søkerIdent,
                 deltakelseStart = deltakelseStart
@@ -155,6 +168,13 @@ class UngdomsytelsesøknadServiceTest : AbstractIntegrationTest() {
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(pdlPerson)
         every { pdlService.hentPerson(any()) } returns Scenarioer
             .lagPerson(LocalDate.of(2000, 1, 1))
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon(
+                "123456789",
+                false,
+                IdentGruppe.AKTORID
+            )
+        )
 
     }
 

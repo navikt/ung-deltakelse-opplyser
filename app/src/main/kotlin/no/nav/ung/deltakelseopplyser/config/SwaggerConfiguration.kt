@@ -54,12 +54,12 @@ class SwaggerConfiguration(
     }
 
     @Bean
-    fun diagnostikkOpenApi(): GroupedOpenApi {
+    fun driftOpenApi(): GroupedOpenApi {
         val packagesToscan = arrayOf(
-            "no.nav.ung.deltakelseopplyser.diagnostikk",
+            "no.nav.ung.deltakelseopplyser.drift",
         )
         return GroupedOpenApi.builder()
-            .group("diagnostikk").packagesToScan(*packagesToscan)
+            .group("drift").packagesToScan(*packagesToscan)
             .build()
     }
 

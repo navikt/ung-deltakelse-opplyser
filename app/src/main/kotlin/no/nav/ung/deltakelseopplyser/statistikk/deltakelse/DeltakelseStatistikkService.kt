@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.statistikk.deltakelse
 
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseVeilederEnhetService
 import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
 import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
@@ -14,6 +15,7 @@ import java.time.ZonedDateTime
 class DeltakelseStatistikkService(
     private val deltakelseRepository: DeltakelseRepository,
     private val nomApiService: NomApiService,
+    private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
     private val deltakelsePerEnhetStatistikkTeller: DeltakelsePerEnhetStatistikkTeller = DeltakelsePerEnhetStatistikkTeller()
 ) {
     private companion object {
@@ -26,7 +28,6 @@ class DeltakelseStatistikkService(
         val alleDeltakelser: List<DeltakelseDAO> = deltakelseRepository.findAll()
         logger.info("Henter enheter for {} deltakelser", alleDeltakelser.size)
 
-        // Konverter til input-format for beregner
         val deltakelseInputs = alleDeltakelser.map { deltakelse ->
             DeltakelseInput(
                 id = deltakelse.id,
@@ -35,29 +36,78 @@ class DeltakelseStatistikkService(
             )
         }
 
-        // Hent alle unike navIdenter fra deltakelsene
-        val navIdenter = deltakelseInputs
-            .map { it.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
-            .toSet()
+        // Primærkilde: koblingstabellen (point-in-time snapshot av veileder→enhet)
+        val enhetKoblinger = deltakelseVeilederEnhetService
+            .hentEnhetNavnForDeltakelser(deltakelseInputs.map { it.id })
 
-        logger.info("Fant {} unike NAV-identer", navIdenter.size)
+        val (medKobling, utenKobling) = deltakelseInputs.partition { it.id in enhetKoblinger }
 
-        // Hent alle tilknytninger fra NOM API (ufiltrert med periodeinformasjon)
-        // Vi henter ufiltrerte data slik at periodefiltrering kan skje i beregner og testes
-        val ressurserMedAlleTilknytninger: List<RessursMedAlleTilknytninger> = nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
-
-        val deltakelsePerEnhetResultat = deltakelsePerEnhetStatistikkTeller.tellAntallDeltakelserPerEnhet(
-            deltakelser = deltakelseInputs,
-            ressurserMedTilknytninger = ressurserMedAlleTilknytninger
+        logger.info(
+            "Koblingstabellen dekker {} av {} deltakelser. {} krever NOM-oppslag.",
+            medKobling.size, deltakelseInputs.size, utenKobling.size
         )
 
-        // Konverter til statistikk-records
-        val statistikkRecords = deltakelsePerEnhetResultat.deltakelserPerEnhet.map { (enhetsNavn, antallDeltakelser) ->
+        // Deltakelser med kobling → bruk enhetNavn direkte
+        val deltakelserPerEnhetFraKobling: Map<String, Int> = medKobling
+            .map { enhetKoblinger[it.id]!! }
+            .groupingBy { it }
+            .eachCount()
+
+        // Deltakelser uten kobling → fallback til NOM-basert logikk
+        var deltakelserPerEnhetFraNom: Map<String, Int> = emptyMap()
+        var nomDiagnostikk: Map<Any, Any?> = emptyMap()
+
+        if (utenKobling.isNotEmpty()) {
+            val navIdenter = utenKobling
+                .map { it.opprettetAv.replace(VEILEDER_SUFFIX, "").trim() }
+                .toSet()
+
+            logger.info("Henter NOM-data for {} unike NAV-identer (deltakelser uten kobling)", navIdenter.size)
+            val ressurserMedAlleTilknytninger: List<RessursMedAlleTilknytninger> =
+                nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
+
+            logger.info(
+                "NOM returnerte {} ressurser for {} etterspurte identer",
+                ressurserMedAlleTilknytninger.size, navIdenter.size
+            )
+
+            val nomResultat = deltakelsePerEnhetStatistikkTeller.tellAntallDeltakelserPerEnhet(
+                deltakelser = utenKobling,
+                ressurserMedTilknytninger = ressurserMedAlleTilknytninger
+            )
+            deltakelserPerEnhetFraNom = nomResultat.deltakelserPerEnhet
+            nomDiagnostikk = nomResultat.diagnostikk
+        }
+
+        // Slå sammen resultatene fra kobling og NOM
+        val samletDeltakelserPerEnhet = mutableMapOf<String, Int>()
+        deltakelserPerEnhetFraKobling.forEach { (enhet, antall) ->
+            samletDeltakelserPerEnhet.merge(enhet, antall, Int::plus)
+        }
+        deltakelserPerEnhetFraNom.forEach { (enhet, antall) ->
+            samletDeltakelserPerEnhet.merge(enhet, antall, Int::plus)
+        }
+
+        // Logg endelig fordeling for feilsøking
+        val fordeling = samletDeltakelserPerEnhet.entries
+            .sortedByDescending { it.value }
+            .joinToString { "${it.key}: ${it.value}" }
+        logger.info("Statistikk-resultat fordeling: [{}]", fordeling)
+
+        @Suppress("UNCHECKED_CAST")
+        val diagnostikk = mapOf<Any, Any?>(
+            "antallMedKobling" to medKobling.size,
+            "antallUtenKobling" to utenKobling.size,
+            "totalAntallDeltakelser" to deltakelseInputs.size,
+            "nomDiagnostikk" to nomDiagnostikk,
+        )
+
+        val statistikkRecords = samletDeltakelserPerEnhet.map { (enhetsNavn, antallDeltakelser) ->
             AntallDeltakelsePerEnhetStatistikkRecord(
                 kontor = enhetsNavn,
                 antallDeltakelser = antallDeltakelser,
                 opprettetTidspunkt = kjøringstidspunkt,
-                diagnostikk = deltakelsePerEnhetResultat.diagnostikk
+                diagnostikk = diagnostikk
             )
         }
 
@@ -73,9 +123,15 @@ class DeltakelseStatistikkService(
     ) {
         val totalAntallDeltakelserStatistikk = statistikkRecords.sumOf { it.antallDeltakelser }
         if (kastFeilVedInkonsekventTelling && totalAntallDeltakelserStatistikk != alleDeltakelser.size) {
-            throw IllegalStateException("Inkonsekvent telling: Total antall deltakelser i statistikk (${totalAntallDeltakelserStatistikk}) stemmer ikke overens med totalt antall deltakelser (${alleDeltakelser.size})")
+            throw IllegalStateException(
+                "Inkonsekvent telling: Total antall deltakelser i statistikk ($totalAntallDeltakelserStatistikk) " +
+                        "stemmer ikke overens med totalt antall deltakelser (${alleDeltakelser.size})"
+            )
         } else {
-            logger.info("Verifisert at total antall deltakelser i statistikk (${totalAntallDeltakelserStatistikk}) stemmer overens med totalt antall deltakelser for enhetene (${alleDeltakelser.size})")
+            logger.info(
+                "Verifisert konsekvent telling: {} deltakelser i statistikk = {} totalt",
+                totalAntallDeltakelserStatistikk, alleDeltakelser.size
+            )
         }
     }
 }

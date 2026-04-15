@@ -47,6 +47,35 @@ Andre applikasjoner i SiF-porteføljen bør gjøre selvstendige vurderinger om H
 
 # 6. Data
 
+## Statistikk: Deltakelser per enhet
+
+Tjenesten publiserer statistikk over antall deltakelser per NAV-enhet til BigQuery. Hver deltakelse mappes til enheten som veilederen (som opprettet deltakelsen) tilhørte på opprettelsestidspunktet.
+
+### Koblingstabell (primærkilde)
+
+Når en deltakelse opprettes, lagres veilederens enhet i en koblingstabell (`deltakelse_veileder_enhet`) som et point-in-time snapshot. Dette gjør statistikken uavhengig av fremtidige endringer i NOM — f.eks. at veilederen bytter enhet eller slutter i NAV.
+
+For historiske deltakelser (opprettet før koblingstabellen) kan man kjøre backfill via diagnostikk-endepunktet `POST /diagnostikk/backfill/deltakelse-veileder-enhet`. Deltakelser der backfill feiler (f.eks. veileder har sluttet og har tom `orgTilknytning`) kan korrigeres manuelt via `PUT /diagnostikk/deltakelse-veileder-enhet/{deltakelseId}`.
+
+### NOM-fallback (sekundærkilde)
+
+Deltakelser som ikke finnes i koblingstabellen faller tilbake til oppslag mot [NOM API](https://nom.nav.no/). To strategier brukes i prioritert rekkefølge:
+
+1. **Eksakt match**: Veilederens tilknytning og enheten må begge være gyldige på opprettelsesdatoen.
+2. **Nærmeste tilknytning**: Velger tilknytningen med korteste absolutte avstand til datoen. Dekker gap ved enhetsbytte og sen NOM-registrering.
+
+### "Enhet sikkerhetsnett"
+
+Deltakelser som ikke kan mappes til en enhet — verken via koblingstabell eller NOM — telles under kategorien **"Enhet sikkerhetsnett"**. Dette sikrer at summen av alle enheter alltid er lik det totale antallet deltakelser.
+
+| Årsak | Forklaring |
+|-------|-----------|
+| **Ingen kobling og ressurs ikke funnet i NOM** | Veilederens NAV-ident finnes ikke i NOM API. Kan skyldes at veilederen har sluttet. |
+| **Ingen kobling og tom orgTilknytning** | Veilederen finnes i NOM, men har ingen tilknytninger (har sluttet). |
+
+Et høyt antall "Enhet sikkerhetsnett" kan løses ved å kjøre backfill og/eller bruke PUT-endepunktet for manuell korrigering.
+
+
 # 7. Infrastrukturarkitektur
 
 ## System Context Diagram
