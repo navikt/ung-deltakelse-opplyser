@@ -1,6 +1,8 @@
+CREATE SEQUENCE IF NOT EXISTS task_seq INCREMENT BY 50;
+
 CREATE TABLE IF NOT EXISTS task
 (
-    id            BIGSERIAL PRIMARY KEY,
+    id            BIGINT       DEFAULT nextval('task_seq') PRIMARY KEY,
     payload       VARCHAR                                              NOT NULL,
     status        VARCHAR(20)  DEFAULT 'UBEHANDLET'::CHARACTER VARYING NOT NULL,
     versjon       BIGINT       DEFAULT 0,
@@ -11,7 +13,6 @@ CREATE TABLE IF NOT EXISTS task
     avvikstype    VARCHAR
 );
 
-CREATE SEQUENCE IF NOT EXISTS task_seq INCREMENT BY 50;
 CREATE UNIQUE INDEX IF NOT EXISTS task_payload_type_idx ON task (payload, TYPE);
 CREATE INDEX IF NOT EXISTS task_status_idx ON task (STATUS);
 
