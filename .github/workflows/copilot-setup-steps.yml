@@ -15,11 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup java and maven
-        uses: navikt/sif-gha-workflows/.github/actions/maven/setup-java-and-maven@main
+      - uses: actions/setup-java@v4
         with:
-          github-token: ${{ secrets.READER_TOKEN }}
+          distribution: temurin
           java-version: '21'
 
       - name: Resolve Maven dependencies
-        run: mvn clean install -DskipTests -s settings.xml --file pom.xml
+        run: mvn clean install -DskipTests --settings ./.github/.m2/settings.xml --file pom.xml
+        env:
+          GH_ACCESS_TOKEN: ${{ secrets.READER_TOKEN }}
