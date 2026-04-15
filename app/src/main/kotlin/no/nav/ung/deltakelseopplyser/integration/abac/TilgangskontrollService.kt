@@ -13,6 +13,7 @@ import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinBeslutning
 import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinService
+import no.nav.ung.deltakelseopplyser.config.Issuers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -137,7 +138,7 @@ class TilgangskontrollService(
 
     fun erSystemBruker(): Boolean {
         val jwt = hentTokenForInnloggetBruker()
-        val azureIssuer = multiIssuerConfiguration.issuers["azure"]?.metadata?.issuer?.value
+        val azureIssuer = multiIssuerConfiguration.issuers[Issuers.AZURE]?.metadata?.issuer?.value
         val erAzureToken = azureIssuer != null && jwt.issuer == azureIssuer
         val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
         return erAzureToken && erClientCredentials
