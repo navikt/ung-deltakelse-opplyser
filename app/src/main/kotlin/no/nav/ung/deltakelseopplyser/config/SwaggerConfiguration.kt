@@ -57,6 +57,7 @@ class SwaggerConfiguration(
     fun driftOpenApi(): GroupedOpenApi {
         val packagesToscan = arrayOf(
             "no.nav.ung.deltakelseopplyser.drift",
+            "no.nav.familie.prosessering" // Drift av tasker
         )
         return GroupedOpenApi.builder()
             .group("drift").packagesToScan(*packagesToscan)
