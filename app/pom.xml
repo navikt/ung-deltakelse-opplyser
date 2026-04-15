@@ -433,7 +433,7 @@
 
     <repositories>
         <repository>
-            <id>github-familie-felles</id>
+            <id>github</id>
             <url>https://maven.pkg.github.com/navikt/familie-felles</url>
         </repository>
         <repository>
