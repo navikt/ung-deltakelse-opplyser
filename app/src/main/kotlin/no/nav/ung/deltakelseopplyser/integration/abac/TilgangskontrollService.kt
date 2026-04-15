@@ -11,6 +11,7 @@ import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
 import no.nav.sif.abac.kontrakt.abac.resultat.IkkeTilgangÅrsak
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
+import no.nav.ung.deltakelseopplyser.config.Issuers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -91,7 +92,7 @@ class TilgangskontrollService(
 
     fun erSystemBruker(): Boolean {
         val jwt = hentTokenForInnloggetBruker()
-        val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers["azure"]!!.metadata.issuer.value
+        val erAzureToken = jwt.issuer == multiIssuerConfiguration.issuers[Issuers.AZURE]!!.metadata.issuer.value
         val erClientCredentials = jwt.jwtTokenClaims.getStringClaim("idtyp") == "app"
         return erAzureToken && erClientCredentials
     }
