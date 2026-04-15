@@ -4,7 +4,7 @@ import no.nav.familie.prosessering.internal.TaskService
 import no.nav.tms.microfrontend.Sensitivitet
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
-import no.nav.ung.deltakelseopplyser.domene.minside.AktiverMikrofrontendMinSideTask
+import no.nav.ung.deltakelseopplyser.domene.minside.task.AktiverMikrofrontendMinSideTask
 import org.springframework.stereotype.Service
 
 @Service

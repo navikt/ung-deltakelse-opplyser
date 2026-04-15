@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.domene.minside
+package no.nav.ung.deltakelseopplyser.domene.minside.task
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.instrumentation.annotations.WithSpan
@@ -7,11 +7,12 @@ import no.nav.familie.prosessering.TaskStepBeskrivelse
 import no.nav.familie.prosessering.domene.Task
 import no.nav.tms.microfrontend.Sensitivitet
 import no.nav.ung.deltakelseopplyser.config.JacksonConfiguration
+import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Properties
 
 @Service
 @TaskStepBeskrivelse(
