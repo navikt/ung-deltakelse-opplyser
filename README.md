@@ -49,29 +49,31 @@ Andre applikasjoner i SiF-porteføljen bør gjøre selvstendige vurderinger om H
 
 ## Statistikk: Deltakelser per enhet
 
-Tjenesten publiserer statistikk over antall deltakelser per NAV-enhet til BigQuery. Hver deltakelse mappes til enheten som veilederen (som opprettet deltakelsen) tilhørte på opprettelsestidspunktet, basert på data fra [NOM API](https://nom.nav.no/).
+Tjenesten publiserer statistikk over antall deltakelser per NAV-enhet til BigQuery. Hver deltakelse mappes til enheten som veilederen (som opprettet deltakelsen) tilhørte på opprettelsestidspunktet.
+
+### Koblingstabell (primærkilde)
+
+Når en deltakelse opprettes, lagres veilederens enhet i en koblingstabell (`deltakelse_veileder_enhet`) som et point-in-time snapshot. Dette gjør statistikken uavhengig av fremtidige endringer i NOM — f.eks. at veilederen bytter enhet eller slutter i NAV.
+
+For historiske deltakelser (opprettet før koblingstabellen) kan man kjøre backfill via diagnostikk-endepunktet `POST /diagnostikk/backfill/deltakelse-veileder-enhet`. Deltakelser der backfill feiler (f.eks. veileder har sluttet og har tom `orgTilknytning`) kan korrigeres manuelt via `PUT /diagnostikk/deltakelse-veileder-enhet/{deltakelseId}`.
+
+### NOM-fallback (sekundærkilde)
+
+Deltakelser som ikke finnes i koblingstabellen faller tilbake til oppslag mot [NOM API](https://nom.nav.no/). To strategier brukes i prioritert rekkefølge:
+
+1. **Eksakt match**: Veilederens tilknytning og enheten må begge være gyldige på opprettelsesdatoen.
+2. **Nærmeste tilknytning**: Velger tilknytningen med korteste absolutte avstand til datoen. Dekker gap ved enhetsbytte og sen NOM-registrering.
 
 ### "Enhet sikkerhetsnett"
 
-Noen deltakelser kan ikke mappes til en spesifikk enhet. Disse telles under kategorien **"Enhet sikkerhetsnett"** i stedet for å bli droppet fra tellingen. Dette sikrer at summen av alle enheter alltid er lik det totale antallet deltakelser.
-
-Årsaker til at en deltakelse havner under "Enhet sikkerhetsnett":
+Deltakelser som ikke kan mappes til en enhet — verken via koblingstabell eller NOM — telles under kategorien **"Enhet sikkerhetsnett"**. Dette sikrer at summen av alle enheter alltid er lik det totale antallet deltakelser.
 
 | Årsak | Forklaring |
 |-------|-----------|
-| **Ressurs ikke funnet i NOM** | Veilederens NAV-ident finnes ikke i NOM API. Kan skyldes at veilederen har sluttet eller at identen ikke er registrert. |
-| **Ingen gyldig enhet på dato** | Veilederen finnes i NOM, men ingen av enhetstilknytningene (inkludert fallback) dekker datoen deltakelsen ble opprettet. Typisk ved gap i NOM-data ved enhetsbytte. |
+| **Ingen kobling og ressurs ikke funnet i NOM** | Veilederens NAV-ident finnes ikke i NOM API. Kan skyldes at veilederen har sluttet. |
+| **Ingen kobling og tom orgTilknytning** | Veilederen finnes i NOM, men har ingen tilknytninger (har sluttet). |
 
-Et høyt antall "Enhet sikkerhetsnett" tyder på datakvalitetsproblemer i NOM. Diagnostikk-data inkluderer hvilke NAV-identer som er berørt, slik at NOM-data kan korrigeres.
-
-### Toleranseperiode (fallback)
-
-Når en veileder bytter enhet, kan det oppstå et gap i NOM der den gamle tilknytningen har utløpt men den nye ikke er registrert ennå. For å håndtere dette brukes en **toleranseperiode på 90 dager**: hvis ingen enhet er gyldig på opprettelsesdatoen, velges den sist utløpte tilknytningen — forutsatt at den utløp innen de siste 90 dagene.
-
-Eksempel:
-- Veileder har tilknytning til "NAV Oslo" som utløp 30. september
-- Ny tilknytning til "NAV Bergen" registreres først 20. oktober
-- Deltakelse opprettet 9. oktober → mappes til "NAV Oslo" via fallback (gap på 9 dager < 90 dager)
+Et høyt antall "Enhet sikkerhetsnett" kan løses ved å kjøre backfill og/eller bruke PUT-endepunktet for manuell korrigering.
 
 
 # 7. Infrastrukturarkitektur
