@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
-internal class MineSiderService(
+class MineSiderService(
     private val pdlService: PdlService,
     @Value("\${topic.producer.min-side-mikrofrontend.navn}") private val minSideMikrofrontendTopic: String,
     private val kafkaTemplate: KafkaTemplate<String, String>,

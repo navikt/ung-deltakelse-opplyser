@@ -8,8 +8,6 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
-import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
-import no.nav.ung.deltakelseopplyser.domene.inntekt.RapportertInntektService
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService

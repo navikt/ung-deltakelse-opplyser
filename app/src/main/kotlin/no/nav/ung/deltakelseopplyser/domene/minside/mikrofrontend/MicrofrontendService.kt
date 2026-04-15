@@ -8,7 +8,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.AktiverMikrofrontendMinSideT
 import org.springframework.stereotype.Service
 
 @Service
-class MicrofrontendService(
+class MicrofrontendService internal constructor(
     private val microfrontendRepository: MicrofrontendRepository,
     private val deltakerService: DeltakerService,
     private val mineSiderService: MineSiderService,
