@@ -1,20 +1,13 @@
 package no.nav.ung.deltakelseopplyser.domene.minside
 
 import no.nav.tms.microfrontend.MicrofrontendMessageBuilder
-import no.nav.tms.varsel.action.EksternKanal
 import no.nav.tms.varsel.action.Produsent
-import no.nav.tms.varsel.action.Sensitivitet
-import no.nav.tms.varsel.action.Tekst
-import no.nav.tms.varsel.action.Varseltype
-import no.nav.tms.varsel.builder.VarselActionBuilder
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.kafka.support.SendResult
 import org.springframework.stereotype.Service
-import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 @Service
