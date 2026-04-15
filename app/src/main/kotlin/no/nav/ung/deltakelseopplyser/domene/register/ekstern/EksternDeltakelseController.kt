@@ -12,6 +12,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelseSjekk
 import no.nav.ung.deltakelseopplyser.kontrakt.ekstern.DeltakerIdent
+import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
@@ -35,13 +36,14 @@ class EksternDeltakelseController(
     private val sporingsloggService: SporingsloggService,
     private val tilgangskontrollService: TilgangskontrollService,
     private val registerService: UngdomsprogramregisterService,
+    environment: Environment,
 ) {
 
-    companion object {
-        private val GODKJENTE_APPLIKASJONER = listOf(
-            "veilarboppfolging",
-            "azure-token-generator" // TODO: Fjern før merge til prod.
-        )
+    private val godkjenteApplikasjoner: List<String> = buildList {
+        add("veilarboppfolging")
+        if (environment.activeProfiles.contains("dev-gcp")) {
+            add("azure-token-generator")
+        }
     }
 
     @PostMapping(
@@ -64,10 +66,10 @@ class EksternDeltakelseController(
         val erSystemkall = tilgangskontrollService.erSystemBruker()
 
         if (erSystemkall) {
-            tilgangskontrollService.krevSystemtilgang(GODKJENTE_APPLIKASJONER)
+            tilgangskontrollService.krevSystemtilgang(godkjenteApplikasjoner)
         } else {
             tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(
-                GODKJENTE_APPLIKASJONER,
+                godkjenteApplikasjoner,
                 personIdent
             )
         }
