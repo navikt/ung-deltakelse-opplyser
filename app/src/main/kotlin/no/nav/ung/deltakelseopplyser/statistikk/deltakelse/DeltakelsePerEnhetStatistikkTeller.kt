@@ -5,6 +5,7 @@ import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPerio
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
@@ -31,7 +32,7 @@ data class DeltakelsePerEnhetResultat(
  * Tellingen fungerer slik:
  * 1. Hver deltakelse mappes til enheten veilederen tilhørte på opprettelsestidspunktet (via NOM).
  * 2. Hvis veilederen hadde flere gyldige enheter på datoen, velges den mest populære (flest veiledere totalt).
- * 3. Hvis ingen enhet er gyldig på eksakt dato, brukes en fallback med 90-dagers toleranse.
+ * 3. Hvis ingen enhet er gyldig på eksakt dato, brukes nærmeste tilknytning som fallback.
  * 4. Deltakelser som ikke kan mappes til noen enhet, telles under [ENHET_SIKKERHETSNETT]
  *    slik at totalsummen alltid stemmer med antall input-deltakelser.
  */
@@ -87,7 +88,7 @@ class DeltakelsePerEnhetStatistikkTeller {
 
         // Veilederen finnes ikke i NOM — kan skyldes at de har sluttet eller ikke er registrert
         if (ressurs == null) {
-            logger.warn("Fant ingen ressurs for NAV-ident $navIdent")
+            logger.warn("Fant ingen NOM-ressurs for NAV-ident {} (deltakelseId={})", navIdent, deltakelse.id)
             return null
         }
 
@@ -97,7 +98,10 @@ class DeltakelsePerEnhetStatistikkTeller {
         return when {
             // Ingen gyldige enheter funnet, heller ikke via fallback
             gyldigeEnheter.isEmpty() -> {
-                logger.warn("Fant ingen gyldig enhet for NAV-ident $navIdent på tidspunkt ${deltakelse.opprettetDato}")
+                logger.warn(
+                    "Fant ingen gyldig enhet for NAV-ident {} på {} (deltakelseId={}, antallTilknytninger={})",
+                    navIdent, deltakelse.opprettetDato, deltakelse.id, ressurs.orgTilknytninger.size
+                )
                 null
             }
             // Nøyaktig én gyldig enhet — bruk den direkte
@@ -119,10 +123,11 @@ class DeltakelsePerEnhetStatistikkTeller {
     /**
      * Finner gyldige enheter for en veileder på en gitt dato.
      *
-     * Bruker to strategier:
+     * Bruker to strategier i prioritert rekkefølge:
      * 1. **Eksakt match**: Både tilknytning og orgEnhet må være gyldig på datoen.
-     * 2. **Fallback (90 dager)**: Hvis ingen eksakt match, brukes den sist utløpte tilknytningen
-     *    som sluttet innen 90 dager før datoen. Dette dekker gap i NOM ved enhetsbytte.
+     * 2. **Nærmeste tilknytning**: Velger tilknytningen med korteste absolutte avstand
+     *    til datoen. Dekker gap i NOM ved enhetsbytte, sen NOM-registrering, og
+     *    historiske deltakelser.
      */
     private fun finnGyldigeEnheter(
         ressurs: RessursMedAlleTilknytninger,
@@ -140,35 +145,39 @@ class DeltakelsePerEnhetStatistikkTeller {
             return eksaktGyldigeEnheter
         }
 
-        // Strategi 2 (fallback): Finn siste gyldige enhet innen toleranseperiode.
-        // Toleranseperioden overbrygger korte gap i NOM-data som oppstår ved enhetsbytte,
-        // der den gamle tilknytningen har utløpt men den nye ikke er registrert ennå.
-        val toleranseDager = 90L
-
-        val sisteGyldigeEnhet = ressurs.orgTilknytninger
-            .filter { tilknytning ->
-                // Tilknytningen må ha startet før (eller på) opprettelsesdatoen
-                !tilknytning.gyldigFom.isAfter(opprettetDato) &&
-                        // Tilknytningen må ha en sluttdato (dvs. den har utløpt)
-                        tilknytning.gyldigTom != null &&
-                        // Sluttdatoen må ikke ligge mer enn 90 dager før opprettelsesdatoen
-                        !tilknytning.gyldigTom.isBefore(opprettetDato.minusDays(toleranseDager))
+        // Strategi 2: Nærmeste tilknytning — velg den med korteste absolutte avstand til datoen.
+        // Dekker gap ved enhetsbytte, sen NOM-registrering, og historiske deltakelser.
+        val tilknytningerMedAvstand = ressurs.orgTilknytninger
+            .map { tilknytning ->
+                val avstand = when {
+                    opprettetDato.isBefore(tilknytning.gyldigFom) ->
+                        ChronoUnit.DAYS.between(opprettetDato, tilknytning.gyldigFom)
+                    tilknytning.gyldigTom != null && opprettetDato.isAfter(tilknytning.gyldigTom) ->
+                        ChronoUnit.DAYS.between(tilknytning.gyldigTom, opprettetDato)
+                    else -> 0L
+                }
+                tilknytning to avstand
             }
-            // Velg den som utløp sist (mest sannsynlig riktig enhet)
-            .sortedByDescending { it.gyldigTom }
-            .take(1)
-            .map { it.orgEnhet }
+            .sortedBy { it.second }
 
-        if (sisteGyldigeEnhet.isNotEmpty()) {
-            logger.info(
-                "Bruker fallback: Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på $opprettetDato, " +
-                        "bruker siste gyldige enhet: ${sisteGyldigeEnhet.first().navn} " +
-                        "(gyldigTom: ${ressurs.orgTilknytninger.first { it.orgEnhet.id == sisteGyldigeEnhet.first().id }.gyldigTom})"
+        val nærmesteTilknytning = tilknytningerMedAvstand.firstOrNull()
+
+        if (nærmesteTilknytning != null) {
+            val kandidater = tilknytningerMedAvstand.joinToString { (tilknytning, avstand) ->
+                "${tilknytning.orgEnhet.navn} (${tilknytning.gyldigFom}–${tilknytning.gyldigTom ?: "løpende"}, avstand: $avstand dager)"
+            }
+            logger.warn(
+                "Nærmeste-tilknytning-fallback: NAV-ident {} på {} → {} (avstand: {} dager). Kandidater: [{}]",
+                ressurs.navIdent, opprettetDato, nærmesteTilknytning.first.orgEnhet.navn,
+                nærmesteTilknytning.second, kandidater
             )
-            return sisteGyldigeEnhet
+            return listOf(nærmesteTilknytning.first.orgEnhet)
         }
 
-        logger.warn("Fant ingen gyldig enhet for NAV-ident ${ressurs.navIdent} på tidspunkt $opprettetDato, heller ikke i fallback. Prøv å øke toleranseDager.")
+        logger.warn(
+            "Fant ingen enhet for NAV-ident {} på {} — ingen tilknytninger i NOM.",
+            ressurs.navIdent, opprettetDato
+        )
         return emptyList()
     }
 
@@ -221,8 +230,8 @@ class DeltakelsePerEnhetStatistikkTeller {
         }
 
         logger.warn(
-            "NAV-ident hadde ${gyldigeEnheter.size} enheter på tidspunkt $opprettetDato [$enhetInfo], " +
-                    "valgte den mest populære: ${valgtEnhet.id}-${valgtEnhet.navn}"
+            "NAV-ident hadde {} enheter på tidspunkt {} [{}], valgte den mest populære: {}-{}",
+            gyldigeEnheter.size, opprettetDato, enhetInfo, valgtEnhet.id, valgtEnhet.navn
         )
     }
 
@@ -239,14 +248,16 @@ class DeltakelsePerEnhetStatistikkTeller {
             .toSet()
             .size
 
-        logger.info("Fant $antallUnikeNavIdenter unike NAV-identer fra ${deltakelser.size} deltakelser")
+        logger.info("Fant {} unike NAV-identer fra {} deltakelser", antallUnikeNavIdenter, deltakelser.size)
 
         if (deltakelserUtenEnhet.isNotEmpty()) {
             // Logg hvilke veiledere som ikke kunne mappes — indikerer datakvalitetsproblemer i NOM
             val berørteNavIdenter = deltakelserUtenEnhet.map { it.navIdent() }.toSet()
+            val berørteDeltakelseIder = deltakelserUtenEnhet.map { it.id }
             logger.warn(
-                "${deltakelserUtenEnhet.size} deltakelser kunne ikke mappes til en enhet og er telt under '$ENHET_SIKKERHETSNETT'. " +
-                        "Berørte NAV-identer: $berørteNavIdenter"
+                "{} deltakelser kunne ikke mappes til en enhet og er telt under '{}'. " +
+                        "Berørte NAV-identer: {}, deltakelseIder: {}",
+                deltakelserUtenEnhet.size, ENHET_SIKKERHETSNETT, berørteNavIdenter, berørteDeltakelseIder
             )
         }
 

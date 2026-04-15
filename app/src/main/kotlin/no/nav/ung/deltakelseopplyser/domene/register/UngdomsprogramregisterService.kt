@@ -9,6 +9,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerPersonalia
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
+import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
@@ -42,6 +43,7 @@ class UngdomsprogramregisterService(
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
     private val ungBrukerdialogService: UngBrukerdialogService,
+    private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
     @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean
 ) {
     companion object {
@@ -77,6 +79,21 @@ class UngdomsprogramregisterService(
 
         val deltakelseDAO = deltakelseDTO.mapToDAO(deltakerDAO)
         val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDAO)
+
+        // Lagre veileder → enhet kobling for statistikk (point-in-time snapshot).
+        // Feiler stille slik at innmeldingen ikke blokkeres ved NOM-problemer.
+        try {
+            val navIdent = ungdomsprogramDAO.opprettetAv
+                .removeSuffix(VEILEDER_SUFFIX).trim()
+            if (navIdent != "system") {
+                deltakelseVeilederEnhetService.prøvLagreEnhetForDeltakelse(
+                    deltakelseId = ungdomsprogramDAO.id,
+                    navIdent = navIdent
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("Kunne ikke lagre enhet-kobling for deltakelse ${ungdomsprogramDAO.id}. Fortsetter.", e)
+        }
 
         val oppgaveReferanse = UUID.randomUUID()
         pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {

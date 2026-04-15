@@ -18,10 +18,13 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendR
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseVeilederEnhetService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
+import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
+import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkService
 import org.springframework.http.HttpStatus
@@ -29,12 +32,14 @@ import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -55,6 +60,8 @@ class DiagnostikkDriftController(
     private val deltakelseStatistikkService: DeltakelseStatistikkService,
     private val deltakerRepository: DeltakerRepository,
     private val microfrontendRepository: MicrofrontendRepository,
+    private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
+    private val nomApiService: NomApiService,
 ) {
     @PostMapping(
         "/hent/deltakelse/{deltakelseId}",
@@ -170,5 +177,105 @@ class DiagnostikkDriftController(
         val status: MicrofrontendStatus,
         val opprettet: ZonedDateTime?,
         val endret: LocalDateTime?,
+    )
+
+    // === Koblingstabellen deltakelse → veileder → enhet ===
+
+    @PostMapping("/backfill/deltakelse-veileder-enhet", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Backfill koblingstabellen deltakelse→veileder→enhet basert på NOM-data for alle deltakelser som mangler kobling")
+    @ResponseStatus(HttpStatus.OK)
+    fun backfillDeltakelseVeilederEnhet(): Map<String, Any> {
+        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.CREATE)
+
+        val alleDeltakelser = deltakelseRepository.findAll()
+
+        val backfillInputs = alleDeltakelser.map { deltakelse ->
+            DeltakelseVeilederEnhetService.BackfillInput(
+                deltakelseId = deltakelse.id,
+                navIdent = deltakelse.opprettetAv.removeSuffix(VEILEDER_SUFFIX).trim(),
+                opprettetDato = deltakelse.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDate()
+            )
+        }
+
+        val navIdenter = backfillInputs.map { it.navIdent }.toSet()
+        val ressurser = nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
+
+        val resultat = deltakelseVeilederEnhetService.backfillEnhetKoblinger(backfillInputs, ressurser)
+
+        return mapOf(
+            "totalDeltakelser" to alleDeltakelser.size,
+            "antallOpprettet" to resultat.antallOpprettet,
+            "antallHoppetOver" to resultat.antallHoppetOver,
+            "feiledeNavIdenter" to resultat.feiledeNavIdenter,
+        )
+    }
+
+    @PutMapping(
+        "/deltakelse-veileder-enhet/{deltakelseId}",
+        consumes = [MediaType.APPLICATION_JSON_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Opprett eller oppdater enhet-kobling for en spesifikk deltakelse. Brukes for manuell korrigering.")
+    @ResponseStatus(HttpStatus.OK)
+    fun oppdaterDeltakelseVeilederEnhet(
+        @PathVariable deltakelseId: UUID,
+        @RequestBody request: OppdaterDeltakelseVeilederEnhetRequest,
+    ): DeltakelseVeilederEnhetDto {
+        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.UPDATE)
+
+        val deltakelse = deltakelseRepository.findById(deltakelseId)
+            .orElseThrow { IllegalArgumentException("Fant ikke deltakelse med id $deltakelseId") }
+
+        val navIdent = request.navIdent
+            ?: deltakelse.opprettetAv.removeSuffix(VEILEDER_SUFFIX).trim()
+
+        val dao = deltakelseVeilederEnhetService.oppdaterEnhetKobling(
+            deltakelseId = deltakelseId,
+            navIdent = navIdent,
+            enhetId = request.enhetId,
+            enhetNavn = request.enhetNavn,
+        )
+
+        return DeltakelseVeilederEnhetDto(
+            deltakelseId = dao.deltakelseId,
+            navIdent = dao.navIdent,
+            enhetId = dao.enhetId,
+            enhetNavn = dao.enhetNavn,
+        )
+    }
+
+    @GetMapping(
+        "/deltakelse-veileder-enhet/{deltakelseId}",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Hent enhet-kobling for en spesifikk deltakelse")
+    @ResponseStatus(HttpStatus.OK)
+    fun hentDeltakelseVeilederEnhet(
+        @PathVariable deltakelseId: UUID,
+    ): DeltakelseVeilederEnhetDto? {
+        tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.READ)
+
+        val dao = deltakelseVeilederEnhetService.hentEnhetKoblingForDeltakelse(deltakelseId)
+            ?: return null
+
+        return DeltakelseVeilederEnhetDto(
+            deltakelseId = dao.deltakelseId,
+            navIdent = dao.navIdent,
+            enhetId = dao.enhetId,
+            enhetNavn = dao.enhetNavn,
+        )
+    }
+
+    data class OppdaterDeltakelseVeilederEnhetRequest(
+        val enhetId: String,
+        val enhetNavn: String,
+        val navIdent: String? = null,
+    )
+
+    data class DeltakelseVeilederEnhetDto(
+        val deltakelseId: UUID,
+        val navIdent: String,
+        val enhetId: String,
+        val enhetNavn: String,
     )
 }
