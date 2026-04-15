@@ -33,25 +33,26 @@ class ProsesseringConfiguration : AbstractJdbcConfiguration() {
     @Bean
     fun prosesseringInfoProvider(
         @Value("\${prosessering.rolle}") prosesseringRolle: String,
+        springTokenValidationContextHolder: SpringTokenValidationContextHolder,
     ) = object : ProsesseringInfoProvider {
         override fun hentBrukernavn(): String =
             try {
-                SpringTokenValidationContextHolder().getTokenValidationContext().getClaims("azuread")
+                springTokenValidationContextHolder.getTokenValidationContext().getClaims("azuread")
                     .getStringClaim("preferred_username")
             } catch (e: Exception) {
                 "VL"
             }
 
         override fun harTilgang(): Boolean = grupper().contains(prosesseringRolle)
-    }
 
-    private fun grupper(): List<String> =
-        try {
-            SpringTokenValidationContextHolder()
-                .getTokenValidationContext()
-                .getClaims("azuread")
-                .get("groups") as List<String>? ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        private fun grupper(): List<String> =
+            try {
+                springTokenValidationContextHolder
+                    .getTokenValidationContext()
+                    .getClaims("azuread")
+                    .get("groups") as List<String>? ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+    }
 }
