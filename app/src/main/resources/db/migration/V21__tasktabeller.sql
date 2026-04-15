@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS task_logg
 (
     id            BIGSERIAL PRIMARY KEY,
     task_id       BIGINT       NOT NULL
-        CONSTRAINT henvendelse_logg_henvendelse_id_fkey REFERENCES task,
+        CONSTRAINT task_logg_task_id_fkey REFERENCES task,
     type          VARCHAR      NOT NULL,
     node          VARCHAR(100) NOT NULL,
     opprettet_tid TIMESTAMP(3) DEFAULT LOCALTIMESTAMP,
@@ -29,5 +29,5 @@ CREATE TABLE IF NOT EXISTS task_logg
 );
 
 
-CREATE INDEX IF NOT EXISTS henvendelse_logg_henvendelse_id_idx
+CREATE INDEX IF NOT EXISTS task_logg_task_id_idx
     ON task_logg (task_id);
