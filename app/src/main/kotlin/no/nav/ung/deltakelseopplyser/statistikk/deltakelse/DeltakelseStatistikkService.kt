@@ -71,9 +71,12 @@ class DeltakelseStatistikkService(
                 ressurserMedAlleTilknytninger.size, navIdenter.size
             )
 
+            val enhetPopularitet = deltakelseVeilederEnhetService.hentEnhetPopularitetFraKoblingstabellen()
+
             val nomResultat = deltakelsePerEnhetStatistikkTeller.tellAntallDeltakelserPerEnhet(
                 deltakelser = utenKobling,
-                ressurserMedTilknytninger = ressurserMedAlleTilknytninger
+                ressurserMedTilknytninger = ressurserMedAlleTilknytninger,
+                enhetPopularitet = enhetPopularitet,
             )
             deltakelserPerEnhetFraNom = nomResultat.deltakelserPerEnhet
             nomDiagnostikk = nomResultat.diagnostikk

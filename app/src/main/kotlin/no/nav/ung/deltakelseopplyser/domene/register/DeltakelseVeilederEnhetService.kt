@@ -69,9 +69,9 @@ class DeltakelseVeilederEnhetService(
                 return
             }
 
-            // Disambiguer ved flere gyldige enheter — bruk popularitet
+            // Disambiguer ved flere gyldige enheter — bruk popularitet fra koblingstabellen
             val enhet = if (kandidater.size > 1) {
-                val enhetPopularitet = beregnEnhetPopularitet(ressurser)
+                val enhetPopularitet = hentEnhetPopularitetFraKoblingstabellen()
                 val valgt = velgMestPopulær(kandidater, enhetPopularitet)
                 logger.info(
                     "Deltakelse {}: NAV-ident {} har {} gyldige enheter på {}, velger mest populære: {} ({}). Kandidater: [{}]",
@@ -152,7 +152,7 @@ class DeltakelseVeilederEnhetService(
         }
 
         val ressursLookup = ressurserMedTilknytninger.associateBy { it.navIdent }
-        val enhetPopularitet = beregnEnhetPopularitet(ressurserMedTilknytninger)
+        val enhetPopularitet = hentEnhetPopularitetFraKoblingstabellen()
 
         var antallOpprettet = 0
         var antallOppdatert = 0
@@ -251,16 +251,6 @@ class DeltakelseVeilederEnhetService(
             .distinctBy { "${it.id}-${it.navn}" }
     }
 
-    /**
-     * Beregner popularitet per enhet: antall ganger enheten forekommer som tilknytning
-     * på tvers av alle veiledere. Brukes for å disambiguere når en veileder har flere enheter.
-     */
-    private fun beregnEnhetPopularitet(ressurser: List<RessursMedAlleTilknytninger>): Map<String, Int> =
-        ressurser
-            .flatMap { it.orgTilknytninger }
-            .map { it.orgEnhet }
-            .groupingBy { "${it.id}-${it.navn}" }
-            .eachCount()
 
     /**
      * Velger den mest populære enheten fra en liste med kandidater.
@@ -279,6 +269,16 @@ class DeltakelseVeilederEnhetService(
             gyldigTom != null && dato.isAfter(gyldigTom) -> ChronoUnit.DAYS.between(gyldigTom, dato)
             else -> 0L
         }
+    }
+
+    /**
+     * Henter enhet-popularitet fra koblingstabellen (antall deltakelser per enhet).
+     * Brukes for å disambiguere når en veileder har flere gyldige enheter.
+     * Returnerer map med nøkkel "enhetId-enhetNavn" og antall koblinger som verdi.
+     */
+    fun hentEnhetPopularitetFraKoblingstabellen(): Map<String, Int> {
+        return deltakelseVeilederEnhetRepository.hentEnhetPopularitet()
+            .associate { "${it.enhetId}-${it.enhetNavn}" to it.antall.toInt() }
     }
 
     data class BackfillInput(

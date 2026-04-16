@@ -49,6 +49,7 @@ class DeltakelsePerEnhetStatistikkTeller {
     fun tellAntallDeltakelserPerEnhet(
         deltakelser: List<DeltakelseInput>,
         ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>,
+        enhetPopularitet: Map<String, Int> = emptyMap(),
     ): DeltakelsePerEnhetResultat {
         // Oppslag-map for rask lookup av NOM-ressurs per NAV-ident
         val ressursLookup = ressurserMedTilknytninger.associateBy { it.navIdent }
@@ -59,14 +60,14 @@ class DeltakelsePerEnhetStatistikkTeller {
         // som fallback slik at ingen deltakelser går tapt fra tellingen.
         val deltakelserPerEnhet = deltakelser
             .map { deltakelse ->
-                finnEnhetForDeltakelse(deltakelse, ressursLookup, ressurserMedTilknytninger, veiledereMedFlereEnheter)
+                finnEnhetForDeltakelse(deltakelse, ressursLookup, enhetPopularitet, veiledereMedFlereEnheter)
                     ?: ENHET_SIKKERHETSNETT.also { deltakelserUtenEnhet.add(deltakelse) }
             }
             // Grupper enhetsnavn og tell forekomster: "NAV Oslo" -> 82, "NAV Bergen" -> 67, osv.
             .groupingBy { it }
             .eachCount()
 
-        return opprettResultat(deltakelser, deltakelserPerEnhet, veiledereMedFlereEnheter, ressurserMedTilknytninger, deltakelserUtenEnhet)
+        return opprettResultat(deltakelser, deltakelserPerEnhet, veiledereMedFlereEnheter, enhetPopularitet, deltakelserUtenEnhet)
     }
 
     /**
@@ -80,7 +81,7 @@ class DeltakelsePerEnhetStatistikkTeller {
     private fun finnEnhetForDeltakelse(
         deltakelse: DeltakelseInput,
         ressursLookup: Map<String, RessursMedAlleTilknytninger>,
-        alleRessurser: List<RessursMedAlleTilknytninger>,
+        enhetPopularitet: Map<String, Int>,
         veiledereMedFlereEnheter: MutableMap<String, List<OrgEnhetMedPeriode>>,
     ): String? {
         val navIdent = deltakelse.navIdent()
@@ -110,7 +111,7 @@ class DeltakelsePerEnhetStatistikkTeller {
             else -> {
                 val valgtEnhet = velgMestPopulæreEnhet(
                     gyldigeEnheter,
-                    alleRessurser,
+                    enhetPopularitet,
                     navIdent,
                     deltakelse.opprettetDato,
                     veiledereMedFlereEnheter
@@ -189,14 +190,12 @@ class DeltakelsePerEnhetStatistikkTeller {
      */
     private fun velgMestPopulæreEnhet(
         gyldigeEnheter: List<OrgEnhetMedPeriode>,
-        alleRessurser: List<RessursMedAlleTilknytninger>,
+        enhetPopularitet: Map<String, Int>,
         navIdent: String,
         opprettetDato: LocalDate,
         veiledereMedFlereEnheter: MutableMap<String, List<OrgEnhetMedPeriode>>,
     ): OrgEnhetMedPeriode {
-        // Tell hvor mange tilknytninger hver enhet har totalt på tvers av alle veiledere
-        val enhetPopularitet = beregnEnhetPopularitet(alleRessurser)
-        // Velg enheten med flest tilknytninger totalt
+        // Velg enheten med flest koblinger i koblingstabellen
         val mestPopulæreEnhet = gyldigeEnheter.maxByOrNull {
             enhetPopularitet["${it.id}-${it.navn}"] ?: 0
         } ?: gyldigeEnheter.first()
@@ -207,16 +206,6 @@ class DeltakelsePerEnhetStatistikkTeller {
         return mestPopulæreEnhet
     }
 
-    /**
-     * Beregner popularitet per enhet: antall ganger enheten forekommer som tilknytning
-     * på tvers av alle veiledere. Brukes for å disambiguere når en veileder har flere enheter.
-     */
-    private fun beregnEnhetPopularitet(ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>): Map<String, Int> =
-        ressurserMedTilknytninger
-            .flatMap { it.orgTilknytninger }
-            .map { it.orgEnhet }
-            .groupingBy { "${it.id}-${it.navn}" }
-            .eachCount()
 
     private fun loggFlereEnheterValg(
         gyldigeEnheter: List<OrgEnhetMedPeriode>,
@@ -240,7 +229,7 @@ class DeltakelsePerEnhetStatistikkTeller {
         deltakelser: List<DeltakelseInput>,
         deltakelserPerEnhet: Map<String, Int>,
         veiledereMedFlereEnheter: Map<String, List<OrgEnhetMedPeriode>>,
-        ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>,
+        enhetPopularitet: Map<String, Int>,
         deltakelserUtenEnhet: List<DeltakelseInput>,
     ): DeltakelsePerEnhetResultat {
         val antallUnikeNavIdenter = deltakelser
@@ -264,7 +253,7 @@ class DeltakelsePerEnhetStatistikkTeller {
         return DeltakelsePerEnhetResultat(
             deltakelserPerEnhet = deltakelserPerEnhet,
             diagnostikk = mapOf(
-                "enhetPopularitet" to beregnEnhetPopularitet(ressurserMedTilknytninger),
+                "enhetPopularitet" to enhetPopularitet,
                 "veiledereMedFlereEnheter" to veiledereMedFlereEnheter,
                 "totalAntallDeltakelser" to deltakelser.size,
                 "antallUnikeNavIdenter" to antallUnikeNavIdenter,
