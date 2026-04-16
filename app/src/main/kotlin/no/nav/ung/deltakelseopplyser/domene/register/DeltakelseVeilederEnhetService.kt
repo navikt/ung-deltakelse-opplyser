@@ -38,6 +38,9 @@ class DeltakelseVeilederEnhetService(
     /**
      * Prøver å resolve veilederens nåværende enhet fra NOM og lagre koblingen.
      * Feiler stille (try-catch) slik at innmeldingen ikke blokkeres.
+     *
+     * Når veilederen har flere gyldige enheter (f.eks. ungdomsteam + kontaktsenter),
+     * velges den mest populære enheten blant alle veiledere i NOM-datasettet.
      */
     fun prøvLagreEnhetForDeltakelse(deltakelseId: UUID, navIdent: String) {
         try {
@@ -53,8 +56,8 @@ class DeltakelseVeilederEnhetService(
             }
 
             val dato = LocalDate.now()
-            val enhet = resolveGyldigEnhet(ressurs, dato)
-            if (enhet == null) {
+            val kandidater = resolveGyldigeEnheter(ressurs, dato)
+            if (kandidater.isEmpty()) {
                 val tilknytninger = ressurs.orgTilknytninger.joinToString { t ->
                     "${t.orgEnhet.navn} (${t.gyldigFom}–${t.gyldigTom ?: "løpende"})"
                 }
@@ -64,6 +67,20 @@ class DeltakelseVeilederEnhetService(
                     deltakelseId, navIdent, dato, ressurs.orgTilknytninger.size, tilknytninger
                 )
                 return
+            }
+
+            // Disambiguer ved flere gyldige enheter — bruk popularitet
+            val enhet = if (kandidater.size > 1) {
+                val enhetPopularitet = beregnEnhetPopularitet(ressurser)
+                val valgt = velgMestPopulær(kandidater, enhetPopularitet)
+                logger.info(
+                    "Deltakelse {}: NAV-ident {} har {} gyldige enheter på {}, velger mest populære: {} ({}). Kandidater: [{}]",
+                    deltakelseId, navIdent, kandidater.size, dato, valgt.navn, valgt.id,
+                    kandidater.joinToString { "${it.navn} (${it.id})" }
+                )
+                valgt
+            } else {
+                kandidater.first()
             }
 
             deltakelseVeilederEnhetRepository.save(
@@ -115,25 +132,36 @@ class DeltakelseVeilederEnhetService(
 
     /**
      * Backfill: Lagrer enhets-koblinger for en liste med deltakelser basert på NOM-data.
-     * Returnerer resultat med antall vellykkede/feilede koblinger.
+     * Bruker popularitets-disambiguering for å velge riktig enhet når en veileder har
+     * flere samtidige tilknytninger (f.eks. ungdomsteam + kontaktsenter).
+     *
+     * @param force Hvis true, overskriver eksisterende koblinger. Nyttig for re-backfill.
      */
     fun backfillEnhetKoblinger(
         deltakelser: List<BackfillInput>,
         ressurserMedTilknytninger: List<RessursMedAlleTilknytninger>,
+        force: Boolean = false,
     ): BackfillResultat {
-        val eksisterendeKoblinger = deltakelseVeilederEnhetRepository
-            .findAllByDeltakelseIdIn(deltakelser.map { it.deltakelseId })
-            .map { it.deltakelseId }
-            .toSet()
+        val eksisterendeKoblinger = if (force) {
+            emptySet()
+        } else {
+            deltakelseVeilederEnhetRepository
+                .findAllByDeltakelseIdIn(deltakelser.map { it.deltakelseId })
+                .map { it.deltakelseId }
+                .toSet()
+        }
 
         val ressursLookup = ressurserMedTilknytninger.associateBy { it.navIdent }
+        val enhetPopularitet = beregnEnhetPopularitet(ressurserMedTilknytninger)
+
         var antallOpprettet = 0
+        var antallOppdatert = 0
         var antallHoppetOver = 0
         val identerUtenRessurs = mutableSetOf<String>()
         val identerUtenGyldigEnhet = mutableSetOf<String>()
 
         deltakelser.forEach { input ->
-            if (input.deltakelseId in eksisterendeKoblinger) {
+            if (!force && input.deltakelseId in eksisterendeKoblinger) {
                 antallHoppetOver++
                 return@forEach
             }
@@ -144,9 +172,8 @@ class DeltakelseVeilederEnhetService(
                 return@forEach
             }
 
-            // Bruk nærmeste tilknytning uten toleransegrense for historiske deltakelser
-            val enhet = resolveNærmesteEnhet(ressurs, input.opprettetDato)
-            if (enhet == null) {
+            val kandidater = resolveGyldigeEnheter(ressurs, input.opprettetDato)
+            if (kandidater.isEmpty()) {
                 identerUtenGyldigEnhet.add(input.navIdent)
                 logger.debug(
                     "Backfill: Ingen gyldig enhet for NAV-ident {} på {} (deltakelseId={}, antallTilknytninger={})",
@@ -155,70 +182,92 @@ class DeltakelseVeilederEnhetService(
                 return@forEach
             }
 
-            deltakelseVeilederEnhetRepository.save(
-                DeltakelseVeilederEnhetDAO(
-                    deltakelseId = input.deltakelseId,
-                    navIdent = input.navIdent,
-                    enhetId = enhet.id,
-                    enhetNavn = enhet.navn,
+            val enhet = if (kandidater.size > 1) {
+                val valgt = velgMestPopulær(kandidater, enhetPopularitet)
+                logger.debug(
+                    "Backfill: NAV-ident {} har {} kandidater på {}, velger {} ({})",
+                    input.navIdent, kandidater.size, input.opprettetDato, valgt.navn, valgt.id
                 )
-            )
-            antallOpprettet++
+                valgt
+            } else {
+                kandidater.first()
+            }
+
+            if (force) {
+                oppdaterEnhetKobling(input.deltakelseId, input.navIdent, enhet.id, enhet.navn)
+                antallOppdatert++
+            } else {
+                deltakelseVeilederEnhetRepository.save(
+                    DeltakelseVeilederEnhetDAO(
+                        deltakelseId = input.deltakelseId,
+                        navIdent = input.navIdent,
+                        enhetId = enhet.id,
+                        enhetNavn = enhet.navn,
+                    )
+                )
+                antallOpprettet++
+            }
         }
 
         val feiledeIdenter = identerUtenRessurs + identerUtenGyldigEnhet
         logger.info(
-            "Backfill ferdig: {} opprettet, {} hoppet over (eksisterte), {} feilet " +
+            "Backfill ferdig (force={}): {} opprettet, {} oppdatert, {} hoppet over (eksisterte), {} feilet " +
                     "(ingen NOM-ressurs: {}, ingen gyldig enhet: {})",
-            antallOpprettet, antallHoppetOver, feiledeIdenter.size,
+            force, antallOpprettet, antallOppdatert, antallHoppetOver, feiledeIdenter.size,
             identerUtenRessurs, identerUtenGyldigEnhet
         )
-        return BackfillResultat(antallOpprettet, antallHoppetOver, feiledeIdenter)
+        return BackfillResultat(antallOpprettet, antallOppdatert, antallHoppetOver, feiledeIdenter)
     }
 
     /**
-     * Finner gyldig enhet for en veileder på en gitt dato.
-     * Eksakt match, deretter bakover/fremover-fallback med 90 dager.
+     * Finner alle gyldige enheter for en veileder på en gitt dato.
+     * Returnerer en liste slik at kalleren kan disambiguere (f.eks. via popularitet).
+     *
+     * Strategier:
+     * 1. Eksakt match: Tilknytning og orgEnhet begge gyldige på datoen.
+     * 2. Nærmeste tilknytning: Korteste absolutte avstand til datoen.
      */
-    private fun resolveGyldigEnhet(ressurs: RessursMedAlleTilknytninger, dato: LocalDate): OrgEnhetMedPeriode? {
-        val eksaktGyldig = ressurs.orgTilknytninger
+    private fun resolveGyldigeEnheter(ressurs: RessursMedAlleTilknytninger, dato: LocalDate): List<OrgEnhetMedPeriode> {
+        if (ressurs.orgTilknytninger.isEmpty()) return emptyList()
+
+        val eksaktGyldige = ressurs.orgTilknytninger
             .filter { it.erGyldigPåTidspunkt(dato) }
             .map { it.orgEnhet }
             .filter { it.erGyldigPåTidspunkt(dato) }
-            .firstOrNull()
+            .distinctBy { "${it.id}-${it.navn}" }
 
-        if (eksaktGyldig != null) return eksaktGyldig
+        if (eksaktGyldige.isNotEmpty()) return eksaktGyldige
 
-        val toleranseDager = 90L
-        return ressurs.orgTilknytninger
-            .mapNotNull { tilknytning ->
-                val avstand = beregnAvstand(tilknytning.gyldigFom, tilknytning.gyldigTom, dato)
-                if (avstand <= toleranseDager) tilknytning.orgEnhet to avstand else null
-            }
-            .minByOrNull { it.second }
-            ?.first
-    }
-
-    /**
-     * Finner nærmeste tilknytning uten toleransegrense.
-     * Brukes for backfill av historiske deltakelser.
-     */
-    private fun resolveNærmesteEnhet(ressurs: RessursMedAlleTilknytninger, dato: LocalDate): OrgEnhetMedPeriode? {
-        if (ressurs.orgTilknytninger.isEmpty()) return null
-
-        val eksaktGyldig = ressurs.orgTilknytninger
-            .filter { it.erGyldigPåTidspunkt(dato) }
-            .map { it.orgEnhet }
-            .filter { it.erGyldigPåTidspunkt(dato) }
-            .firstOrNull()
-
-        if (eksaktGyldig != null) return eksaktGyldig
-
-        return ressurs.orgTilknytninger
+        val tilknytningerMedAvstand = ressurs.orgTilknytninger
             .map { tilknytning -> tilknytning.orgEnhet to beregnAvstand(tilknytning.gyldigFom, tilknytning.gyldigTom, dato) }
-            .minByOrNull { it.second }
-            ?.first
+            .sortedBy { it.second }
+
+        val minAvstand = tilknytningerMedAvstand.firstOrNull()?.second ?: return emptyList()
+
+        // Returner alle med samme minimale avstand (kan være flere like nære)
+        return tilknytningerMedAvstand
+            .filter { it.second == minAvstand }
+            .map { it.first }
+            .distinctBy { "${it.id}-${it.navn}" }
     }
+
+    /**
+     * Beregner popularitet per enhet: antall ganger enheten forekommer som tilknytning
+     * på tvers av alle veiledere. Brukes for å disambiguere når en veileder har flere enheter.
+     */
+    private fun beregnEnhetPopularitet(ressurser: List<RessursMedAlleTilknytninger>): Map<String, Int> =
+        ressurser
+            .flatMap { it.orgTilknytninger }
+            .map { it.orgEnhet }
+            .groupingBy { "${it.id}-${it.navn}" }
+            .eachCount()
+
+    /**
+     * Velger den mest populære enheten fra en liste med kandidater.
+     * Faller tilbake til første enhet hvis ingen popularitetsdata finnes.
+     */
+    private fun velgMestPopulær(kandidater: List<OrgEnhetMedPeriode>, popularitet: Map<String, Int>): OrgEnhetMedPeriode =
+        kandidater.maxByOrNull { popularitet["${it.id}-${it.navn}"] ?: 0 } ?: kandidater.first()
 
     /**
      * Beregner den absolutte avstanden i dager mellom en tilknytningsperiode og en dato.
@@ -240,6 +289,7 @@ class DeltakelseVeilederEnhetService(
 
     data class BackfillResultat(
         val antallOpprettet: Int,
+        val antallOppdatert: Int,
         val antallHoppetOver: Int,
         val feiledeNavIdenter: Set<String>,
     )
