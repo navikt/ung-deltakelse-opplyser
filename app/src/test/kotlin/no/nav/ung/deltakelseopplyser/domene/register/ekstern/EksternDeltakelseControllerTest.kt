@@ -32,6 +32,7 @@ import org.springframework.http.ProblemDetail
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.ErrorResponseException
 import com.ninjasquad.springmockk.MockkBean
+import no.nav.ung.deltakelseopplyser.config.Issuers
 import java.time.LocalDate
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -273,10 +274,10 @@ class EksternDeltakelseControllerTest {
     // ── helpers ────────────────────────────────────────────────────────────────
 
     private fun azureSystemToken(): HttpHeaders =
-        bearerHeaders(mockOAuth2Server.hentToken(issuerId = "azure", claims = mapOf("idtyp" to "app")))
+        bearerHeaders(mockOAuth2Server.hentToken(issuerId = Issuers.AZURE, claims = mapOf("idtyp" to "app")))
 
     private fun azureOboToken(): HttpHeaders =
-        bearerHeaders(mockOAuth2Server.hentToken(issuerId = "azure", claims = mapOf("NAVident" to "Z123456")))
+        bearerHeaders(mockOAuth2Server.hentToken(issuerId = Issuers.AZURE, claims = mapOf("NAVident" to "Z123456")))
 
     private fun bearerHeaders(token: SignedJWT) = HttpHeaders().apply {
         setBearerAuth(token.serialize())
