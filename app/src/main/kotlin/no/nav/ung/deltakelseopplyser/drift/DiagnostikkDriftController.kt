@@ -182,9 +182,11 @@ class DiagnostikkDriftController(
     // === Koblingstabellen deltakelse → veileder → enhet ===
 
     @PostMapping("/backfill/deltakelse-veileder-enhet", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Backfill koblingstabellen deltakelse→veileder→enhet basert på NOM-data for alle deltakelser som mangler kobling")
+    @Operation(summary = "Backfill koblingstabellen deltakelse→veileder→enhet basert på NOM-data. Bruk force=true for å overskrive eksisterende koblinger.")
     @ResponseStatus(HttpStatus.OK)
-    fun backfillDeltakelseVeilederEnhet(): Map<String, Any> {
+    fun backfillDeltakelseVeilederEnhet(
+        @RequestParam(defaultValue = "false") force: Boolean,
+    ): Map<String, Any> {
         tilgangskontrollService.krevDriftsTilgang(BeskyttetRessursActionAttributt.CREATE)
 
         val alleDeltakelser = deltakelseRepository.findAll()
@@ -200,13 +202,15 @@ class DiagnostikkDriftController(
         val navIdenter = backfillInputs.map { it.navIdent }.toSet()
         val ressurser = nomApiService.hentResursserMedAlleTilknytninger(navIdenter)
 
-        val resultat = deltakelseVeilederEnhetService.backfillEnhetKoblinger(backfillInputs, ressurser)
+        val resultat = deltakelseVeilederEnhetService.backfillEnhetKoblinger(backfillInputs, ressurser, force)
 
         return mapOf(
             "totalDeltakelser" to alleDeltakelser.size,
             "antallOpprettet" to resultat.antallOpprettet,
+            "antallOppdatert" to resultat.antallOppdatert,
             "antallHoppetOver" to resultat.antallHoppetOver,
             "feiledeNavIdenter" to resultat.feiledeNavIdenter,
+            "force" to force,
         )
     }
 
