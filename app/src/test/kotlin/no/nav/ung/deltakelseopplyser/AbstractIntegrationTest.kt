@@ -10,6 +10,7 @@ import no.nav.ung.deltakelseopplyser.utils.KafkaUtils.opprettKafkaProducer
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.producer.Producer
 import org.junit.jupiter.api.AfterAll
+import java.time.Duration
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -106,7 +107,7 @@ abstract class AbstractIntegrationTest {
 
     @AfterAll
     fun tearDown() {
-        producer.close()
-        consumer.close()
+        producer.close(Duration.ZERO)
+        consumer.close(Duration.ZERO)
     }
 }
