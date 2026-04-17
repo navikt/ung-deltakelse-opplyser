@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register.kafka
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.justRun
 import io.mockk.verify
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
@@ -23,7 +23,7 @@ class UngdomsytelseYtelseVedtattKonsumentTest : AbstractIntegrationTest() {
     override val consumerGroupPrefix: String = "ungdomsytelse-vedtak-hendelse-konsument"
     override val consumerGroupTopics: List<String> = listOf(TOPIC)
 
-    @SpykBean
+    @MockkSpyBean
     lateinit var ungdomsprogramytelseVedtakService: UngdomsprogramytelseVedtakService
 
     @MockkBean(relaxed = true)
