@@ -192,7 +192,11 @@
         </dependency>
         <!-- Swagger -->
 
-        <!-- Jackson -->
+        <!-- Jackson 2 (stop-gap iht. Boot 4 migration guide; Boot 4 bruker Jackson 3 som default) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
@@ -201,7 +205,7 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
-        <!-- Jackson -->
+        <!-- Jackson 2 -->
 
         <!-- Database -->
         <dependency>
