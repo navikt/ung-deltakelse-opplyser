@@ -14,25 +14,25 @@
 
     <properties>
         <java.version>25</java.version>
-        <kotlin.version>2.3.10</kotlin.version>
-        <tokenSupport.version>5.0.39</tokenSupport.version>
-        <springdoc.version>2.8.14</springdoc.version>
-        <spring-cloud.version>4.3.0</spring-cloud.version>
+        <kotlin.version>2.3.20</kotlin.version>
+        <tokenSupport.version>6.0.1</tokenSupport.version>
+        <springdoc.version>3.0.1</springdoc.version>
+        <spring-cloud.version>5.0.2</spring-cloud.version>
         <logback.logstash.version>9.0</logback.logstash.version>
-        <spring-mockk.version>4.0.2</spring-mockk.version>
+        <spring-mockk.version>5.0.1</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>7.0.8</ung-sak.version>
-        <ung-brukerdialog-api.version>0.2.1</ung-brukerdialog-api.version>
+        <ung-sak.version>7.4.2</ung-sak.version>
+        <ung-brukerdialog-api.version>1.0.0</ung-brukerdialog-api.version>
 
         <fp-sak.version>2.7.4</fp-sak.version>
-        <k9-format.version>12.9.1</k9-format.version>
-        <k9-abakus.version>1.5.3</k9-abakus.version>
-        <graphql-kotlin.version>8.8.1</graphql-kotlin.version>
+        <k9-format.version>13.0.0</k9-format.version>
+        <k9-abakus.version>1.5.4</k9-abakus.version>
+        <graphql-kotlin.version>9.0.0</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.2.0</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
-        <sif-abac-kontrakt.version>1.6.0</sif-abac-kontrakt.version>
-        <google-cloud-bigquery.version>2.59.0</google-cloud-bigquery.version>
-        <prosessering-core.version>2.20250922094930_4bb329c</prosessering-core.version>
+        <sif-abac-kontrakt.version>1.9.0</sif-abac-kontrakt.version>
+        <google-cloud-bigquery.version>2.61.0</google-cloud-bigquery.version>
+        <prosessering-core.version>2.20260331095424_89d92d2</prosessering-core.version>
     </properties>
     <dependencies>
 
@@ -199,13 +199,13 @@
         </dependency>
         <dependency>
             <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-63</artifactId>
+            <artifactId>hypersistence-utils-hibernate-73</artifactId>
             <version>3.15.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
+            <artifactId>testcontainers-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Database -->
@@ -282,17 +282,17 @@
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>gcloud</artifactId>
+            <artifactId>testcontainers-gcloud</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>kafka</artifactId>
+            <artifactId>testcontainers-kafka</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
