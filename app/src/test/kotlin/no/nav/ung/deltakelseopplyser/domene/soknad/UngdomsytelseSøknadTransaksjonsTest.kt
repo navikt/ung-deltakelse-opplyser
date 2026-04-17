@@ -38,7 +38,7 @@ import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -127,16 +127,16 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
     override val consumerGroupTopics: List<String>
         get() = emptyList()
 
-    @BeforeAll
-    fun beforeAll() {
+    @BeforeEach
+    fun beforeEach() {
         every { ungBrukerdialogService.opprettSøkYtelseOppgave(any()) } returns true
+        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
     }
 
     @Test
     fun `happy path - søknad, mikrofrontend og task committes atomisk i samme transaksjon`() {
         val søkerIdent = FødselsnummerGenerator.neste()
         mockPdlIdent(søkerIdent)
-        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
 
         val deltakelse = meldInnIProgrammet(søkerIdent)
         val antallTasksFør = antallAktiverMikrofrontendTasks(søkerIdent)
@@ -163,7 +163,6 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
     fun `rollback - hvis den omsluttende transaksjonen feiler, persisteres verken task eller mikrofrontend`() {
         val søkerIdent = FødselsnummerGenerator.neste()
         mockPdlIdent(søkerIdent)
-        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
 
         val deltakelse = meldInnIProgrammet(søkerIdent)
         val antallTasksFør = antallAktiverMikrofrontendTasks(søkerIdent)
@@ -192,7 +191,6 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
     fun `task plukkes opp i egen transaksjon og publiserer mikrofrontend-melding`() {
         val søkerIdent = FødselsnummerGenerator.neste()
         mockPdlIdent(søkerIdent)
-        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
 
         val deltakelse = meldInnIProgrammet(søkerIdent)
 
@@ -224,7 +222,6 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
     fun `task-feil ruller ikke tilbake allerede committede søknadsdata`() {
         val søkerIdent = FødselsnummerGenerator.neste()
         mockPdlIdent(søkerIdent)
-        justRun { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
 
         val deltakelse = meldInnIProgrammet(søkerIdent)
 
