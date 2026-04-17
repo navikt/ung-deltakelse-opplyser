@@ -160,6 +160,11 @@
         </dependency>
         <dependency>
             <groupId>no.nav.k9</groupId>
+            <artifactId>soknad-jackson2</artifactId>
+            <version>${k9-format.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.k9</groupId>
             <artifactId>oppgave-ungdomsytelse</artifactId>
             <version>${k9-format.version}</version>
         </dependency>
