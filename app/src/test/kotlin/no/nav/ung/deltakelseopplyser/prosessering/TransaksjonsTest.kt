@@ -195,7 +195,7 @@ class TransaksjonsTest : AbstractIntegrationTest() {
         assertThat(taskService.findById(task.id).status).isEqualTo(Status.PLUKKET)
 
         jdbcTemplate.update(
-            "UPDATE task_logg SET opprettet_tid = now() - interval '2 hours' WHERE task_id = ? AND type = 'PLUKKET'",
+            "UPDATE task_logg SET opprettet_tid = now() - interval '2 hours' WHERE task_id = ?",
             task.id
         )
 
