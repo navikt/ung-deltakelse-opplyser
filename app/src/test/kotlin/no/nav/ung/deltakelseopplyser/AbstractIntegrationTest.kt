@@ -17,23 +17,22 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import no.nav.ung.deltakelseopplyser.wiremock.AutoConfigureWireMock
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.context.annotation.Import
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.context.EmbeddedKafka
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 
 /**
  * Annotates a test class to run with embedded Kafka and Spring Boot.
- * The embedded Kafka will be started with 3 brokers and 1 partition.
+ * The embedded Kafka will be started with 1 broker and 1 partition.
  * The topics specified in the annotation will be created.
  * The bootstrap servers property will be set to the value of the KAFKA_BROKERS environment variable.
  * The test class will be started with the test profile.
  * The test class will be started with a random port.
  * The test class will be started with the SpringExtension.
- * The test class will be started with the DirtiesContext annotation.
  * The test class will be started with the TestInstance annotation.
  * The test class will be started with the EnableMockOAuth2Server annotation.
  * The test class will be started with the UngDeltakelseOpplyserApplication class.
@@ -42,7 +41,6 @@ import org.springframework.test.web.servlet.MockMvc
  * @see EmbeddedKafka
  * @see SpringBootTest
  * @see EnableMockOAuth2Server
- * @see DirtiesContext
  * @see TestInstance
  * @see SpringExtension
  * @see UngDeltakelseOpplyserApplication
@@ -50,14 +48,18 @@ import org.springframework.test.web.servlet.MockMvc
  */
 @EmbeddedKafka(
     partitions = 1,
-    count = 3,
+    count = 1,
     bootstrapServersProperty = "KAFKA_BROKERS",
     topics = [
-        "dusseldorf.ungdomsytelse-soknad-cleanup"
+        "dusseldorf.ungdomsytelse-soknad-cleanup",
+        "dusseldorf.ungdomsytelse-oppgavebekreftelse-cleanup",
+        "dusseldorf.ungdomsytelse-inntektsrapportering-cleanup",
+        "k9saksbehandling.ung-vedtakhendelse",
+        "min-side.aapen-brukervarsel-v1",
+        "min-side.aapen-microfrontend-v1"
     ]
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DirtiesContext
 @ExtendWith(SpringExtension::class)
 @EnableMockOAuth2Server
 @ActiveProfiles("test")
@@ -67,6 +69,7 @@ import org.springframework.test.web.servlet.MockMvc
 )
 @AutoConfigureMockMvc
 @AutoConfigureWireMock
+@AutoConfigureTestRestTemplate
 @Import(BigQueryTestConfiguration::class)
 abstract class AbstractIntegrationTest {
 

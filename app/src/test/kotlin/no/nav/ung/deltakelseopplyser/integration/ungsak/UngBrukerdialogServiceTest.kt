@@ -29,7 +29,15 @@ import java.util.UUID
 @EnableMockOAuth2Server
 @ExtendWith(SpringExtension::class)
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    properties = [
+        "topic.listener.ung-soknad.bryter=false",
+        "topic.listener.ung-oppgavebekreftelse.bryter=false",
+        "topic.listener.ung-rapportert-inntekt.bryter=false",
+        "topic.listener.ung-vedtakhendelse.bryter=false",
+    ]
+)
 @Import(BigQueryTestConfiguration::class)
 class UngBrukerdialogServiceTest {
 
