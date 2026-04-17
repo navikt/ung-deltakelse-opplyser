@@ -47,6 +47,16 @@
       "app": "ung-sak",
       "namespace": "k9saksbehandling",
       "cluster": "prod-gcp"
+    },
+    {
+      "app": "aktivitetspenger-soknad",
+      "namespace": "dusseldorf",
+      "cluster": "prod-gcp"
+    },
+    {
+      "app": "aktivitetspenger-innsyn",
+      "namespace": "dusseldorf",
+      "cluster": "prod-gcp"
     }
   ],
   "database": {
