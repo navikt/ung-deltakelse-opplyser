@@ -2,7 +2,6 @@ package no.nav.ung.deltakelseopplyser.prosessering
 
 import no.nav.familie.prosessering.domene.Status
 import no.nav.familie.prosessering.domene.Task
-import no.nav.familie.prosessering.domene.TaskRepository
 import no.nav.familie.prosessering.error.RekjørSenereException
 import no.nav.familie.prosessering.internal.TaskMaintenanceService
 import no.nav.familie.prosessering.internal.TaskService
@@ -20,6 +19,7 @@ import org.springframework.context.ApplicationListener
 import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.annotation.Version
+import org.springframework.data.jdbc.core.JdbcAggregateTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -57,7 +57,7 @@ class TransaksjonsTest : AbstractIntegrationTest() {
     private lateinit var taskStepExecutorService: TaskStepExecutorService
 
     @Autowired
-    private lateinit var taskRepository: TaskRepository
+    private lateinit var jdbcAggregateTemplate: JdbcAggregateTemplate
 
     @Autowired
     private lateinit var testTaskEffectsService: TestTaskEffectsService
@@ -118,12 +118,12 @@ class TransaksjonsTest : AbstractIntegrationTest() {
         assertThat(versionField!!.isAnnotationPresent(Version::class.java)).isTrue()
 
         val task = opprettTask(TestTaskTyper.ALLTID_OK)
-        val taskKopi1 = taskRepository.findById(task.id).orElseThrow()
-        val taskKopi2 = taskRepository.findById(task.id).orElseThrow()
+        val taskKopi1 = taskService.findById(task.id)
+        val taskKopi2 = taskService.findById(task.id)
 
-        taskRepository.save(taskKopi1.medTriggerTid(taskKopi1.triggerTid.plusSeconds(5)))
+        jdbcAggregateTemplate.update(taskKopi1.medTriggerTid(taskKopi1.triggerTid.plusSeconds(5)))
         assertThrows<OptimisticLockingFailureException> {
-            taskRepository.save(taskKopi2.medTriggerTid(taskKopi2.triggerTid.plusSeconds(10)))
+            jdbcAggregateTemplate.update(taskKopi2.medTriggerTid(taskKopi2.triggerTid.plusSeconds(10)))
         }
     }
 
