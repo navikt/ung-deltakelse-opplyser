@@ -16,8 +16,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
+import org.springframework.resilience.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
 import org.springframework.web.client.HttpClientErrorException
@@ -27,15 +26,12 @@ import java.net.URI
 
 @Service
 @Retryable(
-    noRetryFor = [HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
-    backoff = Backoff(
-        delayExpression = "\${spring.rest.retry.initialDelay}",
-        multiplierExpression = "\${spring.rest.retry.multiplier}",
-        maxDelayExpression = "\${spring.rest.retry.maxDelay}"
-    ),
-    maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
-
-    )
+    excludes = [HttpClientErrorException.Unauthorized::class, HttpClientErrorException.Forbidden::class, ResourceAccessException::class],
+    maxRetriesString = "\${spring.rest.retry.maxRetries}",
+    delayString = "\${spring.rest.retry.initialDelay}",
+    multiplierString = "\${spring.rest.retry.multiplier}",
+    maxDelayString = "\${spring.rest.retry.maxDelay}",
+)
 class SifAbacPdpService(
     @Qualifier("sifAbacPdpKlient")
     private val sifAbacPdpKlient: RestTemplate,

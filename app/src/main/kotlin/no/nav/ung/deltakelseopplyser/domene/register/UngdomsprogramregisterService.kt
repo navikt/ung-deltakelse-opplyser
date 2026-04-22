@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILED
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelseSjekk
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
@@ -167,6 +168,7 @@ class UngdomsprogramregisterService(
         return true
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun markerSomHarSøkt(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererDeltakelse(id)
@@ -174,6 +176,7 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun markerSomSlettet(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltakelse er slettet med id $id")
         val eksisterende = forsikreEksistererDeltakelse(id)
@@ -181,6 +184,7 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun markerSomFattetOpphørsvedtak(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltakelse er slettet og fattet vedtak om opphør med id $id")
         val eksisterende = forsikreEksistererDeltakelse(id)
@@ -189,18 +193,21 @@ class UngdomsprogramregisterService(
     }
 
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentFraProgram(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreEksistererDeltakelse(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentFraProgramInkludertSlettet(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreHarHattDeltakelse(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
@@ -210,6 +217,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentAlleForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
@@ -230,6 +238,7 @@ class UngdomsprogramregisterService(
     }
 
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentIkkeSlettetForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
@@ -239,6 +248,7 @@ class UngdomsprogramregisterService(
     }
 
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentIkkeSlettetForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
@@ -330,6 +340,36 @@ class UngdomsprogramregisterService(
         sendEndretSluttdatoHendelseTilUngSak(oppdatertDeltakelse)
 
         return oppdatertDeltakelse.mapToDTO()
+    }
+
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
+    fun sjekkAktivDeltakelse(deltakerIdent: String): DeltakelseSjekk {
+        logger.info("Sjekker om bruker er aktiv deltaker i ungdomsprogrammet.")
+        val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdent)
+        if (deltakerIder.isEmpty()) {
+            logger.info("Fant ingen deltaker for ident. Returnerer erDeltaker=false.")
+            return DeltakelseSjekk(erDeltaker = false)
+        }
+        val iDag = LocalDate.now()
+        val aktivDeltakelse = deltakelseRepository
+            .findByDeltaker_IdInAndErSlettet(deltakerIder, false)
+            .filter { it.getTom() == null || it.getTom()!! >= iDag }
+            .sortedWith(
+                compareByDescending<DeltakelseDAO> { it.getTom() == null }
+                    .thenByDescending { it.getFom() }
+            )
+            .firstOrNull()
+        return if (aktivDeltakelse != null) {
+            logger.info("Fant aktiv deltakelse.")
+            DeltakelseSjekk(
+                erDeltaker = true,
+                fraOgMed = aktivDeltakelse.getFom(),
+                tilOgMed = aktivDeltakelse.getTom()
+            )
+        } else {
+            logger.info("Fant ingen aktiv deltakelse. Returnerer erDeltaker=false.")
+            DeltakelseSjekk(erDeltaker = false)
+        }
     }
 
     private fun sendFjernetDeltakelseHendelseTilUngSak(oppdatert: DeltakelseDTO) {
