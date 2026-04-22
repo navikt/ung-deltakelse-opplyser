@@ -15,7 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.resttestclient.TestRestTemplate
 import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders

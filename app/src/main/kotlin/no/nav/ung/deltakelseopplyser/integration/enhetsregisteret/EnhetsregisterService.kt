@@ -7,9 +7,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Recover
-import org.springframework.retry.annotation.Retryable
+import org.springframework.resilience.annotation.Retryable
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.ErrorResponseException
 import org.springframework.web.client.HttpClientErrorException
@@ -23,76 +22,40 @@ import java.net.URI
  *
  * Se [EREG API V1](https://ereg-services.dev.intern.nav.no/swagger-ui/index.html) for mer informasjon.
  */
-
-@Retryable(
-    noRetryFor = [
-        ResourceAccessException::class,
-        EnhetsregisterException::class
-    ],
-    backoff = Backoff(
-        delayExpression = "\${spring.rest.retry.initialDelay}",
-        multiplierExpression = "\${spring.rest.retry.multiplier}",
-        maxDelayExpression = "\${spring.rest.retry.maxDelay}"
-    ),
-    maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
-)
 @Service
 class EnhetsregisterService(
-    @Qualifier("enhetsregisterKlient") private val enhetsregisterKlient: RestTemplate,
+    private val enhetsregisterRetryClient: EnhetsregisterRetryClient,
     private val objectMapper: ObjectMapper,
 ) {
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(EnhetsregisterService::class.java)
 
         const val TJENESTE_NAVN = "enhetsregisteret"
-
-        private val hentOrganisasjonInfoUrl = "/v2/organisasjon"
     }
 
     fun hentOrganisasjonsinfo(organisasjonsnummer: String): OrganisasjonRespons {
-        return kotlin.runCatching {
-            enhetsregisterKlient.exchange(
-                "$hentOrganisasjonInfoUrl/$organisasjonsnummer",
-                HttpMethod.GET,
-                null,
-                OrganisasjonRespons::class.java
+        return try {
+            enhetsregisterRetryClient.hentOrganisasjonsinfo(organisasjonsnummer)
+        } catch (_: HttpClientErrorException.NotFound) {
+            throw EnhetsregisterException(
+                "Fant ikke organisasjon med organisasjonsnummer: $organisasjonsnummer",
+                HttpStatus.NOT_FOUND
             )
-        }.fold(
-            onSuccess = { it.body!! },
-            onFailure = {
-                if (it is HttpClientErrorException.NotFound) {
-                    throw EnhetsregisterException(
-                        "Fant ikke organisasjon med organisasjonsnummer: $organisasjonsnummer",
-                        HttpStatus.NOT_FOUND
-                    )
-                }
-                throw it
-            }
-        )
-    }
-
-    @Recover
-    open fun hentOrganisasjonsinfo(ex: HttpClientErrorException): OrganisasjonRespons {
-        val feilmelding = parseFeilmelding(ex.responseBodyAsString)
-        logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding", ex)
-
-        throw EnhetsregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))
-    }
-
-    @Recover
-    open fun recoverServerError(ex: HttpServerErrorException): OrganisasjonRespons {
-        val feilmelding = parseFeilmelding(ex.responseBodyAsString)
-        logger.error("Serverfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding", ex)
-        throw EnhetsregisterException("Annen feil: $feilmelding", HttpStatus.valueOf(ex.statusCode.value()))
-    }
-
-    @Recover
-    open fun recoverResourceAccess(ex: ResourceAccessException): OrganisasjonRespons {
-        logger.error("Tilgangsfeil mot $TJENESTE_NAVN: ${ex.message}", ex)
-        throw EnhetsregisterException(
-            "Kunne ikke nå enhetsregisteret: ${ex.message}",
-            HttpStatus.SERVICE_UNAVAILABLE
-        )
+        } catch (ex: HttpClientErrorException) {
+            val feilmelding = parseFeilmelding(ex.responseBodyAsString)
+            logger.warn("Klientfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding", ex)
+            throw EnhetsregisterException(feilmelding, HttpStatus.valueOf(ex.statusCode.value()))
+        } catch (ex: HttpServerErrorException) {
+            val feilmelding = parseFeilmelding(ex.responseBodyAsString)
+            logger.error("Serverfeil ${ex.statusCode} mot $TJENESTE_NAVN: $feilmelding", ex)
+            throw EnhetsregisterException("Annen feil: $feilmelding", HttpStatus.valueOf(ex.statusCode.value()))
+        } catch (ex: ResourceAccessException) {
+            logger.error("Tilgangsfeil mot $TJENESTE_NAVN: ${ex.message}", ex)
+            throw EnhetsregisterException(
+                "Kunne ikke nå enhetsregisteret: ${ex.message}",
+                HttpStatus.SERVICE_UNAVAILABLE
+            )
+        }
     }
 
     private fun parseFeilmelding(body: String): String =
@@ -101,6 +64,36 @@ class EnhetsregisterService(
         } catch (_: Exception) {
             body
         }
+}
+
+@Component
+@Retryable(
+    excludes = [
+        ResourceAccessException::class,
+        EnhetsregisterException::class,
+        HttpClientErrorException.NotFound::class,
+    ],
+    maxRetriesString = "\${spring.rest.retry.maxRetries}",
+    delayString = "\${spring.rest.retry.initialDelay}",
+    multiplierString = "\${spring.rest.retry.multiplier}",
+    maxDelayString = "\${spring.rest.retry.maxDelay}",
+)
+class EnhetsregisterRetryClient(
+    @Qualifier("enhetsregisterKlient") private val enhetsregisterKlient: RestTemplate,
+) {
+    private companion object {
+        private val hentOrganisasjonInfoUrl = "/v2/organisasjon"
+    }
+
+    fun hentOrganisasjonsinfo(organisasjonsnummer: String): OrganisasjonRespons {
+        val response = enhetsregisterKlient.exchange(
+            "$hentOrganisasjonInfoUrl/$organisasjonsnummer",
+            HttpMethod.GET,
+            null,
+            OrganisasjonRespons::class.java
+        )
+        return response.body!!
+    }
 }
 
 class EnhetsregisterException(

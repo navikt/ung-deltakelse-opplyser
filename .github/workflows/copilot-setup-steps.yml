@@ -13,12 +13,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
 
       - name: Resolve Maven dependencies
         run: mvn clean install -DskipTests --settings ./.github/.m2/settings.xml --file pom.xml

@@ -8,8 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
+import org.springframework.resilience.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.ResourceAccessException
@@ -18,13 +17,11 @@ import org.springframework.web.client.exchange
 
 @Service
 @Retryable(
-    noRetryFor = [HttpClientErrorException.Forbidden::class, HttpClientErrorException.NotFound::class, HttpClientErrorException.Unauthorized::class, ResourceAccessException::class],
-    backoff = Backoff(
-        delayExpression = "\${spring.rest.retry.initialDelay}",
-        multiplierExpression = "\${spring.rest.retry.multiplier}",
-        maxDelayExpression = "\${spring.rest.retry.maxDelay}",
-    ),
-    maxAttemptsExpression = "\${spring.rest.retry.maxAttempts}",
+    excludes = [HttpClientErrorException.Forbidden::class, HttpClientErrorException.NotFound::class, HttpClientErrorException.Unauthorized::class, ResourceAccessException::class],
+    maxRetriesString = "\${spring.rest.retry.maxRetries}",
+    delayString = "\${spring.rest.retry.initialDelay}",
+    multiplierString = "\${spring.rest.retry.multiplier}",
+    maxDelayString = "\${spring.rest.retry.maxDelay}",
 )
 class TilgangsmaskinService(
     @Qualifier("tilgangsmaskinKlient") private val tilgangsmaskinKlient: RestTemplate,

@@ -18,6 +18,7 @@ spring:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
     hikari:
+      maximum-pool-size: 2
       data-source-properties:
         logServerErrorDetail: true
 

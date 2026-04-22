@@ -28,14 +28,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.kafka.listener.KafkaExceptionLogLevelAware
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
 class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
 
-    @Autowired
-    private lateinit var kafkaExceptionLogLevelAware: KafkaExceptionLogLevelAware
 
     @Autowired
     private lateinit var deltakerRepository: DeltakerRepository

@@ -33,7 +33,7 @@ spring:
       multiplier: 2
       initialDelay: 1000
       maxDelay: 4000
-      maxAttempts: 3
+      maxRetries: 2
 
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS}

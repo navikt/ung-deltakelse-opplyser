@@ -20,8 +20,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
+import no.nav.ung.deltakelseopplyser.wiremock.AutoConfigureWireMock
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -40,6 +41,7 @@ import java.time.LocalDate
 @ActiveProfiles("test")
 @EnableMockOAuth2Server
 @AutoConfigureWireMock
+@AutoConfigureTestRestTemplate
 @Import(BigQueryTestConfiguration::class)
 class EksternDeltakelseControllerTest {
 
