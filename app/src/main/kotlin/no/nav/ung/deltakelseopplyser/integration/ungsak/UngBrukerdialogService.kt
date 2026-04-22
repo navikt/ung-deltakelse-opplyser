@@ -30,6 +30,9 @@ class UngBrukerdialogService(
         return try {
             ungBrukerdialogRetryClient.opprettSøkYtelseOppgave(opprettOppgave)
         } catch (exception: HttpClientErrorException) {
+            if (exception.statusCode == HttpStatus.UNAUTHORIZED || exception.statusCode == HttpStatus.FORBIDDEN) {
+                throw exception
+            }
             logger.error("Fikk en HttpClientErrorException når man kalte opprettSøkYtelseOppgave tjeneste i ung-brukerdialog-api. Error response = '${exception.responseBodyAsString}'")
             false
         } catch (_: HttpServerErrorException) {
