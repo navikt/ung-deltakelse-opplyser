@@ -16,7 +16,7 @@
         <java.version>25</java.version>
         <kotlin.version>2.3.20</kotlin.version>
         <tokenSupport.version>6.0.5</tokenSupport.version>
-        <springdoc.version>3.0.1</springdoc.version>
+        <springdoc.version>3.0.3</springdoc.version>
         <spring-cloud.version>5.0.2</spring-cloud.version>
         <logback.logstash.version>9.0</logback.logstash.version>
         <spring-mockk.version>5.0.1</spring-mockk.version>
@@ -25,9 +25,9 @@
         <ung-brukerdialog-api.version>1.0.0</ung-brukerdialog-api.version>
 
         <fp-sak.version>2.7.4</fp-sak.version>
+        <graphql-kotlin.version>9.1.0</graphql-kotlin.version>
         <k9-format.version>13.0.0</k9-format.version>
         <k9-abakus.version>1.5.4</k9-abakus.version>
-        <graphql-kotlin.version>9.0.0</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.2.0</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.10.0</sif-abac-kontrakt.version>
