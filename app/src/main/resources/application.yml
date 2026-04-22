@@ -160,6 +160,15 @@ no.nav:
               client-id: ${AZURE_APP_CLIENT_ID}
               client-jwk: ${AZURE_APP_JWK}
 
+          azure-tilgangsmaskin:
+            token-endpoint-url: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
+            grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+            scope: ${TILGANGSMASKIN_AZURE_SCOPE}
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: ${AZURE_APP_CLIENT_ID}
+              client-jwk: ${AZURE_APP_JWK}
+
   gateways:
     ung-sak: # Settes i nais/<cluster>.json
     ung-brukerdialog-api: # Settes i nais/<cluster>.json
@@ -167,6 +176,12 @@ no.nav:
     sokos-kontoregister-person-base-url: # Settes i nais/<cluster>.json
     enhetsregister-base-url: # Settes i nais/<cluster>.json
     nom-api-base-url: # Settes i nais/<cluster>.json
+    tilgangsmaskin-base-url: # Settes i nais/<cluster>.json
+
+ung:
+  authorized-groups:
+    programveileder: ${UNG_AUTHORIZED_GROUPS_PROGRAMVEILEDER}
+    drift: ${UNG_AUTHORIZED_GROUPS_DRIFT}
 
 springdoc:
   api-docs:
@@ -183,6 +198,9 @@ springdoc:
     authorizationUrl: ${AZURE_LOGIN_URL:http://localhost:8060/rest/azuread}/authorize
     tokenUrl: ${AZURE_LOGIN_URL:http://localhost:8060/rest/azuread}/token
     apiScope: api://${AZURE_APP_CLIENT_ID:vtp}/.default
+    oboAudience: ${NAIS_CLUSTER_NAME:dev-gcp}:${NAIS_NAMESPACE:k9saksbehandling}:${NAIS_APP_NAME:ung-deltakelse-opplyser}
+    tokenXTokenGeneratorUrl: ${TOKENX_TOKEN_GENERATOR_URL:https://tokenx-token-generator.intern.dev.nav.no}
+    azureTokenGeneratorUrl: ${AZURE_TOKEN_GENERATOR_URL:https://azure-token-generator.intern.dev.nav.no}
 
 prosessering:
   rolle: ${PROSESSERING_UNG_DRIFT_ROLLE} # 0000-CA-ung-drift

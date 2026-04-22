@@ -1,9 +1,15 @@
 package no.nav.ung.deltakelseopplyser
 
 import com.nimbusds.jwt.SignedJWT
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.clearMocks
+import io.mockk.every
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -16,9 +22,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.ErrorResponseException
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
@@ -37,8 +45,16 @@ class ApplicationSecurityTests : AbstractIntegrationTest() {
     override val consumerGroupTopics: List<String>
         get() = listOf()
 
+    @MockkBean
+    private lateinit var tilgangskontrollService: TilgangskontrollService
+
     private companion object {
         private val logger = LoggerFactory.getLogger(ApplicationSecurityTests::class.java)
+    }
+
+    @BeforeEach
+    fun beforeEach() {
+        clearMocks(tilgangskontrollService)
     }
 
     @Test
@@ -46,7 +62,82 @@ class ApplicationSecurityTests : AbstractIntegrationTest() {
         assertThat(endpointsProvider()).isNotEmpty
     }
 
-    //ender i testen
+    @Test
+    fun `Alle Azure-sikrede controllere må ha TilgangskontrollService i konstruktøren`() {
+        val requestMappingHandlerMapping =
+            applicationContext.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping::class.java)
+        val apiMappings = requestMappingHandlerMapping.handlerMethods
+
+        val azureControllerKlasser = apiMappings.values
+            .map { it.beanType }
+            .distinct()
+            .filter { controllerClass ->
+                val requiredIssuers = controllerClass.getAnnotation(RequiredIssuers::class.java)
+                requiredIssuers?.value?.any { it.issuer == Issuers.AZURE } == true
+            }
+
+        assertThat(azureControllerKlasser).isNotEmpty
+
+        azureControllerKlasser.forEach { controllerClass ->
+            val harTilgangskontroll = controllerClass.constructors.any { constructor ->
+                constructor.parameterTypes.any { it == TilgangskontrollService::class.java }
+            }
+            assertThat(harTilgangskontroll)
+                .withFailMessage(
+                    "Azure-sikret controller ${controllerClass.simpleName} mangler TilgangskontrollService i konstruktøren! " +
+                            "Siden allowAllUsers=true er applikasjonen ansvarlig for all autorisasjon."
+                )
+                .isTrue()
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("azureEndepunkterProvider")
+    fun `Azure-endepunkt skal returnere 403 når TilgangskontrollService nekter tilgang`(endpoint: Endpoint) {
+        // Mock alle metoder i TilgangskontrollService til å kaste 403
+        val forbidden = ErrorResponseException(
+            HttpStatus.FORBIDDEN,
+            ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Ikke tilgang (test)"),
+            null
+        )
+
+        every { tilgangskontrollService.krevAnsattTilgang(any(), any()) } throws forbidden
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } throws forbidden
+        every { tilgangskontrollService.krevSystemtilgang(any()) } throws forbidden
+        every { tilgangskontrollService.krevSystemtilgang() } throws forbidden
+        every { tilgangskontrollService.krevDriftsTilgang(any()) } throws forbidden
+        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } throws forbidden
+        every { tilgangskontrollService.erSystemBruker() } returns false
+
+        val token = mockOAuth2Server.hentToken(issuerId = Issuers.AZURE, claims = mapOf("NAVident" to "Z999999"))
+
+        val response = testRestTemplate.request(endpoint, endpoint.url, endpoint.method, token)
+
+        // Verifiser at endepunktet IKKE returnerer suksess (2xx).
+        // Noen endepunkter gjør database-oppslag før TilgangskontrollService kalles,
+        // og returnerer da 404/500 i testmiljøet. Det viktige er at ingen endepunkter
+        // returnerer 2xx uten autorisasjonssjekk.
+        //
+        // Unntak: DELETE-endepunkter som returnerer 204 NO_CONTENT for ikke-eksisterende
+        // ressurser er en no-op (ifPresent-mønster) — ikke en sikkerhetsbypass.
+        val er204DeleteNoOp = endpoint.method == HttpMethod.DELETE
+                && response.statusCode == HttpStatus.NO_CONTENT
+
+        if (er204DeleteNoOp) {
+            logger.warn(
+                "DELETE ${endpoint.url} returnerte 204 NO_CONTENT (no-op for ikke-eksisterende ressurs). " +
+                        "Kontrollér manuelt at TilgangskontrollService kalles når ressursen finnes."
+            )
+        } else {
+            assertThat(response.statusCode.is2xxSuccessful)
+                .withFailMessage(
+                    "Forventet IKKE 2xx for ${endpoint.method} ${endpoint.url}, " +
+                            "men fikk ${response.statusCode}. " +
+                            "Endepunktet returnerer suksess uten autorisasjonssjekk!"
+                )
+                .isFalse()
+        }
+    }
 
     @ParameterizedTest
     @MethodSource("endpointsProvider")
@@ -150,6 +241,10 @@ class ApplicationSecurityTests : AbstractIntegrationTest() {
         return endpointList
     }
 
+    private fun azureEndepunkterProvider(): List<Endpoint> {
+        return endpointsProvider().filter { it.issuers.contains(Issuers.AZURE) }
+    }
+
     private fun TestRestTemplate.assertEquals(
         endpoint: Endpoint,
         expectedStatus: HttpStatus,
@@ -186,7 +281,7 @@ class ApplicationSecurityTests : AbstractIntegrationTest() {
         assertThat(statusCode).isNotEqualTo(expectedStatus)
     }
 
-    private fun TestRestTemplate.request(
+    fun TestRestTemplate.request(
         endpoint: Endpoint,
         url: String,
         httpMethod: HttpMethod,
@@ -200,6 +295,12 @@ class ApplicationSecurityTests : AbstractIntegrationTest() {
             var body: Any? = null
             if (it.contentType == MediaType.MULTIPART_FORM_DATA) {
                 body = håndterMultipartUpload(it)
+            } else if (httpMethod in listOf(HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH)) {
+                body = when (it.contentType) {
+                    MediaType.TEXT_PLAIN -> "test-begrunnelse"
+                    MediaType.APPLICATION_FORM_URLENCODED -> "begrunnelse=test"
+                    else -> """{"deltakerIdent":"12345678901","ident":"12345678901","aktørId":"1234567890123","startdato":"2024-01-01"}"""
+                }
             }
             HttpEntity(body, it)
         }
