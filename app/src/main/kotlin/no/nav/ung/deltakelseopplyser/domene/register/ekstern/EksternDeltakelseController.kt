@@ -12,7 +12,6 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelseSjekk
 import no.nav.ung.deltakelseopplyser.kontrakt.ekstern.DeltakerIdent
-import org.springframework.context.annotation.Profile
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@Profile("!prod-gcp")
 @RequestMapping("/ekstern/deltakelse")
 @RequiredIssuers(
     ProtectedWithClaims(issuer = Issuers.AZURE)
