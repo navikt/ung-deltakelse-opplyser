@@ -30,7 +30,7 @@ import org.springframework.test.web.servlet.MockMvc
  * Annotates a test class to run with embedded Kafka and Spring Boot.
  * The embedded Kafka will be started with 1 broker and 1 partition.
  * The topics specified in the annotation will be created.
- * The bootstrap servers property will be set to the value of the KAFKA_BROKERS environment variable.
+ * The Spring property KAFKA_BROKERS will be set to the embedded Kafka broker address.
  * The test class will be started with the test profile.
  * The test class will be started with a random port.
  * The test class will be started with the SpringExtension.
