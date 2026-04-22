@@ -1,4 +1,4 @@
-package no.nav.ung.deltakelseopplyser.integration.ungsak
+package no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin
 
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
@@ -19,23 +19,22 @@ import org.springframework.web.client.RestTemplate
 import java.time.Duration
 
 @Configuration
-class UngBrukerdialogKlientKonfig(
-    @Value("\${no.nav.gateways.ung-brukerdialog-api}") private val ungBrukerdialogUrl: String,
+class TilgangsmaskinKlientKonfig(
+    @Value("\${no.nav.gateways.tilgangsmaskin-base-url}") private val tilgangsmaskinBaseUrl: String,
     oauth2Config: ClientConfigurationProperties,
-    private val oAuth2AccessTokenService: OAuth2AccessTokenService
+    private val oAuth2AccessTokenService: OAuth2AccessTokenService,
 ) {
-
     private companion object {
-        val logger: Logger = LoggerFactory.getLogger(UngBrukerdialogKlientKonfig::class.java)
+        private val logger: Logger = LoggerFactory.getLogger(TilgangsmaskinKlientKonfig::class.java)
 
-        const val AZURE_UNG_BRUKERDIALOG_API = "azure-ung-brukerdialog-api"
+        const val AZURE_TILGANGSMASKIN = "azure-tilgangsmaskin"
     }
 
-    private val azureUngBrukerdialogClientProperties =
-        oauth2Config.registration[AZURE_UNG_BRUKERDIALOG_API]
-            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_UNG_BRUKERDIALOG_API")
+    private val azureTilgangsmaskinClientProperties =
+        oauth2Config.registration[AZURE_TILGANGSMASKIN]
+            ?: throw RuntimeException("could not find oauth2 client config for $AZURE_TILGANGSMASKIN")
 
-    @Bean(name = ["ungBrukerdialogKlient"])
+    @Bean(name = ["tilgangsmaskinKlient"])
     fun restTemplate(
         builder: RestTemplateBuilder,
         mdcInterceptor: MDCValuesPropagatingClientHttpRequestInterceptor,
@@ -44,7 +43,7 @@ class UngBrukerdialogKlientKonfig(
             .connectTimeout(Duration.ofSeconds(20))
             .readTimeout(Duration.ofSeconds(20))
             .defaultHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .rootUri(ungBrukerdialogUrl)
+            .rootUri(tilgangsmaskinBaseUrl)
             .defaultMessageConverters()
             .interceptors(bearerTokenInterceptor(), mdcInterceptor, requestLoggerInterceptor(logger))
             .build()
@@ -52,18 +51,12 @@ class UngBrukerdialogKlientKonfig(
 
     private fun bearerTokenInterceptor(): ClientHttpRequestInterceptor {
         return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray, execution: ClientHttpRequestExecution ->
-            when {
-                request.uri.path == "/isalive" -> {} // ignorer
+            oAuth2AccessTokenService.getAccessToken(azureTilgangsmaskinClientProperties).access_token?.let {
+                request.headers.setBearerAuth(it)
+            } ?: throw SecurityException("Access token er null")
 
-                else -> {
-                    oAuth2AccessTokenService.getAccessToken(azureUngBrukerdialogClientProperties).access_token?.let {
-                        request.headers.setBearerAuth(it)
-                    }?: throw SecurityException("Access token er null")
-                }
-            }
             execution.execute(request, body)
         }
     }
-
 }
 

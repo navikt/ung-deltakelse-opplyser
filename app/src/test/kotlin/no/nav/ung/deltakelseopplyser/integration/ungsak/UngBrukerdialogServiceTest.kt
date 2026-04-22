@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
+import no.nav.ung.deltakelseopplyser.wiremock.AutoConfigureWireMock
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
@@ -29,7 +29,15 @@ import java.util.UUID
 @EnableMockOAuth2Server
 @ExtendWith(SpringExtension::class)
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    properties = [
+        "topic.listener.ung-soknad.bryter=false",
+        "topic.listener.ung-oppgavebekreftelse.bryter=false",
+        "topic.listener.ung-rapportert-inntekt.bryter=false",
+        "topic.listener.ung-vedtakhendelse.bryter=false",
+    ]
+)
 @Import(BigQueryTestConfiguration::class)
 class UngBrukerdialogServiceTest {
 
