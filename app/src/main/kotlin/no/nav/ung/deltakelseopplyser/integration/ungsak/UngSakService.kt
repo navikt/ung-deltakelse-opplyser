@@ -30,6 +30,9 @@ class UngSakService(
         return try {
             ungSakRetryClient.sendInnHendelse(hendelse)
         } catch (exception: HttpClientErrorException) {
+            if (exception is HttpClientErrorException.Unauthorized || exception is HttpClientErrorException.Forbidden) {
+                throw exception
+            }
             logger.error("Fikk en HttpClientErrorException når man kalte sendInnHendelse tjeneste i ung-sak. Error response = '${exception.responseBodyAsString}'")
             false
         } catch (_: HttpServerErrorException) {
