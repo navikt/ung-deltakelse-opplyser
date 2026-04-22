@@ -21,7 +21,7 @@
         <logback.logstash.version>9.0</logback.logstash.version>
         <spring-mockk.version>5.0.1</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>7.4.2</ung-sak.version>
+        <ung-sak.version>7.5.0</ung-sak.version>
         <ung-brukerdialog-api.version>1.0.0</ung-brukerdialog-api.version>
 
         <fp-sak.version>2.7.4</fp-sak.version>
@@ -30,9 +30,9 @@
         <graphql-kotlin.version>9.0.0</graphql-kotlin.version>
         <tms-kotlin-builder.version>2.2.0</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
-        <sif-abac-kontrakt.version>1.9.0</sif-abac-kontrakt.version>
+        <sif-abac-kontrakt.version>1.10.0</sif-abac-kontrakt.version>
         <google-cloud-bigquery.version>2.61.0</google-cloud-bigquery.version>
-        <prosessering-core.version>2.20260331095424_89d92d2</prosessering-core.version>
+        <prosessering-core.version>2.20260420122910_8bfca04</prosessering-core.version>
     </properties>
     <dependencies>
 
