@@ -15,7 +15,7 @@
     <properties>
         <java.version>25</java.version>
         <kotlin.version>2.3.20</kotlin.version>
-        <tokenSupport.version>6.0.1</tokenSupport.version>
+        <tokenSupport.version>6.0.5</tokenSupport.version>
         <springdoc.version>3.0.1</springdoc.version>
         <spring-cloud.version>5.0.2</spring-cloud.version>
         <logback.logstash.version>9.0</logback.logstash.version>
