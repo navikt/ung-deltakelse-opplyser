@@ -24,10 +24,8 @@ class RapportertInntektHåndtererService(
         val deltakerIdent = rapportertInntekt.søker.personIdent.verdi
 
         logger.info("Henter deltakerIder for søker oppgitt i rapportert inntekt")
-        runCatching {
-            deltakerService.finnDeltakerGittIdent(deltakerIdent)
-                ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i rapportert inntekt")
-        }
+        deltakerService.finnDeltakerGittIdent(deltakerIdent)
+            ?: throw IllegalStateException("Fant ingen deltakere med ident oppgitt i rapportert inntekt")
 
         logger.info("Lagrer rapportert inntekt med journalpostId: {}", rapportertInntektTopicEntry.journalpostId)
         rapportertInntektRepository.save(rapportertInntektTopicEntry.somRapportertInntektDAO())
