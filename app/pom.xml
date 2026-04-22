@@ -31,7 +31,7 @@
         <tms-kotlin-builder.version>2.2.0</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.10.0</sif-abac-kontrakt.version>
-        <google-cloud-bigquery.version>2.64.0</google-cloud-bigquery.version>
+        <google-cloud-bigquery.version>2.65.0</google-cloud-bigquery.version>
         <prosessering-core.version>2.20260420122910_8bfca04</prosessering-core.version>
     </properties>
     <dependencies>
