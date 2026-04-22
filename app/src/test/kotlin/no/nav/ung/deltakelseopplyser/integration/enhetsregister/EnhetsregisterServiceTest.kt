@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.retry.ExhaustedRetryException
 import java.net.URI
 
 class EnhetsregisterServiceTest : AbstractIntegrationTest() {
@@ -64,9 +63,9 @@ class EnhetsregisterServiceTest : AbstractIntegrationTest() {
             body = """{"melding": "Organisasjon ikke funnet i enhetsregisteret"}"""
         )
 
-        val exhaustedRetryException =
-            assertThrows<ExhaustedRetryException> { enhetsregisterService.hentOrganisasjonsinfo("123456789") }
-        assertThat(exhaustedRetryException.cause).isInstanceOf(EnhetsregisterException::class.java)
+        val enhetsregisterException =
+            assertThrows<EnhetsregisterException> { enhetsregisterService.hentOrganisasjonsinfo("123456789") }
+        assertThat(enhetsregisterException.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
 
         verifiserAntallKall(1, "$ENHETSREGISTER_BASE_PATH/123456789")
     }

@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.soknad.kafka
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.andThenJust
 import io.mockk.every
 import io.mockk.runs
@@ -48,7 +48,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
 
-    @SpykBean
+    @MockkSpyBean
     lateinit var ungdomsytelsesøknadService: UngdomsytelsesøknadService
 
     @MockkBean

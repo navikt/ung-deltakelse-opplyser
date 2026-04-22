@@ -1,5 +1,7 @@
 UNGDOMSYTELSE_DELTAKER_BASE_URL: https://ungdomsytelse-deltaker.intern.dev.nav.no/ungdomsprogrammet/ytelsen # placeholder
-AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}]\"
+AZURE_APP_PRE_AUTHORIZED_APPS: \"[{"name":":ung-sak", "clientId":"vtp"}, {"name":"poao:veilarboppfolging", "clientId":"veilarboppfolging-client-id"}]\"
+UNG_AUTHORIZED_GROUPS_PROGRAMVEILEDER: "37538533-e91c-4a53-b155-f4448dcada0d"
+UNG_AUTHORIZED_GROUPS_DRIFT: "0d0da462-c300-43d9-8364-38a0a8cf2401"
 NAIS_CLUSTER_NAME: dev-gcp
 NAIS_NAMESPACE: k9saksbehandling
 NAIS_APP_NAME: ung-deltakelse-opplyser
@@ -16,6 +18,7 @@ spring:
     url: jdbc:tc:postgresql:16:///?TC_INITSCRIPT=file:src/test/resources/db/init.sql
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
     hikari:
+      maximum-pool-size: 2
       data-source-properties:
         logServerErrorDetail: true
 
@@ -112,6 +115,15 @@ no.nav:
               client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
               client-jwk: src/test/resources/private_jwk.json
 
+          azure-tilgangsmaskin:
+            token-endpoint-url: http://localhost:${mock-oauth2-server.port}/oauth2/v2.0/token
+            grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+            scope: api://vtp:k9saksbehandling:tilgangsmaskin/.default
+            authentication:
+              client-auth-method: private_key_jwt
+              client-id: dev-gcp:k9saksbehandling:ung-deltakelse-opplyser
+              client-jwk: src/test/resources/private_jwk.json
+
   gateways:
     ung-sak: http://localhost:${wiremock.server.port}/ung-sak-mock/ung/sak
     ung-brukerdialog-api: http://localhost:${wiremock.server.port}/ung-brukerdialog-api-mock/ung/brukerdialog
@@ -120,6 +132,7 @@ no.nav:
     sokos-kontoregister-person-base-url: http://localhost:${wiremock.server.port}/sokos-kontoregister-person-mock
     enhetsregister-base-url: http://localhost:${wiremock.server.port}/enhetsregister-mock
     nom-api-base-url: http://localhost:${wiremock.server.port}/nom-api-mock
+    tilgangsmaskin-base-url: http://localhost:${wiremock.server.port}/tilgangsmaskin-mock
 
 wiremock:
   reset-mappings-after-each-test: true
