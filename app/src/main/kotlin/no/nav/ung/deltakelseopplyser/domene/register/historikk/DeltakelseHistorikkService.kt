@@ -60,7 +60,8 @@ class DeltakelseHistorikkService(
                     deltakerMeldtUt = historikkEndring.deltakerMeldtUtData,
                     endretSluttdato = historikkEndring.endretSluttdatoData,
                     søktTidspunktSatt = historikkEndring.søktTidspunktSatt,
-                    deltakelseFjernet = historikkEndring.deltakelseFjernetData
+                    deltakelseFjernet = historikkEndring.deltakelseFjernetData,
+                    utvidetKvote = historikkEndring.utvidetKvoteData
 
                 )
             }.also {

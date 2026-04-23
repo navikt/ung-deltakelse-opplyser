@@ -8,6 +8,7 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
+import no.nav.ung.deltakelseopplyser.domene.register.UtvidetKvoteBeregner
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
@@ -378,6 +379,93 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         assertTrue(utmelding)
 
         assertThat(ungdomsprogramregisterService.hentIkkeSlettetForDeltakerId(deltakerDAO.id).isEmpty())
+    }
+
+    @Test
+    fun `Utvid kvote på deltakelse uten sluttdato setter harUtvidetKvote`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        val resultat = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+
+        assertThat(resultat.harUtvidetKvote).isTrue()
+        assertThat(resultat.fraOgMed).isEqualTo(mandag)
+        assertThat(resultat.tilOgMed).isNull() // Sluttdato var ikke satt, skal fortsatt være null
+    }
+
+    @Test
+    fun `Utvid kvote på deltakelse med sluttdato utvider perioden til 301 dager`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        ungdomsprogramregisterService.avsluttDeltakelse(
+            innmelding.id!!, DeltakelseDTO(
+                deltaker = innmelding.deltaker,
+                fraOgMed = mandag,
+                tilOgMed = mandag.plusDays(100)
+            )
+        )
+
+        val resultat = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+
+        assertThat(resultat.harUtvidetKvote).isTrue()
+        assertThat(resultat.fraOgMed).isEqualTo(mandag)
+        assertThat(resultat.tilOgMed).isEqualTo(UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300))
+    }
+
+    @Test
+    fun `Utvid kvote er idempotent - andre kall returnerer samme resultat`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        val førsteKall = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+        val andreKall = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+
+        assertThat(førsteKall.harUtvidetKvote).isTrue()
+        assertThat(andreKall.harUtvidetKvote).isTrue()
+        assertThat(førsteKall).isEqualTo(andreKall)
+    }
+
+    @Test
+    fun `Endring av startdato etter utvidet kvote gir CONFLICT`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+        ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.endreStartdato(innmelding.id!!, mockEndrePeriodeDTO(mandag.plusDays(1)))
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.CONFLICT)
+            assertThat(it.body.detail).isEqualTo("Kan ikke endre startdato når kvoten allerede er utvidet")
+        }
     }
 
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)

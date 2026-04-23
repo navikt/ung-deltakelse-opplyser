@@ -11,6 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
+import no.nav.ung.deltakelseopplyser.domene.register.UtvidetKvoteBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_FORMATTER
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
@@ -270,9 +271,71 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
             .isEqualTo("Deltakelse med id $deltakelseId har endret sluttdatoSatt og søktTidspunkt i samme revisjon. Dette er uvanlig.")
     }
 
-    private fun formater(tidspunkt: ZonedDateTime?): String? = DATE_TIME_FORMATTER.format(
-        tidspunkt
-    )
+    @Test
+    fun `Utvidet kvote fører til historikkinnslag med riktig endringstype og tekst`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+        every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(LocalDate.of(2000, 1, 1))
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+        val deltakelseId = innmelding.id!!
+
+        ungdomsprogramregisterService.utvidKvote(deltakelseId)
+
+        val historikk = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
+        assertThat(historikk).hasSize(2)
+
+        val utvidetKvoteInnslag = historikk.last()
+        assertThat(utvidetKvoteInnslag.endringstype).isEqualTo(Endringstype.UTVIDET_KVOTE)
+        assertThat(utvidetKvoteInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
+        assertThat(utvidetKvoteInnslag.utvidetKvote).isNotNull
+        assertThat(utvidetKvoteInnslag.utvidetKvote!!.utvidetFraOgMed).isEqualTo(mandag)
+        assertThat(utvidetKvoteInnslag.utvidetKvote!!.utvidetTilOgMed).isEqualTo(UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300))
+        assertThat(utvidetKvoteInnslag.deltakelse.harUtvidetKvote).isTrue()
+
+        val forventetTilOgMed = UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300)
+        val forventetTekst = "Kvote er utvidet med 8 uker (fra ${formater(mandag)} til ${formater(forventetTilOgMed)})."
+        assertThat(utvidetKvoteInnslag.utledEndringsTekst()).isEqualTo(forventetTekst)
+    }
+
+    @Test
+    fun `Utvidet kvote med sluttdato satt - sluttdato-endring undertrykkes i historikk`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+        every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(LocalDate.of(2000, 1, 1))
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+        val deltakelseId = innmelding.id!!
+
+        // Sett sluttdato først
+        ungdomsprogramregisterService.avsluttDeltakelse(
+            deltakelseId, DeltakelseDTO(deltaker = innmelding.deltaker, fraOgMed = mandag, tilOgMed = mandag.plusDays(100))
+        )
+
+        // Utvid kvote - dette endrer også sluttdato, men historikken skal vise UTVIDET_KVOTE, ikke ENDRET_SLUTTDATO
+        ungdomsprogramregisterService.utvidKvote(deltakelseId)
+
+        val historikk = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
+        assertThat(historikk).hasSize(3) // innmelding, utmelding, utvidet kvote
+
+        val sisteInnslag = historikk.last()
+        assertThat(sisteInnslag.endringstype).isEqualTo(Endringstype.UTVIDET_KVOTE)
+        assertThat(sisteInnslag.endretSluttdato).isNull() // Sluttdato-endring undertrykkes
+        assertThat(sisteInnslag.utvidetKvote).isNotNull
+        assertThat(sisteInnslag.deltakelse.getTom()).isEqualTo(UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300))
+    }
+
+    private fun formater(tidspunkt: ZonedDateTime?): String? = DATE_TIME_FORMATTER.format(tidspunkt)
 
     private fun formater(dato: LocalDate): String? = DATE_FORMATTER.format(dato)
 

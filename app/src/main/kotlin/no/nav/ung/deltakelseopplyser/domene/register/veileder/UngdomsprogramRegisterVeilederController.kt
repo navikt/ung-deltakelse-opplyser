@@ -156,6 +156,28 @@ class UngdomsprogramRegisterVeilederController(
         }
     }
 
+    @PutMapping(
+        "/deltakelse/{deltakelseId}/utvid-kvote",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Utvider kvoten for en deltakelse i ungdomsprogrammet med 8 uker")
+    @ResponseStatus(HttpStatus.OK)
+    fun utvidKvote(@PathVariable deltakelseId: UUID): DeltakelseDTO {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
+        return registerService.utvidKvote(deltakelseId).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/utvid-kvote",
+                "Utvidet kvote for deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
+    }
+
     @GetMapping(
         "/deltaker/{deltakerId}/deltakelser",
         produces = [MediaType.APPLICATION_JSON_VALUE]

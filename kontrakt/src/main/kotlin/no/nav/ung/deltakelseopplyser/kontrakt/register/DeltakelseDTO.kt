@@ -26,6 +26,9 @@ data class DeltakelseDTO(
     @JsonProperty("harOpphørsvedtak")
     val harOpphørsvedtak: Boolean = false,
 
+    @JsonProperty("harUtvidetKvote")
+    val harUtvidetKvote: Boolean = false,
+
     @JsonProperty("søktTidspunkt")
     val søktTidspunkt: ZonedDateTime? = null
 ) {
