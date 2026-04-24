@@ -26,7 +26,7 @@
 
         <fp-sak.version>2.7.4</fp-sak.version>
         <graphql-kotlin.version>9.1.0</graphql-kotlin.version>
-        <k9-format.version>13.0.0</k9-format.version>
+        <k9-format.version>13.0.1</k9-format.version>
         <k9-abakus.version>1.5.4</k9-abakus.version>
         <tms-kotlin-builder.version>2.2.0</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
