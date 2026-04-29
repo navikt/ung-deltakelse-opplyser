@@ -4,14 +4,14 @@ import no.nav.fpsak.tidsserie.LocalDateInterval
 import java.time.LocalDate
 
 /**
- * Beregner utvidet kvoteperiode for en deltakelse i ungdomsprogrammet.
+ * Beregner kvoteperiode for en deltakelse i ungdomsprogrammet.
  *
  * Programmet har en grunnkvote på 260 virkedager. Ved utvidet kvote legges det til
  * 40 nye virkedager kant i kant etter grunnkvoten.
  *
  * Helger (lørdag/søndag) telles ikke med – kun virkedager (mandag–fredag).
  */
-object UtvidetKvoteBeregner {
+object KvotePeriodeBeregner {
 
     private const val GRUNNKVOTE_VIRKEDAGER = 260
     private const val UTVIDET_KVOTE_VIRKEDAGER = 40
@@ -22,8 +22,8 @@ object UtvidetKvoteBeregner {
         val tilOgMed: LocalDate,
     )
 
-    fun beregn(deltakelse: DeltakelseDAO): UtvidetKvotePeriode {
-        val fraOgMed = deltakelse.getFom()
+    fun beregn(deltakelseStartdato: LocalDate): UtvidetKvotePeriode {
+        val fraOgMed = deltakelseStartdato
         val tilOgMed = finnSluttdatoForVirkedager(fraOgMed, TOTALT_VIRKEDAGER_MED_UTVIDET_KVOTE)
         return UtvidetKvotePeriode(
             fraOgMed = fraOgMed,

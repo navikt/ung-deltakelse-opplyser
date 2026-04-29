@@ -11,7 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
-import no.nav.ung.deltakelseopplyser.domene.register.UtvidetKvoteBeregner
+import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_FORMATTER
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
@@ -92,7 +92,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull
@@ -113,7 +113,8 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
             deltakelseId, DeltakelseDTO(
                 deltaker = innmelding.deltaker,
                 fraOgMed = onsdag,
-                tilOgMed = onsdag
+                tilOgMed = onsdag,
+                kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
             )
         ) // Fører til fjerde historikkinnslag
 
@@ -252,7 +253,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull
@@ -281,7 +282,11 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
 
         val mandag = LocalDate.parse("2024-10-07")
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+        )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
         val deltakelseId = innmelding.id!!
 
@@ -295,10 +300,10 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         assertThat(utvidetKvoteInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
         assertThat(utvidetKvoteInnslag.utvidetKvote).isNotNull
         assertThat(utvidetKvoteInnslag.utvidetKvote!!.utvidetFraOgMed).isEqualTo(mandag)
-        assertThat(utvidetKvoteInnslag.utvidetKvote!!.utvidetTilOgMed).isEqualTo(UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300))
+        assertThat(utvidetKvoteInnslag.utvidetKvote!!.utvidetTilOgMed).isEqualTo(KvotePeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300))
         assertThat(utvidetKvoteInnslag.deltakelse.harUtvidetKvote).isTrue()
 
-        val forventetTilOgMed = UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300)
+        val forventetTilOgMed = KvotePeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300)
         val forventetTekst = "Kvote er utvidet med 8 uker (fra ${formater(mandag)} til ${formater(forventetTilOgMed)})."
         assertThat(utvidetKvoteInnslag.utledEndringsTekst()).isEqualTo(forventetTekst)
     }
@@ -313,13 +318,22 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
 
         val mandag = LocalDate.parse("2024-10-07")
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+        )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
         val deltakelseId = innmelding.id!!
 
         // Sett sluttdato først
         ungdomsprogramregisterService.avsluttDeltakelse(
-            deltakelseId, DeltakelseDTO(deltaker = innmelding.deltaker, fraOgMed = mandag, tilOgMed = mandag.plusDays(100))
+            deltakelseId, DeltakelseDTO(
+                deltaker = innmelding.deltaker,
+                fraOgMed = mandag,
+                tilOgMed = mandag.plusDays(100),
+                kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+            )
         )
 
         // Utvid kvote - dette endrer også sluttdato, men historikken skal vise UTVIDET_KVOTE, ikke ENDRET_SLUTTDATO
@@ -332,7 +346,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         assertThat(sisteInnslag.endringstype).isEqualTo(Endringstype.UTVIDET_KVOTE)
         assertThat(sisteInnslag.endretSluttdato).isNull() // Sluttdato-endring undertrykkes
         assertThat(sisteInnslag.utvidetKvote).isNotNull
-        assertThat(sisteInnslag.deltakelse.getTom()).isEqualTo(UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300))
+        assertThat(sisteInnslag.deltakelse.getTom()).isEqualTo(KvotePeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300))
     }
 
     private fun formater(tidspunkt: ZonedDateTime?): String? = DATE_TIME_FORMATTER.format(tidspunkt)

@@ -8,7 +8,6 @@ import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
-import no.nav.ung.deltakelseopplyser.domene.register.UtvidetKvoteBeregner
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.kontoregister.KontoregisterService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
@@ -82,10 +81,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val startdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
-            tilOgMed = null
+            fraOgMed = startdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(startdato).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -103,7 +103,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -115,7 +115,12 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         // Skal feile fordi deltaker allerede er meldt inn i programmet uten t.o.m dato.
         assertThrows<DataIntegrityViolationException> {
-            ungdomsprogramregisterService.leggTilIProgram(dto.copy(fraOgMed = onsdag))
+            ungdomsprogramregisterService.leggTilIProgram(
+                dto.copy(
+                    fraOgMed = onsdag,
+                    kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+                )
+            )
         }
     }
 
@@ -125,7 +130,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
             fraOgMed = programDato.minusDays(2),
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(programDato.minusDays(2)).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -148,7 +153,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
             fraOgMed = tjuveniårsdag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(tjuveniårsdag).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -167,10 +172,12 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Test
     fun `Deltaker blir meldt inn i programmet med en sluttdato`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
-            tilOgMed = LocalDate.now().plusDays(10)
+            fraOgMed = deltakelseStartdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            tilOgMed = deltakelseStartdato.plusDays(10),
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -182,10 +189,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
-            tilOgMed = null
+            fraOgMed = deltakelseStartdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -202,10 +210,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Test
     fun `Henter deltaker fra programmet`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
-            tilOgMed = null
+            fraOgMed = deltakelseStartdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -229,7 +238,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -255,7 +264,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -279,7 +288,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -291,7 +300,8 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val oppdatertDto = DeltakelseDTO(
             deltaker = innmelding.deltaker,
             fraOgMed = mandag,
-            tilOgMed = onsdag
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            tilOgMed = onsdag,
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
 
@@ -313,7 +323,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            tilOgMed = null
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -325,7 +335,8 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val oppdatertDto = DeltakelseDTO(
             deltaker = innmelding.deltaker,
             fraOgMed = mandag,
-            tilOgMed = onsdag
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            tilOgMed = onsdag,
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
 
@@ -340,10 +351,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Test
     fun `Deltaker blir meldt inn to ganger ved feil skal ikke produsere to oppgaver`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
-            tilOgMed = null
+            fraOgMed = deltakelseStartdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         ungdomsprogramregisterService.leggTilIProgram(dto)
         assertThrows<DataIntegrityViolationException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
@@ -353,10 +365,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     fun `Deltaker blir fjernet fra programmet_etter_søkt_ytelse`() {
         val deltakerIdent = FødselsnummerGenerator.neste()
         val deltakerDTO = DeltakerDTO(deltakerIdent = deltakerIdent)
+        val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
-            fraOgMed = LocalDate.now(),
-            tilOgMed = null
+            fraOgMed = deltakelseStartdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
@@ -369,7 +382,8 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
         ungdomsprogramregisterService.markerSomHarSøkt(innmelding.id!!)
 
-        val deltakerDAO = deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
+        val deltakerDAO =
+            deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
         assertThat(deltakerDAO).isNotNull
         assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
 
@@ -390,7 +404,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         val mandag = LocalDate.parse("2024-10-07")
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+        )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         val resultat = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
@@ -409,14 +427,19 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         val mandag = LocalDate.parse("2024-10-07")
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+        )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         ungdomsprogramregisterService.avsluttDeltakelse(
             innmelding.id!!, DeltakelseDTO(
                 deltaker = innmelding.deltaker,
                 fraOgMed = mandag,
-                tilOgMed = mandag.plusDays(100)
+                kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+                tilOgMed = mandag.plusDays(100),
             )
         )
 
@@ -424,7 +447,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         assertThat(resultat.harUtvidetKvote).isTrue()
         assertThat(resultat.fraOgMed).isEqualTo(mandag)
-        assertThat(resultat.tilOgMed).isEqualTo(UtvidetKvoteBeregner.finnSluttdatoForVirkedager(mandag, 300))
+        assertThat(resultat.tilOgMed).isEqualTo(KvotePeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300))
     }
 
     @Test
@@ -436,7 +459,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         val mandag = LocalDate.parse("2024-10-07")
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+        )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
         val førsteKall = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
@@ -456,7 +483,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         val mandag = LocalDate.parse("2024-10-07")
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
-        val dto = DeltakelseDTO(deltaker = deltakerDTO, fraOgMed = mandag, tilOgMed = null)
+        val dto = DeltakelseDTO(
+            deltaker = deltakerDTO,
+            fraOgMed = mandag,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+        )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
         ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
 

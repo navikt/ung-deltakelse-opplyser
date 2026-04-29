@@ -60,7 +60,8 @@ class UngdomsprogramregisterService(
                 tilOgMed = getTom(),
                 erSlettet = erSlettet,
                 harOpphørsvedtak = harOpphørsvedtak,
-                harUtvidetKvote = harUtvidetKvote
+                harUtvidetKvote = harUtvidetKvote,
+                kvoteMaksDato = KvotePeriodeBeregner.beregn(getFom()).tilOgMed
             )
         }
     }
@@ -377,7 +378,7 @@ class UngdomsprogramregisterService(
 
         logger.info("Utvider kvote for deltakelse med id $deltakelseId med 8 uker")
 
-        val utvidetKvotePeriode = UtvidetKvoteBeregner.beregn(eksisterendeDeltakelse)
+        val utvidetKvotePeriode = KvotePeriodeBeregner.beregn(eksisterendeDeltakelse.getFom())
 
         // Hvis sluttdato er satt, utvid perioden slik at den dekker utvidet kvote fra startdato
         if (eksisterendeDeltakelse.getTom() != null) {

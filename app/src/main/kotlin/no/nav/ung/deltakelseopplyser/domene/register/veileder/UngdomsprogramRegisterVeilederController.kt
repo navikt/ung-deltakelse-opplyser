@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
@@ -63,7 +64,8 @@ class UngdomsprogramRegisterVeilederController(
         )
         val deltakelseDTO = DeltakelseDTO(
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
-            fraOgMed = deltakelseInnmeldingDTO.startdato
+            fraOgMed = deltakelseInnmeldingDTO.startdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseInnmeldingDTO.startdato).tilOgMed
         )
 
         return registerService.leggTilIProgram(deltakelseDTO).also {

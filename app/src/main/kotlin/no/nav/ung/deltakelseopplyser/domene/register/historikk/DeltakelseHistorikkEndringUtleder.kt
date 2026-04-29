@@ -1,7 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register.historikk
 
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
-import no.nav.ung.deltakelseopplyser.domene.register.UtvidetKvoteBeregner
+import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import java.util.*
 
@@ -168,7 +168,7 @@ object DeltakelseHistorikkEndringUtleder {
         nåværendeDeltakelseRevisjon: DeltakelseDAO,
     ): UtvidetKvoteHistorikk? {
         if (!kvoteUtvidet) return null
-        val periode = UtvidetKvoteBeregner.beregn(nåværendeDeltakelseRevisjon)
+        val periode = KvotePeriodeBeregner.beregn(nåværendeDeltakelseRevisjon.getFom())
         return UtvidetKvoteHistorikk(
             utvidetFraOgMed = periode.fraOgMed,
             utvidetTilOgMed = periode.tilOgMed

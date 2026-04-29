@@ -30,7 +30,10 @@ data class DeltakelseDTO(
     val harUtvidetKvote: Boolean = false,
 
     @JsonProperty("søktTidspunkt")
-    val søktTidspunkt: ZonedDateTime? = null
+    val søktTidspunkt: ZonedDateTime? = null,
+
+    @JsonProperty("kvoteMaksDato")
+    val kvoteMaksDato: LocalDate
 ) {
     override fun toString(): String =
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
