@@ -168,7 +168,7 @@ object DeltakelseHistorikkEndringUtleder {
         nåværendeDeltakelseRevisjon: DeltakelseDAO,
     ): UtvidetKvoteHistorikk? {
         if (!kvoteUtvidet) return null
-        val periode = KvotePeriodeBeregner.beregn(nåværendeDeltakelseRevisjon.getFom())
+        val periode = KvotePeriodeBeregner.beregn(nåværendeDeltakelseRevisjon.getFom(), nåværendeDeltakelseRevisjon.harUtvidetKvote)
         return UtvidetKvoteHistorikk(
             utvidetFraOgMed = periode.fraOgMed,
             utvidetTilOgMed = periode.tilOgMed

@@ -69,5 +69,32 @@ class KvotePeriodeBeregnerTest {
         // ons, tor, fre, man, tir = 5 virkedager
         assertThat(resultat).isEqualTo(LocalDate.of(2025, 1, 14)) // tirsdag
     }
+
+    @Test
+    fun `beregn uten utvidet kvote gir 260 virkedager`() {
+        val startdato = LocalDate.of(2025, 1, 6) // mandag
+        val resultat = KvotePeriodeBeregner.beregn(startdato, harUtvidetKvote = false)
+
+        assertThat(resultat.fraOgMed).isEqualTo(startdato)
+        assertThat(resultat.tilOgMed).isEqualTo(KvotePeriodeBeregner.finnSluttdatoForVirkedager(startdato, 260))
+    }
+
+    @Test
+    fun `beregn med utvidet kvote gir 300 virkedager`() {
+        val startdato = LocalDate.of(2025, 1, 6) // mandag
+        val resultat = KvotePeriodeBeregner.beregn(startdato, harUtvidetKvote = true)
+
+        assertThat(resultat.fraOgMed).isEqualTo(startdato)
+        assertThat(resultat.tilOgMed).isEqualTo(KvotePeriodeBeregner.finnSluttdatoForVirkedager(startdato, 300))
+    }
+
+    @Test
+    fun `beregn default er uten utvidet kvote`() {
+        val startdato = LocalDate.of(2025, 1, 6)
+        val resultatDefault = KvotePeriodeBeregner.beregn(startdato)
+        val resultatExplicit = KvotePeriodeBeregner.beregn(startdato)
+
+        assertThat(resultatDefault).isEqualTo(resultatExplicit)
+    }
 }
 

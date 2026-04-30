@@ -17,15 +17,16 @@ object KvotePeriodeBeregner {
     private const val UTVIDET_KVOTE_VIRKEDAGER = 40
     private const val TOTALT_VIRKEDAGER_MED_UTVIDET_KVOTE = GRUNNKVOTE_VIRKEDAGER + UTVIDET_KVOTE_VIRKEDAGER
 
-    data class UtvidetKvotePeriode(
+    data class KvotePeriode(
         val fraOgMed: LocalDate,
         val tilOgMed: LocalDate,
     )
 
-    fun beregn(deltakelseStartdato: LocalDate): UtvidetKvotePeriode {
+    fun beregn(deltakelseStartdato: LocalDate, harUtvidetKvote: Boolean = false): KvotePeriode {
+        val antallVirkedager = if (harUtvidetKvote) TOTALT_VIRKEDAGER_MED_UTVIDET_KVOTE else GRUNNKVOTE_VIRKEDAGER
         val fraOgMed = deltakelseStartdato
-        val tilOgMed = finnSluttdatoForVirkedager(fraOgMed, TOTALT_VIRKEDAGER_MED_UTVIDET_KVOTE)
-        return UtvidetKvotePeriode(
+        val tilOgMed = finnSluttdatoForVirkedager(fraOgMed, antallVirkedager)
+        return KvotePeriode(
             fraOgMed = fraOgMed,
             tilOgMed = tilOgMed,
         )
