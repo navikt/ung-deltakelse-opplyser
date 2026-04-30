@@ -376,15 +376,21 @@ class UngdomsprogramregisterService(
             return eksisterendeDeltakelse.mapToDTO()
         }
 
+        // Hindre utvidelse av kvote dersom sluttdato er satt
+        if (eksisterendeDeltakelse.getTom() != null) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail = "Kan ikke utvide kvote når sluttdato er satt. Deltakelsen har allerede en sluttdato, og kvoten kan derfor ikke utvides."
+                },
+                null
+            )
+        }
+
         logger.info("Utvider kvote for deltakelse med id $deltakelseId med 8 uker")
 
         val utvidetKvotePeriode = KvotePeriodeBeregner.beregn(eksisterendeDeltakelse.getFom(), true)
 
-        // Hvis sluttdato er satt, utvid perioden slik at den dekker utvidet kvote fra startdato
-        if (eksisterendeDeltakelse.getTom() != null) {
-            val nyPeriode = Range.closed(utvidetKvotePeriode.fraOgMed, utvidetKvotePeriode.tilOgMed)
-            eksisterendeDeltakelse.oppdaterPeriode(nyPeriode)
-        }
 
         eksisterendeDeltakelse.markerSomUtvidetKvote()
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)

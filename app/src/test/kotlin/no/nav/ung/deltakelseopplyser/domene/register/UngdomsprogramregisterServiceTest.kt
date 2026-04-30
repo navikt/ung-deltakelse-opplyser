@@ -419,7 +419,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `Utvid kvote på deltakelse med sluttdato utvider perioden til 301 dager`() {
+    fun `Utvid kvote på deltakelse med sluttdato gir BAD_REQUEST`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
@@ -443,11 +443,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
             )
         )
 
-        val resultat = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
-
-        assertThat(resultat.harUtvidetKvote).isTrue()
-        assertThat(resultat.fraOgMed).isEqualTo(mandag)
-        assertThat(resultat.tilOgMed).isEqualTo(KvotePeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300))
+        val exception = assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+        }
+        assertThat(exception.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        assertThat(exception.body.detail).contains("sluttdato")
     }
 
     @Test
