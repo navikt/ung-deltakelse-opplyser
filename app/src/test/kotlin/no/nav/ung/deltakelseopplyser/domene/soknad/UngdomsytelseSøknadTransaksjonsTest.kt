@@ -24,6 +24,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendI
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.task.AktiverMikrofrontendMinSideTask
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
+import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
@@ -291,14 +292,16 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
             )
     )
 
-    private fun meldInnIProgrammet(søkerIdent: String): DeltakelseDTO =
-        registerService.leggTilIProgram(
+    private fun meldInnIProgrammet(søkerIdent: String): DeltakelseDTO {
+        val startdato = LocalDate.parse(DELTAKELSE_START)
+        return registerService.leggTilIProgram(
             DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
-                fraOgMed = LocalDate.parse(DELTAKELSE_START),
-                tilOgMed = null,
+                fraOgMed = startdato,
+                kvoteMaksDato = KvotePeriodeBeregner.beregn(startdato).tilOgMed
             )
         )
+    }
 
     private fun mockPdlIdent(søkerIdent: String) {
         val pdlPerson = IdentInformasjon(

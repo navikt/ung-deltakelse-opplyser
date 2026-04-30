@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
@@ -63,7 +64,8 @@ class UngdomsprogramRegisterVeilederController(
         )
         val deltakelseDTO = DeltakelseDTO(
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
-            fraOgMed = deltakelseInnmeldingDTO.startdato
+            fraOgMed = deltakelseInnmeldingDTO.startdato,
+            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseInnmeldingDTO.startdato).tilOgMed
         )
 
         return registerService.leggTilIProgram(deltakelseDTO).also {
@@ -150,6 +152,28 @@ class UngdomsprogramRegisterVeilederController(
             sporingsloggService.logg(
                 "/deltakelse/{deltakelseId}/endre/sluttdato",
                 "Endret sluttdato for deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
+    }
+
+    @PutMapping(
+        "/deltakelse/{deltakelseId}/utvid-kvote",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Utvider kvoten for en deltakelse i ungdomsprogrammet med 8 uker")
+    @ResponseStatus(HttpStatus.OK)
+    fun utvidKvote(@PathVariable deltakelseId: UUID): DeltakelseDTO {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
+        return registerService.utvidKvote(deltakelseId).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/utvid-kvote",
+                "Utvidet kvote for deltakelse med id $deltakelseId",
                 PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
                 EventClassId.AUDIT_UPDATE
             )

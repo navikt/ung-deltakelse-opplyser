@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register.historikk
 
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import java.util.*
 
@@ -31,13 +32,17 @@ object DeltakelseHistorikkEndringUtleder {
         val soktTidspunktErEndret =
             forrigeDeltakelseRevisjon?.søktTidspunkt != nåværendeDeltakelseRevisjon.søktTidspunkt
 
+        val kvoteUtvidet =
+            nåværendeDeltakelseRevisjon.harUtvidetKvote && forrigeDeltakelseRevisjon?.harUtvidetKvote != true
+
         // Lag liste med navn på de feltene som faktisk endret seg
         val endredeFelter = listOfNotNull(
             "startdato".takeIf { startdatoErEndret },
             "sluttdatoSatt".takeIf { deltakerMeldtUt },
-            "sluttdatoEndret".takeIf { sluttdatoErEndret },
+            "sluttdatoEndret".takeIf { sluttdatoErEndret && !kvoteUtvidet },
             "søktTidspunkt".takeIf { soktTidspunktErEndret },
-            "deltakelseFjernet".takeIf { deltakelseErFjernet }
+            "deltakelseFjernet".takeIf { deltakelseErFjernet },
+            "utvidetKvote".takeIf { kvoteUtvidet }
         )
 
         håndterFlereEndringerISammeRevisjon(endredeFelter, nåværendeDeltakelseRevisjon.id)
@@ -49,7 +54,8 @@ object DeltakelseHistorikkEndringUtleder {
                 deltakerMeldtUt,
                 sluttdatoErEndret,
                 soktTidspunktErEndret,
-                deltakelseErFjernet
+                deltakelseErFjernet,
+                kvoteUtvidet
             ),
 
             endretStartdatoData = utledEndretStartdatoHistorikkDTO(
@@ -61,7 +67,7 @@ object DeltakelseHistorikkEndringUtleder {
             deltakerMeldtUtData = utledDeltakerMeldtUtHistorikk(deltakerMeldtUt, nåværendeDeltakelseRevisjon),
 
             endretSluttdatoData = utledEndretSluttdatoHistorikkDTO(
-                sluttdatoErEndret,
+                sluttdatoErEndret && !kvoteUtvidet,
                 forrigeDeltakelseRevisjon,
                 nåværendeDeltakelseRevisjon
             ),
@@ -71,7 +77,9 @@ object DeltakelseHistorikkEndringUtleder {
             deltakelseFjernetData = if (deltakelseErFjernet) DeltakelseFjernetHistorikk(
                 forrigeStartdato = forrigeDeltakelseRevisjon!!.getFom(),
                 forrigeSluttdato = forrigeSluttdato
-            ) else null
+            ) else null,
+
+            utvidetKvoteData = utledUtvidetKvoteHistorikk(kvoteUtvidet, nåværendeDeltakelseRevisjon)
         )
     }
 
@@ -133,12 +141,14 @@ object DeltakelseHistorikkEndringUtleder {
         sluttdatoErEndret: Boolean,
         soktTidspunktErEndret: Boolean,
         deltakelseErFjernet: Boolean,
+        kvoteUtvidet: Boolean,
     ) = when {
         // Dersom vi ikke har en tidligere revisjon, betyr det at dette er den første revisjonen for deltakelsen.
         // Vi tolker dette som at deltakelsen er opprettet og at deltakeren er meldt inn i programmet.
         forrigeDeltakelseRevisjon == null -> Endringstype.DELTAKER_MELDT_INN
         startdatoErEndret -> Endringstype.ENDRET_STARTDATO
         deltakerMeldtUt -> Endringstype.DELTAKER_MELDT_UT
+        kvoteUtvidet -> Endringstype.UTVIDET_KVOTE
         sluttdatoErEndret -> Endringstype.ENDRET_SLUTTDATO
         soktTidspunktErEndret -> Endringstype.DELTAKER_HAR_SØKT_YTELSE
         deltakelseErFjernet -> Endringstype.DELTAKELSE_FJERNET
@@ -153,6 +163,18 @@ object DeltakelseHistorikkEndringUtleder {
         }
     }
 
+    private fun utledUtvidetKvoteHistorikk(
+        kvoteUtvidet: Boolean,
+        nåværendeDeltakelseRevisjon: DeltakelseDAO,
+    ): UtvidetKvoteHistorikk? {
+        if (!kvoteUtvidet) return null
+        val periode = KvotePeriodeBeregner.beregn(nåværendeDeltakelseRevisjon.getFom(), nåværendeDeltakelseRevisjon.harUtvidetKvote)
+        return UtvidetKvoteHistorikk(
+            utvidetFraOgMed = periode.fraOgMed,
+            utvidetTilOgMed = periode.tilOgMed
+        )
+    }
+
     data class HistorikkEndring(
         val endringstype: Endringstype,
         val endretStartdatoData: EndretStartdatoHistorikk?,
@@ -160,5 +182,6 @@ object DeltakelseHistorikkEndringUtleder {
         val endretSluttdatoData: EndretSluttdatoHistorikk?,
         val søktTidspunktSatt: SøktTidspunktHistorikk?,
         val deltakelseFjernetData: DeltakelseFjernetHistorikk?,
+        val utvidetKvoteData: UtvidetKvoteHistorikk?,
     )
 }
