@@ -342,6 +342,45 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
+    /**
+     * Setter sluttdato på en deltakelse fra ung-sak (system-kall).
+     * Brukes ved automatisk opphør.
+     * Sender IKKE hendelse tilbake til ung-sak for å unngå loop.
+     */
+    @Transactional(TRANSACTION_MANAGER)
+    fun settSluttdatoFraSystem(deltakelseId: UUID, sluttdato: LocalDate): DeltakelseDTO {
+        val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
+        logger.info("Setter sluttdato fra system for deltakelse med id $deltakelseId til $sluttdato")
+
+        val deltakelseFraOgMedDato = eksisterendeDeltakelse.getFom()
+
+        if (sluttdato < deltakelseFraOgMedDato) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail = "Sluttdato kan ikke være før startdato"
+                },
+                null
+            )
+        }
+
+        if (sluttdato < LocalDate.now()) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail = "Sluttdato kan ikke være før nåværende dato"
+                },
+                null
+            )
+        }
+
+        val nyPeriodeMedSluttdato = Range.closed(deltakelseFraOgMedDato, sluttdato)
+        eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeMedSluttdato)
+        val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
+
+        return oppdatertDeltakelse.mapToDTO()
+    }
+
     @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun sjekkAktivDeltakelse(deltakerIdent: String): DeltakelseSjekk {
         logger.info("Sjekker om bruker er aktiv deltaker i ungdomsprogrammet.")
