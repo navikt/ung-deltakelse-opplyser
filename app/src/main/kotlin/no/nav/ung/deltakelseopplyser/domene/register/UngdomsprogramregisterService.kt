@@ -21,6 +21,7 @@ import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramUtvidetKvoteHendelse
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -44,7 +45,8 @@ class UngdomsprogramregisterService(
     private val pdlService: PdlService,
     private val ungBrukerdialogService: UngBrukerdialogService,
     private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
-    @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean
+    @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
+    @Value("\${UTVID_KVOTE_ENABLED:false}") private val utvidKvoteEnabled: Boolean
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -58,7 +60,9 @@ class UngdomsprogramregisterService(
                 fraOgMed = getFom(),
                 tilOgMed = getTom(),
                 erSlettet = erSlettet,
-                harOpphørsvedtak = harOpphørsvedtak
+                harOpphørsvedtak = harOpphørsvedtak,
+                harUtvidetKvote = harUtvidetKvote,
+                kvoteMaksDato = KvotePeriodeBeregner.beregn(getFom(), harUtvidetKvote).tilOgMed
             )
         }
     }
@@ -295,6 +299,17 @@ class UngdomsprogramregisterService(
     @Transactional(TRANSACTION_MANAGER)
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
+
+        if (eksisterendeDeltakelse.harUtvidetKvote) {
+            throw ErrorResponseException(
+                HttpStatus.CONFLICT,
+                ProblemDetail.forStatus(HttpStatus.CONFLICT).also {
+                    it.detail = "Kan ikke endre startdato når kvoten allerede er utvidet"
+                },
+                null
+            )
+        }
+
         val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id)
             ?: throw IllegalStateException("Deltakerpersonalia er null")
 
@@ -342,41 +357,47 @@ class UngdomsprogramregisterService(
         return oppdatertDeltakelse.mapToDTO()
     }
 
-    /**
-     * Setter sluttdato på en deltakelse fra ung-sak (system-kall).
-     * Brukes ved automatisk opphør.
-     * Sender IKKE hendelse tilbake til ung-sak for å unngå loop.
-     */
     @Transactional(TRANSACTION_MANAGER)
-    fun settSluttdatoFraSystem(deltakelseId: UUID, sluttdato: LocalDate): DeltakelseDTO {
+    fun utvidKvote(deltakelseId: UUID): DeltakelseDTO {
+        if (!utvidKvoteEnabled) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatus(HttpStatus.FORBIDDEN).also {
+                    it.detail = "Utvid kvote er ikke aktivert"
+                },
+                null
+            )
+        }
+
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
-        logger.info("Setter sluttdato fra system for deltakelse med id $deltakelseId til $sluttdato")
 
-        val deltakelseFraOgMedDato = eksisterendeDeltakelse.getFom()
+        // Idempotens: hvis kvoten allerede er utvidet, returner eksisterende DTO
+        if (eksisterendeDeltakelse.harUtvidetKvote) {
+            logger.info("Kvote er allerede utvidet for deltakelse med id $deltakelseId. Returnerer eksisterende.")
+            return eksisterendeDeltakelse.mapToDTO()
+        }
 
-        if (sluttdato < deltakelseFraOgMedDato) {
+        // Hindre utvidelse av kvote dersom sluttdato er satt
+        if (eksisterendeDeltakelse.getTom() != null) {
             throw ErrorResponseException(
                 HttpStatus.BAD_REQUEST,
                 ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
-                    it.detail = "Sluttdato kan ikke være før startdato"
+                    it.detail = "Kan ikke utvide kvote når sluttdato er satt. Deltakelsen har allerede en sluttdato, og kvoten kan derfor ikke utvides."
                 },
                 null
             )
         }
 
-        if (sluttdato < LocalDate.now()) {
-            throw ErrorResponseException(
-                HttpStatus.BAD_REQUEST,
-                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
-                    it.detail = "Sluttdato kan ikke være før nåværende dato"
-                },
-                null
-            )
-        }
+        logger.info("Utvider kvote for deltakelse med id $deltakelseId med 8 uker")
 
-        val nyPeriodeMedSluttdato = Range.closed(deltakelseFraOgMedDato, sluttdato)
-        eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeMedSluttdato)
+        val utvidetKvotePeriode = KvotePeriodeBeregner.beregn(eksisterendeDeltakelse.getFom(), true)
+
+
+        eksisterendeDeltakelse.markerSomUtvidetKvote()
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
+
+        // Send hendelse til ung-sak med perioden fra startdato til utvidet sluttdato
+        sendUtvidetKvoteHendelseTilUngSak(oppdatertDeltakelse, utvidetKvotePeriode.fraOgMed, utvidetKvotePeriode.tilOgMed)
 
         return oppdatertDeltakelse.mapToDTO()
     }
@@ -487,6 +508,36 @@ class UngdomsprogramregisterService(
 
         val hendelse = UngdomsprogramEndretStartdatoHendelse(hendelseInfo.build(), startdato)
         ungSakService.sendInnHendelse(hendelse = HendelseDto(hendelse, AktørId(nåværendeAktørId)))
+    }
+
+    private fun sendUtvidetKvoteHendelseTilUngSak(
+        oppdatert: DeltakelseDAO,
+        utvidetFraOgMed: LocalDate,
+        utvidetTilOgMed: LocalDate,
+    ) {
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+
+        logger.info("Sender inn hendelse til ung-sak om at kvoten er utvidet med 8 uker")
+
+        val hendelsedato = LocalDateTime.now()
+
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramUtvidetKvoteHendelse(
+            hendelseInfo.build(),
+            Periode(utvidetFraOgMed, utvidetTilOgMed)
+        )
+        ungSakService.sendInnHendelse(
+            hendelse = HendelseDto(
+                hendelse,
+                AktørId(nåværendeAktørId)
+            )
+        )
     }
 
     private fun DeltakelseDTO.mapToDAO(deltakerDAO: DeltakerDAO): DeltakelseDAO {
