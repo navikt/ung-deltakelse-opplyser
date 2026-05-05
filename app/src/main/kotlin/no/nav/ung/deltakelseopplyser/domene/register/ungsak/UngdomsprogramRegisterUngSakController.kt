@@ -10,16 +10,13 @@ import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import no.nav.ung.deltakelseopplyser.config.Issuers
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.ungsak.DeltakelseOpplysningerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.ungsak.SettSluttdatoDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.sak.kontrakt.person.AktørIdDto
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 
 @RestController
@@ -53,17 +50,6 @@ class UngdomsprogramRegisterUngSakController(
         }
         val opplysninger = registerService.hentIkkeSlettetForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
         return DeltakelseOpplysningerDTO(opplysninger)
-    }
-
-    @PutMapping("/{deltakelseId}/sluttdato", produces = [MediaType.APPLICATION_JSON_VALUE])
-    @Operation(summary = "Sett sluttdato på en deltakelse. Brukes av ung-sak ved automatisk opphør.")
-    @ResponseStatus(HttpStatus.OK)
-    fun settSluttdato(
-        @PathVariable deltakelseId: UUID,
-        @RequestBody settSluttdatoDTO: SettSluttdatoDTO
-    ): DeltakelseDTO {
-        tilgangskontrollService.krevSystemtilgang()
-        return registerService.settSluttdatoFraSystem(deltakelseId, settSluttdatoDTO.sluttdato)
     }
 
 }
