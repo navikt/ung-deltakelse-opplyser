@@ -43,6 +43,9 @@ class DeltakelseDAO(
     @Column(name = "har_opphoersvedtak")
     var harOpphørsvedtak: Boolean = false,
 
+    @Column(name = "maks_dato")
+    var maksDato: LocalDate? = null,
+
     @Column(name = "søkt_tidspunkt")
     var søktTidspunkt: ZonedDateTime? = null,
 ) : BaseAuditEntity() {
@@ -77,4 +80,3 @@ class DeltakelseDAO(
         harOpphørsvedtak = true
     }
 }
-
