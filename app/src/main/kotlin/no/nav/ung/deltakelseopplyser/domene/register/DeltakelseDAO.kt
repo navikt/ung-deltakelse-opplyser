@@ -84,3 +84,8 @@ class DeltakelseDAO(
         harUtvidetKvote = true
     }
 }
+
+    fun markerSomUtvidetKvote() {
+        harUtvidetKvote = true
+    }
+}

@@ -15,6 +15,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
+import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
@@ -71,11 +72,12 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
         val journalpostId = "671161658"
         val søknadId = UUID.randomUUID()
 
+        val startdato = LocalDate.now()
         val deltakelseDTO = ungdomsprogramregisterService.leggTilIProgram(
             DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
-                fraOgMed = LocalDate.now(),
-                tilOgMed = null
+                fraOgMed = startdato,
+                kvoteMaksDato = KvotePeriodeBeregner.beregn(startdato).tilOgMed
             )
         )
 
