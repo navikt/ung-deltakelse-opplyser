@@ -23,6 +23,7 @@ import java.time.LocalDateTime
  *
  * Dette er scenario 4: naturlig avslutning.
  * Deltaker-appen setter selv opphørsdato når maksdato passeres.
+ * Maksdato beregnes dynamisk via KvotePeriodeBeregner.
  */
 @Service
 @Profile(value = ["prod-gcp", "dev-gcp"])
@@ -39,8 +40,9 @@ class AvsluttDeltakelseVedMaksdatoJobb(
     }
 
     /**
-     * Finner alle aktive deltakelser der maksdato <= i dag og tilOgMed ikke er satt,
-     * og setter sluttdato = maksdato. Sender opphørshendelse til ung-sak.
+     * Finner alle aktive deltakelser uten sluttdato, beregner maksdato via KvotePeriodeBeregner,
+     * og setter sluttdato = maksdato for de som har passert maksdato.
+     * Sender opphørshendelse til ung-sak.
      */
     @Scheduled(cron = CRON_DAGLIG_KL_06)
     fun avsluttDeltakelserVedMaksdato() {
@@ -52,7 +54,13 @@ class AvsluttDeltakelseVedMaksdatoJobb(
         val iDag = LocalDate.now()
         log.info("Starter jobb for å avslutte deltakelser der maksdato <= $iDag")
 
-        val deltakelser = deltakelseRepository.findAktiveDeltakelserMedMaksdatoPassert(iDag)
+        val aktiveDeltakelser = deltakelseRepository.findAktiveDeltakelserUtenSluttdato()
+
+        val deltakelser = aktiveDeltakelser.filter { deltakelse ->
+            val maksdato = KvotePeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harUtvidetKvote).tilOgMed
+            maksdato <= iDag
+        }
+
         log.info("Fant ${deltakelser.size} deltakelser som skal avsluttes.")
 
         deltakelser.forEach { deltakelse ->
@@ -68,8 +76,7 @@ class AvsluttDeltakelseVedMaksdatoJobb(
 
     @Transactional(TRANSACTION_MANAGER)
     fun avsluttEnkeltDeltakelse(deltakelse: DeltakelseDAO) {
-        val maksdato = deltakelse.maksDato
-            ?: throw IllegalStateException("Deltakelse ${deltakelse.id} mangler maksdato")
+        val maksdato = KvotePeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harUtvidetKvote).tilOgMed
 
         log.info("Avslutter deltakelse ${deltakelse.id} med sluttdato = maksdato = $maksdato")
 

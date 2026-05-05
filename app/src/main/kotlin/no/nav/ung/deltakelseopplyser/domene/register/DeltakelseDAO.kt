@@ -43,8 +43,8 @@ class DeltakelseDAO(
     @Column(name = "har_opphoersvedtak")
     var harOpphørsvedtak: Boolean = false,
 
-    @Column(name = "maks_dato")
-    var maksDato: LocalDate? = null,
+    @Column(name = "har_utvidet_kvote")
+    var harUtvidetKvote: Boolean = false,
 
     @Column(name = "søkt_tidspunkt")
     var søktTidspunkt: ZonedDateTime? = null,
@@ -78,5 +78,9 @@ class DeltakelseDAO(
 
     fun markerMedOpphørsvedtak() {
         harOpphørsvedtak = true
+    }
+
+    fun markerSomUtvidetKvote() {
+        harUtvidetKvote = true
     }
 }
