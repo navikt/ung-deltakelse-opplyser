@@ -3,19 +3,12 @@ package no.nav.ung.deltakelseopplyser.domene.register
 import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
 import no.nav.ung.deltakelseopplyser.integration.leader.LeaderElectorService
-import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
-import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
-import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
-import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
-import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
-import no.nav.ung.sak.typer.AktørId
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 /**
  * Schedulert jobb som setter sluttdato (opphørsdato) på deltakelser
@@ -29,8 +22,6 @@ import java.time.LocalDateTime
 @Profile(value = ["prod-gcp", "dev-gcp"])
 class AvsluttDeltakelseVedMaksdatoJobb(
     private val deltakelseRepository: DeltakelseRepository,
-    private val pdlService: PdlService,
-    private val ungSakService: UngSakService,
     private val leaderElectorService: LeaderElectorService,
 ) {
 
@@ -42,7 +33,6 @@ class AvsluttDeltakelseVedMaksdatoJobb(
     /**
      * Finner alle aktive deltakelser uten sluttdato, beregner maksdato via KvotePeriodeBeregner,
      * og setter sluttdato = maksdato for de som har passert maksdato.
-     * Sender opphørshendelse til ung-sak.
      */
     @Scheduled(cron = CRON_DAGLIG_KL_06)
     fun avsluttDeltakelserVedMaksdato() {
@@ -83,25 +73,5 @@ class AvsluttDeltakelseVedMaksdatoJobb(
         val nyPeriode = Range.closed(deltakelse.getFom(), maksdato)
         deltakelse.oppdaterPeriode(nyPeriode)
         deltakelseRepository.save(deltakelse)
-
-        // Send hendelse til ung-sak
-        sendOpphørsHendelseTilUngSak(deltakelse, maksdato)
-    }
-
-    private fun sendOpphørsHendelseTilUngSak(deltakelse: DeltakelseDAO, opphørsdato: LocalDate) {
-        try {
-            val aktørIder = pdlService.hentAktørIder(deltakelse.deltaker.deltakerIdent)
-            val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
-
-            val hendelseInfo = HendelseInfo.Builder().medOpprettet(LocalDateTime.now())
-            aktørIder.forEach { hendelseInfo.leggTilAktør(AktørId(it.ident)) }
-
-            val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
-            ungSakService.sendInnHendelse(HendelseDto(hendelse, AktørId(nåværendeAktørId)))
-
-            log.info("Sendt opphørshendelse til ung-sak for deltakelse ${deltakelse.id}")
-        } catch (e: Exception) {
-            log.error("Kunne ikke sende opphørshendelse til ung-sak for deltakelse ${deltakelse.id}", e)
-        }
     }
 }
