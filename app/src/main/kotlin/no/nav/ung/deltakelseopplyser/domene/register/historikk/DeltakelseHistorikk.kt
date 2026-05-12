@@ -22,7 +22,7 @@ data class DeltakelseHistorikk(
     val endretSluttdato: EndretSluttdatoHistorikk?,
     val søktTidspunktSatt: SøktTidspunktHistorikk?,
      val deltakelseFjernet: DeltakelseFjernetHistorikk?,
-    val utvidetKvote: UtvidetKvoteHistorikk?
+    val forlengetPeriode: ForlengetPeriodeHistorikk?
 ) {
 
     companion object {
@@ -77,11 +77,11 @@ data class DeltakelseHistorikk(
                 "Deltakelsen ${formattertPeriode} er fjernet."
             }
 
-            Endringstype.UTVIDET_KVOTE -> {
-                requireNotNull(utvidetKvote)
-                val fraOgMed = DATE_FORMATTER.format(utvidetKvote.utvidetFraOgMed)
-                val tilOgMed = DATE_FORMATTER.format(utvidetKvote.utvidetTilOgMed)
-                "Kvote er utvidet med 8 uker (fra $fraOgMed til $tilOgMed)."
+            Endringstype.FORLENGET_PERIODE -> {
+                requireNotNull(forlengetPeriode)
+                val fraOgMed = DATE_FORMATTER.format(forlengetPeriode.forlengetFraOgMed)
+                val tilOgMed = DATE_FORMATTER.format(forlengetPeriode.forlengetTilOgMed)
+                "Perioden er forlenget med 8 uker (fra $fraOgMed til $tilOgMed)."
             }
 
             Endringstype.UKJENT -> "Endringstype er ukjent."

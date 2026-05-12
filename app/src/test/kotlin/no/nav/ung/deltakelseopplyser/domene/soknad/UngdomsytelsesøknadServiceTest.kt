@@ -19,7 +19,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
-import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
+import no.nav.ung.deltakelseopplyser.domene.register.ForlengetPeriodeBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.soknad.kafka.Ungdomsytelsesøknad
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
@@ -154,7 +154,7 @@ class UngdomsytelsesøknadServiceTest : AbstractIntegrationTest() {
             deltakelseDTO = DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
                 fraOgMed = LocalDate.parse(deltakelseStart),
-                kvoteMaksDato = KvotePeriodeBeregner.beregn(LocalDate.parse(deltakelseStart)).tilOgMed
+                forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(LocalDate.parse(deltakelseStart)).tilOgMed
             )
         )
     }

@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.register
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonUnwrapped
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -26,15 +27,28 @@ data class DeltakelseDTO(
     @JsonProperty("harOpphørsvedtak")
     val harOpphørsvedtak: Boolean = false,
 
-    @JsonProperty("harUtvidetKvote")
-    val harUtvidetKvote: Boolean = false,
+    @JsonProperty("harForlengetPeriode")
+    @JsonAlias("harUtvidetKvote")
+    val harForlengetPeriode: Boolean = false,
 
     @JsonProperty("søktTidspunkt")
     val søktTidspunkt: ZonedDateTime? = null,
 
-    @JsonProperty("kvoteMaksDato")
-    val kvoteMaksDato: LocalDate
+    @JsonProperty("forlengetPeriodeMaksDato")
+    @JsonAlias("kvoteMaksDato")
+    val forlengetPeriodeMaksDato: LocalDate
 ) {
+
+    /** @deprecated Bruk [harForlengetPeriode]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk harForlengetPeriode", ReplaceWith("harForlengetPeriode"))
+    @get:JsonProperty("harUtvidetKvote")
+    val harUtvidetKvote: Boolean get() = harForlengetPeriode
+
+    /** @deprecated Bruk [forlengetPeriodeMaksDato]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk forlengetPeriodeMaksDato", ReplaceWith("forlengetPeriodeMaksDato"))
+    @get:JsonProperty("kvoteMaksDato")
+    val kvoteMaksDato: LocalDate get() = forlengetPeriodeMaksDato
+
     override fun toString(): String =
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
 }

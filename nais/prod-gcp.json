@@ -121,7 +121,7 @@
 
     "SLETT_SOKT_DELTAKELSE_ENABLED": false,
 
-    "UTVID_KVOTE_ENABLED": false,
+    "FORLENG_PERIODE_ENABLED": false,
 
     "FLYWAY_REPAIR_ON_FAIL": false,
 
