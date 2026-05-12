@@ -1,0 +1,3 @@
+flyway:
+  - changed-files:
+      - any-glob-to-any-file: 'app/src/main/resources/db/migration/**'
