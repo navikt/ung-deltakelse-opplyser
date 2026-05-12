@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import java.util.*
 
 interface DeltakelseRepository : JpaRepository<DeltakelseDAO, UUID> {
@@ -9,4 +10,13 @@ interface DeltakelseRepository : JpaRepository<DeltakelseDAO, UUID> {
 
     fun findByIdAndDeltaker_IdIn(id: UUID, deltakerIds: List<UUID>): DeltakelseDAO?
 
+    /**
+     * Finner aktive deltakelser uten sluttdato (upper bound er null) som ikke er slettet.
+     */
+    @Query("""
+        SELECT d.* FROM ungdomsprogram_deltakelse d
+        WHERE d.er_slettet = false
+        AND upper(d.periode) IS NULL
+    """, nativeQuery = true)
+    fun findAktiveDeltakelserUtenSluttdato(): List<DeltakelseDAO>
 }
