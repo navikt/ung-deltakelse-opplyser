@@ -15,7 +15,7 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.domene.soknad.UngdomsytelsesøknadService
 import no.nav.ung.deltakelseopplyser.domene.soknad.repository.SøknadRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
-import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
+import no.nav.ung.deltakelseopplyser.domene.register.ForlengetPeriodeBeregner
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
@@ -77,7 +77,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
             DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
                 fraOgMed = startdato,
-                kvoteMaksDato = KvotePeriodeBeregner.beregn(startdato).tilOgMed
+                forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
             )
         )
 

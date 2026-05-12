@@ -4,29 +4,29 @@ import no.nav.fpsak.tidsserie.LocalDateInterval
 import java.time.LocalDate
 
 /**
- * Beregner kvoteperiode for en deltakelse i ungdomsprogrammet.
+ * Beregner forlenget periode for en deltakelse i ungdomsprogrammet.
  *
- * Programmet har en grunnkvote på 260 virkedager. Ved utvidet kvote legges det til
- * 40 nye virkedager kant i kant etter grunnkvoten.
+ * Programmet har en grunnperiode på 260 virkedager. Ved forlenget periode legges det til
+ * 40 nye virkedager kant i kant etter grunnperioden.
  *
  * Helger (lørdag/søndag) telles ikke med – kun virkedager (mandag–fredag).
  */
-object KvotePeriodeBeregner {
+object ForlengetPeriodeBeregner {
 
-    private const val GRUNNKVOTE_VIRKEDAGER = 260
-    private const val UTVIDET_KVOTE_VIRKEDAGER = 40
-    private const val TOTALT_VIRKEDAGER_MED_UTVIDET_KVOTE = GRUNNKVOTE_VIRKEDAGER + UTVIDET_KVOTE_VIRKEDAGER
+    private const val GRUNNPERIODE_VIRKEDAGER = 260
+    private const val FORLENGET_PERIODE_VIRKEDAGER = 40
+    private const val TOTALT_VIRKEDAGER_MED_FORLENGET_PERIODE = GRUNNPERIODE_VIRKEDAGER + FORLENGET_PERIODE_VIRKEDAGER
 
-    data class KvotePeriode(
+    data class ForlengetPeriode(
         val fraOgMed: LocalDate,
         val tilOgMed: LocalDate,
     )
 
-    fun beregn(deltakelseStartdato: LocalDate, harUtvidetKvote: Boolean = false): KvotePeriode {
-        val antallVirkedager = if (harUtvidetKvote) TOTALT_VIRKEDAGER_MED_UTVIDET_KVOTE else GRUNNKVOTE_VIRKEDAGER
+    fun beregn(deltakelseStartdato: LocalDate, harForlengetPeriode: Boolean = false): ForlengetPeriode {
+        val antallVirkedager = if (harForlengetPeriode) TOTALT_VIRKEDAGER_MED_FORLENGET_PERIODE else GRUNNPERIODE_VIRKEDAGER
         val fraOgMed = deltakelseStartdato
         val tilOgMed = finnSluttdatoForVirkedager(fraOgMed, antallVirkedager)
-        return KvotePeriode(
+        return ForlengetPeriode(
             fraOgMed = fraOgMed,
             tilOgMed = tilOgMed,
         )
@@ -48,3 +48,4 @@ object KvotePeriodeBeregner {
         return dato
     }
 }
+
