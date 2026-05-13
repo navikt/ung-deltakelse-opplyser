@@ -39,15 +39,15 @@ data class DeltakelseDTO(
     val periodeMaksDato: LocalDate
 ) {
 
-    /** @deprecated Bruk [harForlengetPeriode]. Beholdt for bakoverkompatibilitet. */
-    @Deprecated("Bruk harForlengetPeriode", ReplaceWith("harForlengetPeriode"))
-    @get:JsonProperty("harUtvidetKvote")
-    val harUtvidetKvote: Boolean get() = harForlengetPeriode
-
     /** @deprecated Bruk [periodeMaksDato]. Beholdt for bakoverkompatibilitet. */
     @Deprecated("Bruk periodeMaksDato", ReplaceWith("periodeMaksDato"))
     @get:JsonProperty("forlengetPeriodeMaksDato")
     val forlengetPeriodeMaksDato: LocalDate get() = periodeMaksDato
+
+    /** @deprecated Bruk [harForlengetPeriode]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk harForlengetPeriode", ReplaceWith("harForlengetPeriode"))
+    @get:JsonProperty("harUtvidetKvote")
+    val harUtvidetKvote: Boolean get() = harForlengetPeriode
 
     /** @deprecated Bruk [periodeMaksDato]. Beholdt for bakoverkompatibilitet. */
     @Deprecated("Bruk periodeMaksDato", ReplaceWith("periodeMaksDato"))
