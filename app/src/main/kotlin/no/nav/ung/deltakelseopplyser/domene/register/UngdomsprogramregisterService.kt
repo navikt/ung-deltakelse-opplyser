@@ -61,7 +61,7 @@ class UngdomsprogramregisterService(
                 erSlettet = erSlettet,
                 harOpphørsvedtak = harOpphørsvedtak,
                 harForlengetPeriode = harForlengetPeriode,
-                forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(getFom(), harForlengetPeriode).tilOgMed
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(getFom(), harForlengetPeriode).tilOgMed
             )
         }
     }

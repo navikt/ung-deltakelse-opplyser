@@ -65,7 +65,7 @@ class UngdomsprogramRegisterVeilederController(
         val deltakelseDTO = DeltakelseDTO(
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
             fraOgMed = deltakelseInnmeldingDTO.startdato,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseInnmeldingDTO.startdato).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseInnmeldingDTO.startdato).tilOgMed
         )
 
         return registerService.leggTilIProgram(deltakelseDTO).also {

@@ -34,20 +34,25 @@ data class DeltakelseDTO(
     @JsonProperty("søktTidspunkt")
     val søktTidspunkt: ZonedDateTime? = null,
 
-    @JsonProperty("forlengetPeriodeMaksDato")
-    @JsonAlias("kvoteMaksDato")
-    val forlengetPeriodeMaksDato: LocalDate
+    @JsonProperty("periodeMaksDato")
+    @JsonAlias("forlengetPeriodeMaksDato", "kvoteMaksDato")
+    val periodeMaksDato: LocalDate
 ) {
+
+    /** @deprecated Bruk [periodeMaksDato]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk periodeMaksDato", ReplaceWith("periodeMaksDato"))
+    @get:JsonProperty("forlengetPeriodeMaksDato")
+    val forlengetPeriodeMaksDato: LocalDate get() = periodeMaksDato
 
     /** @deprecated Bruk [harForlengetPeriode]. Beholdt for bakoverkompatibilitet. */
     @Deprecated("Bruk harForlengetPeriode", ReplaceWith("harForlengetPeriode"))
     @get:JsonProperty("harUtvidetKvote")
     val harUtvidetKvote: Boolean get() = harForlengetPeriode
 
-    /** @deprecated Bruk [forlengetPeriodeMaksDato]. Beholdt for bakoverkompatibilitet. */
-    @Deprecated("Bruk forlengetPeriodeMaksDato", ReplaceWith("forlengetPeriodeMaksDato"))
+    /** @deprecated Bruk [periodeMaksDato]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk periodeMaksDato", ReplaceWith("periodeMaksDato"))
     @get:JsonProperty("kvoteMaksDato")
-    val kvoteMaksDato: LocalDate get() = forlengetPeriodeMaksDato
+    val kvoteMaksDato: LocalDate get() = periodeMaksDato
 
     override fun toString(): String =
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
