@@ -85,7 +85,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = startdato,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -103,7 +103,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -118,7 +118,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
             ungdomsprogramregisterService.leggTilIProgram(
                 dto.copy(
                     fraOgMed = onsdag,
-                    forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
+                    periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
                 )
             )
         }
@@ -130,7 +130,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
             fraOgMed = programDato.minusDays(2),
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(programDato.minusDays(2)).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(programDato.minusDays(2)).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -153,7 +153,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
             fraOgMed = tjuveniårsdag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(tjuveniårsdag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(tjuveniårsdag).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -176,7 +176,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
             tilOgMed = deltakelseStartdato.plusDays(10),
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
@@ -193,7 +193,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -214,7 +214,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -238,7 +238,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -264,7 +264,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -288,7 +288,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -300,7 +300,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val oppdatertDto = DeltakelseDTO(
             deltaker = innmelding.deltaker,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
             tilOgMed = onsdag,
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
@@ -323,7 +323,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -335,7 +335,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val oppdatertDto = DeltakelseDTO(
             deltaker = innmelding.deltaker,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
             tilOgMed = onsdag,
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
@@ -355,7 +355,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         ungdomsprogramregisterService.leggTilIProgram(dto)
         assertThrows<DataIntegrityViolationException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
@@ -369,7 +369,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
@@ -407,7 +407,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -430,7 +430,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -438,7 +438,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
             innmelding.id!!, DeltakelseDTO(
                 deltaker = innmelding.deltaker,
                 fraOgMed = mandag,
-                forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
                 tilOgMed = mandag.plusDays(100),
             )
         )
@@ -462,7 +462,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -486,7 +486,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
         ungdomsprogramregisterService.forlengPeriode(innmelding.id!!)

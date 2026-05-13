@@ -77,7 +77,7 @@ class UngdomsytelsesøknadKonsumentTest : AbstractIntegrationTest() {
             DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
                 fraOgMed = startdato,
-                forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
             )
         )
 

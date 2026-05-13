@@ -154,7 +154,7 @@ class UngdomsytelsesøknadServiceTest : AbstractIntegrationTest() {
             deltakelseDTO = DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = søkerIdent),
                 fraOgMed = LocalDate.parse(deltakelseStart),
-                forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(LocalDate.parse(deltakelseStart)).tilOgMed
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(LocalDate.parse(deltakelseStart)).tilOgMed
             )
         )
     }

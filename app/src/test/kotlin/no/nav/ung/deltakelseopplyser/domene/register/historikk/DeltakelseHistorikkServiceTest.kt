@@ -92,7 +92,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull
@@ -114,7 +114,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
                 deltaker = innmelding.deltaker,
                 fraOgMed = onsdag,
                 tilOgMed = onsdag,
-                forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
             )
         ) // Fører til fjerde historikkinnslag
 
@@ -253,7 +253,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull
@@ -285,7 +285,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            forlengetPeriodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
         val deltakelseId = innmelding.id!!
