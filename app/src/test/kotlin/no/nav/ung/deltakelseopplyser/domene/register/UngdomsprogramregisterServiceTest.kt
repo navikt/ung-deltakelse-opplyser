@@ -195,6 +195,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+
         val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
@@ -223,6 +224,8 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val utmelding = ungdomsprogramregisterService.fjernFraProgram(deltakerDAO!!)
 
         assertTrue(utmelding)
+        assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isEmpty()
+        assertThat(deltakelseVeilederEnhetRepository.findByDeltakelseId(innmelding.id!!)).isNull()
     }
 
     @Test
