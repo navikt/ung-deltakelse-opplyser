@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
 import org.springframework.dao.DataIntegrityViolationException
@@ -44,6 +43,12 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
+
+    @Autowired
+    lateinit var deltakelseVeilederEnhetRepository: DeltakelseVeilederEnhetRepository
+
+    @jakarta.persistence.PersistenceContext
+    private lateinit var entityManager: jakarta.persistence.EntityManager
 
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
@@ -72,10 +77,6 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     fun beforeEach() {
         springTokenValidationContextHolder.mockContext()
         every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(defaultFødselsdato)
-    }
-
-    private companion object {
-        private val logger = LoggerFactory.getLogger(UngdomsprogramregisterServiceTest::class.java)
     }
 
     @Test
@@ -188,7 +189,12 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
-        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val fnr = FødselsnummerGenerator.neste()
+        val deltakerDTO = DeltakerDTO(deltakerIdent = fnr)
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(fnr, false, IdentGruppe.FOLKEREGISTERIDENT))
+
         val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
@@ -197,14 +203,27 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
+        // Opprett veileder-enhet kobling (som i prod der det skjer via NOM i en annen request)
+        deltakelseVeilederEnhetRepository.saveAndFlush(
+            DeltakelseVeilederEnhetDAO(
+                deltakelseId = innmelding.id!!,
+                navIdent = "Z999999",
+                enhetId = "1234",
+                enhetNavn = "NAV Test"
+            )
+        )
+
         val deltakerDAO =
             deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
         assertThat(deltakerDAO).isNotNull
         assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
+        assertThat(deltakelseVeilederEnhetRepository.findByDeltakelseId(innmelding.id!!)).isNotNull
 
         val utmelding = ungdomsprogramregisterService.fjernFraProgram(deltakerDAO!!)
 
         assertTrue(utmelding)
+        assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isEmpty()
+        assertThat(deltakelseVeilederEnhetRepository.findByDeltakelseId(innmelding.id!!)).isNull()
     }
 
     @Test
