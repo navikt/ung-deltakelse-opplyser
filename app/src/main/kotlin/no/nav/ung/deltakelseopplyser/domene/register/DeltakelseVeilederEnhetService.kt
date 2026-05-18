@@ -25,6 +25,7 @@ class DeltakelseVeilederEnhetService(
     fun slettForDeltakelser(deltakelseIder: List<UUID>) {
         if (deltakelseIder.isEmpty()) return
         deltakelseVeilederEnhetRepository.deleteAllByDeltakelseIdIn(deltakelseIder)
+        deltakelseVeilederEnhetRepository.flush()
     }
 
     /**
