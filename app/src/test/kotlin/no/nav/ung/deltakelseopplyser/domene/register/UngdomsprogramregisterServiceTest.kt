@@ -45,6 +45,9 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
 
+    @Autowired
+    lateinit var deltakelseVeilederEnhetRepository: DeltakelseVeilederEnhetRepository
+
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
 
@@ -196,6 +199,16 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
             periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        // Simuler at det finnes en veileder-enhet kobling (som ville blitt opprettet via NOM i prod)
+        deltakelseVeilederEnhetRepository.saveAndFlush(
+            DeltakelseVeilederEnhetDAO(
+                deltakelseId = innmelding.id!!,
+                navIdent = "Z999999",
+                enhetId = "1234",
+                enhetNavn = "NAV Test"
+            )
+        )
 
         val deltakerDAO =
             deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()

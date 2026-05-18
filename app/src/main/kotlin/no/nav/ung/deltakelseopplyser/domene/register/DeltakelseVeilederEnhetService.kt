@@ -19,6 +19,15 @@ class DeltakelseVeilederEnhetService(
     }
 
     /**
+     * Sletter alle veileder-enhet koblinger for gitte deltakelse-IDer.
+     * Brukes ved hard-delete av deltakelser for å unngå FK constraint violations.
+     */
+    fun slettForDeltakelser(deltakelseIder: List<UUID>) {
+        if (deltakelseIder.isEmpty()) return
+        deltakelseVeilederEnhetRepository.deleteAllByDeltakelseIdIn(deltakelseIder)
+    }
+
+    /**
      * Henter alle koblinger for gitte deltakelse-IDer.
      * Returnerer en map fra deltakelseId til enhetNavn.
      */

@@ -144,6 +144,12 @@ class UngdomsprogramregisterService(
             }
         }
 
+        // Slett veileder-enhet koblinger for deltakelsene før sletting av deltaker,
+        // fordi deltakelse_veileder_enhet har FK til ungdomsprogram_deltakelse uten CASCADE.
+        // NB: Nye tabeller med FK til ungdomsprogram_deltakelse må også ryddes opp her.
+        val deltakelseIder = deltakelser.mapNotNull { it.id }
+        deltakelseVeilederEnhetService.slettForDeltakelser(deltakelseIder)
+
         val deltakerSlettet = deltakerService.slettDeltaker(deltakerId)
         if (!deltakerSlettet) {
             logger.error("Klarte ikke å slette deltaker med id $deltakerId fra deltakerregisteret")
