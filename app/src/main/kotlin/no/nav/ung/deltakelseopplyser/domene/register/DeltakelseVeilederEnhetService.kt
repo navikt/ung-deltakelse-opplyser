@@ -1,7 +1,5 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import no.nav.ung.deltakelseopplyser.integration.nom.api.NomApiService
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.OrgEnhetMedPeriode
 import no.nav.ung.deltakelseopplyser.integration.nom.api.domene.RessursMedAlleTilknytninger
@@ -16,26 +14,14 @@ class DeltakelseVeilederEnhetService(
     private val deltakelseVeilederEnhetRepository: DeltakelseVeilederEnhetRepository,
     private val nomApiService: NomApiService,
 ) {
-    @PersistenceContext
-    private lateinit var entityManager: EntityManager
-
     private companion object {
         private val logger = LoggerFactory.getLogger(DeltakelseVeilederEnhetService::class.java)
     }
 
-    /**
-     * Sletter alle veileder-enhet koblinger for gitte deltakelse-IDer.
-     * Brukes ved hard-delete av deltakelser for å unngå FK constraint violations.
-     * Flusher og clearer persistence context etter sletting for å sikre at radene
-     * er fjernet fra DB før Hibernate sin cascade-delete av deltakelse kjører.
-     */
+
     fun slettForDeltakelser(deltakelseIder: List<UUID>) {
         if (deltakelseIder.isEmpty()) return
-        for (id in deltakelseIder) {
-            deltakelseVeilederEnhetRepository.deleteById(id)
-        }
-        entityManager.flush()
-        entityManager.clear()
+        deltakelseVeilederEnhetRepository.deleteAllByDeltakelseIdIn(deltakelseIder)
     }
 
     /**

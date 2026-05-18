@@ -48,6 +48,9 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var deltakelseVeilederEnhetRepository: DeltakelseVeilederEnhetRepository
 
+    @jakarta.persistence.PersistenceContext
+    private lateinit var entityManager: jakarta.persistence.EntityManager
+
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
 
@@ -209,6 +212,8 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
                 enhetNavn = "NAV Test"
             )
         )
+        // Clear persistence context for å simulere at veileder-enhet ble opprettet i en annen request
+        entityManager.clear()
 
         val deltakerDAO =
             deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
