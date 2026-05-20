@@ -21,7 +21,7 @@ import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
-import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramUtvidetKvoteHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramForlengetPeriodeHendelse
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -533,7 +533,7 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramUtvidetKvoteHendelse(
+        val hendelse = UngdomsprogramForlengetPeriodeHendelse(
             hendelseInfo.build(),
             Periode(forlengetFraOgMed, forlengetTilOgMed)
         )
