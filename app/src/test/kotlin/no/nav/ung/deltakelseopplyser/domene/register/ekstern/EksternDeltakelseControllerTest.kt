@@ -358,6 +358,28 @@ class EksternDeltakelseControllerTest {
         assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
     }
 
+    @Test
+    fun `hentAlleDeltakelser - OBO-token avvises med 403 fordi kun M2M er tillatt`() {
+        every { tilgangskontrollService.krevSystemtilgang(any()) } throws
+            ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
+                ),
+                null
+            )
+
+        val response = testRestTemplate.exchange(
+            "/ekstern/deltakelse/alle",
+            HttpMethod.GET,
+            HttpEntity<Void>(azureOboToken()),
+            String::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+    }
+
     // ── helpers ────────────────────────────────────────────────────────────────
 
     private fun azureSystemToken(): HttpHeaders =
