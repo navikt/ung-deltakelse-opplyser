@@ -277,6 +277,14 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
+    fun hentAlleDeltakelser(): List<DeltakelseDTO> {
+        logger.info("Henter alle deltakelser.")
+        val deltakelser = deltakelseRepository.findAlleIkkeSlettet()
+        logger.info("Fant ${deltakelser.size} deltakelser.")
+        return deltakelser.map { it.mapToDTO() }
+    }
+
     @Transactional(TRANSACTION_MANAGER)
     fun avsluttDeltakelse(
         id: UUID,

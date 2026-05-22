@@ -12,6 +12,8 @@ import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterServi
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelseSjekk
+import no.nav.ung.deltakelseopplyser.kontrakt.ekstern.AlleDeltakelserResponseDTO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
@@ -267,6 +269,89 @@ class EksternDeltakelseControllerTest {
                 DeltakerDTO(deltakerIdent = deltakerIdent),
                 bearerHeaders(mockOAuth2Server.hentToken(issuerId = "ukjent"))
             ),
+            String::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+    }
+
+    // ── GET /ekstern/deltakelse/alle ──────────────────────────────────────────
+
+    @Test
+    fun `hentAlleDeltakelser - systemtoken returnerer alle deltakelser`() {
+        every { tilgangskontrollService.krevSystemtilgang(any()) } just runs
+        every { registerService.hentAlleDeltakelser() } returns listOf(
+            DeltakelseDTO(
+                id = java.util.UUID.randomUUID(),
+                deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+                fraOgMed = LocalDate.of(2025, 1, 1),
+                tilOgMed = null,
+                harForlengetPeriode = false,
+                periodeMaksDato = LocalDate.of(2026, 1, 1),
+            )
+        )
+
+        val response = testRestTemplate.exchange(
+            "/ekstern/deltakelse/alle",
+            HttpMethod.GET,
+            HttpEntity<Void>(azureSystemToken()),
+            AlleDeltakelserResponseDTO::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body!!.deltakelser).hasSize(1)
+        val deltakelse = response.body!!.deltakelser.first()
+        assertThat(deltakelse.deltakerIdent).isEqualTo(deltakerIdent)
+        assertThat(deltakelse.periode.fraOgMed).isEqualTo(LocalDate.of(2025, 1, 1))
+        assertThat(deltakelse.periode.tilOgMed).isNull()
+        assertThat(deltakelse.periode.harForlengetPeriode).isFalse()
+        assertThat(deltakelse.periode.periodeMaksDato).isEqualTo(LocalDate.of(2026, 1, 1))
+    }
+
+    @Test
+    fun `hentAlleDeltakelser - tom liste naar ingen deltakelser finnes`() {
+        every { tilgangskontrollService.krevSystemtilgang(any()) } just runs
+        every { registerService.hentAlleDeltakelser() } returns emptyList()
+
+        val response = testRestTemplate.exchange(
+            "/ekstern/deltakelse/alle",
+            HttpMethod.GET,
+            HttpEntity<Void>(azureSystemToken()),
+            AlleDeltakelserResponseDTO::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body!!.deltakelser).isEmpty()
+    }
+
+    @Test
+    fun `hentAlleDeltakelser - ikke-godkjent system gir 403`() {
+        every { tilgangskontrollService.krevSystemtilgang(any()) } throws
+            ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.FORBIDDEN,
+                    "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
+                ),
+                null
+            )
+
+        val response = testRestTemplate.exchange(
+            "/ekstern/deltakelse/alle",
+            HttpMethod.GET,
+            HttpEntity<Void>(azureSystemToken()),
+            String::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    fun `hentAlleDeltakelser - uten token gir 401`() {
+        val response = testRestTemplate.exchange(
+            "/ekstern/deltakelse/alle",
+            HttpMethod.GET,
+            HttpEntity<Void>(HttpHeaders()),
             String::class.java
         )
 
