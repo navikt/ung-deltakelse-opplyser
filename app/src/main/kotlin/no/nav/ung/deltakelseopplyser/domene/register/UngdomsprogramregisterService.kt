@@ -21,7 +21,7 @@ import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
-import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramUtvidetKvoteHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramForlengetPeriodeHendelse
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -45,7 +45,7 @@ class UngdomsprogramregisterService(
     private val ungBrukerdialogService: UngBrukerdialogService,
     private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
     @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
-    @Value("\${UTVID_KVOTE_ENABLED:false}") private val utvidKvoteEnabled: Boolean
+    @Value("\${FORLENG_PERIODE_ENABLED:false}") private val forlengPeriodeEnabled: Boolean
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -60,8 +60,8 @@ class UngdomsprogramregisterService(
                 tilOgMed = getTom(),
                 erSlettet = erSlettet,
                 harOpphørsvedtak = harOpphørsvedtak,
-                harUtvidetKvote = harUtvidetKvote,
-                kvoteMaksDato = KvotePeriodeBeregner.beregn(getFom(), harUtvidetKvote).tilOgMed
+                harForlengetPeriode = harForlengetPeriode,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(getFom(), harForlengetPeriode).tilOgMed
             )
         }
     }
@@ -143,6 +143,12 @@ class UngdomsprogramregisterService(
                 )
             }
         }
+
+        // Slett veileder-enhet koblinger for deltakelsene før sletting av deltaker,
+        // fordi deltakelse_veileder_enhet har FK til ungdomsprogram_deltakelse uten CASCADE.
+        // NB: Nye tabeller med FK til ungdomsprogram_deltakelse må også ryddes opp her.
+        val deltakelseIder = deltakelser.mapNotNull { it.id }
+        deltakelseVeilederEnhetService.slettForDeltakelser(deltakelseIder)
 
         val deltakerSlettet = deltakerService.slettDeltaker(deltakerId)
         if (!deltakerSlettet) {
@@ -271,6 +277,14 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
+    fun hentAlleDeltakelser(): List<DeltakelseDTO> {
+        logger.info("Henter alle deltakelser.")
+        val deltakelser = deltakelseRepository.findAlleIkkeSlettet()
+        logger.info("Fant ${deltakelser.size} deltakelser.")
+        return deltakelser.map { it.mapToDTO() }
+    }
+
     @Transactional(TRANSACTION_MANAGER)
     fun avsluttDeltakelse(
         id: UUID,
@@ -299,11 +313,11 @@ class UngdomsprogramregisterService(
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
 
-        if (eksisterendeDeltakelse.harUtvidetKvote) {
+        if (eksisterendeDeltakelse.harForlengetPeriode) {
             throw ErrorResponseException(
                 HttpStatus.CONFLICT,
                 ProblemDetail.forStatus(HttpStatus.CONFLICT).also {
-                    it.detail = "Kan ikke endre startdato når kvoten allerede er utvidet"
+                    it.detail = "Kan ikke endre startdato når perioden allerede er forlenget"
                 },
                 null
             )
@@ -357,12 +371,12 @@ class UngdomsprogramregisterService(
     }
 
     @Transactional(TRANSACTION_MANAGER)
-    fun utvidKvote(deltakelseId: UUID): DeltakelseDTO {
-        if (!utvidKvoteEnabled) {
+    fun forlengPeriode(deltakelseId: UUID): DeltakelseDTO {
+        if (!forlengPeriodeEnabled) {
             throw ErrorResponseException(
                 HttpStatus.FORBIDDEN,
                 ProblemDetail.forStatus(HttpStatus.FORBIDDEN).also {
-                    it.detail = "Utvid kvote er ikke aktivert"
+                    it.detail = "Forleng periode er ikke aktivert"
                 },
                 null
             )
@@ -370,33 +384,33 @@ class UngdomsprogramregisterService(
 
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
 
-        // Idempotens: hvis kvoten allerede er utvidet, returner eksisterende DTO
-        if (eksisterendeDeltakelse.harUtvidetKvote) {
-            logger.info("Kvote er allerede utvidet for deltakelse med id $deltakelseId. Returnerer eksisterende.")
+        // Idempotens: hvis perioden allerede er forlenget, returner eksisterende DTO
+        if (eksisterendeDeltakelse.harForlengetPeriode) {
+            logger.info("Perioden er allerede forlenget for deltakelse med id $deltakelseId. Returnerer eksisterende.")
             return eksisterendeDeltakelse.mapToDTO()
         }
 
-        // Hindre utvidelse av kvote dersom sluttdato er satt
+        // Hindre forlengelse av periode dersom sluttdato er satt
         if (eksisterendeDeltakelse.getTom() != null) {
             throw ErrorResponseException(
                 HttpStatus.BAD_REQUEST,
                 ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
-                    it.detail = "Kan ikke utvide kvote når sluttdato er satt. Deltakelsen har allerede en sluttdato, og kvoten kan derfor ikke utvides."
+                    it.detail = "Kan ikke forlenge periode når sluttdato er satt. Deltakelsen har allerede en sluttdato, og perioden kan derfor ikke forlenges."
                 },
                 null
             )
         }
 
-        logger.info("Utvider kvote for deltakelse med id $deltakelseId med 8 uker")
+        logger.info("Forlenger periode for deltakelse med id $deltakelseId med 8 uker")
 
-        val utvidetKvotePeriode = KvotePeriodeBeregner.beregn(eksisterendeDeltakelse.getFom(), true)
+        val forlengetPeriode = ForlengetPeriodeBeregner.beregn(eksisterendeDeltakelse.getFom(), true)
 
 
-        eksisterendeDeltakelse.markerSomUtvidetKvote()
+        eksisterendeDeltakelse.markerSomForlengetPeriode()
         val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
 
-        // Send hendelse til ung-sak med perioden fra startdato til utvidet sluttdato
-        sendUtvidetKvoteHendelseTilUngSak(oppdatertDeltakelse, utvidetKvotePeriode.fraOgMed, utvidetKvotePeriode.tilOgMed)
+        // Send hendelse til ung-sak med perioden fra startdato til forlenget sluttdato
+        sendForlengetPeriodeHendelseTilUngSak(oppdatertDeltakelse, forlengetPeriode.fraOgMed, forlengetPeriode.tilOgMed)
 
         return oppdatertDeltakelse.mapToDTO()
     }
@@ -509,16 +523,16 @@ class UngdomsprogramregisterService(
         ungSakService.sendInnHendelse(hendelse = HendelseDto(hendelse, AktørId(nåværendeAktørId)))
     }
 
-    private fun sendUtvidetKvoteHendelseTilUngSak(
+    private fun sendForlengetPeriodeHendelseTilUngSak(
         oppdatert: DeltakelseDAO,
-        utvidetFraOgMed: LocalDate,
-        utvidetTilOgMed: LocalDate,
+        forlengetFraOgMed: LocalDate,
+        forlengetTilOgMed: LocalDate,
     ) {
         logger.info("Henter aktørIder for deltaker")
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
-        logger.info("Sender inn hendelse til ung-sak om at kvoten er utvidet med 8 uker")
+        logger.info("Sender inn hendelse til ung-sak om at perioden er forlenget med 8 uker")
 
         val hendelsedato = LocalDateTime.now()
 
@@ -527,9 +541,9 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramUtvidetKvoteHendelse(
+        val hendelse = UngdomsprogramForlengetPeriodeHendelse(
             hendelseInfo.build(),
-            Periode(utvidetFraOgMed, utvidetTilOgMed)
+            Periode(forlengetFraOgMed, forlengetTilOgMed)
         )
         ungSakService.sendInnHendelse(
             hendelse = HendelseDto(

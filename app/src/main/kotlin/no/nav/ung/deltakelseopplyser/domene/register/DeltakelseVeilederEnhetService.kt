@@ -18,6 +18,12 @@ class DeltakelseVeilederEnhetService(
         private val logger = LoggerFactory.getLogger(DeltakelseVeilederEnhetService::class.java)
     }
 
+
+    fun slettForDeltakelser(deltakelseIder: List<UUID>) {
+        if (deltakelseIder.isEmpty()) return
+        deltakelseVeilederEnhetRepository.deleteAllByDeltakelseIdIn(deltakelseIder)
+    }
+
     /**
      * Henter alle koblinger for gitte deltakelse-IDer.
      * Returnerer en map fra deltakelseId til enhetNavn.

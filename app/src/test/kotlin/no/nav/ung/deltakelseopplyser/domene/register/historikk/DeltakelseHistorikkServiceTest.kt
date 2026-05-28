@@ -11,7 +11,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
-import no.nav.ung.deltakelseopplyser.domene.register.KvotePeriodeBeregner
+import no.nav.ung.deltakelseopplyser.domene.register.ForlengetPeriodeBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_FORMATTER
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk.Companion.DATE_TIME_FORMATTER
 import no.nav.ung.deltakelseopplyser.integration.abac.SifAbacPdpService
@@ -92,7 +92,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull
@@ -114,7 +114,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
                 deltaker = innmelding.deltaker,
                 fraOgMed = onsdag,
                 tilOgMed = onsdag,
-                kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
             )
         ) // Fører til fjerde historikkinnslag
 
@@ -253,7 +253,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto) // Fører til første historikkinnslag
         assertThat(innmelding.id).isNotNull
@@ -273,7 +273,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `Utvidet kvote fører til historikkinnslag med riktig endringstype og tekst`() {
+    fun `Forlenget periode fører til historikkinnslag med riktig endringstype og tekst`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
@@ -285,27 +285,27 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
         val deltakelseId = innmelding.id!!
 
-        ungdomsprogramregisterService.utvidKvote(deltakelseId)
+        ungdomsprogramregisterService.forlengPeriode(deltakelseId)
 
         val historikk = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
         assertThat(historikk).hasSize(2)
 
-        val utvidetKvoteInnslag = historikk.last()
-        assertThat(utvidetKvoteInnslag.endringstype).isEqualTo(Endringstype.UTVIDET_KVOTE)
-        assertThat(utvidetKvoteInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
-        assertThat(utvidetKvoteInnslag.utvidetKvote).isNotNull
-        assertThat(utvidetKvoteInnslag.utvidetKvote!!.utvidetFraOgMed).isEqualTo(mandag)
-        assertThat(utvidetKvoteInnslag.utvidetKvote!!.utvidetTilOgMed).isEqualTo(KvotePeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300))
-        assertThat(utvidetKvoteInnslag.deltakelse.harUtvidetKvote).isTrue()
+        val forlengetPeriodeInnslag = historikk.last()
+        assertThat(forlengetPeriodeInnslag.endringstype).isEqualTo(Endringstype.FORLENGET_PERIODE)
+        assertThat(forlengetPeriodeInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
+        assertThat(forlengetPeriodeInnslag.forlengetPeriode).isNotNull
+        assertThat(forlengetPeriodeInnslag.forlengetPeriode!!.forlengetFraOgMed).isEqualTo(mandag)
+        assertThat(forlengetPeriodeInnslag.forlengetPeriode!!.forlengetTilOgMed).isEqualTo(ForlengetPeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300))
+        assertThat(forlengetPeriodeInnslag.deltakelse.harForlengetPeriode).isTrue()
 
-        val forventetTilOgMed = KvotePeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300)
-        val forventetTekst = "Kvote er utvidet med 8 uker (fra ${formater(mandag)} til ${formater(forventetTilOgMed)})."
-        assertThat(utvidetKvoteInnslag.utledEndringsTekst()).isEqualTo(forventetTekst)
+        val forventetTilOgMed = ForlengetPeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300)
+        val forventetTekst = "Perioden er forlenget med 8 uker (fra ${formater(mandag)} til ${formater(forventetTilOgMed)})."
+        assertThat(forlengetPeriodeInnslag.utledEndringsTekst()).isEqualTo(forventetTekst)
     }
 
     private fun formater(tidspunkt: ZonedDateTime?): String? = DATE_TIME_FORMATTER.format(tidspunkt)

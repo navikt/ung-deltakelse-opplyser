@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
 import org.springframework.dao.DataIntegrityViolationException
@@ -44,6 +43,12 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var deltakelseRepository: DeltakelseRepository
+
+    @Autowired
+    lateinit var deltakelseVeilederEnhetRepository: DeltakelseVeilederEnhetRepository
+
+    @jakarta.persistence.PersistenceContext
+    private lateinit var entityManager: jakarta.persistence.EntityManager
 
     @MockkBean(relaxed = true)
     lateinit var ungSakService: UngSakService
@@ -74,10 +79,6 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(defaultFødselsdato)
     }
 
-    private companion object {
-        private val logger = LoggerFactory.getLogger(UngdomsprogramregisterServiceTest::class.java)
-    }
-
     @Test
     fun `Deltaker blir meldt inn i programmet uten en sluttdato`() {
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
@@ -85,7 +86,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = startdato,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(startdato).tilOgMed
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -103,7 +104,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -118,7 +119,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
             ungdomsprogramregisterService.leggTilIProgram(
                 dto.copy(
                     fraOgMed = onsdag,
-                    kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed
+                    periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
                 )
             )
         }
@@ -130,7 +131,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
             fraOgMed = programDato.minusDays(2),
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(programDato.minusDays(2)).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(programDato.minusDays(2)).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -153,7 +154,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = DeltakerDTO(UUID.randomUUID(), "02499435811"),
             fraOgMed = tjuveniårsdag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(tjuveniårsdag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(tjuveniårsdag).tilOgMed,
         )
 
         every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
@@ -176,7 +177,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
             tilOgMed = deltakelseStartdato.plusDays(10),
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
@@ -188,23 +189,41 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Test
     fun `Deltaker blir fjernet fra programmet`() {
-        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val fnr = FødselsnummerGenerator.neste()
+        val deltakerDTO = DeltakerDTO(deltakerIdent = fnr)
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(fnr, false, IdentGruppe.FOLKEREGISTERIDENT))
+
         val deltakelseStartdato = LocalDate.now()
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        // Opprett veileder-enhet kobling (som i prod der det skjer via NOM i en annen request)
+        deltakelseVeilederEnhetRepository.saveAndFlush(
+            DeltakelseVeilederEnhetDAO(
+                deltakelseId = innmelding.id!!,
+                navIdent = "Z999999",
+                enhetId = "1234",
+                enhetNavn = "NAV Test"
+            )
+        )
 
         val deltakerDAO =
             deltakerRepository.finnDeltakerGittIdenter(listOf(innmelding.deltaker.deltakerIdent)).firstOrNull()
         assertThat(deltakerDAO).isNotNull
         assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isNotEmpty
+        assertThat(deltakelseVeilederEnhetRepository.findByDeltakelseId(innmelding.id!!)).isNotNull
 
         val utmelding = ungdomsprogramregisterService.fjernFraProgram(deltakerDAO!!)
 
         assertTrue(utmelding)
+        assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isEmpty()
+        assertThat(deltakelseVeilederEnhetRepository.findByDeltakelseId(innmelding.id!!)).isNull()
     }
 
     @Test
@@ -214,7 +233,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -238,7 +257,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -264,7 +283,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -288,7 +307,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -300,7 +319,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val oppdatertDto = DeltakelseDTO(
             deltaker = innmelding.deltaker,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
             tilOgMed = onsdag,
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
@@ -323,7 +342,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -335,7 +354,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val oppdatertDto = DeltakelseDTO(
             deltaker = innmelding.deltaker,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
             tilOgMed = onsdag,
         )
         ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
@@ -355,7 +374,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         ungdomsprogramregisterService.leggTilIProgram(dto)
         assertThrows<DataIntegrityViolationException> { ungdomsprogramregisterService.leggTilIProgram(dto) }
@@ -369,7 +388,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = deltakelseStartdato,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
         )
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
@@ -396,7 +415,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `Utvid kvote på deltakelse uten sluttdato setter harUtvidetKvote`() {
+    fun `Forleng periode på deltakelse uten sluttdato setter harForlengetPeriode`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
@@ -407,19 +426,19 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val resultat = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+        val resultat = ungdomsprogramregisterService.forlengPeriode(innmelding.id!!)
 
-        assertThat(resultat.harUtvidetKvote).isTrue()
+        assertThat(resultat.harForlengetPeriode).isTrue()
         assertThat(resultat.fraOgMed).isEqualTo(mandag)
         assertThat(resultat.tilOgMed).isNull() // Sluttdato var ikke satt, skal fortsatt være null
     }
 
     @Test
-    fun `Utvid kvote på deltakelse med sluttdato gir BAD_REQUEST`() {
+    fun `Forleng periode på deltakelse med sluttdato gir BAD_REQUEST`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
@@ -430,7 +449,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
@@ -438,20 +457,20 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
             innmelding.id!!, DeltakelseDTO(
                 deltaker = innmelding.deltaker,
                 fraOgMed = mandag,
-                kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
                 tilOgMed = mandag.plusDays(100),
             )
         )
 
         val exception = assertThrows<ErrorResponseException> {
-            ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+            ungdomsprogramregisterService.forlengPeriode(innmelding.id!!)
         }
         assertThat(exception.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
         assertThat(exception.body.detail).contains("sluttdato")
     }
 
     @Test
-    fun `Utvid kvote er idempotent - andre kall returnerer samme resultat`() {
+    fun `Forleng periode er idempotent - andre kall returnerer samme resultat`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
@@ -462,20 +481,20 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
 
-        val førsteKall = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
-        val andreKall = ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+        val førsteKall = ungdomsprogramregisterService.forlengPeriode(innmelding.id!!)
+        val andreKall = ungdomsprogramregisterService.forlengPeriode(innmelding.id!!)
 
-        assertThat(førsteKall.harUtvidetKvote).isTrue()
-        assertThat(andreKall.harUtvidetKvote).isTrue()
+        assertThat(førsteKall.harForlengetPeriode).isTrue()
+        assertThat(andreKall.harForlengetPeriode).isTrue()
         assertThat(førsteKall).isEqualTo(andreKall)
     }
 
     @Test
-    fun `Endring av startdato etter utvidet kvote gir CONFLICT`() {
+    fun `Endring av startdato etter forlenget periode gir CONFLICT`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
             IdentInformasjon("451", true, IdentGruppe.AKTORID)
@@ -486,16 +505,16 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         val dto = DeltakelseDTO(
             deltaker = deltakerDTO,
             fraOgMed = mandag,
-            kvoteMaksDato = KvotePeriodeBeregner.beregn(mandag).tilOgMed,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
         )
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
-        ungdomsprogramregisterService.utvidKvote(innmelding.id!!)
+        ungdomsprogramregisterService.forlengPeriode(innmelding.id!!)
 
         assertThrows<ErrorResponseException> {
             ungdomsprogramregisterService.endreStartdato(innmelding.id!!, mockEndrePeriodeDTO(mandag.plusDays(1)))
         }.also {
             assertThat(it.statusCode).isEqualTo(HttpStatus.CONFLICT)
-            assertThat(it.body.detail).isEqualTo("Kan ikke endre startdato når kvoten allerede er utvidet")
+            assertThat(it.body.detail).isEqualTo("Kan ikke endre startdato når perioden allerede er forlenget")
         }
     }
 

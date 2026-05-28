@@ -43,8 +43,8 @@ class DeltakelseDAO(
     @Column(name = "har_opphoersvedtak")
     var harOpphørsvedtak: Boolean = false,
 
-    @Column(name = "har_utvidet_kvote")
-    var harUtvidetKvote: Boolean = false,
+    @Column(name = "har_forlenget_periode")
+    var harForlengetPeriode: Boolean = false,
 
     @Column(name = "søkt_tidspunkt")
     var søktTidspunkt: ZonedDateTime? = null,
@@ -80,8 +80,7 @@ class DeltakelseDAO(
         harOpphørsvedtak = true
     }
 
-    fun markerSomUtvidetKvote() {
-        harUtvidetKvote = true
+    fun markerSomForlengetPeriode() {
+        harForlengetPeriode = true
     }
 }
-

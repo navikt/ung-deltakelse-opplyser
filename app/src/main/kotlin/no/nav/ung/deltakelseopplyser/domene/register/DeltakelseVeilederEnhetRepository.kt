@@ -6,6 +6,7 @@ import java.util.*
 interface DeltakelseVeilederEnhetRepository : JpaRepository<DeltakelseVeilederEnhetDAO, UUID> {
     fun findAllByDeltakelseIdIn(deltakelseIder: List<UUID>): List<DeltakelseVeilederEnhetDAO>
     fun findByDeltakelseId(deltakelseId: UUID): DeltakelseVeilederEnhetDAO?
+    fun deleteAllByDeltakelseIdIn(deltakelseIder: List<UUID>)
 
     @org.springframework.data.jpa.repository.Query(
         "SELECT d.enhetId AS enhetId, d.enhetNavn AS enhetNavn, COUNT(d) AS antall " +

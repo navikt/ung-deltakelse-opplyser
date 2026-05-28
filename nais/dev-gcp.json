@@ -72,6 +72,11 @@
       "app": "veilarboppfolging",
       "namespace": "poao",
       "cluster": "dev-gcp"
+    },
+    {
+      "app": "veilarbportefolje",
+      "namespace": "obo",
+      "cluster": "dev-gcp"
     }
   ],
   "database": {
@@ -139,7 +144,7 @@
 
     "SLETT_SOKT_DELTAKELSE_ENABLED": true,
 
-    "UTVID_KVOTE_ENABLED": true,
+    "FORLENG_PERIODE_ENABLED": true,
 
     "FLYWAY_REPAIR_ON_FAIL": true,
 
