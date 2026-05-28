@@ -18,8 +18,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.ekstern.DeltakerIdent
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ProblemDetail
-import org.springframework.web.ErrorResponseException
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -57,9 +55,6 @@ class EksternDeltakelseController(
             add("azure-token-generator")
         }
     }
-
-    private val hentAlleDeltakelserEnabled: Boolean =
-        !environment.activeProfiles.contains("prod-gcp")
 
     @PostMapping(
         "/sjekk",
@@ -114,13 +109,6 @@ class EksternDeltakelseController(
     )
     @ResponseStatus(HttpStatus.OK)
     fun hentAlleDeltakelser(): AlleDeltakelserResponseDTO {
-        if (!hentAlleDeltakelserEnabled) {
-            throw ErrorResponseException(
-                HttpStatus.NOT_FOUND,
-                ProblemDetail.forStatus(HttpStatus.NOT_FOUND),
-                null
-            )
-        }
 
         tilgangskontrollService.krevSystemtilgang(godkjenteApplikasjonerAlle)
 
