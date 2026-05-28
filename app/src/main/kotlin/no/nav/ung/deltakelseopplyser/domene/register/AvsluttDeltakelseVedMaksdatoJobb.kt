@@ -47,7 +47,7 @@ class AvsluttDeltakelseVedMaksdatoJobb(
         val aktiveDeltakelser = deltakelseRepository.findAktiveDeltakelserUtenSluttdato()
 
         val deltakelser = aktiveDeltakelser.filter { deltakelse ->
-            val maksdato = KvotePeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harUtvidetKvote).tilOgMed
+            val maksdato = ForlengetPeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harForlengetPeriode).tilOgMed
             maksdato <= iDag
         }
 
@@ -66,7 +66,7 @@ class AvsluttDeltakelseVedMaksdatoJobb(
 
     @Transactional(TRANSACTION_MANAGER)
     fun avsluttEnkeltDeltakelse(deltakelse: DeltakelseDAO) {
-        val maksdato = KvotePeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harUtvidetKvote).tilOgMed
+        val maksdato = ForlengetPeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harForlengetPeriode).tilOgMed
 
         log.info("Avslutter deltakelse ${deltakelse.id} med sluttdato = maksdato = $maksdato")
 
