@@ -35,6 +35,7 @@ class AvsluttDeltakelseVedMaksdatoJobb(
      * og setter sluttdato = maksdato for de som har passert maksdato.
      */
     @Scheduled(cron = CRON_DAGLIG_KL_06)
+    @Transactional(TRANSACTION_MANAGER)
     fun avsluttDeltakelserVedMaksdato() {
         if (!leaderElectorService.erLeader()) {
             log.info("Ikke leader, hopper over avslutning av deltakelser ved maksdato.")
