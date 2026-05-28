@@ -72,6 +72,11 @@
       "app": "veilarboppfolging",
       "namespace": "poao",
       "cluster": "dev-gcp"
+    },
+    {
+      "app": "veilarbportefolje",
+      "namespace": "obo",
+      "cluster": "dev-gcp"
     }
   ],
   "database": {
