@@ -56,7 +56,6 @@ class EksternDeltakelseController(
         }
     }
 
-
     @PostMapping(
         "/sjekk",
         produces = [MediaType.APPLICATION_JSON_VALUE],
