@@ -31,3 +31,4 @@ interface DeltakelseRepository : JpaRepository<DeltakelseDAO, UUID> {
         """
     )
     fun findAlleIkkeSlettet(): List<DeltakelseDAO>
+}
