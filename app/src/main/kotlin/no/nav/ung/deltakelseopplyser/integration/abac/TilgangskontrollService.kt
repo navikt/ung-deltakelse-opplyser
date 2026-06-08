@@ -8,7 +8,6 @@ import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
-import no.nav.sif.abac.kontrakt.abac.resultat.IkkeTilgangÅrsak
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinBeslutning
@@ -285,19 +284,19 @@ class TilgangskontrollService(
         }
     }
 
-    private fun MutableSet<IkkeTilgangÅrsak>.somTekst(): String {
+    private fun Collection<*>.somTekst(): String {
         val årsaker = map {
-            when (it) {
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_KODE6_PERSON -> "Ikke tilgang til kode6 person"
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_KODE7_PERSON -> "Ikke tilgang til kode7 person"
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_EGEN_ANSATT -> "Ikke tilgang til egen ansatt"
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_APPLIKASJONEN -> "Ikke tilgang til applikasjonen"
-                IkkeTilgangÅrsak.ER_IKKE_VEILEDER_ELLER_SAKSBEHANDLER -> "Ikke veileder eller saksbehandler"
-                IkkeTilgangÅrsak.ER_IKKE_SAKSBEHANDLER -> "Ikke saksbehandler"
-                IkkeTilgangÅrsak.ER_IKKE_BESLUTTER -> "Ikke beslutter"
-                IkkeTilgangÅrsak.ER_IKKE_OVERSTYRER -> "Ikke overstyrer"
-                IkkeTilgangÅrsak.ER_IKKE_DRIFTER -> "Ikke drifter"
-                IkkeTilgangÅrsak.ER_IKKE_UNGDSOMSPROGRAMVEILEDER -> "Ikke ungdomsprogramveileder"
+            when (it.toString()) {
+                "HAR_IKKE_TILGANG_TIL_KODE6_PERSON" -> "Ikke tilgang til kode6 person"
+                "HAR_IKKE_TILGANG_TIL_KODE7_PERSON" -> "Ikke tilgang til kode7 person"
+                "HAR_IKKE_TILGANG_TIL_EGEN_ANSATT" -> "Ikke tilgang til egen ansatt"
+                "HAR_IKKE_TILGANG_TIL_APPLIKASJONEN" -> "Ikke tilgang til applikasjonen"
+                "ER_IKKE_VEILEDER_ELLER_SAKSBEHANDLER" -> "Ikke veileder eller saksbehandler"
+                "ER_IKKE_SAKSBEHANDLER" -> "Ikke saksbehandler"
+                "ER_IKKE_BESLUTTER" -> "Ikke beslutter"
+                "ER_IKKE_OVERSTYRER" -> "Ikke overstyrer"
+                "ER_IKKE_DRIFTER" -> "Ikke drifter"
+                "ER_IKKE_UNGDSOMSPROGRAMVEILEDER", "ER_IKKE_UNGDOMSPROGRAMVEILEDER" -> "Ikke ungdomsprogramveileder"
                 else -> "Ikke tilgang"
             }
         }
