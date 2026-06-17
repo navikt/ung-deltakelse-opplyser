@@ -5,6 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.ninjasquad.springmockk.MockkBean
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.EndreOppgaveStatusDto
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveType
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveYtelsetype
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.søkytelse.SøkYtelseOppgavetypeDataDto
@@ -57,6 +59,7 @@ class UngBrukerdialogServiceTest {
 
     private companion object {
         const val OPPRETT_SØK_YTELSE_PATH = "/ung-brukerdialog-api-mock/ung/brukerdialog/intern/api/oppgavebehandling/opprett"
+        const val SETT_AVBRUTT_FOR_TYPE_OG_PERIODE_PATH = "/ung-brukerdialog-api-mock/ung/brukerdialog/intern/api/oppgavebehandling/sett-avbrutt-for-type-og-periode"
     }
 
     @Test
@@ -93,6 +96,44 @@ class UngBrukerdialogServiceTest {
                 UUID.randomUUID(),
                 SøkYtelseOppgavetypeDataDto(LocalDate.now()),
                 null
+            )
+        )
+
+        assertThat(resultat).isFalse()
+    }
+
+    @Test
+    fun `settAvbruttSøkYtelseOppgaveForTypeOgPeriode returnerer true ved vellykket kall`() {
+        wireMockServer.stubFor(
+            WireMock.post(WireMock.urlPathEqualTo(SETT_AVBRUTT_FOR_TYPE_OG_PERIODE_PATH))
+                .willReturn(WireMock.aResponse().withStatus(HttpStatus.OK.value()))
+        )
+
+        val resultat = ungBrukerdialogService.settAvbruttSøkYtelseOppgaveForTypeOgPeriode(
+            EndreOppgaveStatusDto(
+                AktørId("1234567890123"),
+                OppgaveType.SØK_YTELSE,
+                LocalDate.now(),
+                null,
+            )
+        )
+
+        assertThat(resultat).isTrue()
+    }
+
+    @Test
+    fun `settAvbruttSøkYtelseOppgaveForTypeOgPeriode returnerer false ved klientfeil`() {
+        wireMockServer.stubFor(
+            WireMock.post(WireMock.urlPathEqualTo(SETT_AVBRUTT_FOR_TYPE_OG_PERIODE_PATH))
+                .willReturn(WireMock.aResponse().withStatus(HttpStatus.BAD_REQUEST.value()))
+        )
+
+        val resultat = ungBrukerdialogService.settAvbruttSøkYtelseOppgaveForTypeOgPeriode(
+            EndreOppgaveStatusDto(
+                AktørId("1234567890123"),
+                OppgaveType.SØK_YTELSE,
+                LocalDate.now(),
+                null,
             )
         )
 
