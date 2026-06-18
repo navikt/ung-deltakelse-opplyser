@@ -194,7 +194,7 @@ class UngdomsprogramregisterService(
                 }
 
             ikkeSøkteDeltakelser.forEach { deltakelse ->
-                ungBrukerdialogService.settAvbruttSøkYtelseOppgaveForTypeOgPeriode(
+                val ok = ungBrukerdialogService.settAvbruttSøkYtelseOppgaveForTypeOgPeriode(
                     EndreOppgaveStatusDto(
                         no.nav.ung.brukerdialog.typer.AktørId(aktørId.ident),
                         OppgaveType.SØK_YTELSE,
@@ -202,6 +202,12 @@ class UngdomsprogramregisterService(
                         deltakelse.tilOgMed,
                     )
                 )
+
+                if (!ok) {
+                    logger.warn(
+                        "Klarte ikke å sette SøkYtelse-oppgave til avbrutt for deltaker ${deltaker.id} og periode ${deltakelse.fraOgMed}..${deltakelse.tilOgMed}. Fortsetter med sletting."
+                    )
+                }
             }
         } catch (e: org.springframework.web.client.HttpClientErrorException) {
             if (e.statusCode == HttpStatus.UNAUTHORIZED || e.statusCode == HttpStatus.FORBIDDEN) {
