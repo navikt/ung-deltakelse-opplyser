@@ -522,7 +522,7 @@ class UngdomsprogramregisterService(
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
-        logger.info("Sender inn hendelse til ung-sak om at perioden er forlenget med 8 uker")
+        logger.info("Sender inn hendelse til ung-sak om at perioden er forlenget med inntil 8 uker")
 
         val hendelsedato = LocalDateTime.now()
 

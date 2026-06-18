@@ -81,7 +81,7 @@ data class DeltakelseHistorikk(
                 requireNotNull(forlengetPeriode)
                 val fraOgMed = DATE_FORMATTER.format(forlengetPeriode.forlengetFraOgMed)
                 val tilOgMed = DATE_FORMATTER.format(forlengetPeriode.forlengetTilOgMed)
-                "Perioden er forlenget med 8 uker (fra $fraOgMed til $tilOgMed)."
+                "Perioden er forlenget med inntil 8 uker (fra $fraOgMed til $tilOgMed)."
             }
 
             Endringstype.UKJENT -> "Endringstype er ukjent."
