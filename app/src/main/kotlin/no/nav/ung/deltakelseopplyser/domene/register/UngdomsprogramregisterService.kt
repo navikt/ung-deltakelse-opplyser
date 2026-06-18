@@ -203,6 +203,11 @@ class UngdomsprogramregisterService(
                     )
                 )
             }
+        } catch (e: org.springframework.web.client.HttpClientErrorException) {
+            if (e.statusCode == HttpStatus.UNAUTHORIZED || e.statusCode == HttpStatus.FORBIDDEN) {
+                throw e
+            }
+            logger.warn("Klarte ikke å sette SøkYtelse-oppgaver til avbrutt for deltaker ${deltaker.id}. Fortsetter med sletting.", e)
         } catch (e: Exception) {
             logger.warn("Klarte ikke å sette SøkYtelse-oppgaver til avbrutt for deltaker ${deltaker.id}. Fortsetter med sletting.", e)
         }
