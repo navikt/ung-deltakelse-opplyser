@@ -304,7 +304,7 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         assertThat(forlengetPeriodeInnslag.deltakelse.harForlengetPeriode).isTrue()
 
         val forventetTilOgMed = ForlengetPeriodeBeregner.finnSluttdatoForVirkedager(mandag, 300)
-        val forventetTekst = "Perioden er forlenget med 8 uker (fra ${formater(mandag)} til ${formater(forventetTilOgMed)})."
+        val forventetTekst = "Perioden er forlenget med inntil 8 uker (fra ${formater(mandag)} til ${formater(forventetTilOgMed)})."
         assertThat(forlengetPeriodeInnslag.utledEndringsTekst()).isEqualTo(forventetTekst)
     }
 

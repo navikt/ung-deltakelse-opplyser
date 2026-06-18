@@ -20,8 +20,8 @@ import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
-import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramForlengetPeriodeHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -45,7 +45,6 @@ class UngdomsprogramregisterService(
     private val ungBrukerdialogService: UngBrukerdialogService,
     private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
     @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
-    @Value("\${FORLENG_PERIODE_ENABLED:false}") private val forlengPeriodeEnabled: Boolean
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -372,16 +371,6 @@ class UngdomsprogramregisterService(
 
     @Transactional(TRANSACTION_MANAGER)
     fun forlengPeriode(deltakelseId: UUID): DeltakelseDTO {
-        if (!forlengPeriodeEnabled) {
-            throw ErrorResponseException(
-                HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatus(HttpStatus.FORBIDDEN).also {
-                    it.detail = "Forleng periode er ikke aktivert"
-                },
-                null
-            )
-        }
-
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
 
         // Idempotens: hvis perioden allerede er forlenget, returner eksisterende DTO
@@ -395,7 +384,8 @@ class UngdomsprogramregisterService(
             throw ErrorResponseException(
                 HttpStatus.BAD_REQUEST,
                 ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
-                    it.detail = "Kan ikke forlenge periode når sluttdato er satt. Deltakelsen har allerede en sluttdato, og perioden kan derfor ikke forlenges."
+                    it.detail =
+                        "Kan ikke forlenge periode når sluttdato er satt. Deltakelsen har allerede en sluttdato, og perioden kan derfor ikke forlenges."
                 },
                 null
             )
@@ -532,7 +522,7 @@ class UngdomsprogramregisterService(
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
-        logger.info("Sender inn hendelse til ung-sak om at perioden er forlenget med 8 uker")
+        logger.info("Sender inn hendelse til ung-sak om at perioden er forlenget med inntil 8 uker")
 
         val hendelsedato = LocalDateTime.now()
 
