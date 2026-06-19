@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import com.ninjasquad.springmockk.MockkBean
+import com.github.tomakehurst.wiremock.client.WireMock
 import io.mockk.every
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
@@ -224,6 +225,45 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         assertTrue(utmelding)
         assertThat(deltakelseRepository.findByDeltaker_IdIn(listOf(innmelding.deltaker.id!!))).isEmpty()
         assertThat(deltakelseVeilederEnhetRepository.findByDeltakelseId(innmelding.id!!)).isNull()
+    }
+
+    @Test
+    fun `Fjerner deltaker setter SøkYtelse-oppgave til avbrutt`() {
+        val fnr = FødselsnummerGenerator.neste()
+        val deltakerDTO = DeltakerDTO(deltakerIdent = fnr)
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(fnr, false, IdentGruppe.FOLKEREGISTERIDENT))
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        wireMockServer.stubFor(
+            WireMock.post(WireMock.urlPathEqualTo("/ung-brukerdialog-api-mock/ung/brukerdialog/intern/api/oppgavebehandling/sett-avbrutt-for-type-og-periode"))
+                .willReturn(WireMock.aResponse().withStatus(HttpStatus.OK.value()))
+        )
+
+        val deltakelseStartdato = LocalDate.now()
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = deltakerDTO,
+                fraOgMed = deltakelseStartdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseStartdato).tilOgMed,
+            )
+        )
+
+        val deltakerDAO = deltakerRepository.finnDeltakerGittIdenter(listOf(fnr)).firstOrNull()
+        assertThat(deltakerDAO).isNotNull
+
+        val utmelding = ungdomsprogramregisterService.fjernFraProgram(deltakerDAO!!)
+
+        assertTrue(utmelding)
+        wireMockServer.verify(
+            WireMock.postRequestedFor(
+                WireMock.urlPathEqualTo("/ung-brukerdialog-api-mock/ung/brukerdialog/intern/api/oppgavebehandling/sett-avbrutt-for-type-og-periode")
+            )
+        )
     }
 
     @Test
