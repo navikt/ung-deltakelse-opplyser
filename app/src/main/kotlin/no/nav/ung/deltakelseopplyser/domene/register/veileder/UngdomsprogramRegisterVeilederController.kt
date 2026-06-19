@@ -160,15 +160,13 @@ class UngdomsprogramRegisterVeilederController(
 
     @DeleteMapping("/deltakelse/{deltakelseId}/slett/sluttdato")
     @Operation(summary = "Sletter sluttdato på en deltakelse i ungdomsprogrammet")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun slettSluttdato(@PathVariable deltakelseId: UUID) {
+    @ResponseStatus(HttpStatus.OK)
+    fun slettSluttdato(@PathVariable deltakelseId: UUID): DeltakelseDTO {
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
         tilgangskontrollService.krevAnsattTilgang(
             UPDATE,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-
-        registerService.slettSluttdato(deltakelseId)
 
         sporingsloggService.logg(
             "/deltakelse/{deltakelseId}/slett/sluttdato",
@@ -176,6 +174,8 @@ class UngdomsprogramRegisterVeilederController(
             PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
             EventClassId.AUDIT_UPDATE
         )
+
+        return registerService.slettSluttdato(deltakelseId)
     }
 
     @PutMapping(

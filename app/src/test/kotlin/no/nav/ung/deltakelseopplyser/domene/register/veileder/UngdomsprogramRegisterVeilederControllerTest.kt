@@ -92,7 +92,7 @@ class UngdomsprogramRegisterVeilederControllerTest {
             String::class.java
         )
 
-        assertThat(response.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         verify(exactly = 1) { registerService.slettSluttdato(deltakelseId) }
         verify(exactly = 1) {
             tilgangskontrollService.krevAnsattTilgang(any(), listOf(PersonIdent.fra(deltakerIdent)))
