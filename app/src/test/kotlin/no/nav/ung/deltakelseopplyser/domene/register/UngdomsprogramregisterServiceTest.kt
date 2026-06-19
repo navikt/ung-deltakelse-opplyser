@@ -2,6 +2,7 @@ package no.nav.ung.deltakelseopplyser.domene.register
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import io.mockk.verify
 import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.security.token.support.spring.SpringTokenValidationContextHolder
@@ -491,6 +492,54 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         assertThat(førsteKall.harForlengetPeriode).isTrue()
         assertThat(andreKall.harForlengetPeriode).isTrue()
         assertThat(førsteKall).isEqualTo(andreKall)
+    }
+
+    @Test
+    fun `Sletting av sluttdato setter tilOgMed til null`() {
+        val mandag = LocalDate.parse("2024-10-07")
+
+        val deltakelseMedSluttdato = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = mandag,
+                tilOgMed = mandag.plusDays(10),
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            )
+        )
+
+        val oppdatert = ungdomsprogramregisterService.slettSluttdato(deltakelseMedSluttdato.id!!)
+
+        assertThat(oppdatert.fraOgMed).isEqualTo(mandag)
+        assertThat(oppdatert.tilOgMed).isNull()
+        verify(exactly = 0) { ungSakService.sendInnHendelse(any()) }
+    }
+
+    @Test
+    fun `Sletting av sluttdato er idempotent nar sluttdato allerede er null`() {
+        val mandag = LocalDate.parse("2024-10-07")
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = mandag,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            )
+        )
+
+        val førsteKall = ungdomsprogramregisterService.slettSluttdato(innmelding.id!!)
+        val andreKall = ungdomsprogramregisterService.slettSluttdato(innmelding.id!!)
+
+        assertThat(førsteKall.tilOgMed).isNull()
+        assertThat(andreKall.tilOgMed).isNull()
+        assertThat(førsteKall).isEqualTo(andreKall)
+    }
+
+    @Test
+    fun `Sletting av sluttdato gir not found nar deltakelse ikke finnes`() {
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.slettSluttdato(UUID.randomUUID())
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        }
     }
 
     @Test

@@ -158,6 +158,26 @@ class UngdomsprogramRegisterVeilederController(
         }
     }
 
+    @DeleteMapping("/deltakelse/{deltakelseId}/slett/sluttdato")
+    @Operation(summary = "Sletter sluttdato på en deltakelse i ungdomsprogrammet")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun slettSluttdato(@PathVariable deltakelseId: UUID) {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
+
+        registerService.slettSluttdato(deltakelseId)
+
+        sporingsloggService.logg(
+            "/deltakelse/{deltakelseId}/slett/sluttdato",
+            "Slettet sluttdato for deltakelse med id $deltakelseId",
+            PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+            EventClassId.AUDIT_UPDATE
+        )
+    }
+
     @PutMapping(
         "/deltakelse/{deltakelseId}/forleng-periode",
         produces = [MediaType.APPLICATION_JSON_VALUE]
