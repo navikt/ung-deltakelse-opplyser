@@ -496,6 +496,11 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Test
     fun `Sletting av sluttdato setter tilOgMed til null`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
         val mandag = LocalDate.parse("2024-10-07")
 
         val deltakelseMedSluttdato = ungdomsprogramregisterService.leggTilIProgram(
@@ -511,7 +516,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         assertThat(oppdatert.fraOgMed).isEqualTo(mandag)
         assertThat(oppdatert.tilOgMed).isNull()
-        verify(exactly = 0) { ungSakService.sendInnHendelse(any()) }
+        verify(exactly = 1) { ungSakService.sendInnHendelse(any()) }
     }
 
     @Test
