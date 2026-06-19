@@ -72,6 +72,43 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `Sletting av sluttdato gir eget historikkinnslag`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+        every { pdlService.hentPerson(any()) } returns Scenarioer
+            .lagPerson(LocalDate.of(2000, 1, 1))
+
+        val startdato = LocalDate.parse("2024-10-07")
+        val opprinneligSluttdato = LocalDate.parse("2024-10-21")
+
+        val deltakelse = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = startdato,
+                tilOgMed = opprinneligSluttdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
+            )
+        )
+
+        val deltakelseId = deltakelse.id!!
+        ungdomsprogramregisterService.slettSluttdato(deltakelseId)
+
+        val historikk = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
+        assertThat(historikk).hasSize(2)
+
+        val sisteInnslag = historikk.last()
+        assertThat(sisteInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
+        assertThat(sisteInnslag.endringstype).isEqualTo(Endringstype.SLUTTDATO_SLETTET)
+        assertThat(sisteInnslag.sluttdatoSlettet).isNotNull
+        assertThat(sisteInnslag.sluttdatoSlettet!!.slettetSluttdato).isEqualTo(opprinneligSluttdato)
+        assertThat(sisteInnslag.deltakelse.getTom()).isNull()
+        assertThat(sisteInnslag.utledEndringsTekst())
+            .isEqualTo("Sluttdato for deltakelse er slettet (tidligere sluttdato var ${formater(opprinneligSluttdato)}).")
+    }
+
+    @Test
     fun `Deltaker blir meldt inn i programmet, startdato endres, deltaker søker ytelse, meldes ut av programmet, og deltakelsen fjernes`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),

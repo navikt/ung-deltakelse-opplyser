@@ -521,11 +521,17 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Test
     fun `Sletting av sluttdato er idempotent nar sluttdato allerede er null`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
         val mandag = LocalDate.parse("2024-10-07")
         val innmelding = ungdomsprogramregisterService.leggTilIProgram(
             DeltakelseDTO(
                 deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
                 fraOgMed = mandag,
+                tilOgMed = mandag.plusDays(3),
                 periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
             )
         )
@@ -536,6 +542,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         assertThat(førsteKall.tilOgMed).isNull()
         assertThat(andreKall.tilOgMed).isNull()
         assertThat(førsteKall).isEqualTo(andreKall)
+        verify(exactly = 1) { ungSakService.sendInnHendelse(any()) }
     }
 
     @Test

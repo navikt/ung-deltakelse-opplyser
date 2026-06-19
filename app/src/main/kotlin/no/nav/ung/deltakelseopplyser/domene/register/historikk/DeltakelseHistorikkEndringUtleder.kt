@@ -26,7 +26,9 @@ object DeltakelseHistorikkEndringUtleder {
         val forrigeSluttdato = forrigeDeltakelseRevisjon?.getTom()
         val nåværendeSluttdato = nåværendeDeltakelseRevisjon.getTom()
         val deltakerMeldtUt = forrigeSluttdato == null && nåværendeSluttdato != null
-        val sluttdatoErEndret = forrigeSluttdato != null && forrigeSluttdato != nåværendeSluttdato
+        val sluttdatoSlettet = forrigeSluttdato != null && nåværendeSluttdato == null
+        val sluttdatoErEndret =
+            forrigeSluttdato != null && nåværendeSluttdato != null && forrigeSluttdato != nåværendeSluttdato
         val deltakelseErFjernet = nåværendeDeltakelseRevisjon.erSlettet && forrigeDeltakelseRevisjon?.erSlettet != true
 
         val soktTidspunktErEndret =
@@ -39,6 +41,7 @@ object DeltakelseHistorikkEndringUtleder {
         val endredeFelter = listOfNotNull(
             "startdato".takeIf { startdatoErEndret },
             "sluttdatoSatt".takeIf { deltakerMeldtUt },
+            "sluttdatoSlettet".takeIf { sluttdatoSlettet },
             "sluttdatoEndret".takeIf { sluttdatoErEndret && !periodeForlenget },
             "søktTidspunkt".takeIf { soktTidspunktErEndret },
             "deltakelseFjernet".takeIf { deltakelseErFjernet },
@@ -52,6 +55,7 @@ object DeltakelseHistorikkEndringUtleder {
                 forrigeDeltakelseRevisjon,
                 startdatoErEndret,
                 deltakerMeldtUt,
+                sluttdatoSlettet,
                 sluttdatoErEndret,
                 soktTidspunktErEndret,
                 deltakelseErFjernet,
@@ -71,6 +75,14 @@ object DeltakelseHistorikkEndringUtleder {
                 forrigeDeltakelseRevisjon,
                 nåværendeDeltakelseRevisjon
             ),
+
+            sluttdatoSlettetData = if (sluttdatoSlettet) {
+                SluttdatoSlettetHistorikk(
+                    slettetSluttdato = requireNotNull(forrigeSluttdato) {
+                        "Forrige sluttdato kan ikke være null ved sletting av sluttdato"
+                    }
+                )
+            } else null,
 
             søktTidspunktSatt = utledSøktTidspunktHistorikkDTO(soktTidspunktErEndret, nåværendeDeltakelseRevisjon),
 
@@ -138,6 +150,7 @@ object DeltakelseHistorikkEndringUtleder {
         forrigeDeltakelseRevisjon: DeltakelseDAO?,
         startdatoErEndret: Boolean,
         deltakerMeldtUt: Boolean,
+        sluttdatoSlettet: Boolean,
         sluttdatoErEndret: Boolean,
         soktTidspunktErEndret: Boolean,
         deltakelseErFjernet: Boolean,
@@ -148,6 +161,7 @@ object DeltakelseHistorikkEndringUtleder {
         forrigeDeltakelseRevisjon == null -> Endringstype.DELTAKER_MELDT_INN
         startdatoErEndret -> Endringstype.ENDRET_STARTDATO
         deltakerMeldtUt -> Endringstype.DELTAKER_MELDT_UT
+        sluttdatoSlettet -> Endringstype.SLUTTDATO_SLETTET
         periodeForlenget -> Endringstype.FORLENGET_PERIODE
         sluttdatoErEndret -> Endringstype.ENDRET_SLUTTDATO
         soktTidspunktErEndret -> Endringstype.DELTAKER_HAR_SØKT_YTELSE
@@ -180,6 +194,7 @@ object DeltakelseHistorikkEndringUtleder {
         val endretStartdatoData: EndretStartdatoHistorikk?,
         val deltakerMeldtUtData: DeltakerMeldtUtHistorikk?,
         val endretSluttdatoData: EndretSluttdatoHistorikk?,
+        val sluttdatoSlettetData: SluttdatoSlettetHistorikk?,
         val søktTidspunktSatt: SøktTidspunktHistorikk?,
         val deltakelseFjernetData: DeltakelseFjernetHistorikk?,
         val forlengetPeriodeData: ForlengetPeriodeHistorikk?,
