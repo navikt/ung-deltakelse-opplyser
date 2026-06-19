@@ -489,7 +489,7 @@ class UngdomsprogramregisterService(
                 oppdatert.getTom()!!
             }
             else -> {
-                TIDENES_ENDE
+                TIDENES_ENDE // TODO: Avklar om maksdato eller TIDENES_ENDE er best å bruke.
             }
         }
 
