@@ -1,5 +1,6 @@
 package no.nav.ung.deltakelseopplyser.integration.ungsak
 
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.EndreOppgaveStatusDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -43,6 +44,24 @@ class UngBrukerdialogService(
             false
         }
     }
+
+    fun settAvbruttSøkYtelseOppgaveForTypeOgPeriode(dto: EndreOppgaveStatusDto): Boolean {
+        return try {
+            ungBrukerdialogRetryClient.settAvbruttForTypeOgPeriode(dto)
+        } catch (exception: HttpClientErrorException) {
+            if (exception.statusCode == HttpStatus.UNAUTHORIZED || exception.statusCode == HttpStatus.FORBIDDEN) {
+                throw exception
+            }
+            logger.error("Fikk en HttpClientErrorException når man kalte sett-avbrutt-for-type-og-periode i ung-brukerdialog-api. Error response = '${exception.responseBodyAsString}'")
+            false
+        } catch (_: HttpServerErrorException) {
+            logger.error("Fikk en HttpServerErrorException når man kalte sett-avbrutt-for-type-og-periode i ung-brukerdialog-api.")
+            false
+        } catch (_: ResourceAccessException) {
+            logger.error("Fikk en ResourceAccessException når man kalte sett-avbrutt-for-type-og-periode i ung-brukerdialog-api.")
+            false
+        }
+    }
 }
 
 @Component
@@ -59,12 +78,24 @@ class UngBrukerdialogRetryClient(
 ) {
     private companion object {
         private const val opprettSøkYtelseUrl = "/intern/api/oppgavebehandling/opprett"
+        private const val settAvbruttForTypeOgPeriodeUrl = "/intern/api/oppgavebehandling/sett-avbrutt-for-type-og-periode"
     }
 
     fun opprettSøkYtelseOppgave(opprettOppgave: OpprettOppgaveDto): Boolean {
         val httpEntity = HttpEntity(opprettOppgave)
         val response = ungBrukerdialogKlient.exchange(
             opprettSøkYtelseUrl,
+            HttpMethod.POST,
+            httpEntity,
+            Unit::class.java
+        )
+        return response.statusCode == HttpStatus.OK
+    }
+
+    fun settAvbruttForTypeOgPeriode(dto: EndreOppgaveStatusDto): Boolean {
+        val httpEntity = HttpEntity(dto)
+        val response = ungBrukerdialogKlient.exchange(
+            settAvbruttForTypeOgPeriodeUrl,
             HttpMethod.POST,
             httpEntity,
             Unit::class.java

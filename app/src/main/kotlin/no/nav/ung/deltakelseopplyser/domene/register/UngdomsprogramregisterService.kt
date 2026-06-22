@@ -2,6 +2,8 @@ package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
 import no.nav.k9.søknad.TidUtils.TIDENES_ENDE
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.EndreOppgaveStatusDto
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveType
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveYtelsetype
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.søkytelse.SøkYtelseOppgavetypeDataDto
@@ -150,6 +152,8 @@ class UngdomsprogramregisterService(
         val deltakelseIder = deltakelser.mapNotNull { it.id }
         deltakelseVeilederEnhetService.slettForDeltakelser(deltakelseIder)
 
+        settAvbruttSøkYtelseOppgaverForDeltakelser(deltaker, deltakelser)
+
         val deltakerSlettet = deltakerService.slettDeltaker(deltakerId)
         if (!deltakerSlettet) {
             logger.error("Klarte ikke å slette deltaker med id $deltakerId fra deltakerregisteret")
@@ -175,6 +179,44 @@ class UngdomsprogramregisterService(
         }
 
         return true
+    }
+
+    private fun settAvbruttSøkYtelseOppgaverForDeltakelser(deltaker: DeltakerDAO, deltakelser: List<DeltakelseDTO>) {
+        val ikkeSøkteDeltakelser = deltakelser.filter { it.søktTidspunkt == null }
+        if (ikkeSøkteDeltakelser.isEmpty()) return
+
+        try {
+            val aktørId = pdlService.hentAktørIder(deltaker.deltakerIdent)
+                .firstOrNull { !it.historisk }
+                ?: run {
+                    logger.warn("Fant ingen aktiv aktørId for deltaker ${deltaker.id}. Kan ikke sette SøkYtelse-oppgaver til avbrutt.")
+                    return
+                }
+
+            ikkeSøkteDeltakelser.forEach { deltakelse ->
+                val ok = ungBrukerdialogService.settAvbruttSøkYtelseOppgaveForTypeOgPeriode(
+                    EndreOppgaveStatusDto(
+                        no.nav.ung.brukerdialog.typer.AktørId(aktørId.ident),
+                        OppgaveType.SØK_YTELSE,
+                        deltakelse.fraOgMed,
+                        deltakelse.tilOgMed,
+                    )
+                )
+
+                if (!ok) {
+                    logger.warn(
+                        "Klarte ikke å sette SøkYtelse-oppgave til avbrutt for deltaker ${deltaker.id} og periode ${deltakelse.fraOgMed}..${deltakelse.tilOgMed}. Fortsetter med sletting."
+                    )
+                }
+            }
+        } catch (e: org.springframework.web.client.HttpClientErrorException) {
+            if (e.statusCode == HttpStatus.UNAUTHORIZED || e.statusCode == HttpStatus.FORBIDDEN) {
+                throw e
+            }
+            logger.warn("Klarte ikke å sette SøkYtelse-oppgaver til avbrutt for deltaker ${deltaker.id}. Fortsetter med sletting.", e)
+        } catch (e: Exception) {
+            logger.warn("Klarte ikke å sette SøkYtelse-oppgaver til avbrutt for deltaker ${deltaker.id}. Fortsetter med sletting.", e)
+        }
     }
 
     @Transactional(TRANSACTION_MANAGER)
