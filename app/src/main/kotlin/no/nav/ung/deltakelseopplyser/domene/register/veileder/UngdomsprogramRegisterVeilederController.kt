@@ -180,15 +180,21 @@ class UngdomsprogramRegisterVeilederController(
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
 
-        sporingsloggService.logg(
-            "/deltakelse/{deltakelseId}/slett/sluttdato",
-            "Slettet sluttdato for deltakelse med id $deltakelseId",
-            PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
-            EventClassId.AUDIT_UPDATE
-        )
+        val varSluttdatoSatt = eksisterendeDeltakelse.tilOgMed != null
+        return registerService.slettSluttdato(deltakelseId).also {
+            val melding = if (varSluttdatoSatt) {
+                "Slettet sluttdato for deltakelse med id $deltakelseId"
+            } else {
+                "Sletting av sluttdato var idempotent (sluttdato var allerede tom) for deltakelse med id $deltakelseId"
+            }
 
-        return registerService.slettSluttdato(deltakelseId)
-    }
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/slett/sluttdato",
+                melding,
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        )
 
     @PutMapping(
         "/deltakelse/{deltakelseId}/forleng-periode",
