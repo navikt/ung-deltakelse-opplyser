@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
+import no.nav.k9.søknad.TidUtils.TIDENES_ENDE
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.EndreOppgaveStatusDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveType
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveYtelsetype
@@ -412,6 +413,26 @@ class UngdomsprogramregisterService(
     }
 
     @Transactional(TRANSACTION_MANAGER)
+    fun slettSluttdato(deltakelseId: UUID): DeltakelseDTO {
+        val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
+
+        // Idempotens: hvis sluttdato allerede er tom, returner eksisterende deltakelse.
+        if (eksisterendeDeltakelse.getTom() == null) {
+            logger.info("Sluttdato er allerede tom for deltakelse med id $deltakelseId. Returnerer eksisterende.")
+            return eksisterendeDeltakelse.mapToDTO()
+        }
+
+        logger.info("Sletter sluttdato for deltakelse med id $deltakelseId")
+        val nyPeriodeUtenSluttdato = Range.closedInfinite(eksisterendeDeltakelse.getFom())
+        eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeUtenSluttdato)
+
+        val lagret = deltakelseRepository.save(eksisterendeDeltakelse)
+        sendEndretSluttdatoHendelseTilUngSak(lagret)
+
+        return lagret.mapToDTO()
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
     fun forlengPeriode(deltakelseId: UUID): DeltakelseDTO {
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
 
@@ -506,8 +527,14 @@ class UngdomsprogramregisterService(
 
 
     private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: DeltakelseDAO) {
-        val opphørsdato = oppdatert.getTom()
-        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
+        val sluttdato = when {
+            oppdatert.getTom() != null -> {
+                oppdatert.getTom()!!
+            }
+            else -> {
+                TIDENES_ENDE
+            }
+        }
 
         logger.info("Henter aktørIder for deltaker")
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
@@ -524,7 +551,7 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
+        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), sluttdato)
         ungSakService.sendInnHendelse(
             hendelse = HendelseDto(
                 hendelse,

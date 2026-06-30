@@ -20,8 +20,9 @@ data class DeltakelseHistorikk(
     val deltakerMeldtUt: DeltakerMeldtUtHistorikk?,
     val endretStartdato: EndretStartdatoHistorikk?,
     val endretSluttdato: EndretSluttdatoHistorikk?,
+    val sluttdatoSlettet: SluttdatoSlettetHistorikk?,
     val søktTidspunktSatt: SøktTidspunktHistorikk?,
-     val deltakelseFjernet: DeltakelseFjernetHistorikk?,
+    val deltakelseFjernet: DeltakelseFjernetHistorikk?,
     val forlengetPeriode: ForlengetPeriodeHistorikk?
 ) {
 
@@ -62,6 +63,12 @@ data class DeltakelseHistorikk(
                 val gammelSluttdato = DATE_FORMATTER.format(endretSluttdato.gammelSluttdato)
                 val nySluttdato = DATE_FORMATTER.format(endretSluttdato.nySluttdato)
                 return "Sluttdato for deltakelse er endret fra $gammelSluttdato til $nySluttdato."
+            }
+
+            Endringstype.SLUTTDATO_SLETTET -> {
+                requireNotNull(sluttdatoSlettet)
+                val slettetSluttdato = DATE_FORMATTER.format(sluttdatoSlettet.slettetSluttdato)
+                "Sluttdato for deltakelse er slettet (tidligere sluttdato var $slettetSluttdato)."
             }
 
             Endringstype.DELTAKER_HAR_SØKT_YTELSE -> {
