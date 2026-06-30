@@ -531,7 +531,7 @@ class UngdomsprogramregisterService(
                 oppdatert.getTom()!!
             }
             else -> {
-                oppdatert.mapToDTO().periodeMaksDato // TODO: Avklar om maksdato eller TIDENES_ENDE er best å bruke.
+                TIDENES_ENDE
             }
         }
 
