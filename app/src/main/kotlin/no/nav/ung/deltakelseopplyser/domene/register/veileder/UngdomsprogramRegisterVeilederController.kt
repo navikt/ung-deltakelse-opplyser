@@ -194,7 +194,9 @@ class UngdomsprogramRegisterVeilederController(
                 PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
                 EventClassId.AUDIT_UPDATE
             )
-        )
+        }
+    }
+
 
     @PutMapping(
         "/deltakelse/{deltakelseId}/forleng-periode",

@@ -430,6 +430,7 @@ class UngdomsprogramregisterService(
         sendEndretSluttdatoHendelseTilUngSak(lagret)
 
         return lagret.mapToDTO()
+    }
 
     @Transactional(TRANSACTION_MANAGER)
     fun forlengPeriode(deltakelseId: UUID): DeltakelseDTO {
