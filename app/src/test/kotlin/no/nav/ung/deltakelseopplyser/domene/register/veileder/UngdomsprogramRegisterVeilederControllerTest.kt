@@ -69,7 +69,7 @@ class UngdomsprogramRegisterVeilederControllerTest {
     private lateinit var deltakerService: DeltakerService
 
     @Test
-    fun `slett sluttdato returnerer 204`() {
+    fun `slett sluttdato returnerer 200`() {
         val deltakelseId = UUID.randomUUID()
         val deltakerIdent = "12345678910"
         val deltakelse = DeltakelseDTO(
