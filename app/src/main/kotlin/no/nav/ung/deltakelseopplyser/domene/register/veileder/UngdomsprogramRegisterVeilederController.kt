@@ -23,8 +23,10 @@ import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHisto
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseInnmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.DeltakelseUtmeldingDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.ErrorResponseException
 import java.util.*
 
 
@@ -49,6 +52,7 @@ class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val deltakerService: DeltakerService,
+    @Value("\${SLETT_SLUTTDATO_ENABLED:true}") private val slettSluttdatoEnabled: Boolean,
 ) {
 
     @PostMapping(
@@ -162,6 +166,14 @@ class UngdomsprogramRegisterVeilederController(
     @Operation(summary = "Sletter sluttdato på en deltakelse i ungdomsprogrammet")
     @ResponseStatus(HttpStatus.OK)
     fun slettSluttdato(@PathVariable deltakelseId: UUID): DeltakelseDTO {
+        if (!slettSluttdatoEnabled) {
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Sletting av sluttdato er deaktivert."),
+                null
+            )
+        }
+
         val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
         tilgangskontrollService.krevAnsattTilgang(
             UPDATE,
