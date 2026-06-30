@@ -426,10 +426,10 @@ class UngdomsprogramregisterService(
         val nyPeriodeUtenSluttdato = Range.closedInfinite(eksisterendeDeltakelse.getFom())
         eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeUtenSluttdato)
 
-        sendEndretSluttdatoHendelseTilUngSak(eksisterendeDeltakelse)
+        val lagret = deltakelseRepository.save(eksisterendeDeltakelse)
+        sendEndretSluttdatoHendelseTilUngSak(lagret)
 
-        return deltakelseRepository.save(eksisterendeDeltakelse).mapToDTO()
-    }
+        return lagret.mapToDTO()
 
     @Transactional(TRANSACTION_MANAGER)
     fun forlengPeriode(deltakelseId: UUID): DeltakelseDTO {
