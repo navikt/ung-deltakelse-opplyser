@@ -527,7 +527,7 @@ class UngdomsprogramregisterService(
 
 
     private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: DeltakelseDAO) {
-        val opphørsdato = when {
+        val sluttdato = when {
             oppdatert.getTom() != null -> {
                 oppdatert.getTom()!!
             }
@@ -551,7 +551,7 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
+        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), sluttdato)
         ungSakService.sendInnHendelse(
             hendelse = HendelseDto(
                 hendelse,
