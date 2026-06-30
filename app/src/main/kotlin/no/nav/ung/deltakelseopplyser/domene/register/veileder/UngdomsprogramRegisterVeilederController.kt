@@ -52,7 +52,7 @@ class UngdomsprogramRegisterVeilederController(
     private val registerService: UngdomsprogramregisterService,
     private val deltakelseHistorikkService: DeltakelseHistorikkService,
     private val deltakerService: DeltakerService,
-    @Value("\${SLETT_SLUTTDATO_ENABLED:true}") private val slettSluttdatoEnabled: Boolean,
+    @param:Value("\${SLETT_SLUTTDATO_ENABLED:true}") private val slettSluttdatoEnabled: Boolean,
 ) {
 
     @PostMapping(
