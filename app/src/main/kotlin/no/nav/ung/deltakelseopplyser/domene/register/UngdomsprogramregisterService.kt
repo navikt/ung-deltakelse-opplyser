@@ -25,6 +25,7 @@ import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramForlengetPeriodeHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørOpphevetHendelse
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -423,11 +424,12 @@ class UngdomsprogramregisterService(
         }
 
         logger.info("Sletter sluttdato for deltakelse med id $deltakelseId")
+        val tidligereOpphørsdato = eksisterendeDeltakelse.getTom()!!
         val nyPeriodeUtenSluttdato = Range.closedInfinite(eksisterendeDeltakelse.getFom())
         eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeUtenSluttdato)
 
         val lagret = deltakelseRepository.save(eksisterendeDeltakelse)
-        sendEndretSluttdatoHendelseTilUngSak(lagret)
+        sendOpphørOpphevetHendelseTilUngSak(lagret, tidligereOpphørsdato)
 
         return lagret.mapToDTO()
     }
@@ -552,6 +554,32 @@ class UngdomsprogramregisterService(
         }
 
         val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), sluttdato)
+        ungSakService.sendInnHendelse(
+            hendelse = HendelseDto(
+                hendelse,
+                AktørId(nåværendeAktørId)
+            )
+        )
+    }
+
+
+    private fun sendOpphørOpphevetHendelseTilUngSak(oppdatert: DeltakelseDAO, tidligereOpphørsdato: LocalDate) {
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+
+        logger.info("Sender inn hendelse til ung-sak om at opphøret av deltakelse er opphevet")
+
+        val hendelsedato =
+            oppdatert.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
+                ?: oppdatert.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
+
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramOpphørOpphevetHendelse(hendelseInfo.build(), tidligereOpphørsdato)
         ungSakService.sendInnHendelse(
             hendelse = HendelseDto(
                 hendelse,
