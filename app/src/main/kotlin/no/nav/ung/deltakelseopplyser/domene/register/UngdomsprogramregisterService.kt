@@ -429,7 +429,7 @@ class UngdomsprogramregisterService(
         eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeUtenSluttdato)
 
         val lagret = deltakelseRepository.save(eksisterendeDeltakelse)
-        sendOpphørOpphevetHendelseTilUngSak(eksisterendeDeltakelse, tidligereOpphørsdato)
+        sendOpphørOpphevetHendelseTilUngSak(lagret, tidligereOpphørsdato)
 
         return lagret.mapToDTO()
     }
@@ -563,16 +563,16 @@ class UngdomsprogramregisterService(
     }
 
 
-    private fun sendOpphørOpphevetHendelseTilUngSak(eksisterende: DeltakelseDAO, tidligereOpphørsdato: LocalDate) {
+    private fun sendOpphørOpphevetHendelseTilUngSak(oppdatert: DeltakelseDAO, tidligereOpphørsdato: LocalDate) {
         logger.info("Henter aktørIder for deltaker")
-        val aktørIder = pdlService.hentAktørIder(eksisterende.deltaker.deltakerIdent)
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
         val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
 
         logger.info("Sender inn hendelse til ung-sak om at opphøret av deltakelse er opphevet")
 
         val hendelsedato =
-            eksisterende.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
-                ?: eksisterende.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
+            oppdatert.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
+                ?: oppdatert.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
 
         val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
         aktørIder.forEach {
