@@ -2,13 +2,13 @@ package no.nav.ung.deltakelseopplyser.integration.abac
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.k9.felles.sikkerhet.abac.ÅrsakIkkeTilgang
 import no.nav.security.token.support.client.core.context.JwtBearerTokenResolver
 import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
 import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.UngdomsprogramTilgangskontrollInputDto
-import no.nav.sif.abac.kontrakt.abac.resultat.IkkeTilgangÅrsak
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.integration.tilgangsmaskin.TilgangsmaskinBeslutning
@@ -285,20 +285,19 @@ class TilgangskontrollService(
         }
     }
 
-    private fun MutableSet<IkkeTilgangÅrsak>.somTekst(): String {
+    private fun MutableSet<ÅrsakIkkeTilgang>.somTekst(): String {
         val årsaker = map {
             when (it) {
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_KODE6_PERSON -> "Ikke tilgang til kode6 person"
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_KODE7_PERSON -> "Ikke tilgang til kode7 person"
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_EGEN_ANSATT -> "Ikke tilgang til egen ansatt"
-                IkkeTilgangÅrsak.HAR_IKKE_TILGANG_TIL_APPLIKASJONEN -> "Ikke tilgang til applikasjonen"
-                IkkeTilgangÅrsak.ER_IKKE_VEILEDER_ELLER_SAKSBEHANDLER -> "Ikke veileder eller saksbehandler"
-                IkkeTilgangÅrsak.ER_IKKE_SAKSBEHANDLER -> "Ikke saksbehandler"
-                IkkeTilgangÅrsak.ER_IKKE_BESLUTTER -> "Ikke beslutter"
-                IkkeTilgangÅrsak.ER_IKKE_OVERSTYRER -> "Ikke overstyrer"
-                IkkeTilgangÅrsak.ER_IKKE_DRIFTER -> "Ikke drifter"
-                IkkeTilgangÅrsak.ER_IKKE_UNGDSOMSPROGRAMVEILEDER -> "Ikke ungdomsprogramveileder"
-                else -> "Ikke tilgang"
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_KODE6_PERSON -> "Ikke tilgang til kode6 person"
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_KODE7_PERSON -> "Ikke tilgang til kode7 person"
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_EGEN_ANSATT -> "Ikke tilgang til egen ansatt"
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_APPLIKASJONEN -> "Ikke tilgang til applikasjonen"
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_ANNEN_GRUNN -> "Du har ikke tilgang til denne operasjonen"
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_HISTORISK_SAK -> "Ikke tilgang til historisk sak"
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_TJENESTE_FOR_BORGER -> "Ikke tilgang. Denne tjenesten er for borgere."
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_TJENESTE_FOR_DRIFT -> "Ikke tilgang. Denen tjenesten er for drift."
+                ÅrsakIkkeTilgang.HAR_IKKE_TILGANG_TIL_PIP_TJENESTE -> "Ikke tilgang. Denne tjenesten er for intern bruk (PIP-tjeneste)"
+                ÅrsakIkkeTilgang.TEKNISK_FEIL -> "Ikke tilgang pga teknisk feil."
             }
         }
 
