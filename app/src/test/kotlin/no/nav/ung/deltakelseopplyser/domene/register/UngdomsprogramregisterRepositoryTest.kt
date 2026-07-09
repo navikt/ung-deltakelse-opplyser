@@ -5,9 +5,11 @@ import jakarta.persistence.EntityManager
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerRepository
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -83,6 +85,46 @@ class UngdomsprogramregisterRepositoryTest {
                 entityManager.flush()
             }
         }
+    }
+
+    @Test
+    fun `findAktiveDeltakelserUtenSluttdato returnerer kun ikke-slettede deltakelser uten sluttdato`() {
+        val iDag = LocalDate.now()
+
+        val aktivDeltakelse = opprettDeltakelse(
+            periode = Range.closedInfinite(iDag.minusMonths(3)),
+            erSlettet = false,
+        )
+        val avsluttetDeltakelse = opprettDeltakelse(
+            periode = Range.closed(iDag.minusMonths(6), iDag.minusDays(1)),
+            erSlettet = false,
+        )
+        val slettetAktivDeltakelse = opprettDeltakelse(
+            periode = Range.closedInfinite(iDag.minusMonths(2)),
+            erSlettet = true,
+        )
+
+        val resultat = repository.findAktiveDeltakelserUtenSluttdato()
+
+        assertThat(resultat.map { it.id })
+            .contains(aktivDeltakelse.id)
+            .doesNotContain(avsluttetDeltakelse.id, slettetAktivDeltakelse.id)
+    }
+
+    private fun opprettDeltakelse(
+        periode: Range<LocalDate>,
+        erSlettet: Boolean,
+    ): DeltakelseDAO {
+        val deltakerDAO = DeltakerDAO(deltakerIdent = FødselsnummerGenerator.neste())
+        deltakerRepository.saveAndFlush(deltakerDAO)
+
+        return repository.saveAndFlush(
+            DeltakelseDAO(
+                deltaker = deltakerDAO,
+                periode = periode,
+                erSlettet = erSlettet,
+            )
+        )
     }
 
     companion object {

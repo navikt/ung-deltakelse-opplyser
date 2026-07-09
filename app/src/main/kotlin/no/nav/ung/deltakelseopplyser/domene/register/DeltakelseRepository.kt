@@ -10,6 +10,19 @@ interface DeltakelseRepository : JpaRepository<DeltakelseDAO, UUID> {
 
     fun findByIdAndDeltaker_IdIn(id: UUID, deltakerIds: List<UUID>): DeltakelseDAO?
 
+    /**
+     * Finner aktive deltakelser uten sluttdato (upper bound er null) som ikke er slettet.
+     */
+    @Query(
+        value = """
+            SELECT d.* FROM ungdomsprogram_deltakelse d
+            WHERE d.er_slettet = false
+              AND upper(d.periode) IS NULL
+        """,
+        nativeQuery = true
+    )
+    fun findAktiveDeltakelserUtenSluttdato(): List<DeltakelseDAO>
+
     @Query(
         """
         SELECT d FROM ungdomsprogram_deltakelse d

@@ -1,0 +1,78 @@
+package no.nav.ung.deltakelseopplyser.domene.register
+
+import io.hypersistence.utils.hibernate.type.range.Range
+import no.nav.ung.deltakelseopplyser.config.TxConfiguration.Companion.TRANSACTION_MANAGER
+import no.nav.ung.deltakelseopplyser.integration.leader.LeaderElectorService
+import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
+
+/**
+ * Schedulert jobb som setter sluttdato (opphørsdato) på deltakelser
+ * der maksdato er nådd. Kjører daglig.
+ *
+ * Dette er scenario 4: naturlig avslutning.
+ * Deltaker-appen setter selv opphørsdato når maksdato passeres.
+ * Maksdato beregnes dynamisk via KvotePeriodeBeregner.
+ */
+@Service
+@Profile(value = ["prod-gcp", "dev-gcp"])
+class AvsluttDeltakelseVedMaksdatoJobb(
+    private val deltakelseRepository: DeltakelseRepository,
+    private val leaderElectorService: LeaderElectorService,
+) {
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AvsluttDeltakelseVedMaksdatoJobb::class.java)
+        private const val CRON_DAGLIG_KL_06 = "0 0 6 * * *"
+    }
+
+    /**
+     * Finner alle aktive deltakelser uten sluttdato, beregner maksdato via KvotePeriodeBeregner,
+     * og setter sluttdato = maksdato for de som har passert maksdato.
+     */
+    @Scheduled(cron = CRON_DAGLIG_KL_06)
+    @Transactional(TRANSACTION_MANAGER)
+    fun avsluttDeltakelserVedMaksdato() {
+        if (!leaderElectorService.erLeader()) {
+            log.info("Ikke leader, hopper over avslutning av deltakelser ved maksdato.")
+            return
+        }
+
+        val iDag = LocalDate.now()
+        log.info("Starter jobb for å avslutte deltakelser der maksdato <= $iDag")
+
+        val aktiveDeltakelser = deltakelseRepository.findAktiveDeltakelserUtenSluttdato()
+
+        val deltakelser = aktiveDeltakelser.filter { deltakelse ->
+            val maksdato = ForlengetPeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harForlengetPeriode).tilOgMed
+            maksdato <= iDag
+        }
+
+        log.info("Fant ${deltakelser.size} deltakelser som skal avsluttes.")
+
+        deltakelser.forEach { deltakelse ->
+            try {
+                avsluttEnkeltDeltakelse(deltakelse)
+            } catch (e: Exception) {
+                log.error("Feil ved avslutning av deltakelse ${deltakelse.id}", e)
+            }
+        }
+
+        log.info("Ferdig med avslutning av deltakelser ved maksdato. Behandlet ${deltakelser.size} stk.")
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
+    fun avsluttEnkeltDeltakelse(deltakelse: DeltakelseDAO) {
+        val maksdato = ForlengetPeriodeBeregner.beregn(deltakelse.getFom(), deltakelse.harForlengetPeriode).tilOgMed
+
+        log.info("Avslutter deltakelse ${deltakelse.id} med sluttdato = maksdato = $maksdato")
+
+        val nyPeriode = Range.closed(deltakelse.getFom(), maksdato)
+        deltakelse.oppdaterPeriode(nyPeriode)
+        deltakelseRepository.save(deltakelse)
+    }
+}
