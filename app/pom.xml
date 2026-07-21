@@ -14,7 +14,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <kotlin.version>2.4.0</kotlin.version>
+        <kotlin.version>2.4.10</kotlin.version>
         <tokenSupport.version>6.0.11</tokenSupport.version>
         <springdoc.version>3.0.3</springdoc.version>
         <spring-cloud.version>5.0.3</spring-cloud.version>
@@ -25,13 +25,13 @@
         <ung-brukerdialog-api.version>1.0.6</ung-brukerdialog-api.version>
 
         <fp-sak.version>2.7.6</fp-sak.version>
-        <graphql-kotlin.version>9.2.0</graphql-kotlin.version>
+        <graphql-kotlin.version>10.1.2</graphql-kotlin.version>
         <k9-format.version>13.4.0</k9-format.version>
         <k9-abakus.version>1.5.4</k9-abakus.version>
         <tms-kotlin-builder.version>2.2.0</tms-kotlin-builder.version>
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.14.0</sif-abac-kontrakt.version>
-        <google-cloud-bigquery.version>2.67.0</google-cloud-bigquery.version>
+        <google-cloud-bigquery.version>2.68.0</google-cloud-bigquery.version>
         <prosessering-core.version>2.20260622101837_623782e</prosessering-core.version>
     </properties>
     <dependencies>
@@ -228,7 +228,7 @@
         <dependency>
             <groupId>io.hypersistence</groupId>
             <artifactId>hypersistence-utils-hibernate-73</artifactId>
-            <version>3.15.3</version>
+            <version>3.15.4</version>
         </dependency>
 
         <dependency>
