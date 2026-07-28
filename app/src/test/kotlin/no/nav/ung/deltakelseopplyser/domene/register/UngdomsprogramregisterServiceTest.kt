@@ -619,5 +619,61 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         }
     }
 
+    @Test
+    fun `endreSluttdato til etter maksdato gir valideringsfeil`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val startdato = LocalDate.parse("2024-10-07")
+        val maksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = startdato,
+                periodeMaksDato = maksDato,
+            )
+        )
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.endreSluttdato(innmelding.id!!, mockEndrePeriodeDTO(maksDato.plusDays(1)))
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+            assertThat(it.body.detail).contains("kan ikke være etter maksdato")
+        }
+    }
+
+    @Test
+    fun `endreStartdato bakover slik at eksisterende sluttdato overstiger ny maksdato gir valideringsfeil`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val startdato = LocalDate.parse("2024-10-07") // mandag
+        val sluttdato = LocalDate.parse("2025-06-01") // innenfor maksdato fra startdato
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+        ungdomsprogramregisterService.avsluttDeltakelse(
+            innmelding.id!!,
+            DeltakelseDTO(deltaker = innmelding.deltaker, fraOgMed = startdato, tilOgMed = sluttdato, periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed)
+        )
+
+        // Ny startdato 2024-01-08: maksdato ≈ 2025-01-06, som er før sluttdato 2025-06-01
+        val nyStartdato = LocalDate.parse("2024-01-08") // mandag
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.endreStartdato(innmelding.id!!, mockEndrePeriodeDTO(nyStartdato))
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+            assertThat(it.body.detail).contains("kan ikke være etter maksdato")
+        }
+    }
+
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
 }

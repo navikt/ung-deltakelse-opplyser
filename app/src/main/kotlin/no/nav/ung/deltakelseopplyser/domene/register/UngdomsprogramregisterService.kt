@@ -377,6 +377,9 @@ class UngdomsprogramregisterService(
 
         forsikreGyldigPeriodeVedEndring(sluttdato, endretStartdato)
         forsikrePeriodeErInnenforDeltakersGyldigeAlder(endretStartdato, deltakerPersonalia)
+        if (sluttdato != null) {
+            forsikreSluttdatoErInnenforMaksdato(sluttdato, endretStartdato, eksisterendeDeltakelse.harForlengetPeriode)
+        }
 
         val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (sluttdato != null) {
             Range.closed(endretStartdato, sluttdato)
@@ -402,6 +405,7 @@ class UngdomsprogramregisterService(
         val endretSluttdato = endrePeriodeDatoDTO.dato
         forsikreGyldigPeriodeVedEndring(endretSluttdato, deltakelseFraOgMedDato)
         forsikrePeriodeErInnenforDeltakersGyldigeAlder(endretSluttdato, deltakerPersonalia)
+        forsikreSluttdatoErInnenforMaksdato(endretSluttdato, deltakelseFraOgMedDato, eksisterendeDeltakelse.harForlengetPeriode)
 
 
         val nyPeriodeMedEndretSluttdato = Range.closed(eksisterendeDeltakelse.getFom(), endrePeriodeDatoDTO.dato)
@@ -682,6 +686,23 @@ class UngdomsprogramregisterService(
                 null
             )
         }
+
+    private fun forsikreSluttdatoErInnenforMaksdato(
+        sluttdato: LocalDate,
+        startdato: LocalDate,
+        harForlengetPeriode: Boolean,
+    ) {
+        val maksDato = ForlengetPeriodeBeregner.beregn(startdato, harForlengetPeriode).tilOgMed
+        if (sluttdato > maksDato) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail = "Sluttdato=$sluttdato kan ikke være etter maksdato=$maksDato"
+                },
+                null
+            )
+        }
+    }
 
     private fun forsikreGyldigPeriodeVedEndring(sluttdato: LocalDate?, startdato: LocalDate) {
         if (sluttdato != null && sluttdato < startdato) {
