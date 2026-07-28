@@ -675,5 +675,33 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         }
     }
 
+    @Test
+    fun `avsluttDeltakelse med sluttdato etter maksdato gir valideringsfeil`() {
+        val startdato = LocalDate.parse("2024-10-07")
+        val maksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = startdato,
+                periodeMaksDato = maksDato,
+            )
+        )
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.avsluttDeltakelse(
+                innmelding.id!!,
+                DeltakelseDTO(
+                    deltaker = innmelding.deltaker,
+                    fraOgMed = startdato,
+                    tilOgMed = maksDato.plusDays(1),
+                    periodeMaksDato = maksDato,
+                )
+            )
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+            assertThat(it.body.detail).contains("kan ikke være etter maksdato")
+        }
+    }
+
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
 }

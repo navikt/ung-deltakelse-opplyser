@@ -342,6 +342,11 @@ class UngdomsprogramregisterService(
             Range.closed(deltakelseDTO.fraOgMed, deltakelseDTO.tilOgMed)
         }
 
+        val tilOgMed = deltakelseDTO.tilOgMed
+        if (tilOgMed != null) {
+            forsikreSluttdatoErInnenforMaksdato(tilOgMed, eksiterende.getFom(), eksiterende.harForlengetPeriode)
+        }
+
         eksiterende.oppdaterPeriode(periode)
         val oppdatert = deltakelseRepository.save(eksiterende)
 
