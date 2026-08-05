@@ -22,7 +22,7 @@
         <spring-mockk.version>5.0.1</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
         <ung-sak.version>7.7.8</ung-sak.version>
-        <ung-brukerdialog-api.version>1.0.6</ung-brukerdialog-api.version>
+        <ung-brukerdialog-api.version>1.0.7</ung-brukerdialog-api.version>
 
         <fp-sak.version>2.7.6</fp-sak.version>
         <graphql-kotlin.version>10.1.2</graphql-kotlin.version>
