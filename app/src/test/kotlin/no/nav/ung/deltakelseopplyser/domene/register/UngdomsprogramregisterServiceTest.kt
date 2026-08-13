@@ -703,5 +703,158 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
         }
     }
 
+    @Test
+    fun `sjekkAktivDeltakelse - passert tilOgMed gir erDeltaker false`() {
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerDTO.deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val startdato = LocalDate.now().minusDays(30)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = deltakerDTO,
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+        ungdomsprogramregisterService.avsluttDeltakelse(
+            innmelding.id!!,
+            DeltakelseDTO(
+                deltaker = innmelding.deltaker,
+                fraOgMed = startdato,
+                tilOgMed = LocalDate.now().minusDays(1),
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+
+        val sjekk = ungdomsprogramregisterService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
+
+        assertThat(sjekk.erDeltaker).isFalse()
+    }
+
+    @Test
+    fun `sjekkAktivDeltakelse - fremtidig tilOgMed gir erDeltaker true`() {
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerDTO.deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val startdato = LocalDate.now().minusDays(30)
+        val tilOgMed = LocalDate.now().plusDays(10)
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = deltakerDTO,
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+        ungdomsprogramregisterService.avsluttDeltakelse(
+            innmelding.id!!,
+            DeltakelseDTO(
+                deltaker = innmelding.deltaker,
+                fraOgMed = startdato,
+                tilOgMed = tilOgMed,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+
+        val sjekk = ungdomsprogramregisterService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
+
+        assertThat(sjekk.erDeltaker).isTrue()
+        assertThat(sjekk.fraOgMed).isEqualTo(startdato)
+        assertThat(sjekk.tilOgMed).isEqualTo(tilOgMed)
+    }
+
+    @Test
+    fun `sjekkAktivDeltakelse - aapen periode med passert maksdato gir erDeltaker false`() {
+        // Regresjonstest for problemet der deltakere med åpen periode (tilOgMed=null) fortsatt
+        // ble regnet som aktive selv om beregnet maksdato (260 virkedager fra startdato) var passert.
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val startdato = LocalDate.now().minusYears(2)
+        ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = deltakerDTO,
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerDTO.deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        val sjekk = ungdomsprogramregisterService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
+
+        assertThat(sjekk.erDeltaker).isFalse()
+    }
+
+    @Test
+    fun `sjekkAktivDeltakelse - aapen periode med maksdato i fremtiden gir erDeltaker true`() {
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val startdato = LocalDate.now().minusDays(5)
+        ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = deltakerDTO,
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerDTO.deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        val sjekk = ungdomsprogramregisterService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
+
+        assertThat(sjekk.erDeltaker).isTrue()
+        assertThat(sjekk.fraOgMed).isEqualTo(startdato)
+        assertThat(sjekk.tilOgMed).isNull()
+    }
+
+    @Test
+    fun `sjekkAktivDeltakelse - maksdato lik i dag gir erDeltaker true (inklusiv grense)`() {
+        val iDag = LocalDate.now()
+        val startdato = finnFraOgMedForMaksdato(iDag)
+
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = deltakerDTO,
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerDTO.deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        val sjekk = ungdomsprogramregisterService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
+
+        assertThat(sjekk.erDeltaker).isTrue()
+    }
+
+    /**
+     * Finner en fraOgMed-dato slik at [ForlengetPeriodeBeregner.beregn] gir en periodeMaksDato
+     * som er nøyaktig lik [maksdato]. Brukes for å konstruere et deterministisk grensetilfelle
+     * uavhengig av dagens dato.
+     */
+    private fun finnFraOgMedForMaksdato(maksdato: LocalDate): LocalDate {
+        var kandidat = maksdato
+        while (ForlengetPeriodeBeregner.beregn(kandidat).tilOgMed != maksdato) {
+            kandidat = kandidat.minusDays(1)
+        }
+        return kandidat
+    }
+
     private fun mockEndrePeriodeDTO(dato: LocalDate) = EndrePeriodeDatoDTO(dato = dato)
 }

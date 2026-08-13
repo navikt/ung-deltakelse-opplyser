@@ -491,6 +491,7 @@ class UngdomsprogramregisterService(
         val aktivDeltakelse = deltakelseRepository
             .findByDeltaker_IdInAndErSlettet(deltakerIder, false)
             .filter { it.getTom() == null || it.getTom()!! >= iDag }
+            .filter { ForlengetPeriodeBeregner.beregn(it.getFom(), it.harForlengetPeriode).tilOgMed >= iDag }
             .sortedWith(
                 compareByDescending<DeltakelseDAO> { it.getTom() == null }
                     .thenByDescending { it.getFom() }
