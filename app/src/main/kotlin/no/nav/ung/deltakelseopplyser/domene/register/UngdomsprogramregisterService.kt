@@ -480,14 +480,13 @@ class UngdomsprogramregisterService(
     }
 
     @Transactional(TRANSACTION_MANAGER, readOnly = true)
-    fun sjekkAktivDeltakelse(deltakerIdent: String): DeltakelseSjekk {
+    fun sjekkAktivDeltakelse(deltakerIdent: String, iDag: LocalDate = LocalDate.now()): DeltakelseSjekk {
         logger.info("Sjekker om bruker er aktiv deltaker i ungdomsprogrammet.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdent)
         if (deltakerIder.isEmpty()) {
             logger.info("Fant ingen deltaker for ident. Returnerer erDeltaker=false.")
             return DeltakelseSjekk(erDeltaker = false)
         }
-        val iDag = LocalDate.now()
         val aktivDeltakelse = deltakelseRepository
             .findByDeltaker_IdInAndErSlettet(deltakerIder, false)
             .filter { it.getTom() == null || it.getTom()!! >= iDag }

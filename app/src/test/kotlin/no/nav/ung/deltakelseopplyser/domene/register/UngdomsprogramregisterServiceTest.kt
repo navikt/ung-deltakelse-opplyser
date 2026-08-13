@@ -822,7 +822,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
     @Test
     fun `sjekkAktivDeltakelse - maksdato lik i dag gir erDeltaker true (inklusiv grense)`() {
-        val iDag = LocalDate.now()
+        val iDag = LocalDate.of(2025, 6, 16) // mandag
         val startdato = finnFraOgMedForMaksdato(iDag)
 
         val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
@@ -838,7 +838,7 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
             IdentInformasjon(deltakerDTO.deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
         )
 
-        val sjekk = ungdomsprogramregisterService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent)
+        val sjekk = ungdomsprogramregisterService.sjekkAktivDeltakelse(deltakerDTO.deltakerIdent, iDag = iDag)
 
         assertThat(sjekk.erDeltaker).isTrue()
     }
