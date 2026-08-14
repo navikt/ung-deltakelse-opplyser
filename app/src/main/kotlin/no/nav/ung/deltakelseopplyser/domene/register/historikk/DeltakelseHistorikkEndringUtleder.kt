@@ -103,7 +103,8 @@ object DeltakelseHistorikkEndringUtleder {
             DeltakerMeldtUtHistorikk(
                 utmeldingDato = requireNotNull(nåværendeDeltakelseRevisjon.getTom()) {
                     "Sluttdato kan ikke være null ved utmelding"
-                }
+                },
+                avslutningsårsak = nåværendeDeltakelseRevisjon.avslutningsårsak
             )
         } else null
     }
