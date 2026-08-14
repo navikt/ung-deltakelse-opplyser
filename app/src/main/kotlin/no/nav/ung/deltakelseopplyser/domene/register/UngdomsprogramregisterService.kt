@@ -348,8 +348,11 @@ class UngdomsprogramregisterService(
             forsikreSluttdatoErInnenforMaksdato(tilOgMed, eksiterende.getFom(), eksiterende.harForlengetPeriode)
         }
 
+        val erFørsteGangAvsluttet = eksiterende.getTom() == null
         eksiterende.oppdaterPeriode(periode)
-        eksiterende.settAvslutningsårsak(deltakelseDTO.avslutningsårsak)
+        if (erFørsteGangAvsluttet) {
+            eksiterende.settAvslutningsårsak(deltakelseDTO.avslutningsårsak)
+        }
         val oppdatert = deltakelseRepository.save(eksiterende)
 
         if (oppdatert.getTom() != null) {

@@ -250,6 +250,47 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `Gjentatt kall til avsluttDeltakelse overskriver ikke allerede satt avslutningsårsak`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = mandag,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            )
+        )
+
+        val førsteAvslutning = DeltakelseDTO(
+            deltaker = innmelding.deltaker,
+            fraOgMed = mandag,
+            tilOgMed = mandag.plusDays(10),
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            avslutningsårsak = Avslutningsårsak.ARBEID,
+        )
+        val avsluttet = ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, førsteAvslutning)
+        assertThat(avsluttet.avslutningsårsak).isEqualTo(Avslutningsårsak.ARBEID)
+
+        // Simulerer feilbruk/gjentatt kall til /avslutt på en deltakelse som allerede har sluttdato,
+        // uten (eller med annen) avslutningsårsak. Den opprinnelige årsaken skal ikke overskrives.
+        val gjentattAvslutning = DeltakelseDTO(
+            deltaker = innmelding.deltaker,
+            fraOgMed = mandag,
+            tilOgMed = mandag.plusDays(20),
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            avslutningsårsak = null,
+        )
+        val oppdatert = ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, gjentattAvslutning)
+
+        assertThat(oppdatert.tilOgMed).isEqualTo(mandag.plusDays(20))
+        assertThat(oppdatert.avslutningsårsak).isEqualTo(Avslutningsårsak.ARBEID)
+    }
+
+    @Test
     fun `Sletting av sluttdato nuller ut avslutningsårsak`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
