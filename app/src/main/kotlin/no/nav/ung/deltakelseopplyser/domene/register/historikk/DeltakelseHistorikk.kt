@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register.historikk
 
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.Avslutningsårsak
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
@@ -48,7 +49,8 @@ data class DeltakelseHistorikk(
             Endringstype.DELTAKER_MELDT_UT -> {
                 requireNotNull(deltakerMeldtUt)
                 val utmeldingDato = DATE_FORMATTER.format(deltakerMeldtUt.utmeldingDato)
-                "Deltaker meldt ut med sluttdato $utmeldingDato."
+                val årsakTekst = deltakerMeldtUt.avslutningsårsak?.let { " Årsak: ${it.somTekst()}." } ?: ""
+                "Deltaker meldt ut med sluttdato $utmeldingDato.$årsakTekst"
             }
 
             Endringstype.ENDRET_STARTDATO -> {
@@ -93,5 +95,14 @@ data class DeltakelseHistorikk(
 
             Endringstype.UKJENT -> "Endringstype er ukjent."
         }
+    }
+
+    private fun Avslutningsårsak.somTekst(): String = when (this) {
+        Avslutningsårsak.ARBEID -> "Arbeid"
+        Avslutningsårsak.UTDANNING -> "Utdanning"
+        Avslutningsårsak.MANGLENDE_DELTAKELSE -> "Manglende deltakelse"
+        Avslutningsårsak.DELTAKER_ØNSKER_IKKE_Å_DELTA -> "Deltakeren ønsker ikke å delta"
+        Avslutningsårsak.FLYTTET -> "Flyttet"
+        Avslutningsårsak.ANNET -> "Annet"
     }
 }

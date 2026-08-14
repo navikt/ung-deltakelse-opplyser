@@ -4,12 +4,15 @@ import io.hypersistence.utils.hibernate.type.range.PostgreSQLRangeType
 import io.hypersistence.utils.hibernate.type.range.Range
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.historikk.BaseAuditEntity
+import no.nav.ung.deltakelseopplyser.kontrakt.register.Avslutningsårsak
 import org.hibernate.annotations.Type
 import org.hibernate.envers.Audited
 import org.hibernate.envers.NotAudited
@@ -48,6 +51,10 @@ class DeltakelseDAO(
 
     @Column(name = "søkt_tidspunkt")
     var søktTidspunkt: ZonedDateTime? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "avslutningsarsak")
+    var avslutningsårsak: Avslutningsårsak? = null,
 ) : BaseAuditEntity() {
 
     fun getFom(): LocalDate {
@@ -82,5 +89,12 @@ class DeltakelseDAO(
 
     fun markerSomForlengetPeriode() {
         harForlengetPeriode = true
+    }
+
+    /**
+     * Setter avslutningsårsaken for deltakelsen, f.eks. ved utmelding.
+     */
+    fun settAvslutningsårsak(årsak: Avslutningsårsak?) {
+        avslutningsårsak = årsak
     }
 }

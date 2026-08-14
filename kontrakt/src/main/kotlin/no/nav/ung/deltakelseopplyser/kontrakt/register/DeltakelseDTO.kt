@@ -36,7 +36,10 @@ data class DeltakelseDTO(
 
     @JsonProperty("periodeMaksDato")
     @JsonAlias("forlengetPeriodeMaksDato", "kvoteMaksDato")
-    val periodeMaksDato: LocalDate
+    val periodeMaksDato: LocalDate,
+
+    @JsonProperty("avslutningsårsak")
+    val avslutningsårsak: Avslutningsårsak? = null,
 ) {
 
     /** @deprecated Bruk [periodeMaksDato]. Beholdt for bakoverkompatibilitet. */

@@ -64,7 +64,8 @@ class UngdomsprogramregisterService(
                 erSlettet = erSlettet,
                 harOpphørsvedtak = harOpphørsvedtak,
                 harForlengetPeriode = harForlengetPeriode,
-                periodeMaksDato = ForlengetPeriodeBeregner.beregn(getFom(), harForlengetPeriode).tilOgMed
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(getFom(), harForlengetPeriode).tilOgMed,
+                avslutningsårsak = avslutningsårsak
             )
         }
     }
@@ -348,6 +349,7 @@ class UngdomsprogramregisterService(
         }
 
         eksiterende.oppdaterPeriode(periode)
+        eksiterende.settAvslutningsårsak(deltakelseDTO.avslutningsårsak)
         val oppdatert = deltakelseRepository.save(eksiterende)
 
         if (oppdatert.getTom() != null) {
@@ -436,6 +438,7 @@ class UngdomsprogramregisterService(
         val tidligereOpphørsdato = eksisterendeDeltakelse.getTom()!!
         val nyPeriodeUtenSluttdato = Range.closedInfinite(eksisterendeDeltakelse.getFom())
         eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeUtenSluttdato)
+        eksisterendeDeltakelse.settAvslutningsårsak(null)
 
         val lagret = deltakelseRepository.save(eksisterendeDeltakelse)
         sendOpphørOpphevetHendelseTilUngSak(lagret, tidligereOpphørsdato)

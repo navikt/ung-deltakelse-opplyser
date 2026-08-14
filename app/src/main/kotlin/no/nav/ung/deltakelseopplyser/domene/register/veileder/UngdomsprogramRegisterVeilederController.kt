@@ -95,7 +95,10 @@ class UngdomsprogramRegisterVeilederController(
             UPDATE,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        val utmeldtDeltakelse = eksisterendeDeltakelse.copy(tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato)
+        val utmeldtDeltakelse = eksisterendeDeltakelse.copy(
+            tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato,
+            avslutningsårsak = deltakelseUtmeldingDTO.avslutningsårsak,
+        )
         return registerService.avsluttDeltakelse(deltakelseId, utmeldtDeltakelse).also {
             sporingsloggService.logg(
                 "/deltakelse/{deltakelseId}/avslutt",
