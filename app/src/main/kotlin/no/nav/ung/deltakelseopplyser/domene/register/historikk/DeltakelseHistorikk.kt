@@ -99,10 +99,16 @@ data class DeltakelseHistorikk(
 
     private fun Avslutningsårsak.somTekst(): String = when (this) {
         Avslutningsårsak.ARBEID -> "Arbeid"
+        Avslutningsårsak.ARBEID_SELVFORSØRGET -> "Arbeid, selvforsørget"
+        Avslutningsårsak.ARBEID_MED_OPPFØLGING_FRA_NAV -> "Arbeid, med fortsatt oppfølging og bistand fra Nav"
         Avslutningsårsak.UTDANNING -> "Utdanning"
+        Avslutningsårsak.VIDEREGÅENDE_OPPLÆRING -> "Videregående, inkludert fag- og yrkesopplæring"
+        Avslutningsårsak.HØYERE_UTDANNING -> "Høyere utdanning"
+        Avslutningsårsak.ANNEN_OPPLÆRING -> "Annen opplæring"
         Avslutningsårsak.MANGLENDE_DELTAKELSE -> "Manglende deltakelse"
         Avslutningsårsak.DELTAKER_ØNSKER_IKKE_Å_DELTA -> "Deltakeren ønsker ikke å delta"
         Avslutningsårsak.FLYTTET -> "Flyttet"
+        Avslutningsårsak.ANDRE_LIVSOPPHOLDSYTELSER -> "Andre livsoppholdsytelser"
         Avslutningsårsak.ANNET -> "Annet"
     }
 }

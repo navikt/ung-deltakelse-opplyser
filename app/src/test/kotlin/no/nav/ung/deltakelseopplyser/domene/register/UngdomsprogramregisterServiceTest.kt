@@ -222,6 +222,37 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `avsluttDeltakelse lagrer ny avslutningsårsak ARBEID_SELVFORSØRGET på deltakelsen`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste()),
+                fraOgMed = mandag,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            )
+        )
+
+        val oppdatertDto = DeltakelseDTO(
+            deltaker = innmelding.deltaker,
+            fraOgMed = mandag,
+            tilOgMed = mandag.plusDays(10),
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed,
+            avslutningsårsak = Avslutningsårsak.ARBEID_SELVFORSØRGET,
+        )
+        val avsluttet = ungdomsprogramregisterService.avsluttDeltakelse(innmelding.id!!, oppdatertDto)
+
+        assertThat(avsluttet.avslutningsårsak).isEqualTo(Avslutningsårsak.ARBEID_SELVFORSØRGET)
+
+        val lagretDeltakelse = ungdomsprogramregisterService.hentFraProgram(innmelding.id!!)
+        assertThat(lagretDeltakelse.avslutningsårsak).isEqualTo(Avslutningsårsak.ARBEID_SELVFORSØRGET)
+    }
+
+    @Test
     fun `avsluttDeltakelse uten avslutningsårsak lagrer null (bakoverkompatibilitet)`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),
