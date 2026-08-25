@@ -12,6 +12,13 @@ import java.time.LocalDate
  * - [AVSLUTTET]: den effektive sluttdatoen (`tilOgMed` hvis satt, ellers `periodeMaksDato` som
  *   fallback) har passert, dvs. er før dagens dato. Dagens dato regnes altså ikke som avsluttet
  *   — status blir først [AVSLUTTET] dagen etter sluttdatoen.
+ *
+ * **OBS: Status er ikke en permanent/terminal tilstand.** Den beregnes på nytt hver gang den leses,
+ * ut fra de til enhver tid gjeldende datoene. Dette betyr blant annet at en deltakelse kan gå fra
+ * [AVSLUTTET] tilbake til [LØPENDE] dersom perioden forlenges (se `forlengPeriode`, som flytter
+ * `periodeMaksDato` frem i tid når `tilOgMed` ikke er satt), eller endre seg ved andre endringer av
+ * `tilOgMed`/`periodeMaksDato` i ettertid. Konsumenter bør derfor ikke cache statusen over tid eller
+ * behandle [AVSLUTTET] som endelig/uigenkallelig — hent status på nytt ved behov.
  */
 enum class DeltakelseStatus {
     LØPENDE,
