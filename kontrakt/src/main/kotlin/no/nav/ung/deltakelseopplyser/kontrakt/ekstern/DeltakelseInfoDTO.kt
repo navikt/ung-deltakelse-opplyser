@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.ekstern
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseStatus
 import java.time.LocalDate
 import java.util.*
 
@@ -9,6 +10,7 @@ data class DeltakelsePeriodeDTO(
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate? = null,
     @JsonProperty("harForlengetPeriode") val harForlengetPeriode: Boolean,
     @JsonProperty("periodeMaksDato") val periodeMaksDato: LocalDate,
+    @JsonProperty("status") val status: DeltakelseStatus,
 )
 
 data class DeltakelseInfoDTO(
