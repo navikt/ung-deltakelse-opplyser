@@ -26,19 +26,19 @@ class DeltakelseDTOTest {
     }
 
     @Test
-    fun `status er LØPENDE nÅr tilOgMed ikke er satt og periodeMaksDato er i dag`() {
+    fun `status er LØPENDE når tilOgMed ikke er satt og periodeMaksDato er i dag`() {
         val dto = deltakelse(tilOgMed = null, periodeMaksDato = iDag)
         assertThat(dto.status).isEqualTo(DeltakelseStatus.LØPENDE)
     }
 
     @Test
-    fun `status er VIL_AVSLUTTES nÅr tilOgMed er satt frem i tid`() {
+    fun `status er VIL_AVSLUTTES når tilOgMed er satt frem i tid`() {
         val dto = deltakelse(tilOgMed = iDag.plusDays(1))
         assertThat(dto.status).isEqualTo(DeltakelseStatus.VIL_AVSLUTTES)
     }
 
     @Test
-    fun `status er VIL_AVSLUTTES nÅr tilOgMed er i dag`() {
+    fun `status er VIL_AVSLUTTES når tilOgMed er i dag`() {
         val dto = deltakelse(tilOgMed = iDag)
         assertThat(dto.status).isEqualTo(DeltakelseStatus.VIL_AVSLUTTES)
     }
@@ -50,7 +50,7 @@ class DeltakelseDTOTest {
     }
 
     @Test
-    fun `status er AVSLUTTET nÅr tilOgMed ikke er satt men periodeMaksDato har passert`() {
+    fun `status er AVSLUTTET når tilOgMed ikke er satt men periodeMaksDato har passert`() {
         val dto = deltakelse(tilOgMed = null, periodeMaksDato = iDag.minusDays(1))
         assertThat(dto.status).isEqualTo(DeltakelseStatus.AVSLUTTET)
     }
