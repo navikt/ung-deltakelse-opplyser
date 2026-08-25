@@ -5,25 +5,23 @@ import java.time.LocalDate
 /**
  * Status for en deltakelse i ungdomsprogrammet, utledet fra `tilOgMed` og `periodeMaksDato`.
  *
- * - [LØPENDE]: `tilOgMed` er ikke satt, og `periodeMaksDato` er ikke passert
+ * - [AKTIV]: `tilOgMed` er ikke satt, og `periodeMaksDato` er ikke passert
  *   (dvs. dagens dato eller frem i tid).
  * - [VIL_AVSLUTTES]: `tilOgMed` er eksplisitt satt, og denne datoen er ikke passert
  *   (dagens dato eller frem i tid).
- * - [AVSLUTTET]: den effektive sluttdatoen (`tilOgMed` hvis satt, ellers `periodeMaksDato` som
- *   fallback) har passert, dvs. er før dagens dato. Dagens dato regnes altså ikke som avsluttet
- *   — status blir først [AVSLUTTET] dagen etter sluttdatoen.
+ * - [IKKE_AKTIV]: den effektive sluttdatoen (`tilOgMed` hvis satt, ellers `periodeMaksDato` som
+ *   fallback) har passert, dvs. er før dagens dato. Dagens dato regnes altså ikke som passert
+ *   — status blir først [IKKE_AKTIV] dagen etter sluttdatoen.
  *
- * **OBS: Status er ikke en permanent/terminal tilstand.** Den beregnes på nytt hver gang den leses,
- * ut fra de til enhver tid gjeldende datoene. Dette betyr blant annet at en deltakelse kan gå fra
- * [AVSLUTTET] tilbake til [LØPENDE] dersom perioden forlenges (se `forlengPeriode`, som flytter
- * `periodeMaksDato` frem i tid når `tilOgMed` ikke er satt), eller endre seg ved andre endringer av
- * `tilOgMed`/`periodeMaksDato` i ettertid. Konsumenter bør derfor ikke cache statusen over tid eller
- * behandle [AVSLUTTET] som endelig/uigenkallelig — hent status på nytt ved behov.
+ * OBS: status er ikke en lagret/persistert tilstand, men beregnes på nytt hver gang den leses,
+ * ut fra de til enhver tid gjeldende datoene. Den kan derfor endre seg over tid — også fra
+ * [IKKE_AKTIV] tilbake til [AKTIV] eller [VIL_AVSLUTTES] — dersom `tilOgMed`/`periodeMaksDato`
+ * endres i ettertid. Ikke cache denne verdien; hent status på nytt ved behov.
  */
 enum class DeltakelseStatus {
-    LØPENDE,
+    AKTIV,
     VIL_AVSLUTTES,
-    AVSLUTTET;
+    IKKE_AKTIV;
 
     companion object {
         /**
@@ -35,9 +33,9 @@ enum class DeltakelseStatus {
         fun utledFra(tilOgMed: LocalDate?, periodeMaksDato: LocalDate): DeltakelseStatus {
             val effektivSluttdato = tilOgMed ?: periodeMaksDato
             return when {
-                effektivSluttdato.isBefore(LocalDate.now()) -> AVSLUTTET
+                effektivSluttdato.isBefore(LocalDate.now()) -> IKKE_AKTIV
                 tilOgMed != null -> VIL_AVSLUTTES
-                else -> LØPENDE
+                else -> AKTIV
             }
         }
     }

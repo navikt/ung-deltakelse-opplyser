@@ -9,15 +9,15 @@ class DeltakelseStatusTest {
     private val iDag: LocalDate = LocalDate.now()
 
     @Test
-    fun `utledFra returnerer LØPENDE når tilOgMed er null og periodeMaksDato ikke er passert`() {
+    fun `utledFra returnerer AKTIV når tilOgMed er null og periodeMaksDato ikke er passert`() {
         assertThat(DeltakelseStatus.utledFra(tilOgMed = null, periodeMaksDato = iDag.plusDays(1)))
-            .isEqualTo(DeltakelseStatus.LØPENDE)
+            .isEqualTo(DeltakelseStatus.AKTIV)
     }
 
     @Test
-    fun `utledFra returnerer LØPENDE når tilOgMed er null og periodeMaksDato er i dag`() {
+    fun `utledFra returnerer AKTIV når tilOgMed er null og periodeMaksDato er i dag`() {
         assertThat(DeltakelseStatus.utledFra(tilOgMed = null, periodeMaksDato = iDag))
-            .isEqualTo(DeltakelseStatus.LØPENDE)
+            .isEqualTo(DeltakelseStatus.AKTIV)
     }
 
     @Test
@@ -33,14 +33,14 @@ class DeltakelseStatusTest {
     }
 
     @Test
-    fun `utledFra returnerer AVSLUTTET når tilOgMed har passert`() {
+    fun `utledFra returnerer IKKE_AKTIV når tilOgMed har passert`() {
         assertThat(DeltakelseStatus.utledFra(tilOgMed = iDag.minusDays(1), periodeMaksDato = iDag.plusYears(1)))
-            .isEqualTo(DeltakelseStatus.AVSLUTTET)
+            .isEqualTo(DeltakelseStatus.IKKE_AKTIV)
     }
 
     @Test
-    fun `utledFra returnerer AVSLUTTET når tilOgMed er null og periodeMaksDato har passert`() {
+    fun `utledFra returnerer IKKE_AKTIV når tilOgMed er null og periodeMaksDato har passert`() {
         assertThat(DeltakelseStatus.utledFra(tilOgMed = null, periodeMaksDato = iDag.minusDays(1)))
-            .isEqualTo(DeltakelseStatus.AVSLUTTET)
+            .isEqualTo(DeltakelseStatus.IKKE_AKTIV)
     }
 }

@@ -20,15 +20,15 @@ class DeltakelseDTOTest {
     )
 
     @Test
-    fun `status er LØPENDE når tilOgMed ikke er satt og periodeMaksDato ikke er passert`() {
+    fun `status er AKTIV når tilOgMed ikke er satt og periodeMaksDato ikke er passert`() {
         val dto = deltakelse(tilOgMed = null, periodeMaksDato = iDag.plusDays(1))
-        assertThat(dto.status).isEqualTo(DeltakelseStatus.LØPENDE)
+        assertThat(dto.status).isEqualTo(DeltakelseStatus.AKTIV)
     }
 
     @Test
-    fun `status er LØPENDE når tilOgMed ikke er satt og periodeMaksDato er i dag`() {
+    fun `status er AKTIV når tilOgMed ikke er satt og periodeMaksDato er i dag`() {
         val dto = deltakelse(tilOgMed = null, periodeMaksDato = iDag)
-        assertThat(dto.status).isEqualTo(DeltakelseStatus.LØPENDE)
+        assertThat(dto.status).isEqualTo(DeltakelseStatus.AKTIV)
     }
 
     @Test
@@ -44,14 +44,14 @@ class DeltakelseDTOTest {
     }
 
     @Test
-    fun `status er AVSLUTTET når tilOgMed har passert`() {
+    fun `status er IKKE_AKTIV når tilOgMed har passert`() {
         val dto = deltakelse(tilOgMed = iDag.minusDays(1))
-        assertThat(dto.status).isEqualTo(DeltakelseStatus.AVSLUTTET)
+        assertThat(dto.status).isEqualTo(DeltakelseStatus.IKKE_AKTIV)
     }
 
     @Test
-    fun `status er AVSLUTTET når tilOgMed ikke er satt men periodeMaksDato har passert`() {
+    fun `status er IKKE_AKTIV når tilOgMed ikke er satt men periodeMaksDato har passert`() {
         val dto = deltakelse(tilOgMed = null, periodeMaksDato = iDag.minusDays(1))
-        assertThat(dto.status).isEqualTo(DeltakelseStatus.AVSLUTTET)
+        assertThat(dto.status).isEqualTo(DeltakelseStatus.IKKE_AKTIV)
     }
 }
