@@ -57,21 +57,6 @@ data class DeltakelseDTO(
     @get:JsonProperty("kvoteMaksDato")
     val kvoteMaksDato: LocalDate get() = periodeMaksDato
 
-    /**
-     * Status for deltakelsen, utledet av [tilOgMed] og [periodeMaksDato] via
-     * [DeltakelseStatus.utledFra].
-     *
-     * - [DeltakelseStatus.LØPENDE]: [tilOgMed] er ikke satt, og [periodeMaksDato] er ikke
-     *   passert (dvs. dagens dato eller frem i tid).
-     * - [DeltakelseStatus.VIL_AVSLUTTES]: [tilOgMed] er eksplisitt satt, og denne datoen er ikke
-     *   passert (dagens dato eller frem i tid).
-     * - [DeltakelseStatus.AVSLUTTET]: den effektive sluttdatoen ([tilOgMed] hvis satt, ellers
-     *   [periodeMaksDato] som fallback) har passert. Dagens dato regnes ikke som avsluttet —
-     *   status blir først [DeltakelseStatus.AVSLUTTET] dagen etter sluttdatoen.
-     *
-     * OBS: dette er ikke en permanent tilstand — se [DeltakelseStatus] for viktig informasjon
-     * om at status kan reverseres (f.eks. ved forlengelse av perioden).
-     */
     @get:JsonProperty("status")
     val status: DeltakelseStatus
         get() = DeltakelseStatus.utledFra(tilOgMed, periodeMaksDato)
