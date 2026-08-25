@@ -124,7 +124,6 @@ class EksternDeltakelseController(
                         tilOgMed = deltakelse.tilOgMed,
                         harForlengetPeriode = deltakelse.harForlengetPeriode,
                         periodeMaksDato = deltakelse.periodeMaksDato,
-                        status = deltakelse.status,
                     ),
                 )
             }

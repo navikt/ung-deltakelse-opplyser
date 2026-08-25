@@ -10,8 +10,14 @@ data class DeltakelsePeriodeDTO(
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate? = null,
     @JsonProperty("harForlengetPeriode") val harForlengetPeriode: Boolean,
     @JsonProperty("periodeMaksDato") val periodeMaksDato: LocalDate,
-    @JsonProperty("status") val status: DeltakelseStatus,
-)
+) {
+    /**
+     * Utledet status for perioden, se [DeltakelseStatus.utledFra]. Beregnet fremfor å tas inn
+     * som konstruktørargument, slik at status alltid stemmer med [tilOgMed]/[periodeMaksDato].
+     */
+    @get:JsonProperty("status")
+    val status: DeltakelseStatus get() = DeltakelseStatus.utledFra(tilOgMed, periodeMaksDato)
+}
 
 data class DeltakelseInfoDTO(
     @JsonProperty("deltakelseId") val deltakelseId: UUID,

@@ -58,23 +58,20 @@ data class DeltakelseDTO(
     val kvoteMaksDato: LocalDate get() = periodeMaksDato
 
     /**
-     * Status for deltakelsen, utledet av [tilOgMed] og [periodeMaksDato].
+     * Status for deltakelsen, utledet av [tilOgMed] og [periodeMaksDato] via
+     * [DeltakelseStatus.utledFra].
      *
-     * - [DeltakelseStatus.LØPENDE]: [tilOgMed] er ikke satt.
-     * - [DeltakelseStatus.VIL_AVSLUTTES]: sluttdato ([tilOgMed] eller, hvis den ikke er satt,
-     *   [periodeMaksDato]) er satt og ligger frem i tid.
-     * - [DeltakelseStatus.AVSLUTTET]: sluttdatoen har passert (dagen etter sluttdato regnes som avsluttet).
+     * - [DeltakelseStatus.LØPENDE]: [tilOgMed] er ikke satt, og [periodeMaksDato] er ikke
+     *   passert (dvs. dagens dato eller frem i tid).
+     * - [DeltakelseStatus.VIL_AVSLUTTES]: [tilOgMed] er eksplisitt satt, og denne datoen er ikke
+     *   passert (dagens dato eller frem i tid).
+     * - [DeltakelseStatus.AVSLUTTET]: den effektive sluttdatoen ([tilOgMed] hvis satt, ellers
+     *   [periodeMaksDato] som fallback) har passert. Dagens dato regnes ikke som avsluttet —
+     *   status blir først [DeltakelseStatus.AVSLUTTET] dagen etter sluttdatoen.
      */
     @get:JsonProperty("status")
     val status: DeltakelseStatus
-        get() {
-            val effektivSluttdato = tilOgMed ?: periodeMaksDato
-            return when {
-                effektivSluttdato.isBefore(LocalDate.now()) -> DeltakelseStatus.AVSLUTTET
-                tilOgMed != null -> DeltakelseStatus.VIL_AVSLUTTES
-                else -> DeltakelseStatus.LØPENDE
-            }
-        }
+        get() = DeltakelseStatus.utledFra(tilOgMed, periodeMaksDato)
 
     override fun toString(): String =
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
