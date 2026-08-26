@@ -3,6 +3,7 @@ package no.nav.ung.deltakelseopplyser.kontrakt.ekstern
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseStatus
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.*
 
 data class DeltakelsePeriodeDTO(
@@ -10,13 +11,11 @@ data class DeltakelsePeriodeDTO(
     @JsonProperty("tilOgMed") val tilOgMed: LocalDate? = null,
     @JsonProperty("harForlengetPeriode") val harForlengetPeriode: Boolean,
     @JsonProperty("periodeMaksDato") val periodeMaksDato: LocalDate,
+    private val søktTidspunkt: ZonedDateTime? = null,
 ) {
-    /**
-     * Utledet status for perioden, se [DeltakelseStatus.utledFra]. Beregnet fremfor å tas inn
-     * som konstruktørargument, slik at status alltid stemmer med [tilOgMed]/[periodeMaksDato].
-     */
+
     @get:JsonProperty("status")
-    val status: DeltakelseStatus get() = DeltakelseStatus.utledFra(tilOgMed, periodeMaksDato)
+    val status: DeltakelseStatus get() = DeltakelseStatus.utledFra(søktTidspunkt, tilOgMed, periodeMaksDato)
 }
 
 data class DeltakelseInfoDTO(

@@ -59,7 +59,7 @@ data class DeltakelseDTO(
 
     @get:JsonProperty("status")
     val status: DeltakelseStatus
-        get() = DeltakelseStatus.utledFra(tilOgMed, periodeMaksDato)
+        get() = DeltakelseStatus.utledFra(søktTidspunkt, tilOgMed, periodeMaksDato)
 
     override fun toString(): String =
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
