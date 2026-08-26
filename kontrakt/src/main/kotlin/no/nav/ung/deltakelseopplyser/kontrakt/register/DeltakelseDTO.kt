@@ -57,6 +57,10 @@ data class DeltakelseDTO(
     @get:JsonProperty("kvoteMaksDato")
     val kvoteMaksDato: LocalDate get() = periodeMaksDato
 
+    @get:JsonProperty("status")
+    val status: DeltakelseStatus
+        get() = DeltakelseStatus.utledFra(søktTidspunkt, tilOgMed, periodeMaksDato)
+
     override fun toString(): String =
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
 }
@@ -69,6 +73,13 @@ data class DeltakelseKomposittDTO(
     @JsonProperty("oppgaver")
     val oppgaver: List<Any> = emptyList()
 ) {
+    /**
+     * Eksponerer [DeltakelseDTO.status] direkte på komposittobjektet for enklere programmatisk
+     * tilgang. Serialiseres allerede via [JsonUnwrapped] på [deltakelse], så denne har ingen
+     * JSON-annotasjon for å unngå duplikat felt.
+     */
+    val status: DeltakelseStatus get() = deltakelse.status
+
     override fun toString(): String =
-        "DeltakelseKomposittDTO(id=${deltakelse.id}, fraOgMed=${deltakelse.fraOgMed}, tilOgMed=${deltakelse.tilOgMed})"
+        "DeltakelseKomposittDTO(id=${deltakelse.id}, fraOgMed=${deltakelse.fraOgMed}, tilOgMed=${deltakelse.tilOgMed}, status=$status)"
 }
