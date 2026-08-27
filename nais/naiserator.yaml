@@ -105,6 +105,8 @@ spec:
             value: "all"
           - name: "pgaudit.log_parameter"
             value: "on"
+          - name: "pgaudit.log_relation"
+            value: "on"
         {{/if}}
         databases:
           - name: {{ database.name }}
