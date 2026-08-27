@@ -67,7 +67,10 @@
     "diskSize": "50",
     "diskAutoresize": "true",
     "highAvailability": "true",
-    "enableDBAudit": true
+    "enableDBAudit": true,
+    "flags": {
+      "pgaudit.log_relation": "on"
+    }
   },
   "bigQueryDatasets": [{
     "name": "ung_deltakelse_opplyser_statistikk_dataset",
