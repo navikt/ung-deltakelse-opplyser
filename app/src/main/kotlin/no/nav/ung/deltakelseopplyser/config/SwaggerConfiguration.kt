@@ -4,11 +4,13 @@ import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.ExternalDocumentation
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.security.OAuthFlow
 import io.swagger.v3.oas.models.security.OAuthFlows
 import io.swagger.v3.oas.models.security.Scopes
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -105,6 +107,33 @@ class SwaggerConfiguration(
             .addSecurityItem(SecurityRequirement().addList("Authorization"))
             .addSecurityItem(SecurityRequirement().addList("entraObo"))
             .addSecurityItem(SecurityRequirement().addList("oauth2", listOf(apiScope)))
+    }
+
+    /**
+     * Fjerner properties med `null`-nøkkel fra genererte schemaer.
+     *
+     * Dette er et kjent bug i swagger-core (versjon 2.2.47, brukt transitivt via
+     * springdoc-openapi 3.0.3) der `ModelResolver.handleUnwrapped()` kan miste navnet på en
+     * property når et `@JsonUnwrapped`-felt sitt underliggende schema har blitt klonet/gjenbrukt
+     * (f.eks. pga. `enumsAsRef`). Da settes property inn i "properties"-mapet med `null` som
+     * nøkkel, noe som gir en 500-feil ("Null key for a Map not allowed in JSON") når
+     * OpenAPI-dokumentet serialiseres.
+     *
+     * Se https://github.com/swagger-api/swagger-core/issues/5126 (fiks foreslått i
+     * https://github.com/swagger-api/swagger-core/pull/5193). Denne customizeren kan fjernes når
+     * swagger-core er oppgradert til en versjon som inneholder fiksen.
+     */
+    @Bean
+    fun nullKeyCleanupCustomizer(): GlobalOpenApiCustomizer =
+        GlobalOpenApiCustomizer { openApi ->
+            openApi.components?.schemas?.values?.forEach { removeNullKeyedProperties(it) }
+        }
+
+    private fun removeNullKeyedProperties(schema: Schema<*>) {
+        schema.properties?.let { properties ->
+            properties.keys.removeIf { it == null }
+            properties.values.forEach { removeNullKeyedProperties(it) }
+        }
     }
 
     private fun tokenXApiToken(): SecurityScheme {

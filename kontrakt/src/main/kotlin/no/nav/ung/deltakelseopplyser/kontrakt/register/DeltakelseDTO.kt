@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.register
 
 import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonUnwrapped
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -75,9 +76,11 @@ data class DeltakelseKomposittDTO(
 ) {
     /**
      * Eksponerer [DeltakelseDTO.status] direkte på komposittobjektet for enklere programmatisk
-     * tilgang. Serialiseres allerede via [JsonUnwrapped] på [deltakelse], så denne har ingen
-     * JSON-annotasjon for å unngå duplikat felt.
+     * tilgang. Feltet serialiseres allerede via [JsonUnwrapped] på [deltakelse], så denne må
+     * annoteres med @JsonIgnore – uten den ga Jackson et duplikat "status"-felt i faktisk
+     * JSON-output (ugyldig JSON med to like nøkler).
      */
+    @get:JsonIgnore
     val status: DeltakelseStatus get() = deltakelse.status
 
     override fun toString(): String =
