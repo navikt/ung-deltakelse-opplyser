@@ -16,7 +16,6 @@ import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfiguration
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
-import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
 import no.nav.ung.deltakelseopplyser.wiremock.AutoConfigureWireMock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
