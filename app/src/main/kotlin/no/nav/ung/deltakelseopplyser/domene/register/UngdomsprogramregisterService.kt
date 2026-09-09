@@ -221,6 +221,21 @@ class UngdomsprogramregisterService(
         }
     }
 
+
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
+    fun verifiserAktørTilhørerDeltakelse(id: UUID, aktørId: String) {
+        val deltakelse = forsikreEksistererDeltakelse(id)
+        val faktiskeAktørIder = pdlService.hentAktørIder(deltakelse.deltaker.deltakerIdent).map { it.ident }
+        if (aktørId !in faktiskeAktørIder) {
+            logger.warn("AktørId i forespørsel samsvarer ikke med aktøren for deltakelse $id.")
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Aktør har ikke tilgang til denne deltakelsen"),
+                null
+            )
+        }
+    }
+
     @Transactional(TRANSACTION_MANAGER)
     fun markerSomHarSøkt(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
