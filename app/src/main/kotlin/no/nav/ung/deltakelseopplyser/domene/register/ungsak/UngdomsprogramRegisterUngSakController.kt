@@ -59,7 +59,18 @@ class UngdomsprogramRegisterUngSakController(
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID, @RequestBody aktørIdDto: AktørIdDto): DeltakelseDTO {
         registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
-        tilgangskontrollService.krevSystemtilgang()
+
+        if (tilgangskontrollService.erSystemBruker()) {
+            tilgangskontrollService.krevSystemtilgang()
+        } else {
+            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+                PersonerOperasjonDto(
+                    listOf(AktørId(aktørIdDto.aktorId)),
+                    listOf(),
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.READ, setOf())
+                )
+            )
+        }
 
         return registerService.markerSomHarSøkt(id)
     }

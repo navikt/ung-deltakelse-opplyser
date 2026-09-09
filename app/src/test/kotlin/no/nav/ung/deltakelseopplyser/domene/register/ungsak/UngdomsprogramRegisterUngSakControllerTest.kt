@@ -64,6 +64,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
     fun `markerDeltakelseSomSoekt - systemtoken markerer deltakelsen som soekt`() {
         val deltakelseId = UUID.randomUUID()
         every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns Unit
+        every { tilgangskontrollService.erSystemBruker() } returns true
         every { tilgangskontrollService.krevSystemtilgang() } returns Unit
         every { registerService.markerSomHarSøkt(deltakelseId) } returns DeltakelseDTO(
             id = deltakelseId,
@@ -89,6 +90,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
     fun `markerDeltakelseSomSoekt - systemtoken fra ikke-godkjent app gir 403`() {
         val deltakelseId = UUID.randomUUID()
         every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns Unit
+        every { tilgangskontrollService.erSystemBruker() } returns true
         every { tilgangskontrollService.krevSystemtilgang() } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
@@ -110,16 +112,14 @@ class UngdomsprogramRegisterUngSakControllerTest {
     }
 
     @Test
-    fun `markerDeltakelseSomSoekt - OBO-token stoettes ikke, gir 403`() {
+    fun `markerDeltakelseSomSoekt - OBO-bruker uten tilgang til aktoeren gir 403`() {
         val deltakelseId = UUID.randomUUID()
         every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns Unit
-        every { tilgangskontrollService.krevSystemtilgang() } throws
+        every { tilgangskontrollService.erSystemBruker() } returns false
+        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN,
-                    "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
-                ),
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Ikke tilgang til kode6 person"),
                 null
             )
 
@@ -131,6 +131,32 @@ class UngdomsprogramRegisterUngSakControllerTest {
         )
 
         assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    fun `markerDeltakelseSomSoekt - OBO-bruker med tilgang markerer deltakelsen som soekt`() {
+        val deltakelseId = UUID.randomUUID()
+        every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns Unit
+        every { tilgangskontrollService.erSystemBruker() } returns false
+        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } returns Unit
+        every { registerService.markerSomHarSøkt(deltakelseId) } returns DeltakelseDTO(
+            id = deltakelseId,
+            deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+            fraOgMed = LocalDate.of(2025, 1, 1),
+            tilOgMed = null,
+            harForlengetPeriode = false,
+            periodeMaksDato = LocalDate.of(2026, 1, 1),
+        )
+
+        val response = testRestTemplate.exchange(
+            "/register/$deltakelseId/marker-sokt",
+            HttpMethod.PATCH,
+            HttpEntity(AktørIdDto(aktørId), azureOboToken()),
+            DeltakelseDTO::class.java
+        )
+
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body!!.id).isEqualTo(deltakelseId)
     }
 
     @Test
