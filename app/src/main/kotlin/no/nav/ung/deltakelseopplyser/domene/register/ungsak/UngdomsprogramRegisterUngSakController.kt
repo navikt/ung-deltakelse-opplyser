@@ -58,8 +58,6 @@ class UngdomsprogramRegisterUngSakController(
     @Operation(summary = "Marker en deltakelse som søkt. Brukes av ung-sak ved journalføring av papirsøknad.")
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID, @RequestBody aktørIdDto: AktørIdDto): DeltakelseDTO {
-        registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
-
         if (tilgangskontrollService.erSystemBruker()) {
             tilgangskontrollService.krevSystemtilgang()
         } else {
@@ -72,6 +70,7 @@ class UngdomsprogramRegisterUngSakController(
             )
         }
 
+        registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
         return registerService.markerSomHarSøkt(id)
     }
 
