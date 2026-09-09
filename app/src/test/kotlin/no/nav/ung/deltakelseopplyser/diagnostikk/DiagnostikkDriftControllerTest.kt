@@ -1,11 +1,15 @@
-package no.nav.ung.deltakelseopplyser.domene.register.ungsak
+package no.nav.ung.deltakelseopplyser.diagnostikk
 
 import com.nimbusds.jwt.SignedJWT
 import com.ninjasquad.springmockk.MockkBean
+import io.hypersistence.utils.hibernate.type.range.Range
 import io.mockk.every
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
+import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
@@ -14,7 +18,6 @@ import no.nav.ung.deltakelseopplyser.statistikk.bigquery.BigQueryTestConfigurati
 import no.nav.ung.deltakelseopplyser.utils.FødselsnummerGenerator
 import no.nav.ung.deltakelseopplyser.utils.TokenTestUtils.hentToken
 import no.nav.ung.deltakelseopplyser.wiremock.AutoConfigureWireMock
-import no.nav.ung.sak.kontrakt.person.AktørIdDto
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -32,6 +35,7 @@ import org.springframework.http.ProblemDetail
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
+import java.util.Optional
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,7 +45,7 @@ import java.util.UUID
 @AutoConfigureWireMock
 @AutoConfigureTestRestTemplate
 @Import(BigQueryTestConfiguration::class)
-class UngdomsprogramRegisterUngSakControllerTest {
+class DiagnostikkDriftControllerTest {
 
     @Autowired
     private lateinit var testRestTemplate: TestRestTemplate
@@ -55,16 +59,24 @@ class UngdomsprogramRegisterUngSakControllerTest {
     @MockkBean
     private lateinit var registerService: UngdomsprogramregisterService
 
-    private val deltakerIdent = FødselsnummerGenerator.neste()
-    private val aktørId = "1000000000001"
+    @MockkBean
+    private lateinit var deltakelseRepository: DeltakelseRepository
 
-    // ── PATCH /register/{id}/marker-sokt ────────────────────────────────────
+    private val deltakerIdent = FødselsnummerGenerator.neste()
+
+    private fun enDeltakelse(deltakelseId: UUID): DeltakelseDAO = DeltakelseDAO(
+        id = deltakelseId,
+        deltaker = DeltakerDAO(deltakerIdent = deltakerIdent),
+        periode = Range.closed(LocalDate.of(2025, 1, 1), LocalDate.of(2026, 1, 1)),
+    )
+
+    // ── PATCH /diagnostikk/marker-sokt/{deltakelseId} ───────────────────────
 
     @Test
-    fun `markerDeltakelseSomSoekt - systemtoken markerer deltakelsen som soekt`() {
+    fun `markerDeltakelseSomSoekt - azurebruker med tilgang markerer deltakelsen som soekt`() {
         val deltakelseId = UUID.randomUUID()
-        every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns Unit
-        every { tilgangskontrollService.krevSystemtilgang() } returns Unit
+        every { deltakelseRepository.findById(deltakelseId) } returns Optional.of(enDeltakelse(deltakelseId))
+        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } returns Unit
         every { registerService.markerSomHarSøkt(deltakelseId) } returns DeltakelseDTO(
             id = deltakelseId,
             deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
@@ -75,9 +87,9 @@ class UngdomsprogramRegisterUngSakControllerTest {
         )
 
         val response = testRestTemplate.exchange(
-            "/register/$deltakelseId/marker-sokt",
+            "/diagnostikk/marker-sokt/$deltakelseId",
             HttpMethod.PATCH,
-            HttpEntity(AktørIdDto(aktørId), azureSystemToken()),
+            HttpEntity("Manuell korrigering, jf. sak 123", azureToken()),
             DeltakelseDTO::class.java
         )
 
@@ -86,47 +98,20 @@ class UngdomsprogramRegisterUngSakControllerTest {
     }
 
     @Test
-    fun `markerDeltakelseSomSoekt - systemtoken fra ikke-godkjent app gir 403`() {
+    fun `markerDeltakelseSomSoekt - avslag fra tilgangskontroll gir 403`() {
         val deltakelseId = UUID.randomUUID()
-        every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns Unit
-        every { tilgangskontrollService.krevSystemtilgang() } throws
+        every { deltakelseRepository.findById(deltakelseId) } returns Optional.of(enDeltakelse(deltakelseId))
+        every { tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(any()) } throws
             ErrorResponseException(
                 HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN,
-                    "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
-                ),
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Ikke tilgang til kode6 person"),
                 null
             )
 
         val response = testRestTemplate.exchange(
-            "/register/$deltakelseId/marker-sokt",
+            "/diagnostikk/marker-sokt/$deltakelseId",
             HttpMethod.PATCH,
-            HttpEntity(AktørIdDto(aktørId), azureSystemToken()),
-            String::class.java
-        )
-
-        assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
-    }
-
-    @Test
-    fun `markerDeltakelseSomSoekt - OBO-token stoettes ikke, gir 403`() {
-        val deltakelseId = UUID.randomUUID()
-        every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns Unit
-        every { tilgangskontrollService.krevSystemtilgang() } throws
-            ErrorResponseException(
-                HttpStatus.FORBIDDEN,
-                ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN,
-                    "Systemtjenesten er ikke tilgjengelig for innlogget bruker"
-                ),
-                null
-            )
-
-        val response = testRestTemplate.exchange(
-            "/register/$deltakelseId/marker-sokt",
-            HttpMethod.PATCH,
-            HttpEntity(AktørIdDto(aktørId), azureOboToken()),
+            HttpEntity("Manuell korrigering, jf. sak 123", azureToken()),
             String::class.java
         )
 
@@ -137,11 +122,11 @@ class UngdomsprogramRegisterUngSakControllerTest {
     fun `markerDeltakelseSomSoekt - uten token gir 401`() {
         val deltakelseId = UUID.randomUUID()
         val response = testRestTemplate.exchange(
-            "/register/$deltakelseId/marker-sokt",
+            "/diagnostikk/marker-sokt/$deltakelseId",
             HttpMethod.PATCH,
             HttpEntity(
-                AktørIdDto(aktørId),
-                HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+                "Manuell korrigering, jf. sak 123",
+                HttpHeaders().apply { contentType = MediaType.TEXT_PLAIN }
             ),
             String::class.java
         )
@@ -151,14 +136,11 @@ class UngdomsprogramRegisterUngSakControllerTest {
 
     // ── helpers ────────────────────────────────────────────────────────────
 
-    private fun azureSystemToken(): HttpHeaders =
-        bearerHeaders(mockOAuth2Server.hentToken(issuerId = Issuers.AZURE, claims = mapOf("idtyp" to "app")))
-
-    private fun azureOboToken(): HttpHeaders =
+    private fun azureToken(): HttpHeaders =
         bearerHeaders(mockOAuth2Server.hentToken(issuerId = Issuers.AZURE, claims = mapOf("NAVident" to "Z123456")))
 
     private fun bearerHeaders(token: SignedJWT) = HttpHeaders().apply {
         setBearerAuth(token.serialize())
-        contentType = MediaType.APPLICATION_JSON
+        contentType = MediaType.TEXT_PLAIN
     }
 }
