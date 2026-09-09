@@ -69,6 +69,7 @@ class UngdomsprogramRegisterUngSakController(
                 )
             )
         }
+        registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
         return registerService.markerSomHarSøkt(id)
     }
 
