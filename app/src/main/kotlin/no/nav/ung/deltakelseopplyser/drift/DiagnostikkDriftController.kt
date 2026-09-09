@@ -118,8 +118,16 @@ class DiagnostikkDriftController(
         @PathVariable deltakelseId: UUID,
         @RequestBody begrunnelse: String,
     ): DeltakelseDTO {
-        val deltakelse = deltakelseRepository.findById(deltakelseId)
-            .orElseThrow { IllegalArgumentException("Fant ikke deltakelse: $deltakelseId") }
+        val deltakelse = deltakelseRepository.findById(deltakelseId).orElseThrow {
+            org.springframework.web.ErrorResponseException(
+                org.springframework.http.HttpStatus.NOT_FOUND,
+                org.springframework.http.ProblemDetail.forStatusAndDetail(
+                    org.springframework.http.HttpStatus.NOT_FOUND,
+                    "Fant ingen deltakelse med id $deltakelseId"
+                ),
+                null
+            )
+        }
 
         val deltakerPersonIdent = PersonIdent(deltakelse.deltaker.deltakerIdent)
         tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
