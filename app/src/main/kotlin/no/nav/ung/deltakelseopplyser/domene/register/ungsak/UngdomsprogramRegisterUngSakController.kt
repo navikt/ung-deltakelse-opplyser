@@ -10,6 +10,7 @@ import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import no.nav.ung.deltakelseopplyser.config.Issuers
+import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.ungsak.DeltakelseOpplysningerDTO
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
@@ -17,6 +18,7 @@ import no.nav.ung.sak.kontrakt.person.AktørIdDto
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
+import java.util.UUID
 
 
 @RestController
@@ -25,8 +27,8 @@ import org.springframework.web.bind.annotation.*
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
 @Tag(
-    name = "Les register data",
-    description = "API for å hente deltakelser for en gitt deltaker i ungdomsprogrammet. Er sikret med Azure."
+    name = "Register data (ung-sak)",
+    description = "API for ung-sak: henter og oppdaterer deltakelser i ungdomsprogrammet. Sikret med Azure."
 )
 class UngdomsprogramRegisterUngSakController(
     private val tilgangskontrollService: TilgangskontrollService,
@@ -50,6 +52,25 @@ class UngdomsprogramRegisterUngSakController(
         }
         val opplysninger = registerService.hentIkkeSlettetForDeltaker(deltakerIdentEllerAktørId = aktørIdDto.aktorId)
         return DeltakelseOpplysningerDTO(opplysninger)
+    }
+
+    @PatchMapping("/{id}/marker-sokt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @Operation(summary = "Marker en deltakelse som søkt. Brukes av ung-sak ved journalføring av papirsøknad.")
+    @ResponseStatus(HttpStatus.OK)
+    fun markerDeltakelseSomSøkt(@PathVariable id: UUID, @RequestBody aktørIdDto: AktørIdDto): DeltakelseDTO {
+        if (tilgangskontrollService.erSystemBruker()) {
+            tilgangskontrollService.krevSystemtilgang()
+        } else {
+            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+                PersonerOperasjonDto(
+                    listOf(AktørId(aktørIdDto.aktorId)),
+                    listOf(),
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.UPDATE, setOf())
+                )
+            )
+        }
+        registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
+        return registerService.markerSomHarSøkt(id)
     }
 
 }
