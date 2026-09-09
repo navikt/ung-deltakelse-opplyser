@@ -27,8 +27,8 @@ import java.util.UUID
     ProtectedWithClaims(issuer = Issuers.AZURE)
 )
 @Tag(
-    name = "Les register data",
-    description = "API for å hente deltakelser for en gitt deltaker i ungdomsprogrammet. Er sikret med Azure."
+    name = "Register data (ung-sak)",
+    description = "API for ung-sak: henter og oppdaterer deltakelser i ungdomsprogrammet. Sikret med Azure."
 )
 class UngdomsprogramRegisterUngSakController(
     private val tilgangskontrollService: TilgangskontrollService,
@@ -54,7 +54,7 @@ class UngdomsprogramRegisterUngSakController(
         return DeltakelseOpplysningerDTO(opplysninger)
     }
 
-    @PostMapping("/{id}/marker-sokt", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @PatchMapping("/{id}/marker-sokt", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Operation(summary = "Marker en deltakelse som søkt. Brukes av ung-sak ved journalføring av papirsøknad.")
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID, @RequestBody aktørIdDto: AktørIdDto): DeltakelseDTO {

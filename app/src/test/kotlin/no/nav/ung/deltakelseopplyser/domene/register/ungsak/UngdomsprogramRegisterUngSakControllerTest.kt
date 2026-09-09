@@ -58,7 +58,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
     private val deltakerIdent = FødselsnummerGenerator.neste()
     private val aktørId = "1000000000001"
 
-    // ── POST /register/{id}/marker-sokt ─────────────────────────────────────
+    // ── PATCH /register/{id}/marker-sokt ────────────────────────────────────
 
     @Test
     fun `markerDeltakelseSomSoekt - systemtoken markerer deltakelsen som soekt`() {
@@ -76,7 +76,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
 
         val response = testRestTemplate.exchange(
             "/register/$deltakelseId/marker-sokt",
-            HttpMethod.POST,
+            HttpMethod.PATCH,
             HttpEntity(AktørIdDto(aktørId), azureSystemToken()),
             DeltakelseDTO::class.java
         )
@@ -101,7 +101,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
 
         val response = testRestTemplate.exchange(
             "/register/$deltakelseId/marker-sokt",
-            HttpMethod.POST,
+            HttpMethod.PATCH,
             HttpEntity(AktørIdDto(aktørId), azureSystemToken()),
             String::class.java
         )
@@ -122,7 +122,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
 
         val response = testRestTemplate.exchange(
             "/register/$deltakelseId/marker-sokt",
-            HttpMethod.POST,
+            HttpMethod.PATCH,
             HttpEntity(AktørIdDto(aktørId), azureOboToken()),
             String::class.java
         )
@@ -146,7 +146,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
 
         val response = testRestTemplate.exchange(
             "/register/$deltakelseId/marker-sokt",
-            HttpMethod.POST,
+            HttpMethod.PATCH,
             HttpEntity(AktørIdDto(aktørId), azureOboToken()),
             DeltakelseDTO::class.java
         )
@@ -160,7 +160,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
         val deltakelseId = UUID.randomUUID()
         val response = testRestTemplate.exchange(
             "/register/$deltakelseId/marker-sokt",
-            HttpMethod.POST,
+            HttpMethod.PATCH,
             HttpEntity(
                 AktørIdDto(aktørId),
                 HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
