@@ -108,28 +108,17 @@ class DiagnostikkDriftController(
     }
 
     @PatchMapping(
-        "/marker-sokt/{deltakelseId}",
-        consumes = [MediaType.TEXT_PLAIN_VALUE],
+        "/marker-sokt",
+        consumes = [MediaType.APPLICATION_JSON_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     @Operation(summary = "Marker en deltakelse som søkt (forvaltning, manuell korrigering)")
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(
-        @PathVariable deltakelseId: UUID,
-        @RequestBody begrunnelse: String,
+        @RequestBody request: MarkerDeltakelseSomSøktDriftRequest,
     ): DeltakelseDTO {
-        val deltakelse = deltakelseRepository.findById(deltakelseId).orElseThrow {
-            org.springframework.web.ErrorResponseException(
-                org.springframework.http.HttpStatus.NOT_FOUND,
-                org.springframework.http.ProblemDetail.forStatusAndDetail(
-                    org.springframework.http.HttpStatus.NOT_FOUND,
-                    "Fant ingen deltakelse med id $deltakelseId"
-                ),
-                null
-            )
-        }
+        val deltakerPersonIdent = PersonIdent(request.deltakerIdent)
 
-        val deltakerPersonIdent = PersonIdent(deltakelse.deltaker.deltakerIdent)
         tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
             PersonerOperasjonDto(
                 null,
@@ -138,14 +127,14 @@ class DiagnostikkDriftController(
             )
         ).also {
             sporingsloggService.logg(
-                url = "/diagnostikk/marker-sokt/$deltakelseId",
-                beskrivelse = begrunnelse,
+                url = "/diagnostikk/marker-sokt",
+                beskrivelse = request.begrunnelse,
                 bruker = deltakerPersonIdent,
                 eventClassId = EventClassId.AUDIT_UPDATE
             )
         }
 
-        return registerService.markerSomHarSøkt(deltakelseId)
+        return registerService.markerSomHarSøktForDeltaker(request.deltakerIdent)
     }
 
     @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -213,6 +202,11 @@ class DiagnostikkDriftController(
     data class DeltakelseDiagnostikkDto(
         val deltakelse: DeltakelseDTO,
         val historikk: List<DeltakelseHistorikk>,
+    )
+
+    data class MarkerDeltakelseSomSøktDriftRequest(
+        val deltakerIdent: String,
+        val begrunnelse: String,
     )
 
     data class MicrofrontendStatusDiagnostikkDto(
