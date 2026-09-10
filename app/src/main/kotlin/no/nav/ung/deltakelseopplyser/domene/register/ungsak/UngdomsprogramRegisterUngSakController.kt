@@ -65,10 +65,11 @@ class UngdomsprogramRegisterUngSakController(
                 PersonerOperasjonDto(
                     listOf(AktørId(aktørIdDto.aktorId)),
                     listOf(),
-                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.UPDATE, setOf())
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.READ, setOf())
                 )
             )
         }
+
         registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
         return registerService.markerSomHarSøkt(id)
     }

@@ -19,6 +19,7 @@ import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendS
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseVeilederEnhetService
+import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService.Companion.mapToDTO
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikk
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
@@ -30,6 +31,7 @@ import no.nav.ung.deltakelseopplyser.statistikk.deltakelse.DeltakelseStatistikkS
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -62,6 +64,7 @@ class DiagnostikkDriftController(
     private val microfrontendRepository: MicrofrontendRepository,
     private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
     private val nomApiService: NomApiService,
+    private val registerService: UngdomsprogramregisterService,
 ) {
     @PostMapping(
         "/hent/deltakelse/{deltakelseId}",
@@ -102,6 +105,47 @@ class DiagnostikkDriftController(
             deltakelse = deltakelseDTO,
             historikk = deltakelseHistorikk
         )
+    }
+
+    @PatchMapping(
+        "/marker-sokt/{deltakelseId}",
+        consumes = [MediaType.TEXT_PLAIN_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Marker en deltakelse som søkt (forvaltning, manuell korrigering)")
+    @ResponseStatus(HttpStatus.OK)
+    fun markerDeltakelseSomSøkt(
+        @PathVariable deltakelseId: UUID,
+        @RequestBody begrunnelse: String,
+    ): DeltakelseDTO {
+        val deltakelse = deltakelseRepository.findById(deltakelseId).orElseThrow {
+            org.springframework.web.ErrorResponseException(
+                org.springframework.http.HttpStatus.NOT_FOUND,
+                org.springframework.http.ProblemDetail.forStatusAndDetail(
+                    org.springframework.http.HttpStatus.NOT_FOUND,
+                    "Fant ingen deltakelse med id $deltakelseId"
+                ),
+                null
+            )
+        }
+
+        val deltakerPersonIdent = PersonIdent(deltakelse.deltaker.deltakerIdent)
+        tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
+            PersonerOperasjonDto(
+                null,
+                listOf(deltakerPersonIdent),
+                OperasjonDto(ResourceType.DRIFT, BeskyttetRessursActionAttributt.UPDATE, setOf<AksjonspunktType>())
+            )
+        ).also {
+            sporingsloggService.logg(
+                url = "/diagnostikk/marker-sokt/$deltakelseId",
+                beskrivelse = begrunnelse,
+                bruker = deltakerPersonIdent,
+                eventClassId = EventClassId.AUDIT_UPDATE
+            )
+        }
+
+        return registerService.markerSomHarSøkt(deltakelseId)
     }
 
     @GetMapping("/hent/antall-deltakelser-per-enhet-statistikk", produces = [MediaType.APPLICATION_JSON_VALUE])
