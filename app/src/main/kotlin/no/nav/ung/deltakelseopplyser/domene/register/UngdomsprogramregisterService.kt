@@ -245,6 +245,38 @@ class UngdomsprogramregisterService(
     }
 
     @Transactional(TRANSACTION_MANAGER)
+    fun markerSomHarSøktForDeltaker(deltakerIdent: String): DeltakelseDTO {
+        val kandidater = hentIkkeSlettetForDeltaker(deltakerIdent)
+        val deltakelse = when (kandidater.size) {
+            0 -> throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Fant ingen deltakelse for gitt deltakerIdent"),
+                null
+            )
+
+            1 -> kandidater.single()
+            else -> throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Fant flere deltakelser for gitt deltakerIdent - kan ikke entydig avgjøre hvilken som skal markeres som søkt"
+                ),
+                null
+            )
+        }
+
+        if (deltakelse.søktTidspunkt != null) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Deltakelsen er allerede markert som søkt"),
+                null
+            )
+        }
+
+        return markerSomHarSøkt(deltakelse.id!!)
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
     fun markerSomSlettet(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltakelse er slettet med id $id")
         val eksisterende = forsikreEksistererDeltakelse(id)

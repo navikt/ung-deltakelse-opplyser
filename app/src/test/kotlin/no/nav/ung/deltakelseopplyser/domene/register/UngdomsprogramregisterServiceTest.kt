@@ -619,6 +619,95 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `markerSomHarSøktForDeltaker markerer den ene deltakelsen som søkt`() {
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+        val startdato = LocalDate.now()
+        val dto = DeltakelseDTO(
+            deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+            fraOgMed = startdato,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
+        )
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(dto)
+
+        val resultat = ungdomsprogramregisterService.markerSomHarSøktForDeltaker(deltakerIdent)
+
+        assertThat(resultat.id).isEqualTo(innmelding.id)
+        assertThat(resultat.søktTidspunkt).isNotNull
+    }
+
+    @Test
+    fun `markerSomHarSøktForDeltaker uten deltakelse gir 404`() {
+        val ukjentDeltakerIdent = FødselsnummerGenerator.neste()
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(ukjentDeltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.markerSomHarSøktForDeltaker(ukjentDeltakerIdent)
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        }
+    }
+
+    @Test
+    fun `markerSomHarSøktForDeltaker med flere deltakelser gir 400`() {
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+        val periode1Start = LocalDate.now().minusYears(1)
+        val periode1Slutt = periode1Start.plusMonths(3)
+        ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+                fraOgMed = periode1Start,
+                tilOgMed = periode1Slutt,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(periode1Start).tilOgMed
+            )
+        )
+
+        val periode2Start = periode1Slutt.plusMonths(1)
+        ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+                fraOgMed = periode2Start,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(periode2Start).tilOgMed
+            )
+        )
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.markerSomHarSøktForDeltaker(deltakerIdent)
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @Test
+    fun `markerSomHarSøktForDeltaker på allerede søkt deltakelse gir 400`() {
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+        val startdato = LocalDate.now()
+        val dto = DeltakelseDTO(
+            deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+            fraOgMed = startdato,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed
+        )
+        ungdomsprogramregisterService.leggTilIProgram(dto)
+        ungdomsprogramregisterService.markerSomHarSøktForDeltaker(deltakerIdent)
+
+        assertThrows<ErrorResponseException> {
+            ungdomsprogramregisterService.markerSomHarSøktForDeltaker(deltakerIdent)
+        }.also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @Test
     fun `Forleng periode på deltakelse uten sluttdato setter harForlengetPeriode`() {
         every { pdlService.hentAktørIder(any()) } returns listOf(
             IdentInformasjon("321", false, IdentGruppe.AKTORID),

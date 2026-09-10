@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
+import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.ResourceType
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
@@ -65,7 +66,8 @@ class UngdomsprogramRegisterUngSakController(
                 PersonerOperasjonDto(
                     listOf(AktørId(aktørIdDto.aktorId)),
                     listOf(),
-                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.READ, setOf())
+                    // Svakhet i abac krever at må sende med AksjonspunktType.MANUELL for UPDATE, slik at kun veileder får tilgang.
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.UPDATE, setOf(AksjonspunktType.MANUELL))
                 )
             )
         }
