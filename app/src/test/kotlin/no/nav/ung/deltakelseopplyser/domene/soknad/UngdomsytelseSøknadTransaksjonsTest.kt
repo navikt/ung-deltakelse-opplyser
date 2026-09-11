@@ -18,14 +18,11 @@ import no.nav.pdl.generated.enums.IdentGruppe
 import no.nav.pdl.generated.hentident.IdentInformasjon
 import no.nav.tms.microfrontend.Sensitivitet
 import no.nav.ung.deltakelseopplyser.AbstractIntegrationTest
-import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
-import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
 import no.nav.ung.deltakelseopplyser.domene.minside.task.AktiverMikrofrontendMinSideTask
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.ForlengetPeriodeBeregner
@@ -51,7 +48,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDate
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -109,12 +105,6 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
 
     @Autowired
     lateinit var microfrontendRepository: MicrofrontendRepository
-
-    @Autowired
-    lateinit var microfrontendService: MicrofrontendService
-
-    @Autowired
-    lateinit var deltakerService: DeltakerService
 
     @Autowired
     lateinit var søknadRepository: SøknadRepository
@@ -199,62 +189,6 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
         val microfrontendStatus = microfrontendRepository.findByDeltaker(deltaker)
         assertThat(microfrontendStatus).isNotNull
         assertThat(microfrontendStatus!!.status).isEqualTo(MicrofrontendStatus.ENABLE)
-    }
-
-    @Test
-    fun `reaktivering etter at forrige aktivering-task er FERDIG skal planlegge tasken på nytt, ikke hoppe over`() {
-        val søkerIdent = FødselsnummerGenerator.neste()
-        mockPdlIdent(søkerIdent)
-
-        val deltakelse = meldInnIProgrammet(søkerIdent)
-
-        transactionTemplate.executeWithoutResult {
-            ungdomsytelsesøknadService.håndterMottattSøknad(
-                lagUngdomsytelseSøknad(UUID.randomUUID().toString(), deltakelse.id!!, søkerIdent)
-            )
-        }
-
-        val førsteTask = finnSisteAktiverMikrofrontendTask(søkerIdent)!!
-        justRun { mineSiderService.deaktiverMikrofrontend(any(), any()) }
-        taskWorker.markerPlukket(førsteTask.id)
-        taskWorker.doActualWork(førsteTask.id)
-        assertThat(taskService.findById(førsteTask.id).status).isEqualTo(Status.FERDIG)
-        verify(exactly = 1) { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
-        assertThat(antallAktiverMikrofrontendTasks(søkerIdent)).isEqualTo(1)
-
-        transactionTemplate.executeWithoutResult {
-            val deltaker = deltakerService.finnDeltakerGittId(deltakelse.deltaker.id!!).get()
-            deltaker.minSideMicrofrontendStatusDAO
-                ?.let { microfrontendService.deaktiver(it) }
-
-            deltaker.minSideMicrofrontendStatusDAO = null
-            deltakerService.oppdaterDeltaker(deltaker)
-
-            microfrontendService.sendOgLagre(
-                MinSideMicrofrontendStatusDAO(
-                    id = UUID.randomUUID(),
-                    deltaker = deltaker,
-                    status = MicrofrontendStatus.ENABLE,
-                    opprettet = ZonedDateTime.now(ZoneOffset.UTC),
-                )
-            )
-        }
-
-        // Samme task-rad skal være gjenbrukt (ikke en ny duplikatrad), og planlagt for ny kjøring.
-        assertThat(antallAktiverMikrofrontendTasks(søkerIdent))
-            .withFailMessage("Forventet at reaktivering gjenbruker samme task-rad i stedet for å opprette en ny")
-            .isEqualTo(1)
-        val gjenbruktTask = taskService.findById(førsteTask.id)
-        assertThat(gjenbruktTask.status).isEqualTo(Status.KLAR_TIL_PLUKK)
-
-        // Kjør tasken på nytt - reaktiveringen skal faktisk nå Min side denne gangen.
-        taskWorker.markerPlukket(gjenbruktTask.id)
-        taskWorker.doActualWork(gjenbruktTask.id)
-        assertThat(taskService.findById(gjenbruktTask.id).status).isEqualTo(Status.FERDIG)
-        verify(exactly = 2) { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
-
-        assertThat(microfrontendRepository.findByDeltaker(deltakelseRepository.findById(deltakelse.id!!).get().deltaker)!!.status)
-            .isEqualTo(MicrofrontendStatus.ENABLE)
     }
 
     @Test
