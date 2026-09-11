@@ -203,10 +203,6 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
 
     @Test
     fun `reaktivering etter at forrige aktivering-task er FERDIG skal planlegge tasken på nytt, ikke hoppe over`() {
-        // Regresjonstest: MinSideForvaltningController.aktiverInnsyn deaktiverer eksisterende status og
-        // kaller MicrofrontendService.sendOgLagre på nytt. Task-payloaden er uendret, så dedupliseringen
-        // må gjenbruke/planlegge den samme (FERDIG) tasken på nytt - ikke stille behandle den som et
-        // duplikat og dermed la reaktiveringen aldri nå Min side.
         val søkerIdent = FødselsnummerGenerator.neste()
         mockPdlIdent(søkerIdent)
 
@@ -226,14 +222,8 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
         verify(exactly = 1) { mineSiderService.aktiverMikrofrontend(any(), any(), any()) }
         assertThat(antallAktiverMikrofrontendTasks(søkerIdent)).isEqualTo(1)
 
-        // Simulerer MinSideForvaltningController.aktiverInnsyn nøyaktig: deaktiver eksisterende status,
-        // fjern referansen (utløser orphanRemoval-sletting av den gamle raden), og aktiver på nytt med
-        // en ny status-rad. Wrappes i en transaksjon slik at de lazy-lastede DAO-forholdene er
-        // tilgjengelige (samme mønster som resten av testklassen).
         transactionTemplate.executeWithoutResult {
-            val deltaker = deltakerService.finnDeltakerGittId(
-                deltakelseRepository.findById(deltakelse.id!!).get().deltaker.id!!
-            ).get()
+            val deltaker = deltakerService.finnDeltakerGittId(deltakelse.deltaker.id!!).get()
             deltaker.minSideMicrofrontendStatusDAO
                 ?.let { microfrontendService.deaktiver(it) }
 
