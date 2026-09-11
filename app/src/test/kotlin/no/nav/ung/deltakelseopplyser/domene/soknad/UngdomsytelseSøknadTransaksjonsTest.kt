@@ -22,6 +22,7 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.Scenarioer
 import no.nav.ung.deltakelseopplyser.domene.minside.MineSiderService
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendId
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendRepository
+import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MicrofrontendStatus
 import no.nav.ung.deltakelseopplyser.domene.minside.task.AktiverMikrofrontendMinSideTask
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseRepository
 import no.nav.ung.deltakelseopplyser.domene.register.ForlengetPeriodeBeregner
@@ -158,6 +159,36 @@ class UngdomsytelseSøknadTransaksjonsTest : AbstractIntegrationTest() {
         assertThat(task!!.status).isEqualTo(Status.UBEHANDLET)
         assertThat(task.type).isEqualTo(AktiverMikrofrontendMinSideTask.TYPE)
         assertThat(antallAktiverMikrofrontendTasks(søkerIdent)).isEqualTo(antallTasksFør + 1)
+    }
+
+    @Test
+    fun `duplikat søknad for samme deltaker skal ikke feile og skal ikke opprette duplikat task`() {
+        val søkerIdent = FødselsnummerGenerator.neste()
+        mockPdlIdent(søkerIdent)
+
+        val deltakelse = meldInnIProgrammet(søkerIdent)
+
+        transactionTemplate.executeWithoutResult {
+            ungdomsytelsesøknadService.håndterMottattSøknad(
+                lagUngdomsytelseSøknad(UUID.randomUUID().toString(), deltakelse.id!!, søkerIdent)
+            )
+        }
+        assertThat(antallAktiverMikrofrontendTasks(søkerIdent)).isEqualTo(1)
+
+        transactionTemplate.executeWithoutResult {
+            ungdomsytelsesøknadService.håndterMottattSøknad(
+                lagUngdomsytelseSøknad(UUID.randomUUID().toString(), deltakelse.id!!, søkerIdent)
+            )
+        }
+
+        assertThat(antallAktiverMikrofrontendTasks(søkerIdent))
+            .withFailMessage("Forventet at det ikke ble opprettet en ny (duplikat) task for samme deltaker")
+            .isEqualTo(1)
+
+        val deltaker = deltakelseRepository.findById(deltakelse.id!!).get().deltaker
+        val microfrontendStatus = microfrontendRepository.findByDeltaker(deltaker)
+        assertThat(microfrontendStatus).isNotNull
+        assertThat(microfrontendStatus!!.status).isEqualTo(MicrofrontendStatus.ENABLE)
     }
 
     @Test
