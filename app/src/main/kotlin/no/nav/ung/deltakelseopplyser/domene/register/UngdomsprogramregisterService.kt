@@ -223,7 +223,7 @@ class UngdomsprogramregisterService(
 
 
     @Transactional(TRANSACTION_MANAGER, readOnly = true)
-    fun verifiserAktørTilhørerDeltakelse(id: UUID, aktørId: String) {
+    fun verifiserAktørTilhørerDeltakelse(id: UUID, aktørId: String): String {
         val deltakelse = forsikreEksistererDeltakelse(id)
         val faktiskeAktørIder = pdlService.hentAktørIder(deltakelse.deltaker.deltakerIdent).map { it.ident }
         if (aktørId !in faktiskeAktørIder) {
@@ -234,6 +234,7 @@ class UngdomsprogramregisterService(
                 null
             )
         }
+        return deltakelse.deltaker.deltakerIdent
     }
 
     @Transactional(TRANSACTION_MANAGER)
