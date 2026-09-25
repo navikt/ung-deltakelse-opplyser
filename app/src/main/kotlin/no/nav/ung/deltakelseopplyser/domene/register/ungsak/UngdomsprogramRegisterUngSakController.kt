@@ -59,11 +59,12 @@ class UngdomsprogramRegisterUngSakController(
     @Operation(summary = "Marker en deltakelse som søkt. Brukes av ung-sak ved journalføring av papirsøknad.")
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID, @RequestBody aktørIdDto: AktørIdDto): DeltakelseDTO {
-        val deltakerIdent = registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
 
         if (tilgangskontrollService.erSystemBruker()) {
             tilgangskontrollService.krevSystemtilgang()
         } else {
+            val deltakerIdent = registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
+
             // ABAC (FAGSAK/UPDATE) krever AksjonspunktType.MANUELL, som kun tildeles enkelte roller.
             // Saksbehandlere som journalfører papirsøknad via ung-sak (OBO) dekkes ikke av dette,
             // så tilgang vurderes i stedet via Tilgangsmaskin (populasjonstilgangskontroll).
