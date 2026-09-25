@@ -138,7 +138,7 @@ class UngdomsprogramRegisterUngSakControllerTest {
         val deltakelseId = UUID.randomUUID()
         every { registerService.verifiserAktørTilhørerDeltakelse(deltakelseId, aktørId) } returns deltakerIdent
         every { tilgangskontrollService.erSystemBruker() } returns false
-        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(any(), any()) } returns Unit
+        every { tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(listOf("ung-sak"), no.nav.sif.abac.kontrakt.person.PersonIdent.fra(deltakerIdent)) } returns Unit
         every { registerService.markerSomHarSøkt(deltakelseId) } returns DeltakelseDTO(
             id = deltakelseId,
             deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
