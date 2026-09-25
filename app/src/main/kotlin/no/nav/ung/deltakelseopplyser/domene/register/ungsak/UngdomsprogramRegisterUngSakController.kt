@@ -4,12 +4,12 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.api.RequiredIssuers
-import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.ResourceType
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.AktørId
+import no.nav.sif.abac.kontrakt.person.PersonIdent
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.ungsak.DeltakelseOpplysningerDTO
@@ -59,20 +59,21 @@ class UngdomsprogramRegisterUngSakController(
     @Operation(summary = "Marker en deltakelse som søkt. Brukes av ung-sak ved journalføring av papirsøknad.")
     @ResponseStatus(HttpStatus.OK)
     fun markerDeltakelseSomSøkt(@PathVariable id: UUID, @RequestBody aktørIdDto: AktørIdDto): DeltakelseDTO {
+
         if (tilgangskontrollService.erSystemBruker()) {
             tilgangskontrollService.krevSystemtilgang()
         } else {
-            tilgangskontrollService.krevTilgangTilPersonerForInnloggetBruker(
-                PersonerOperasjonDto(
-                    listOf(AktørId(aktørIdDto.aktorId)),
-                    listOf(),
-                    // Svakhet i abac krever at må sende med AksjonspunktType.MANUELL for UPDATE, slik at kun veileder får tilgang.
-                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.UPDATE, setOf(AksjonspunktType.MANUELL))
-                )
+            val deltakerIdent = registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
+
+            // ABAC (FAGSAK/UPDATE) krever AksjonspunktType.MANUELL, som kun tildeles enkelte roller.
+            // Saksbehandlere som journalfører papirsøknad via ung-sak (OBO) dekkes ikke av dette,
+            // så tilgang vurderes i stedet via Tilgangsmaskin (populasjonstilgangskontroll).
+            tilgangskontrollService.krevOboTilgangFraGodkjentEksternSystem(
+                listOf("ung-sak"),
+                PersonIdent.fra(deltakerIdent)
             )
         }
 
-        registerService.verifiserAktørTilhørerDeltakelse(id, aktørIdDto.aktorId)
         return registerService.markerSomHarSøkt(id)
     }
 
