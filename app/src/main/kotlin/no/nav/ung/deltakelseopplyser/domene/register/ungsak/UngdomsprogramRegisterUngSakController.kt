@@ -66,8 +66,10 @@ class UngdomsprogramRegisterUngSakController(
                 PersonerOperasjonDto(
                     listOf(AktørId(aktørIdDto.aktorId)),
                     listOf(),
-                    // Svakhet i abac krever at må sende med AksjonspunktType.MANUELL for UPDATE, slik at kun veileder får tilgang.
-                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.UPDATE, setOf(AksjonspunktType.MANUELL))
+
+                    // Bruker FAGSAK + CREATE for å markere som søkt. Krever ikke at det eksisterer en fagsak.
+                    // Denne operasjonen kalles fra ung-sak når en papirsøknad journalføres og sendes inn, og da skal det være mulig å markere som søkt selv om det ikke finnes en fagsak enda.
+                    OperasjonDto(ResourceType.FAGSAK, BeskyttetRessursActionAttributt.CREATE, setOf())
                 )
             )
         }
