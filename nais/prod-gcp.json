@@ -57,6 +57,11 @@
       "app": "veilarbportefolje",
       "namespace": "obo",
       "cluster": "prod-gcp"
+    },
+    {
+      "app": "aktivitetspenger-soknad",
+      "namespace": "dusseldorf",
+      "cluster": "prod-gcp"
     }
   ],
   "database": {
