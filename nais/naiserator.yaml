@@ -20,7 +20,7 @@ spec:
   azure:
     application:
       enabled: true
-      allowAllUsers: false
+      allowAllUsers: true
       claims:
         extra:
           - "NAVident"
@@ -50,6 +50,8 @@ spec:
         - application: ung-brukerdialog-api
         - application: k9-selvbetjening-oppslag
         - application: sif-abac-pdp
+        - application: populasjonstilgangskontroll
+          namespace: tilgangsmaskin
         - application: sokos-kontoregister-person
           namespace: okonomi
       external:
@@ -100,13 +102,17 @@ spec:
           - name: "cloudsql.enable_pgaudit"
             value: "on"
           - name: "pgaudit.log"
-            value: "all"
+            value: "read,write,ddl,role,function"
           - name: "pgaudit.log_parameter"
+            value: "on"
+          - name: "pgaudit.log_relation"
             value: "on"
         {{/if}}
         databases:
           - name: {{ database.name }}
             envVarPrefix: {{ database.envVarPrefix }}
+        pointInTimeRecovery: true
+        retainedBackups: 30
     bigQueryDatasets:
       {{#each bigQueryDatasets}}
       - name: {{ name }}

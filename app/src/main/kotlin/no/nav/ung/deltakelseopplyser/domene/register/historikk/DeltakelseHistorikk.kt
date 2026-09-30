@@ -1,6 +1,7 @@
 package no.nav.ung.deltakelseopplyser.domene.register.historikk
 
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
+import no.nav.ung.deltakelseopplyser.kontrakt.register.Avslutningsårsak
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.DeltakelseHistorikkDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Endringstype
 import no.nav.ung.deltakelseopplyser.kontrakt.register.historikk.Revisjonstype
@@ -20,8 +21,10 @@ data class DeltakelseHistorikk(
     val deltakerMeldtUt: DeltakerMeldtUtHistorikk?,
     val endretStartdato: EndretStartdatoHistorikk?,
     val endretSluttdato: EndretSluttdatoHistorikk?,
+    val sluttdatoSlettet: SluttdatoSlettetHistorikk?,
     val søktTidspunktSatt: SøktTidspunktHistorikk?,
-    val deltakelseFjernet: DeltakelseFjernetHistorikk?
+    val deltakelseFjernet: DeltakelseFjernetHistorikk?,
+    val forlengetPeriode: ForlengetPeriodeHistorikk?
 ) {
 
     companion object {
@@ -46,7 +49,8 @@ data class DeltakelseHistorikk(
             Endringstype.DELTAKER_MELDT_UT -> {
                 requireNotNull(deltakerMeldtUt)
                 val utmeldingDato = DATE_FORMATTER.format(deltakerMeldtUt.utmeldingDato)
-                "Deltaker meldt ut med sluttdato $utmeldingDato."
+                val årsakTekst = deltakerMeldtUt.avslutningsårsak?.let { " Årsak: ${it.somTekst()}." } ?: ""
+                "Deltaker meldt ut med sluttdato $utmeldingDato.$årsakTekst"
             }
 
             Endringstype.ENDRET_STARTDATO -> {
@@ -63,6 +67,12 @@ data class DeltakelseHistorikk(
                 return "Sluttdato for deltakelse er endret fra $gammelSluttdato til $nySluttdato."
             }
 
+            Endringstype.SLUTTDATO_SLETTET -> {
+                requireNotNull(sluttdatoSlettet)
+                val slettetSluttdato = DATE_FORMATTER.format(sluttdatoSlettet.slettetSluttdato)
+                "Sluttdato for deltakelse er slettet (tidligere sluttdato var $slettetSluttdato)."
+            }
+
             Endringstype.DELTAKER_HAR_SØKT_YTELSE -> {
                 requireNotNull(søktTidspunktSatt)
                 val formatertTidspunkt = DATE_TIME_FORMATTER.format(søktTidspunktSatt.søktTidspunkt)
@@ -76,7 +86,29 @@ data class DeltakelseHistorikk(
                 "Deltakelsen ${formattertPeriode} er fjernet."
             }
 
+            Endringstype.FORLENGET_PERIODE -> {
+                requireNotNull(forlengetPeriode)
+                val fraOgMed = DATE_FORMATTER.format(forlengetPeriode.forlengetFraOgMed)
+                val tilOgMed = DATE_FORMATTER.format(forlengetPeriode.forlengetTilOgMed)
+                "Perioden er forlenget med inntil 8 uker (fra $fraOgMed til $tilOgMed)."
+            }
+
             Endringstype.UKJENT -> "Endringstype er ukjent."
         }
+    }
+
+    private fun Avslutningsårsak.somTekst(): String = when (this) {
+        Avslutningsårsak.ARBEID -> "Arbeid"
+        Avslutningsårsak.ARBEID_SELVFORSØRGET -> "Arbeid, selvforsørget"
+        Avslutningsårsak.ARBEID_MED_OPPFØLGING_FRA_NAV -> "Arbeid, med fortsatt oppfølging og bistand fra Nav"
+        Avslutningsårsak.UTDANNING -> "Utdanning"
+        Avslutningsårsak.VIDEREGÅENDE_OPPLÆRING -> "Videregående, inkludert fag- og yrkesopplæring"
+        Avslutningsårsak.HØYERE_UTDANNING -> "Høyere utdanning"
+        Avslutningsårsak.ANNEN_OPPLÆRING -> "Annen opplæring"
+        Avslutningsårsak.MANGLENDE_DELTAKELSE -> "Manglende deltakelse"
+        Avslutningsårsak.DELTAKER_ØNSKER_IKKE_Å_DELTA -> "Deltakeren ønsker ikke å delta"
+        Avslutningsårsak.FLYTTET -> "Flyttet"
+        Avslutningsårsak.ANDRE_LIVSOPPHOLDSYTELSER -> "Andre livsoppholdsytelser"
+        Avslutningsårsak.ANNET -> "Annet"
     }
 }

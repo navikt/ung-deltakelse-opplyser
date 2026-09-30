@@ -4,11 +4,13 @@ import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.ExternalDocumentation
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.security.OAuthFlow
 import io.swagger.v3.oas.models.security.OAuthFlows
 import io.swagger.v3.oas.models.security.Scopes
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -20,7 +22,10 @@ import org.springframework.http.HttpHeaders
 class SwaggerConfiguration(
     @Value("\${springdoc.oAuthFlow.authorizationUrl}") val authorizationUrl: String,
     @Value("\${springdoc.oAuthFlow.tokenUrl}") val tokenUrl: String,
-    @Value("\${springdoc.oAuthFlow.apiScope}") val apiScope: String
+    @Value("\${springdoc.oAuthFlow.apiScope}") val apiScope: String,
+    @Value("\${springdoc.oAuthFlow.oboAudience:\${NAIS_CLUSTER_NAME:dev-gcp}:\${NAIS_NAMESPACE:k9saksbehandling}:\${NAIS_APP_NAME:ung-deltakelse-opplyser}}") val oboAudience: String,
+    @Value("\${springdoc.oAuthFlow.tokenXTokenGeneratorUrl:https://tokenx-token-generator.intern.dev.nav.no}") val tokenXTokenGeneratorUrl: String,
+    @Value("\${springdoc.oAuthFlow.azureTokenGeneratorUrl:https://azure-token-generator.intern.dev.nav.no}") val azureTokenGeneratorUrl: String
 ) {
 
     @Bean
@@ -54,9 +59,20 @@ class SwaggerConfiguration(
     }
 
     @Bean
+    fun eksternOpenApi(): GroupedOpenApi {
+        val packagesToscan = arrayOf(
+            "no.nav.ung.deltakelseopplyser.domene.register.ekstern"
+        )
+        return GroupedOpenApi.builder()
+            .group("ekstern").packagesToScan(*packagesToscan)
+            .build()
+    }
+
+    @Bean
     fun driftOpenApi(): GroupedOpenApi {
         val packagesToscan = arrayOf(
             "no.nav.ung.deltakelseopplyser.drift",
+            "no.nav.familie.prosessering" // Drift av tasker
         )
         return GroupedOpenApi.builder()
             .group("drift").packagesToScan(*packagesToscan)
@@ -67,7 +83,7 @@ class SwaggerConfiguration(
     fun openAPI(): OpenAPI {
         // use Reusable Enums for Swagger generation:
         // see https://springdoc.org/#how-can-i-apply-enumasref-true-to-all-enums
-        io.swagger.v3.core.jackson.ModelResolver.enumsAsRef = true;
+        io.swagger.v3.core.jackson.ModelResolver.enumsAsRef = true
 
         return OpenAPI()
             .info(
@@ -84,18 +100,43 @@ class SwaggerConfiguration(
             .components(
                 Components()
                     .addSecuritySchemes("Authorization", tokenXApiToken())
+                    .addSecuritySchemes("entraObo", entraOboApiToken())
                     .addSecuritySchemes("oauth2", azureLogin())
             )
-            .addSecurityItem(
-                SecurityRequirement()
-                    .addList("Authorization")
-                    .addList("oauth2", listOf("read", "write"))
-            )
+            // OpenAPI security items are OR across entries.
+            .addSecurityItem(SecurityRequirement().addList("Authorization"))
+            .addSecurityItem(SecurityRequirement().addList("entraObo"))
+            .addSecurityItem(SecurityRequirement().addList("oauth2", listOf(apiScope)))
+    }
+
+    /**
+     * Fjerner properties med `null`-nøkkel fra genererte schemaer.
+     *
+     * Dette er et kjent bug i swagger-core (versjon 2.2.47, brukt transitivt via
+     * springdoc-openapi 3.0.3) der `ModelResolver.handleUnwrapped()` kan miste navnet på en
+     * property når et `@JsonUnwrapped`-felt sitt underliggende schema har blitt klonet/gjenbrukt
+     * (f.eks. pga. `enumsAsRef`). Da settes property inn i "properties"-mapet med `null` som
+     * nøkkel, noe som gir en 500-feil ("Null key for a Map not allowed in JSON") når
+     * OpenAPI-dokumentet serialiseres.
+     *
+     * Se https://github.com/swagger-api/swagger-core/issues/5126 (fiks foreslått i
+     * https://github.com/swagger-api/swagger-core/pull/5193). Denne customizeren kan fjernes når
+     * swagger-core er oppgradert til en versjon som inneholder fiksen.
+     */
+    @Bean
+    fun nullKeyCleanupCustomizer(): GlobalOpenApiCustomizer =
+        GlobalOpenApiCustomizer { openApi ->
+            openApi.components?.schemas?.values?.forEach { removeNullKeyedProperties(it) }
+        }
+
+    private fun removeNullKeyedProperties(schema: Schema<*>) {
+        schema.properties?.let { properties ->
+            properties.keys.removeIf { it == null }
+            properties.values.forEach { removeNullKeyedProperties(it) }
+        }
     }
 
     private fun tokenXApiToken(): SecurityScheme {
-        val audience = "dev-gcp:k9saksbehandling:ung-deltakelse-opplyser"
-
         return SecurityScheme()
             .type(SecurityScheme.Type.HTTP)
             .name(HttpHeaders.AUTHORIZATION)
@@ -103,9 +144,25 @@ class SwaggerConfiguration(
             .bearerFormat("JWT")
             .`in`(SecurityScheme.In.HEADER)
             .description(
-                """Eksempel på verdi som skal inn i Value-feltet (Bearer trengs altså ikke å oppgis): 'eyAidH...'
-                For nytt token -> https://tokenx-token-generator.intern.dev.nav.no/api/obo?aud=$audience
-            """.trimMargin()
+                """Brukes for deltaker-endepunkter (TokenX).
+                Eksempel pa verdi i Value-feltet: 'eyAidH...'
+                Generer nytt token: $tokenXTokenGeneratorUrl/api/obo?aud=$oboAudience
+            """.trimIndent()
+            )
+    }
+
+    private fun entraOboApiToken(): SecurityScheme {
+        return SecurityScheme()
+            .type(SecurityScheme.Type.HTTP)
+            .name(HttpHeaders.AUTHORIZATION)
+            .scheme("bearer")
+            .bearerFormat("JWT")
+            .`in`(SecurityScheme.In.HEADER)
+            .description(
+                """Brukes for veileder-, ung-sak-, ekstern- og drift-endepunkter (Entra ID OBO).
+                Eksempel pa verdi i Value-feltet: 'eyAidH...'
+                Generer nytt token: $azureTokenGeneratorUrl/api/obo?aud=$oboAudience
+            """.trimIndent()
             )
     }
 

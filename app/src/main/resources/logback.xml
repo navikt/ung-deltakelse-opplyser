@@ -50,6 +50,8 @@
         <appender-ref ref="auditLogger" />
     </logger>
 
+    <logger name="org.hibernate.orm.connections.pooling" level="WARN"/>
+
     <root level="INFO">
         <appender-ref ref="stdout_json"/>
     </root>

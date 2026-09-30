@@ -14,4 +14,4 @@ jobs:
       security-events: write
       contents: read
     with:
-      java-version: 21
+      java-version: 25

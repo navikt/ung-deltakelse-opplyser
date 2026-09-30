@@ -1,6 +1,9 @@
 package no.nav.ung.deltakelseopplyser.domene.register
 
 import io.hypersistence.utils.hibernate.type.range.Range
+import no.nav.k9.søknad.TidUtils.TIDENES_ENDE
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.EndreOppgaveStatusDto
+import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveType
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OppgaveYtelsetype
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.OpprettOppgaveDto
 import no.nav.ung.brukerdialog.kontrakt.oppgaver.typer.søkytelse.SøkYtelseOppgavetypeDataDto
@@ -9,22 +12,20 @@ import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerPersonalia
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService.Companion.mapToDTO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveMapperService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.OppgaveService
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.SøkYtelseOppgavetypeDataDAO
+import no.nav.ung.deltakelseopplyser.historikk.AuditorAwareImpl.Companion.VEILEDER_SUFFIX
 import no.nav.ung.deltakelseopplyser.integration.pdl.api.PdlService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngBrukerdialogService
 import no.nav.ung.deltakelseopplyser.integration.ungsak.UngSakService
+import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakelseSjekk
 import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.register.DeltakelseKomposittDTO
 import no.nav.ung.deltakelseopplyser.kontrakt.veileder.EndrePeriodeDatoDTO
 import no.nav.ung.sak.kontrakt.hendelser.HendelseDto
 import no.nav.ung.sak.kontrakt.hendelser.HendelseInfo
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramEndretStartdatoHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramFjernDeltakelseHendelse
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramForlengetPeriodeHendelse
 import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørHendelse
-import no.nav.ung.sak.kontrakt.oppgaver.OpprettSøkYtelseOppgaveDto
+import no.nav.ung.sak.kontrakt.hendelser.UngdomsprogramOpphørOpphevetHendelse
 import no.nav.ung.sak.typer.AktørId
 import no.nav.ung.sak.typer.Periode
 import org.slf4j.LoggerFactory
@@ -37,7 +38,6 @@ import org.springframework.web.ErrorResponseException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.util.*
 
 @Service
@@ -46,11 +46,9 @@ class UngdomsprogramregisterService(
     private val deltakerService: DeltakerService,
     private val ungSakService: UngSakService,
     private val pdlService: PdlService,
-    private val oppgaveService: OppgaveService,
-    private val oppgaveMapperService: OppgaveMapperService,
     private val ungBrukerdialogService: UngBrukerdialogService,
+    private val deltakelseVeilederEnhetService: DeltakelseVeilederEnhetService,
     @Value("\${SLETT_SOKT_DELTAKELSE_ENABLED}") private val slettSoktDeltakelseEnabled: Boolean,
-    @Value("\${OPPGAVER_I_UNG_SAK_ENABLED}") private val oppgaverIUngSakEnabled: Boolean,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UngdomsprogramregisterService::class.java)
@@ -64,7 +62,10 @@ class UngdomsprogramregisterService(
                 fraOgMed = getFom(),
                 tilOgMed = getTom(),
                 erSlettet = erSlettet,
-                harOpphørsvedtak = harOpphørsvedtak
+                harOpphørsvedtak = harOpphørsvedtak,
+                harForlengetPeriode = harForlengetPeriode,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(getFom(), harForlengetPeriode).tilOgMed,
+                avslutningsårsak = avslutningsårsak
             )
         }
     }
@@ -78,31 +79,40 @@ class UngdomsprogramregisterService(
             deltakerService.lagreDeltaker(deltakelseDTO)
         }
 
-        val deltakerPersonalia = deltakerService.hentDeltakerInfo(deltakerDAO.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(deltakerDAO.id)
+            ?: throw IllegalStateException("Deltakerpersonalia er null")
 
         forsikrePeriodeErInnenforDeltakersGyldigeAlder(deltakelseDTO.fraOgMed, deltakerPersonalia)
 
         val deltakelseDAO = deltakelseDTO.mapToDAO(deltakerDAO)
         val ungdomsprogramDAO = deltakelseRepository.saveAndFlush(deltakelseDAO)
 
-        val oppgaveReferanse = UUID.randomUUID()
-        oppgaveService.opprettOppgave(
-            deltaker = deltakerDAO,
-            oppgaveReferanse = oppgaveReferanse,
-            oppgaveTypeDataDAO = SøkYtelseOppgavetypeDataDAO(fomDato = ungdomsprogramDAO.getFom()),
-            frist = ZonedDateTime.now().plusMonths(3)
-        )
+        // Lagre veileder → enhet kobling for statistikk (point-in-time snapshot).
+        // Feiler stille slik at innmeldingen ikke blokkeres ved NOM-problemer.
+        try {
+            val navIdent = ungdomsprogramDAO.opprettetAv
+                .removeSuffix(VEILEDER_SUFFIX).trim()
+            if (navIdent != "system") {
+                deltakelseVeilederEnhetService.prøvLagreEnhetForDeltakelse(
+                    deltakelseId = ungdomsprogramDAO.id,
+                    navIdent = navIdent
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("Kunne ikke lagre enhet-kobling for deltakelse ${ungdomsprogramDAO.id}. Fortsetter.", e)
+        }
 
-        if (oppgaverIUngSakEnabled) {
-            pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
-                ungBrukerdialogService.opprettSøkYtelseOppgave(OpprettOppgaveDto(
+        val oppgaveReferanse = UUID.randomUUID()
+        pdlService.hentAktørIder(deltakerDAO.deltakerIdent).filter { it.historisk == false }.firstOrNull()?.let {
+            ungBrukerdialogService.opprettSøkYtelseOppgave(
+                OpprettOppgaveDto(
                     no.nav.ung.brukerdialog.typer.AktørId(it.ident),
                     OppgaveYtelsetype.UNGDOMSYTELSE,
                     oppgaveReferanse,
                     SøkYtelseOppgavetypeDataDto(deltakelseDTO.fraOgMed),
                     null
-                ))
-            }
+                )
+            )
         }
 
 
@@ -138,6 +148,14 @@ class UngdomsprogramregisterService(
             }
         }
 
+        // Slett veileder-enhet koblinger for deltakelsene før sletting av deltaker,
+        // fordi deltakelse_veileder_enhet har FK til ungdomsprogram_deltakelse uten CASCADE.
+        // NB: Nye tabeller med FK til ungdomsprogram_deltakelse må også ryddes opp her.
+        val deltakelseIder = deltakelser.mapNotNull { it.id }
+        deltakelseVeilederEnhetService.slettForDeltakelser(deltakelseIder)
+
+        settAvbruttSøkYtelseOppgaverForDeltakelser(deltaker, deltakelser)
+
         val deltakerSlettet = deltakerService.slettDeltaker(deltakerId)
         if (!deltakerSlettet) {
             logger.error("Klarte ikke å slette deltaker med id $deltakerId fra deltakerregisteret")
@@ -165,6 +183,60 @@ class UngdomsprogramregisterService(
         return true
     }
 
+    private fun settAvbruttSøkYtelseOppgaverForDeltakelser(deltaker: DeltakerDAO, deltakelser: List<DeltakelseDTO>) {
+        val ikkeSøkteDeltakelser = deltakelser.filter { it.søktTidspunkt == null }
+        if (ikkeSøkteDeltakelser.isEmpty()) return
+
+        try {
+            val aktørId = pdlService.hentAktørIder(deltaker.deltakerIdent)
+                .firstOrNull { !it.historisk }
+                ?: run {
+                    logger.warn("Fant ingen aktiv aktørId for deltaker ${deltaker.id}. Kan ikke sette SøkYtelse-oppgaver til avbrutt.")
+                    return
+                }
+
+            ikkeSøkteDeltakelser.forEach { deltakelse ->
+                val ok = ungBrukerdialogService.settAvbruttSøkYtelseOppgaveForTypeOgPeriode(
+                    EndreOppgaveStatusDto(
+                        no.nav.ung.brukerdialog.typer.AktørId(aktørId.ident),
+                        OppgaveType.SØK_YTELSE,
+                        deltakelse.fraOgMed,
+                        deltakelse.tilOgMed,
+                    )
+                )
+
+                if (!ok) {
+                    logger.warn(
+                        "Klarte ikke å sette SøkYtelse-oppgave til avbrutt for deltaker ${deltaker.id} og periode ${deltakelse.fraOgMed}..${deltakelse.tilOgMed}. Fortsetter med sletting."
+                    )
+                }
+            }
+        } catch (e: org.springframework.web.client.HttpClientErrorException) {
+            if (e.statusCode == HttpStatus.UNAUTHORIZED || e.statusCode == HttpStatus.FORBIDDEN) {
+                throw e
+            }
+            logger.warn("Klarte ikke å sette SøkYtelse-oppgaver til avbrutt for deltaker ${deltaker.id}. Fortsetter med sletting.", e)
+        } catch (e: Exception) {
+            logger.warn("Klarte ikke å sette SøkYtelse-oppgaver til avbrutt for deltaker ${deltaker.id}. Fortsetter med sletting.", e)
+        }
+    }
+
+
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
+    fun verifiserAktørTilhørerDeltakelse(id: UUID, aktørId: String) {
+        val deltakelse = forsikreEksistererDeltakelse(id)
+        val faktiskeAktørIder = pdlService.hentAktørIder(deltakelse.deltaker.deltakerIdent).map { it.ident }
+        if (aktørId !in faktiskeAktørIder) {
+            logger.warn("AktørId i forespørsel samsvarer ikke med aktøren for deltakelse $id.")
+            throw ErrorResponseException(
+                HttpStatus.FORBIDDEN,
+                ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Aktør har ikke tilgang til denne deltakelsen"),
+                null
+            )
+        }
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
     fun markerSomHarSøkt(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltaker har søkt programmet med id $id")
         val eksisterende = forsikreEksistererDeltakelse(id)
@@ -172,6 +244,39 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER)
+    fun markerSomHarSøktForDeltaker(deltakerIdent: String): DeltakelseDTO {
+        val kandidater = hentIkkeSlettetForDeltaker(deltakerIdent)
+        val deltakelse = when (kandidater.size) {
+            0 -> throw ErrorResponseException(
+                HttpStatus.NOT_FOUND,
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Fant ingen deltakelse for gitt deltakerIdent"),
+                null
+            )
+
+            1 -> kandidater.single()
+            else -> throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Fant flere deltakelser for gitt deltakerIdent - kan ikke entydig avgjøre hvilken som skal markeres som søkt"
+                ),
+                null
+            )
+        }
+
+        if (deltakelse.søktTidspunkt != null) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Deltakelsen er allerede markert som søkt"),
+                null
+            )
+        }
+
+        return markerSomHarSøkt(deltakelse.id!!)
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
     fun markerSomSlettet(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltakelse er slettet med id $id")
         val eksisterende = forsikreEksistererDeltakelse(id)
@@ -179,6 +284,7 @@ class UngdomsprogramregisterService(
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER)
     fun markerSomFattetOpphørsvedtak(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltakelse er slettet og fattet vedtak om opphør med id $id")
         val eksisterende = forsikreEksistererDeltakelse(id)
@@ -187,18 +293,21 @@ class UngdomsprogramregisterService(
     }
 
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentFraProgram(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreEksistererDeltakelse(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentFraProgramInkludertSlettet(id: UUID): DeltakelseDTO {
         logger.info("Henter programopplysninger for deltaker med id $id")
         val ungdomsprogramDAO = forsikreHarHattDeltakelse(id)
         return ungdomsprogramDAO.mapToDTO()
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentAlleForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
@@ -208,6 +317,7 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentAlleForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
@@ -228,6 +338,7 @@ class UngdomsprogramregisterService(
     }
 
 
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentIkkeSlettetForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
@@ -237,7 +348,7 @@ class UngdomsprogramregisterService(
     }
 
 
-
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
     fun hentIkkeSlettetForDeltakerId(deltakerId: UUID): List<DeltakelseDTO> {
         logger.info("Henter alle programopplysninger for deltaker.")
         val deltakerDAO = deltakerService.finnDeltakerGittId(deltakerId).orElseThrow {
@@ -257,15 +368,12 @@ class UngdomsprogramregisterService(
         return ungdomsprogramDAOs.map { it.mapToDTO() }
     }
 
-    fun hentAlleDeltakelsePerioderForDeltaker(deltakerIdentEllerAktørId: String): List<DeltakelseKomposittDTO> {
-        logger.info("Henter alle programopplysninger for deltaker.")
-
-        val deltakterIder = deltakerService.hentDeltakterIder(deltakerIdentEllerAktørId)
-        val deltakersOppgaver = deltakerService.hentDeltakersOppgaver(deltakerIdentEllerAktørId)
-        val ungdomsprogramDAOs = deltakelseRepository.findByDeltaker_IdIn(deltakterIder)
-        logger.info("Fant ${ungdomsprogramDAOs.size} programopplysninger for deltaker.")
-
-        return ungdomsprogramDAOs.map { it.tilDeltakelsePeriodInfo(deltakersOppgaver) }
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
+    fun hentAlleDeltakelser(): List<DeltakelseDTO> {
+        logger.info("Henter alle deltakelser.")
+        val deltakelser = deltakelseRepository.findAlleIkkeSlettet()
+        logger.info("Fant ${deltakelser.size} deltakelser.")
+        return deltakelser.map { it.mapToDTO() }
     }
 
     @Transactional(TRANSACTION_MANAGER)
@@ -282,7 +390,16 @@ class UngdomsprogramregisterService(
             Range.closed(deltakelseDTO.fraOgMed, deltakelseDTO.tilOgMed)
         }
 
+        val tilOgMed = deltakelseDTO.tilOgMed
+        if (tilOgMed != null) {
+            forsikreSluttdatoErInnenforMaksdato(tilOgMed, eksiterende.getFom(), eksiterende.harForlengetPeriode)
+        }
+
+        val erFørsteGangAvsluttet = eksiterende.getTom() == null
         eksiterende.oppdaterPeriode(periode)
+        if (erFørsteGangAvsluttet) {
+            eksiterende.settAvslutningsårsak(deltakelseDTO.avslutningsårsak)
+        }
         val oppdatert = deltakelseRepository.save(eksiterende)
 
         if (oppdatert.getTom() != null) {
@@ -295,7 +412,19 @@ class UngdomsprogramregisterService(
     @Transactional(TRANSACTION_MANAGER)
     fun endreStartdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
-        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+
+        if (eksisterendeDeltakelse.harForlengetPeriode) {
+            throw ErrorResponseException(
+                HttpStatus.CONFLICT,
+                ProblemDetail.forStatus(HttpStatus.CONFLICT).also {
+                    it.detail = "Kan ikke endre startdato når perioden allerede er forlenget"
+                },
+                null
+            )
+        }
+
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id)
+            ?: throw IllegalStateException("Deltakerpersonalia er null")
 
         logger.info("Endrer startdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getFom()} til $endrePeriodeDatoDTO")
 
@@ -305,6 +434,9 @@ class UngdomsprogramregisterService(
 
         forsikreGyldigPeriodeVedEndring(sluttdato, endretStartdato)
         forsikrePeriodeErInnenforDeltakersGyldigeAlder(endretStartdato, deltakerPersonalia)
+        if (sluttdato != null) {
+            forsikreSluttdatoErInnenforMaksdato(sluttdato, endretStartdato, eksisterendeDeltakelse.harForlengetPeriode)
+        }
 
         val nyPeriodeMedEndretStartdato: Range<LocalDate> = if (sluttdato != null) {
             Range.closed(endretStartdato, sluttdato)
@@ -322,13 +454,15 @@ class UngdomsprogramregisterService(
     @Transactional(TRANSACTION_MANAGER)
     fun endreSluttdato(deltakelseId: UUID, endrePeriodeDatoDTO: EndrePeriodeDatoDTO): DeltakelseDTO {
         val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
-        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id) ?: throw IllegalStateException("Deltakerpersonalia er null")
+        val deltakerPersonalia = deltakerService.hentDeltakerInfo(eksisterendeDeltakelse.deltaker.id)
+            ?: throw IllegalStateException("Deltakerpersonalia er null")
         logger.info("Endrer sluttdato for deltakelse med id $deltakelseId fra ${eksisterendeDeltakelse.getTom()} til $endrePeriodeDatoDTO")
 
         val deltakelseFraOgMedDato = eksisterendeDeltakelse.getFom()
         val endretSluttdato = endrePeriodeDatoDTO.dato
         forsikreGyldigPeriodeVedEndring(endretSluttdato, deltakelseFraOgMedDato)
         forsikrePeriodeErInnenforDeltakersGyldigeAlder(endretSluttdato, deltakerPersonalia)
+        forsikreSluttdatoErInnenforMaksdato(endretSluttdato, deltakelseFraOgMedDato, eksisterendeDeltakelse.harForlengetPeriode)
 
 
         val nyPeriodeMedEndretSluttdato = Range.closed(eksisterendeDeltakelse.getFom(), endrePeriodeDatoDTO.dato)
@@ -338,6 +472,94 @@ class UngdomsprogramregisterService(
         sendEndretSluttdatoHendelseTilUngSak(oppdatertDeltakelse)
 
         return oppdatertDeltakelse.mapToDTO()
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
+    fun slettSluttdato(deltakelseId: UUID): DeltakelseDTO {
+        val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
+
+        // Idempotens: hvis sluttdato allerede er tom, returner eksisterende deltakelse.
+        if (eksisterendeDeltakelse.getTom() == null) {
+            logger.info("Sluttdato er allerede tom for deltakelse med id $deltakelseId. Returnerer eksisterende.")
+            return eksisterendeDeltakelse.mapToDTO()
+        }
+
+        logger.info("Sletter sluttdato for deltakelse med id $deltakelseId")
+        val tidligereOpphørsdato = eksisterendeDeltakelse.getTom()!!
+        val nyPeriodeUtenSluttdato = Range.closedInfinite(eksisterendeDeltakelse.getFom())
+        eksisterendeDeltakelse.oppdaterPeriode(nyPeriodeUtenSluttdato)
+        eksisterendeDeltakelse.settAvslutningsårsak(null)
+
+        val lagret = deltakelseRepository.save(eksisterendeDeltakelse)
+        sendOpphørOpphevetHendelseTilUngSak(lagret, tidligereOpphørsdato)
+
+        return lagret.mapToDTO()
+    }
+
+    @Transactional(TRANSACTION_MANAGER)
+    fun forlengPeriode(deltakelseId: UUID): DeltakelseDTO {
+        val eksisterendeDeltakelse = forsikreEksistererDeltakelse(deltakelseId)
+
+        // Idempotens: hvis perioden allerede er forlenget, returner eksisterende DTO
+        if (eksisterendeDeltakelse.harForlengetPeriode) {
+            logger.info("Perioden er allerede forlenget for deltakelse med id $deltakelseId. Returnerer eksisterende.")
+            return eksisterendeDeltakelse.mapToDTO()
+        }
+
+        // Hindre forlengelse av periode dersom sluttdato er satt
+        if (eksisterendeDeltakelse.getTom() != null) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail =
+                        "Kan ikke forlenge periode når sluttdato er satt. Deltakelsen har allerede en sluttdato, og perioden kan derfor ikke forlenges."
+                },
+                null
+            )
+        }
+
+        logger.info("Forlenger periode for deltakelse med id $deltakelseId med 8 uker")
+
+        val forlengetPeriode = ForlengetPeriodeBeregner.beregn(eksisterendeDeltakelse.getFom(), true)
+
+
+        eksisterendeDeltakelse.markerSomForlengetPeriode()
+        val oppdatertDeltakelse = deltakelseRepository.save(eksisterendeDeltakelse)
+
+        // Send hendelse til ung-sak med perioden fra startdato til forlenget sluttdato
+        sendForlengetPeriodeHendelseTilUngSak(oppdatertDeltakelse, forlengetPeriode.fraOgMed, forlengetPeriode.tilOgMed)
+
+        return oppdatertDeltakelse.mapToDTO()
+    }
+
+    @Transactional(TRANSACTION_MANAGER, readOnly = true)
+    fun sjekkAktivDeltakelse(deltakerIdent: String, iDag: LocalDate = LocalDate.now()): DeltakelseSjekk {
+        logger.info("Sjekker om bruker er aktiv deltaker i ungdomsprogrammet.")
+        val deltakerIder = deltakerService.hentDeltakterIder(deltakerIdent)
+        if (deltakerIder.isEmpty()) {
+            logger.info("Fant ingen deltaker for ident. Returnerer erDeltaker=false.")
+            return DeltakelseSjekk(erDeltaker = false)
+        }
+        val aktivDeltakelse = deltakelseRepository
+            .findByDeltaker_IdInAndErSlettet(deltakerIder, false)
+            .filter { it.getTom() == null || it.getTom()!! >= iDag }
+            .filter { ForlengetPeriodeBeregner.beregn(it.getFom(), it.harForlengetPeriode).tilOgMed >= iDag }
+            .sortedWith(
+                compareByDescending<DeltakelseDAO> { it.getTom() == null }
+                    .thenByDescending { it.getFom() }
+            )
+            .firstOrNull()
+        return if (aktivDeltakelse != null) {
+            logger.info("Fant aktiv deltakelse.")
+            DeltakelseSjekk(
+                erDeltaker = true,
+                fraOgMed = aktivDeltakelse.getFom(),
+                tilOgMed = aktivDeltakelse.getTom()
+            )
+        } else {
+            logger.info("Fant ingen aktiv deltakelse. Returnerer erDeltaker=false.")
+            DeltakelseSjekk(erDeltaker = false)
+        }
     }
 
     private fun sendFjernetDeltakelseHendelseTilUngSak(oppdatert: DeltakelseDTO) {
@@ -355,7 +577,8 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramFjernDeltakelseHendelse(hendelseInfo.build(),
+        val hendelse = UngdomsprogramFjernDeltakelseHendelse(
+            hendelseInfo.build(),
             Periode(oppdatert.fraOgMed, oppdatert.tilOgMed)
         )
         ungSakService.sendInnHendelse(
@@ -368,8 +591,14 @@ class UngdomsprogramregisterService(
 
 
     private fun sendEndretSluttdatoHendelseTilUngSak(oppdatert: DeltakelseDAO) {
-        val opphørsdato = oppdatert.getTom()
-        requireNotNull(opphørsdato) { "Til og med dato må være satt for å sende inn hendelse til ung-sak" }
+        val sluttdato = when {
+            oppdatert.getTom() != null -> {
+                oppdatert.getTom()!!
+            }
+            else -> {
+                TIDENES_ENDE
+            }
+        }
 
         logger.info("Henter aktørIder for deltaker")
         val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
@@ -386,7 +615,33 @@ class UngdomsprogramregisterService(
             hendelseInfo.leggTilAktør(AktørId(it.ident))
         }
 
-        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), opphørsdato)
+        val hendelse = UngdomsprogramOpphørHendelse(hendelseInfo.build(), sluttdato)
+        ungSakService.sendInnHendelse(
+            hendelse = HendelseDto(
+                hendelse,
+                AktørId(nåværendeAktørId)
+            )
+        )
+    }
+
+
+    private fun sendOpphørOpphevetHendelseTilUngSak(oppdatert: DeltakelseDAO, tidligereOpphørsdato: LocalDate) {
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+
+        logger.info("Sender inn hendelse til ung-sak om at opphøret av deltakelse er opphevet")
+
+        val hendelsedato =
+            oppdatert.endretTidspunkt?.atZone(ZoneOffset.UTC)?.toLocalDateTime()
+                ?: oppdatert.opprettetTidspunkt.atZone(ZoneOffset.UTC).toLocalDateTime()
+
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramOpphørOpphevetHendelse(hendelseInfo.build(), tidligereOpphørsdato)
         ungSakService.sendInnHendelse(
             hendelse = HendelseDto(
                 hendelse,
@@ -417,6 +672,36 @@ class UngdomsprogramregisterService(
         ungSakService.sendInnHendelse(hendelse = HendelseDto(hendelse, AktørId(nåværendeAktørId)))
     }
 
+    private fun sendForlengetPeriodeHendelseTilUngSak(
+        oppdatert: DeltakelseDAO,
+        forlengetFraOgMed: LocalDate,
+        forlengetTilOgMed: LocalDate,
+    ) {
+        logger.info("Henter aktørIder for deltaker")
+        val aktørIder = pdlService.hentAktørIder(oppdatert.deltaker.deltakerIdent)
+        val nåværendeAktørId = aktørIder.first { !it.historisk }.ident
+
+        logger.info("Sender inn hendelse til ung-sak om at perioden er forlenget med inntil 8 uker")
+
+        val hendelsedato = LocalDateTime.now()
+
+        val hendelseInfo = HendelseInfo.Builder().medOpprettet(hendelsedato)
+        aktørIder.forEach {
+            hendelseInfo.leggTilAktør(AktørId(it.ident))
+        }
+
+        val hendelse = UngdomsprogramForlengetPeriodeHendelse(
+            hendelseInfo.build(),
+            Periode(forlengetFraOgMed, forlengetTilOgMed)
+        )
+        ungSakService.sendInnHendelse(
+            hendelse = HendelseDto(
+                hendelse,
+                AktørId(nåværendeAktørId)
+            )
+        )
+    }
+
     private fun DeltakelseDTO.mapToDAO(deltakerDAO: DeltakerDAO): DeltakelseDAO {
         val periode = if (tilOgMed == null) {
             Range.closedInfinite(fraOgMed)
@@ -440,8 +725,7 @@ class UngdomsprogramregisterService(
                 null
             )
         }.takeIf { !it.erSlettet }
-            ?: throw
-            ErrorResponseException(
+            ?: throw ErrorResponseException(
                 HttpStatus.NOT_FOUND,
                 ProblemDetail.forStatus(HttpStatus.NOT_FOUND).also {
                     it.detail = "Deltakelse med $id er slettet"
@@ -460,6 +744,23 @@ class UngdomsprogramregisterService(
                 null
             )
         }
+
+    private fun forsikreSluttdatoErInnenforMaksdato(
+        sluttdato: LocalDate,
+        startdato: LocalDate,
+        harForlengetPeriode: Boolean,
+    ) {
+        val maksDato = ForlengetPeriodeBeregner.beregn(startdato, harForlengetPeriode).tilOgMed
+        if (sluttdato > maksDato) {
+            throw ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST).also {
+                    it.detail = "Sluttdato=$sluttdato kan ikke være etter maksdato=$maksDato"
+                },
+                null
+            )
+        }
+    }
 
     private fun forsikreGyldigPeriodeVedEndring(sluttdato: LocalDate?, startdato: LocalDate) {
         if (sluttdato != null && sluttdato < startdato) {
@@ -491,14 +792,5 @@ class UngdomsprogramregisterService(
                 null
             )
         }
-    }
-
-    private fun DeltakelseDAO.tilDeltakelsePeriodInfo(oppgaver: List<OppgaveDAO>): DeltakelseKomposittDTO {
-        val oppgaver = oppgaver.map { oppgaveMapperService.mapOppgaveTilDTO(it) }
-
-        return DeltakelseKomposittDTO(
-            deltakelse = mapToDTO(),
-            oppgaver = oppgaver
-        )
     }
 }

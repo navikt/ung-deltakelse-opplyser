@@ -14,14 +14,4 @@ interface DeltakerRepository : JpaRepository<DeltakerDAO, UUID> {
         nativeQuery = true
     )
     fun finnDeltakerGittIdenter(@Param("deltakerIdenter") deltakerIdenter: List<String>): List<DeltakerDAO>
-
-    @Query(
-        value = """
-        SELECT d.* FROM deltaker d
-        INNER JOIN oppgave o on d.id = o.deltaker_id
-        WHERE o.oppgave_referanse = :oppgaveReferanse
-    """,
-        nativeQuery = true
-    )
-    fun finnDeltakerGittOppgaveReferanse(@Param("oppgaveReferanse") oppgaveReferanse: UUID): DeltakerDAO?
 }

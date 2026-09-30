@@ -21,24 +21,4 @@ interface DeltakerStatistikkRepository : JpaRepository<DeltakerDAO, UUID> {
         nativeQuery = true
     )
     fun antallDeltakereIUngdomsprogrammet(): Long
-
-
-    /**
-     * Henter antall deltakere per oppgavetype.
-     *
-     * @return En liste over antall deltakere per oppgavetype.
-     */
-    @Query(
-        """
-        SELECT 
-          o.oppgavetype           AS oppgavetype,
-          o.status                AS status,
-          COUNT(DISTINCT o.deltaker_id) AS antallDeltakere
-        FROM oppgave o
-        GROUP BY o.oppgavetype, o.status
-        ORDER BY antallDeltakere DESC, oppgavetype, status
-        """,
-        nativeQuery = true
-    )
-    fun antallDeltakerePerOppgavetype(): List<AntallDeltakerePerOppgavetype>
 }

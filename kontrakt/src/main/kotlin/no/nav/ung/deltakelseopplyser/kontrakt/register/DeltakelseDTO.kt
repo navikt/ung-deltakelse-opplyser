@@ -1,16 +1,14 @@
 package no.nav.ung.deltakelseopplyser.kontrakt.register
 
+import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonUnwrapped
 import no.nav.ung.deltakelseopplyser.kontrakt.deltaker.DeltakerDTO
-import no.nav.ung.deltakelseopplyser.kontrakt.oppgave.felles.OppgaveDTO
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 
-/**
- * Kjernestruktur uten oppgaver
- */
 data class DeltakelseDTO(
     @JsonProperty("id")
     val id: UUID? = null,
@@ -30,23 +28,61 @@ data class DeltakelseDTO(
     @JsonProperty("harOpphørsvedtak")
     val harOpphørsvedtak: Boolean = false,
 
+    @JsonProperty("harForlengetPeriode")
+    @JsonAlias("harUtvidetKvote")
+    val harForlengetPeriode: Boolean = false,
+
     @JsonProperty("søktTidspunkt")
-    val søktTidspunkt: ZonedDateTime? = null
+    val søktTidspunkt: ZonedDateTime? = null,
+
+    @JsonProperty("periodeMaksDato")
+    @JsonAlias("forlengetPeriodeMaksDato", "kvoteMaksDato")
+    val periodeMaksDato: LocalDate,
+
+    @JsonProperty("avslutningsårsak")
+    val avslutningsårsak: Avslutningsårsak? = null,
 ) {
+
+    /** @deprecated Bruk [periodeMaksDato]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk periodeMaksDato", ReplaceWith("periodeMaksDato"))
+    @get:JsonProperty("forlengetPeriodeMaksDato")
+    val forlengetPeriodeMaksDato: LocalDate get() = periodeMaksDato
+
+    /** @deprecated Bruk [harForlengetPeriode]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk harForlengetPeriode", ReplaceWith("harForlengetPeriode"))
+    @get:JsonProperty("harUtvidetKvote")
+    val harUtvidetKvote: Boolean get() = harForlengetPeriode
+
+    /** @deprecated Bruk [periodeMaksDato]. Beholdt for bakoverkompatibilitet. */
+    @Deprecated("Bruk periodeMaksDato", ReplaceWith("periodeMaksDato"))
+    @get:JsonProperty("kvoteMaksDato")
+    val kvoteMaksDato: LocalDate get() = periodeMaksDato
+
+    @get:JsonProperty("status")
+    val status: DeltakelseStatus
+        get() = DeltakelseStatus.utledFra(søktTidspunkt, tilOgMed, periodeMaksDato)
+
     override fun toString(): String =
         "DeltakelseDTO(id=$id, fraOgMed=$fraOgMed, tilOgMed=$tilOgMed)"
 }
 
-/**
- * Komposittstruktur som også inneholder oppgaver
- */
+@Deprecated("Bruk DeltakelseDTO via v2-endepunkter. Oppgaver håndteres nå i ung-brukerdialog-api.")
 data class DeltakelseKomposittDTO(
     @JsonUnwrapped
     val deltakelse: DeltakelseDTO,
 
     @JsonProperty("oppgaver")
-    val oppgaver: List<OppgaveDTO>
+    val oppgaver: List<Any> = emptyList()
 ) {
+    /**
+     * Eksponerer [DeltakelseDTO.status] direkte på komposittobjektet for enklere programmatisk
+     * tilgang. Feltet serialiseres allerede via [JsonUnwrapped] på [deltakelse], så denne må
+     * annoteres med @JsonIgnore – uten den ga Jackson et duplikat "status"-felt i faktisk
+     * JSON-output (ugyldig JSON med to like nøkler).
+     */
+    @get:JsonIgnore
+    val status: DeltakelseStatus get() = deltakelse.status
+
     override fun toString(): String =
-        "DeltakelseKomposittDTO(id=${deltakelse.id}, fraOgMed=${deltakelse.fraOgMed}, tilOgMed=${deltakelse.tilOgMed}, antallOppgaver=${oppgaver.size})"
+        "DeltakelseKomposittDTO(id=${deltakelse.id}, fraOgMed=${deltakelse.fraOgMed}, tilOgMed=${deltakelse.tilOgMed}, status=$status)"
 }

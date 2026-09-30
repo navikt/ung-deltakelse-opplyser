@@ -13,6 +13,7 @@ import no.nav.ung.deltakelseopplyser.audit.SporingsloggService
 import no.nav.ung.deltakelseopplyser.config.Issuers
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerDAO
 import no.nav.ung.deltakelseopplyser.domene.deltaker.DeltakerService
+import no.nav.ung.deltakelseopplyser.domene.register.ForlengetPeriodeBeregner
 import no.nav.ung.deltakelseopplyser.domene.register.UngdomsprogramregisterService
 import no.nav.ung.deltakelseopplyser.domene.register.historikk.DeltakelseHistorikkService
 import no.nav.ung.deltakelseopplyser.integration.abac.TilgangskontrollService
@@ -63,7 +64,8 @@ class UngdomsprogramRegisterVeilederController(
         )
         val deltakelseDTO = DeltakelseDTO(
             deltaker = DeltakerDTO(deltakerIdent = deltakelseInnmeldingDTO.deltakerIdent),
-            fraOgMed = deltakelseInnmeldingDTO.startdato
+            fraOgMed = deltakelseInnmeldingDTO.startdato,
+            periodeMaksDato = ForlengetPeriodeBeregner.beregn(deltakelseInnmeldingDTO.startdato).tilOgMed
         )
 
         return registerService.leggTilIProgram(deltakelseDTO).also {
@@ -93,7 +95,10 @@ class UngdomsprogramRegisterVeilederController(
             UPDATE,
             listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
         )
-        val utmeldtDeltakelse = eksisterendeDeltakelse.copy(tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato)
+        val utmeldtDeltakelse = eksisterendeDeltakelse.copy(
+            tilOgMed = deltakelseUtmeldingDTO.utmeldingsdato,
+            avslutningsårsak = deltakelseUtmeldingDTO.avslutningsårsak,
+        )
         return registerService.avsluttDeltakelse(deltakelseId, utmeldtDeltakelse).also {
             sporingsloggService.logg(
                 "/deltakelse/{deltakelseId}/avslutt",
@@ -150,6 +155,56 @@ class UngdomsprogramRegisterVeilederController(
             sporingsloggService.logg(
                 "/deltakelse/{deltakelseId}/endre/sluttdato",
                 "Endret sluttdato for deltakelse med id $deltakelseId",
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
+    }
+
+    @DeleteMapping("/deltakelse/{deltakelseId}/slett/sluttdato")
+    @Operation(summary = "Sletter sluttdato på en deltakelse i ungdomsprogrammet")
+    @ResponseStatus(HttpStatus.OK)
+    fun slettSluttdato(@PathVariable deltakelseId: UUID): DeltakelseDTO {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
+
+        val varSluttdatoSatt = eksisterendeDeltakelse.tilOgMed != null
+        return registerService.slettSluttdato(deltakelseId).also {
+            val melding = if (varSluttdatoSatt) {
+                "Slettet sluttdato for deltakelse med id $deltakelseId"
+            } else {
+                "Sletting av sluttdato var idempotent (sluttdato var allerede tom) for deltakelse med id $deltakelseId"
+            }
+
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/slett/sluttdato",
+                melding,
+                PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
+                EventClassId.AUDIT_UPDATE
+            )
+        }
+    }
+
+
+    @PutMapping(
+        "/deltakelse/{deltakelseId}/forleng-periode",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    @Operation(summary = "Forlenger perioden for en deltakelse i ungdomsprogrammet med 8 uker")
+    @ResponseStatus(HttpStatus.OK)
+    fun forlengPeriode(@PathVariable deltakelseId: UUID): DeltakelseDTO {
+        val eksisterendeDeltakelse = registerService.hentFraProgram(deltakelseId)
+        tilgangskontrollService.krevAnsattTilgang(
+            UPDATE,
+            listOf(PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent))
+        )
+        return registerService.forlengPeriode(deltakelseId).also {
+            sporingsloggService.logg(
+                "/deltakelse/{deltakelseId}/forleng-periode",
+                "Forlenget periode for deltakelse med id $deltakelseId",
                 PersonIdent.fra(eksisterendeDeltakelse.deltaker.deltakerIdent),
                 EventClassId.AUDIT_UPDATE
             )

@@ -199,7 +199,7 @@ class AppExceptionHandler : ResponseEntityExceptionHandler() {
     private fun ServletWebRequest.respondProblemDetails(
         status: HttpStatus,
         title: String,
-        type: URI,
+        type: URI?,
         violations: Set<Violation> = setOf(),
         detail: String,
     ): ProblemDetail {

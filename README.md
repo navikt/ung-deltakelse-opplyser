@@ -47,6 +47,35 @@ Andre applikasjoner i SiF-porteføljen bør gjøre selvstendige vurderinger om H
 
 # 6. Data
 
+## Statistikk: Deltakelser per enhet
+
+Tjenesten publiserer statistikk over antall deltakelser per NAV-enhet til BigQuery. Hver deltakelse mappes til enheten som veilederen (som opprettet deltakelsen) tilhørte på opprettelsestidspunktet.
+
+### Koblingstabell (primærkilde)
+
+Når en deltakelse opprettes, lagres veilederens enhet i en koblingstabell (`deltakelse_veileder_enhet`) som et point-in-time snapshot. Dette gjør statistikken uavhengig av fremtidige endringer i NOM — f.eks. at veilederen bytter enhet eller slutter i NAV.
+
+For historiske deltakelser (opprettet før koblingstabellen) kan man kjøre backfill via diagnostikk-endepunktet `POST /diagnostikk/backfill/deltakelse-veileder-enhet`. Deltakelser der backfill feiler (f.eks. veileder har sluttet og har tom `orgTilknytning`) kan korrigeres manuelt via `PUT /diagnostikk/deltakelse-veileder-enhet/{deltakelseId}`.
+
+### NOM-fallback (sekundærkilde)
+
+Deltakelser som ikke finnes i koblingstabellen faller tilbake til oppslag mot [NOM API](https://nom.nav.no/). To strategier brukes i prioritert rekkefølge:
+
+1. **Eksakt match**: Veilederens tilknytning og enheten må begge være gyldige på opprettelsesdatoen.
+2. **Nærmeste tilknytning**: Velger tilknytningen med korteste absolutte avstand til datoen. Dekker gap ved enhetsbytte og sen NOM-registrering.
+
+### "Enhet sikkerhetsnett"
+
+Deltakelser som ikke kan mappes til en enhet — verken via koblingstabell eller NOM — telles under kategorien **"Enhet sikkerhetsnett"**. Dette sikrer at summen av alle enheter alltid er lik det totale antallet deltakelser.
+
+| Årsak | Forklaring |
+|-------|-----------|
+| **Ingen kobling og ressurs ikke funnet i NOM** | Veilederens NAV-ident finnes ikke i NOM API. Kan skyldes at veilederen har sluttet. |
+| **Ingen kobling og tom orgTilknytning** | Veilederen finnes i NOM, men har ingen tilknytninger (har sluttet). |
+
+Et høyt antall "Enhet sikkerhetsnett" kan løses ved å kjøre backfill og/eller bruke PUT-endepunktet for manuell korrigering.
+
+
 # 7. Infrastrukturarkitektur
 
 ## System Context Diagram
@@ -121,19 +150,38 @@ Ende til ende verdikjede tester som involverer denne appen finnes i [k9-verdikje
 
 ## Registrering og henting av data via api-endepunktene
 
-Applikasjonen er konfigurert swagger-ui for å kunne teste ut endepunktene.
-For å kunne teste et endepunkt som krever innlogging, må man hente et tokenx token.
-Se [Henting av token](#henting-av-token) for mer info.
+Applikasjonen er konfigurert med swagger-ui for å kunne teste ut endepunktene.
+For å kunne teste et endepunkt som krever innlogging, må man hente riktig token for endepunktet:
+- Deltaker-endepunkter: TokenX-token
+- Veileder, ung-sak, ekstern og drift: Entra ID OBO-token
+
+### Testing av `POST /ekstern/deltakelse/sjekk`
+
+#### Tilgangskrav
+Endepunktet støtter **to token-typer**:
+
+- **OBO-token** (veileder): Tilgangskontroll via **Tilgangsmaskin** (kode 6/7, egen ansatt, geografisk tilknytning). Sporingslogg skrives.
+- **Systemtoken / M2M** (maskin-til-maskin): Kun validering av kallende applikasjon (`azp`). Ingen sporingslogg (ingen NAVident).
+
+I begge tilfeller må claimen **`azp`** matche en godkjent ekstern klient, for eksempel `veilarboppfolging`.
+
+#### Praktisk i dev
+- Bruk et **OBO-token** for å teste veileder-flyten, eller et **systemtoken** for å teste M2M-flyten.
+- Tokenet må ha korrekt **`azp`** for godkjent ekstern klient.
+- Ved OBO: kallet kan feile dersom **Tilgangsmaskin** ikke gir tilgang til personen.
+- Ved systemtoken: kun applikasjonssjekk, ingen Tilgangsmaskin-validering.
+- `azure-token-generator` kan brukes **midlertidig for testing i dev**, men skal ikke være en varig eller produksjonsnær måte å hente token på.
 
 #### Henting av token i dev-gcp
 
 1. Åpne [Swagger](https://ung-deltakelse-opplyser.intern.dev.nav.no/swagger-ui/index.html) i nettleseren.
 2. Trykk "Authorize" i høyre hjørne.
-3. Kopier lenken i modalen åpne i ny fane.
-4. Velg "TestId på nivå høyt".
-5. Oppgi Personidentifikator på testpersonen du vil hente token for, og trykk "Autentiser".
-6. Kopier verdien av feltet "access_token" (tokenet).
-7. Gå tilbake til Swagger fanen og lim inn tokenet i feltet "Value" og trykk "Authorize".
+3. Velg riktig sikkerhetsskjema i modalen:
+   - `Authorization` for TokenX
+   - `entraObo` for Entra ID OBO
+4. Kopier token-generator-lenken fra beskrivelsen, åpne i ny fane og logg inn.
+5. Kopier verdien av feltet `access_token`.
+6. Gå tilbake til Swagger-fanen og lim inn tokenet i riktig felt under "Value", og trykk "Authorize".
 
 # 10. Drift og støtte
 

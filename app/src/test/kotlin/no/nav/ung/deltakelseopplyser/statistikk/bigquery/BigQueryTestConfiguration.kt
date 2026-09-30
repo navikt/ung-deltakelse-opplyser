@@ -17,8 +17,8 @@ class BigQueryTestConfiguration {
     }
 
     @Container
-    val BIG_QUERY_EMULATOR_CONTAINER: BigQueryEmulatorContainer =
-        BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator:0.4.3")
+    val BIG_QUERY_EMULATOR_CONTAINER: org.testcontainers.gcloud.BigQueryEmulatorContainer =
+        org.testcontainers.gcloud.BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator:0.4.3")
 
     @Bean(name = ["bigQuery"])
     fun bigQuery(): BigQuery {

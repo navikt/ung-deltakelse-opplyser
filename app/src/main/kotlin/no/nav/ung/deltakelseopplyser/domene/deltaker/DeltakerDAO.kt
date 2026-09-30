@@ -8,7 +8,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import no.nav.ung.deltakelseopplyser.domene.minside.mikrofrontend.MinSideMicrofrontendStatusDAO
-import no.nav.ung.deltakelseopplyser.domene.oppgave.repository.OppgaveDAO
 import no.nav.ung.deltakelseopplyser.domene.register.DeltakelseDAO
 import java.util.*
 
@@ -31,16 +30,4 @@ class DeltakerDAO(
 
     @OneToOne(mappedBy = "deltaker", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
     var minSideMicrofrontendStatusDAO: MinSideMicrofrontendStatusDAO? = null,
-
-    // Oppgavene eies direkte av DeltakerDAO med cascade og orphanRemoval for helhetlig håndtering.
-    @OneToMany(mappedBy = "deltaker", fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
-    val oppgaver: MutableSet<OppgaveDAO> = mutableSetOf()
-) {
-
-    /**
-     * Legger til en ny oppgave i samlingen.
-     */
-    fun leggTilOppgave(oppgave: OppgaveDAO) {
-        oppgaver.add(oppgave)
-    }
-}
+)
