@@ -37,6 +37,9 @@ object DeltakelseHistorikkEndringUtleder {
         val periodeForlenget =
             nåværendeDeltakelseRevisjon.harForlengetPeriode && forrigeDeltakelseRevisjon?.harForlengetPeriode != true
 
+        val opphørsvedtakFattet = forrigeDeltakelseRevisjon != null &&
+                nåværendeDeltakelseRevisjon.harOpphørsvedtak && !forrigeDeltakelseRevisjon.harOpphørsvedtak
+
         // Lag liste med navn på de feltene som faktisk endret seg
         val endredeFelter = listOfNotNull(
             "startdato".takeIf { startdatoErEndret },
@@ -45,7 +48,8 @@ object DeltakelseHistorikkEndringUtleder {
             "sluttdatoEndret".takeIf { sluttdatoErEndret && !periodeForlenget },
             "søktTidspunkt".takeIf { soktTidspunktErEndret },
             "deltakelseFjernet".takeIf { deltakelseErFjernet },
-            "forlengetPeriode".takeIf { periodeForlenget }
+            "forlengetPeriode".takeIf { periodeForlenget },
+            "opphørsvedtak".takeIf { opphørsvedtakFattet }
         )
 
         håndterFlereEndringerISammeRevisjon(endredeFelter, nåværendeDeltakelseRevisjon.id)
@@ -59,7 +63,8 @@ object DeltakelseHistorikkEndringUtleder {
                 sluttdatoErEndret,
                 soktTidspunktErEndret,
                 deltakelseErFjernet,
-                periodeForlenget
+                periodeForlenget,
+                opphørsvedtakFattet
             ),
 
             endretStartdatoData = utledEndretStartdatoHistorikkDTO(
@@ -156,6 +161,7 @@ object DeltakelseHistorikkEndringUtleder {
         soktTidspunktErEndret: Boolean,
         deltakelseErFjernet: Boolean,
         periodeForlenget: Boolean,
+        opphørsvedtakFattet: Boolean,
     ) = when {
         // Dersom vi ikke har en tidligere revisjon, betyr det at dette er den første revisjonen for deltakelsen.
         // Vi tolker dette som at deltakelsen er opprettet og at deltakeren er meldt inn i programmet.
@@ -167,6 +173,7 @@ object DeltakelseHistorikkEndringUtleder {
         sluttdatoErEndret -> Endringstype.ENDRET_SLUTTDATO
         soktTidspunktErEndret -> Endringstype.DELTAKER_HAR_SØKT_YTELSE
         deltakelseErFjernet -> Endringstype.DELTAKELSE_FJERNET
+        opphørsvedtakFattet -> Endringstype.OPPHØRSVEDTAK_FATTET
         else -> Endringstype.UKJENT
     }
 
