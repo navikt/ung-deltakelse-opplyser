@@ -48,6 +48,9 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
     lateinit var deltakelseRepository: DeltakelseRepository
 
     @Autowired
+    lateinit var ungdomsprogramytelseVedtakService: UngdomsprogramytelseVedtakService
+
+    @Autowired
     lateinit var deltakelseVeilederEnhetRepository: DeltakelseVeilederEnhetRepository
 
     @jakarta.persistence.PersistenceContext
@@ -445,6 +448,51 @@ class UngdomsprogramregisterServiceTest : AbstractIntegrationTest() {
 
         assertNotNull(hentetDto)
         assertNotNull(hentetDto.deltaker.id)
+    }
+
+    @Test
+    fun `Slettet deltakelse kan markeres med opphørsvedtak flere ganger`() {
+        val deltakerDTO = DeltakerDTO(deltakerIdent = FødselsnummerGenerator.neste())
+        val startdato = LocalDate.now()
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = deltakerDTO,
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+        ungdomsprogramregisterService.markerSomSlettet(innmelding.id!!)
+
+        val førsteMarkering = ungdomsprogramregisterService.markerSomFattetOpphørsvedtak(innmelding.id!!)
+        val andreMarkering = ungdomsprogramregisterService.markerSomFattetOpphørsvedtak(innmelding.id!!)
+
+        assertTrue(førsteMarkering.harOpphørsvedtak)
+        assertTrue(andreMarkering.harOpphørsvedtak)
+        val lagret = deltakelseRepository.findById(innmelding.id!!).orElseThrow()
+        assertTrue(lagret.erSlettet)
+        assertTrue(lagret.harOpphørsvedtak)
+    }
+
+    @Test
+    fun `Opphørsvedtak for aktør markerer slettet deltakelse med opphørsvedtak`() {
+        val fnr = FødselsnummerGenerator.neste()
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(fnr, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+        val startdato = LocalDate.now()
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = fnr),
+                fraOgMed = startdato,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(startdato).tilOgMed,
+            )
+        )
+        ungdomsprogramregisterService.markerSomSlettet(innmelding.id!!)
+
+        ungdomsprogramytelseVedtakService.håndterUngdomsprogramytelseOpphørsvedtakForAktør("9906437824817")
+
+        val lagret = deltakelseRepository.findById(innmelding.id!!).orElseThrow()
+        assertTrue(lagret.harOpphørsvedtak)
     }
 
     @Test
