@@ -9,5 +9,6 @@ enum class Endringstype {
     DELTAKER_HAR_SØKT_YTELSE,
     DELTAKELSE_FJERNET,
     FORLENGET_PERIODE,
+    OPPHØRSVEDTAK_FATTET,
     UKJENT
 }

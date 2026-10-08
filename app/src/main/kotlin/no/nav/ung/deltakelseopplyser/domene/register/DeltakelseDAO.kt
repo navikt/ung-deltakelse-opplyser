@@ -42,7 +42,6 @@ class DeltakelseDAO(
     @Column(name = "er_slettet")
     var erSlettet: Boolean = false,
 
-    @NotAudited
     @Column(name = "har_opphoersvedtak")
     var harOpphørsvedtak: Boolean = false,
 
