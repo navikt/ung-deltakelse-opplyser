@@ -287,7 +287,12 @@ class UngdomsprogramregisterService(
     @Transactional(TRANSACTION_MANAGER)
     fun markerSomFattetOpphørsvedtak(id: UUID): DeltakelseDTO {
         logger.info("Markerer at deltakelse er slettet og fattet vedtak om opphør med id $id")
-        val eksisterende = forsikreEksistererDeltakelse(id)
+        // Deltakelsen er allerede slettet når opphørsvedtaket kommer, så vi kan ikke kreve at den er aktiv.
+        val eksisterende = forsikreHarHattDeltakelse(id)
+        if (eksisterende.harOpphørsvedtak) {
+            logger.info("Deltakelse med id $id er allerede markert med opphørsvedtak")
+            return eksisterende.mapToDTO()
+        }
         eksisterende.markerMedOpphørsvedtak()
         return deltakelseRepository.save(eksisterende).mapToDTO()
     }
