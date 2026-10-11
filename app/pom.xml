@@ -23,7 +23,6 @@
         <awaitility.version>4.3.0</awaitility.version>
         <ung-sak.version>7.11.5</ung-sak.version>
         <ung-brukerdialog-api.version>1.2.5</ung-brukerdialog-api.version>
-
         <fp-sak.version>2.8.0</fp-sak.version>
         <graphql-kotlin.version>10.2.2</graphql-kotlin.version>
         <k9-format.version>14.1.2</k9-format.version>
@@ -255,6 +254,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -264,6 +264,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit5</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Kotlin -->
