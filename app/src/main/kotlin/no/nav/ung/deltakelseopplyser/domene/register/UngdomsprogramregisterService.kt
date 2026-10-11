@@ -110,6 +110,7 @@ class UngdomsprogramregisterService(
                     OppgaveYtelsetype.UNGDOMSYTELSE,
                     oppgaveReferanse,
                     SøkYtelseOppgavetypeDataDto(deltakelseDTO.fraOgMed),
+                    null,
                     null
                 )
             )

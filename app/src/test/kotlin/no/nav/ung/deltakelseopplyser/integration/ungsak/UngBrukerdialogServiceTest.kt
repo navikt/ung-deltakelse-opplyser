@@ -75,6 +75,7 @@ class UngBrukerdialogServiceTest {
                 OppgaveYtelsetype.UNGDOMSYTELSE,
                 UUID.randomUUID(),
                 SøkYtelseOppgavetypeDataDto(LocalDate.now()),
+                null,
                 null
             )
         )
@@ -95,6 +96,7 @@ class UngBrukerdialogServiceTest {
                 OppgaveYtelsetype.UNGDOMSYTELSE,
                 UUID.randomUUID(),
                 SøkYtelseOppgavetypeDataDto(LocalDate.now()),
+                null,
                 null
             )
         )
