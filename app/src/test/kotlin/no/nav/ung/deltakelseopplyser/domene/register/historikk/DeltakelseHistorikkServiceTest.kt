@@ -270,7 +270,52 @@ class DeltakelseHistorikkServiceTest : AbstractIntegrationTest() {
         assertThat(sjetteInnslag.opprettetTidspunkt).isEqualTo(førsteInnslag.opprettetTidspunkt)
         assertThat(sjetteInnslag.endretAv).isNotNull()
         assertThat(sjetteInnslag.endretTidspunkt).isNotNull()
-        assertThat(sjetteInnslag.utledEndringsTekst()).isEqualTo("Deltakelsen fra ${formater(onsdag)} og til ${formater(onsdag.plusWeeks(1))} er fjernet.")
+        assertThat(sjetteInnslag.utledEndringsTekst()).isEqualTo("Deltakelsen fra ${formater(onsdag)} til ${formater(onsdag.plusWeeks(1))} er fjernet.")
+    }
+
+    @Test
+    fun `Opphørsvedtak på slettet deltakelse gir eget historikkinnslag`() {
+        every { pdlService.hentAktørIder(any()) } returns listOf(
+            IdentInformasjon("321", false, IdentGruppe.AKTORID),
+            IdentInformasjon("451", true, IdentGruppe.AKTORID)
+        )
+        every { pdlService.hentPerson(any()) } returns Scenarioer.lagPerson(LocalDate.of(2000, 1, 1))
+
+        val deltakerIdent = FødselsnummerGenerator.neste()
+        every { pdlService.hentFolkeregisteridenter(any()) } returns listOf(
+            IdentInformasjon(deltakerIdent, false, IdentGruppe.FOLKEREGISTERIDENT)
+        )
+
+        val mandag = LocalDate.parse("2024-10-07")
+        val innmelding = ungdomsprogramregisterService.leggTilIProgram(
+            DeltakelseDTO(
+                deltaker = DeltakerDTO(deltakerIdent = deltakerIdent),
+                fraOgMed = mandag,
+                periodeMaksDato = ForlengetPeriodeBeregner.beregn(mandag).tilOgMed
+            )
+        )
+        val deltakelseId = innmelding.id!!
+        ungdomsprogramregisterService.markerSomHarSøkt(deltakelseId)
+
+        val deltakerDAO = deltakerRepository.finnDeltakerGittIdenter(deltakerIdenter = listOf(deltakerIdent)).first()
+        ungdomsprogramregisterService.fjernFraProgram(deltakerDAO)
+        ungdomsprogramregisterService.markerSomFattetOpphørsvedtak(deltakelseId)
+
+        val historikk = deltakelseHistorikkService.deltakelseHistorikk(deltakelseId)
+        assertThat(historikk.map { it.endringstype }).containsExactly(
+            Endringstype.DELTAKER_MELDT_INN,
+            Endringstype.DELTAKER_HAR_SØKT_YTELSE,
+            Endringstype.DELTAKELSE_FJERNET,
+            Endringstype.OPPHØRSVEDTAK_FATTET
+        )
+
+        assertThat(historikk[2].utledEndringsTekst()).isEqualTo("Deltakelsen fra ${formater(mandag)} er fjernet.")
+
+        val opphørsvedtakInnslag = historikk.last()
+        assertThat(opphørsvedtakInnslag.revisjonstype).isEqualTo(Revisjonstype.ENDRET)
+        assertThat(opphørsvedtakInnslag.deltakelse.harOpphørsvedtak).isTrue()
+        assertThat(opphørsvedtakInnslag.utledEndringsTekst())
+            .isEqualTo("Ung-sak har fattet vedtak om opphør av ungdomsprogramytelsen.")
     }
 
     @Test
