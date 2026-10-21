@@ -21,7 +21,7 @@
         <logback.logstash.version>9.0</logback.logstash.version>
         <spring-mockk.version>5.0.1</spring-mockk.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <ung-sak.version>7.11.5</ung-sak.version>
+        <ung-sak.version>8.0.3</ung-sak.version>
         <ung-brukerdialog-api.version>1.2.5</ung-brukerdialog-api.version>
         <fp-sak.version>2.8.0</fp-sak.version>
         <graphql-kotlin.version>10.2.2</graphql-kotlin.version>
