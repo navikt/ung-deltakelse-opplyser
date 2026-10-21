@@ -82,9 +82,11 @@ data class DeltakelseHistorikk(
             Endringstype.DELTAKELSE_FJERNET -> {
                 requireNotNull(deltakelseFjernet)
                 val formattertPeriode = "fra " + DATE_FORMATTER.format(deltakelseFjernet.forrigeStartdato) +
-                        (deltakelseFjernet.forrigeSluttdato?.let { " og til " + DATE_FORMATTER.format(it) })
-                "Deltakelsen ${formattertPeriode} er fjernet."
+                        (deltakelseFjernet.forrigeSluttdato?.let { " til " + DATE_FORMATTER.format(it) } ?: "")
+                "Deltakelsen $formattertPeriode er fjernet."
             }
+
+            Endringstype.OPPHØRSVEDTAK_FATTET -> "Ung-sak har fattet vedtak om opphør av ungdomsprogramytelsen."
 
             Endringstype.FORLENGET_PERIODE -> {
                 requireNotNull(forlengetPeriode)
