@@ -31,7 +31,7 @@
         <tms-mikrofrontend-builder.version>3.0.0</tms-mikrofrontend-builder.version>
         <sif-abac-kontrakt.version>1.14.1</sif-abac-kontrakt.version>
         <prosessering-core.version>2.20260817115650_f13f507</prosessering-core.version>
-        <google-cloud-bigquery.version>2.74.0</google-cloud-bigquery.version>
+        <google-cloud-bigquery.version>2.75.0</google-cloud-bigquery.version>
     </properties>
     <dependencies>
 
